@@ -14,5 +14,5 @@ type Application struct {
 
 	SourceId int64 `json:"source_id"`
 
-	superkeyData datatypes.JSON
+	SuperkeyData datatypes.JSON `json:"superkey_data"`
 }

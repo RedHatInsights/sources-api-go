@@ -12,9 +12,9 @@ type Pause struct {
 }
 
 type AvailabilityStatus struct {
-	AvailabilityStatus      string     `json:"availability_status"`
-	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
-	LastCheckedAt           *time.Time `json:"last_checked_at"`
+	AvailabilityStatus      *string    `json:"availability_status,omitempty"`
+	AvailabilityStatusError *string    `json:"availability_status_error,omitempty"`
+	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
 	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
 }
 

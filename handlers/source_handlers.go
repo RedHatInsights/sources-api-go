@@ -15,7 +15,12 @@ func SourceList(c echo.Context) error {
 	result := db.DB.Find(&sources)
 	c.Logger().Infof("count: %v, error %v", result.RowsAffected, result.Error)
 
-	return c.JSON(http.StatusOK, sources)
+	out := make([]model.SourceResponse, len(sources))
+	for i, s := range sources {
+		out[i] = *s.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, out)
 }
 
 func SourceGet(c echo.Context) error {
@@ -24,21 +29,36 @@ func SourceGet(c echo.Context) error {
 		return err
 	}
 	c.Logger().Infof("Getting Source ID %v", id)
-	var s model.Source
-	db.DB.First(s, id)
 
-	return c.JSON(http.StatusOK, s)
+	var s model.Source
+	db.DB.First(&s, id)
+
+	return c.JSON(http.StatusOK, s.ToResponse())
 }
 
 func SourceCreate(c echo.Context) error {
-	var src model.Source
-	if err := c.Bind(src); err != nil {
+	input := &model.SourceCreateRequest{}
+	if err := c.Bind(input); err != nil {
 		return err
 	}
 
-	db.DB.Create(src)
+	source := &model.Source{
+		Name:                input.Name,
+		Uid:                 input.Uid,
+		Version:             input.Version,
+		Imported:            input.Imported,
+		SourceRef:           input.SourceRef,
+		AppCreationWorkflow: input.AppCreationWorkflow,
+		AvailabilityStatus: model.AvailabilityStatus{
+			AvailabilityStatus:      input.AvailabilityStatus,
+			AvailabilityStatusError: input.AvailabilityStatusError,
+		},
+		SourceTypeId: input.SourceTypeId,
+	}
 
-	return c.JSON(http.StatusOK, src)
+	db.DB.Create(source)
+
+	return c.JSON(http.StatusOK, source.ToResponse())
 }
 
 func SourceEdit(c echo.Context) error {
