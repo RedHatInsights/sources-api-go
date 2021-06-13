@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
+
 	"github.com/lindgrenj6/sources-api-go/db"
 	"github.com/lindgrenj6/sources-api-go/model"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -41,7 +42,7 @@ func SourceCreate(c echo.Context) error {
 }
 
 func SourceEdit(c echo.Context) error {
-	return nil
+	return c.String(http.StatusOK, "hello")
 }
 
 func SourceDelete(c echo.Context) (err error) {
