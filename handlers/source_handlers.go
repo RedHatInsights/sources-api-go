@@ -5,17 +5,17 @@ import (
 	"strconv"
 
 	"github.com/lindgrenj6/sources-api-go/db"
-	"github.com/lindgrenj6/sources-api-go/model"
+	m "github.com/lindgrenj6/sources-api-go/model"
 
 	"github.com/labstack/echo/v4"
 )
 
 func SourceList(c echo.Context) error {
-	var sources []model.Source
+	var sources []m.Source
 	result := db.DB.Find(&sources)
 	c.Logger().Infof("count: %v, error %v", result.RowsAffected, result.Error)
 
-	out := make([]model.SourceResponse, len(sources))
+	out := make([]m.SourceResponse, len(sources))
 	for i, s := range sources {
 		out[i] = *s.ToResponse()
 	}
@@ -30,26 +30,26 @@ func SourceGet(c echo.Context) error {
 	}
 	c.Logger().Infof("Getting Source ID %v", id)
 
-	var s model.Source
+	var s m.Source
 	db.DB.First(&s, id)
 
 	return c.JSON(http.StatusOK, s.ToResponse())
 }
 
 func SourceCreate(c echo.Context) error {
-	input := &model.SourceCreateRequest{}
+	input := &m.SourceCreateRequest{}
 	if err := c.Bind(input); err != nil {
 		return err
 	}
 
-	source := &model.Source{
+	source := &m.Source{
 		Name:                input.Name,
 		Uid:                 input.Uid,
 		Version:             input.Version,
 		Imported:            input.Imported,
 		SourceRef:           input.SourceRef,
 		AppCreationWorkflow: input.AppCreationWorkflow,
-		AvailabilityStatus: model.AvailabilityStatus{
+		AvailabilityStatus: m.AvailabilityStatus{
 			AvailabilityStatus:      input.AvailabilityStatus,
 			AvailabilityStatusError: input.AvailabilityStatusError,
 		},
@@ -62,7 +62,31 @@ func SourceCreate(c echo.Context) error {
 }
 
 func SourceEdit(c echo.Context) error {
-	return c.String(http.StatusOK, "hello")
+	input := &m.SourceEditRequest{}
+	if err := c.Bind(input); err != nil {
+		return err
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	source := &m.Source{
+		Name:      input.Name,
+		Uid:       input.Uid,
+		Version:   input.Version,
+		Imported:  input.Imported,
+		SourceRef: input.SourceRef,
+		AvailabilityStatus: m.AvailabilityStatus{
+			AvailabilityStatus:      input.AvailabilityStatus,
+			AvailabilityStatusError: input.AvailabilityStatusError,
+		},
+	}
+
+	db.DB.Model(&m.Source{Id: int64(id)}).Updates(source)
+	db.DB.Find(source, id)
+
+	return c.JSON(http.StatusOK, source.ToResponse())
 }
 
 func SourceDelete(c echo.Context) (err error) {
@@ -71,7 +95,7 @@ func SourceDelete(c echo.Context) (err error) {
 		return
 	}
 	c.Logger().Infof("Deleting Source ID %v", id)
-	result := db.DB.Delete(&model.Source{Id: int64(id)})
+	result := db.DB.Delete(&m.Source{Id: int64(id)})
 
 	if result.RowsAffected != 0 {
 		return c.NoContent(http.StatusNoContent)
