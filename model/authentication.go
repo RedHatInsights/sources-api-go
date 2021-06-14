@@ -1,7 +1,5 @@
 package model
 
-import "gorm.io/datatypes"
-
 type Authentication struct {
 	AvailabilityStatus
 	Pause
@@ -10,11 +8,11 @@ type Authentication struct {
 
 	Id int64 `json:"id"`
 
-	Name     string         `json:"name,omitempty"`
-	AuthType string         `json:"auth_type"`
-	Username string         `json:"username"`
-	Password string         `json:"password"`
-	Extra    datatypes.JSON `json:"extra,omitempty"`
+	Name     string                 `json:"name,omitempty"`
+	AuthType string                 `json:"auth_type"`
+	Username string                 `json:"username"`
+	Password string                 `json:"password"`
+	Extra    map[string]interface{} `json:"extra,omitempty"`
 
 	SourceId     int64  `json:"source_id"`
 	ResourceType string `json:"resource_type"`

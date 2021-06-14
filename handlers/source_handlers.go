@@ -4,16 +4,19 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/lindgrenj6/sources-api-go/db"
+	"github.com/lindgrenj6/sources-api-go/dao"
+
 	m "github.com/lindgrenj6/sources-api-go/model"
 
 	"github.com/labstack/echo/v4"
 )
 
 func SourceList(c echo.Context) error {
-	var sources []m.Source
-	result := db.DB.Find(&sources)
-	c.Logger().Infof("count: %v, error %v", result.RowsAffected, result.Error)
+	sources, count, err := dao.SourceList(100, 0)
+	if err != nil {
+		return err
+	}
+	c.Logger().Infof("count: %v, error %v", count, err)
 
 	out := make([]m.SourceResponse, len(sources))
 	for i, s := range sources {
@@ -28,10 +31,13 @@ func SourceGet(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
 	c.Logger().Infof("Getting Source ID %v", id)
 
-	var s m.Source
-	db.DB.First(&s, id)
+	s, err := dao.SourceGet(int64(id))
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(http.StatusOK, s.ToResponse())
 }
@@ -50,15 +56,22 @@ func SourceCreate(c echo.Context) error {
 		SourceRef:           input.SourceRef,
 		AppCreationWorkflow: input.AppCreationWorkflow,
 		AvailabilityStatus: m.AvailabilityStatus{
-			AvailabilityStatus:      input.AvailabilityStatus,
-			AvailabilityStatusError: input.AvailabilityStatusError,
+			AvailabilityStatus: input.AvailabilityStatus,
 		},
 		SourceTypeId: input.SourceTypeId,
 	}
 
-	db.DB.Create(source)
+	id, err := dao.SourceCreate(source)
+	if err != nil {
+		return err
+	}
 
-	return c.JSON(http.StatusOK, source.ToResponse())
+	s, err := dao.SourceGet(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, s.ToResponse())
 }
 
 func SourceEdit(c echo.Context) error {
@@ -66,41 +79,38 @@ func SourceEdit(c echo.Context) error {
 	if err := c.Bind(input); err != nil {
 		return err
 	}
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	source := &m.Source{
-		Name:      input.Name,
-		Uid:       input.Uid,
-		Version:   input.Version,
-		Imported:  input.Imported,
-		SourceRef: input.SourceRef,
-		AvailabilityStatus: m.AvailabilityStatus{
-			AvailabilityStatus:      input.AvailabilityStatus,
-			AvailabilityStatusError: input.AvailabilityStatusError,
-		},
+	s, err := dao.SourceGet(int64(id))
+	if err != nil {
+		return err
 	}
 
-	db.DB.Model(&m.Source{Id: int64(id)}).Updates(source)
-	db.DB.Find(source, id)
+	s.UpdateFromRequest(input)
+	err = dao.SourceUpdate(s)
+	if err != nil {
+		return err
+	}
 
-	return c.JSON(http.StatusOK, source.ToResponse())
+	return c.JSON(http.StatusOK, s.ToResponse())
 }
 
 func SourceDelete(c echo.Context) (err error) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return
+		return err
 	}
-	c.Logger().Infof("Deleting Source ID %v", id)
-	result := db.DB.Delete(&m.Source{Id: int64(id)})
 
-	if result.RowsAffected != 0 {
+	c.Logger().Infof("Deleting Source ID %v", id)
+
+	err = dao.SourceDelete(int64(id))
+	if err != nil {
 		return c.NoContent(http.StatusNoContent)
 	} else {
 		return c.NoContent(http.StatusNotFound)
 	}
-
 }
