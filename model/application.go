@@ -6,11 +6,12 @@ type Application struct {
 	Tenancy
 	TimeStamps
 
-	Id                int64                  `json:"id"`
-	ApplicationTypeId int64                  `json:"application_type_id"`
-	Extra             map[string]interface{} `json:"extra,omitempty"`
+	Id                      int64                  `json:"id"`
+	ApplicationTypeId       int64                  `json:"application_type_id"`
+	Extra                   map[string]interface{} `json:"extra,omitempty"`
+	AvailabilityStatusError *string                `json:"availability_status_error,omitempty"`
+	SuperkeyData            map[string]interface{} `json:"superkey_data"`
 
-	SourceId int64 `json:"source_id"`
-
-	SuperkeyData map[string]interface{} `json:"superkey_data"`
+	SourceId int64   `json:"source_id"`
+	Source   *Source `bun:"rel:belongs-to"`
 }

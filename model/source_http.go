@@ -12,7 +12,7 @@ type SourceCreateRequest struct {
 	AppCreationWorkflow *string `json:"app_creation_workflow"`
 	AvailabilityStatus  *string `json:"availability_status"`
 
-	SourceTypeId int64 `json:"source_type_id"`
+	SourceTypeId *int64 `json:"source_type_id"`
 }
 
 // SourceEditRequest manages what we can/cannot update on the source

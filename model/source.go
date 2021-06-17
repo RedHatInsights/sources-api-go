@@ -18,12 +18,15 @@ type Source struct {
 	SourceRef           *string `json:"source_ref,omitempty"`
 	AppCreationWorkflow *string `json:"app_creation_workflow"`
 
-	SourceTypeId int64 `json:"source_type_id"`
+	SourceTypeId *int64 `json:"source_type_id"`
+
+	Applications []Application `bun:"rel:has-many"`
+	Endpoints    []Endpoint    `bun:"rel:has-many"`
 }
 
 func (src *Source) ToResponse() *SourceResponse {
 	id := strconv.FormatInt(src.Id, 10)
-	stid := strconv.FormatInt(src.SourceTypeId, 10)
+	stid := strconv.FormatInt(*src.SourceTypeId, 10)
 
 	return &SourceResponse{
 		AvailabilityStatus:  src.AvailabilityStatus,
