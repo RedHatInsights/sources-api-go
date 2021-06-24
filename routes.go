@@ -81,14 +81,14 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			if jsonData.Identity.AccountNumber == "" {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant ID!", "401"))
+				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant Id!", "401"))
 			}
 
 			t := dao.GetOrCreateTenantID(jsonData.Identity.AccountNumber)
 			c.Set("tenantID", *t)
 
 		default:
-			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant ID!", "401"))
+			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant Id!", "401"))
 		}
 		return next(c)
 	}

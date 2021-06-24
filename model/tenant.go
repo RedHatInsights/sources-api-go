@@ -1,8 +1,10 @@
 package model
 
-type Tenant struct {
-	TimeStamps
+import "time"
 
+type Tenant struct {
 	Id             int64
 	ExternalTenant string
+	CreatedAt      time.Time
+	UpdateAt       time.Time
 }

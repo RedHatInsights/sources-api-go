@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"fmt"
-	"github.com/lindgrenj6/sources-api-go/middleware"
 	"net/http"
 	"strconv"
+
+	"github.com/lindgrenj6/sources-api-go/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lindgrenj6/sources-api-go/dao"
@@ -13,12 +13,7 @@ import (
 )
 
 func getSourceDao(c echo.Context) (dao.SourceDao, error) {
-	var tenantID int64
-	var ok bool
-	if tenantID, ok = c.Get("tenantID").(int64); !ok {
-		return nil, c.JSON(http.StatusForbidden, util.ErrorDoc("no tenant id", "401"))
-	}
-
+	tenantID := c.Get("tenantID").(int64)
 	return &dao.SourceDaoImpl{TenantID: &tenantID}, nil
 }
 
@@ -28,12 +23,12 @@ func SourceList(c echo.Context) error {
 		return err
 	}
 
+	// TODO: maybe move to a common helper method?
 	filters := c.Get("filters").([]middleware.Filter)
-	fmt.Printf("%#v\n", filters)
-	sources, err := sourcesDB.List(
-		c.Get("limit").(int),
-		c.Get("offset").(int),
-	)
+	limit := c.Get("limit").(int)
+	offset := c.Get("offset").(int)
+
+	sources, count, err := sourcesDB.List(limit, offset, filters)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
 	}
@@ -44,11 +39,7 @@ func SourceList(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	count, err := sourcesDB.Count()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Error getting count", "400"))
-	}
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, count, 100, 0))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, int(*count), limit, offset))
 }
 
 func SourceGet(c echo.Context) error {
@@ -62,7 +53,7 @@ func SourceGet(c echo.Context) error {
 		return err
 	}
 
-	c.Logger().Infof("Getting Source ID %v", id)
+	c.Logger().Infof("Getting Source Id %v", id)
 
 	s, err := sourcesDB.GetById(&id)
 	if err != nil {
@@ -97,17 +88,12 @@ func SourceCreate(c echo.Context) error {
 		Tenancy:      m.Tenancy{TenantId: sourcesDB.Tenant()},
 	}
 
-	id, err := sourcesDB.Create(source)
+	err = sourcesDB.Create(source)
 	if err != nil {
 		return err
 	}
 
-	s, err := sourcesDB.GetById(id)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, s.ToResponse())
+	return c.JSON(http.StatusCreated, source.ToResponse())
 }
 
 func SourceEdit(c echo.Context) error {
@@ -151,7 +137,7 @@ func SourceDelete(c echo.Context) (err error) {
 		return err
 	}
 
-	c.Logger().Infof("Deleting Source ID %v", id)
+	c.Logger().Infof("Deleting Source Id %v", id)
 
 	err = sourcesDB.Delete(&id)
 	if err != nil {

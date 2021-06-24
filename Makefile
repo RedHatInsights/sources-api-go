@@ -1,6 +1,6 @@
 all: build
 
-setup:
+setup: tidy
 	go mod download
 
 tidy:

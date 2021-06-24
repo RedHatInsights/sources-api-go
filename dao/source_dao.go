@@ -1,102 +1,65 @@
 package dao
 
 import (
-	"context"
-	"time"
+	"fmt"
 
+	"github.com/lindgrenj6/sources-api-go/middleware"
 	m "github.com/lindgrenj6/sources-api-go/model"
 )
-
-var ctx = context.Background()
 
 type SourceDaoImpl struct {
 	TenantID *int64
 }
 
-func (s *SourceDaoImpl) Tenant() *int64 {
-	return s.TenantID
-}
-
-func (s *SourceDaoImpl) Count() (int, error) {
-	count := 0
-	err := DB.NewSelect().
-		ColumnExpr("count(*)").
-		Model(&m.Source{}).
-		Where("tenant_id = ?", s.TenantID).
-		Scan(ctx, &count)
-
-	return count, err
-}
-
-func (s *SourceDaoImpl) List(limit, offset int) ([]m.Source, error) {
+func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error) {
 	sources := make([]m.Source, 0, limit)
-	err := DB.NewSelect().
-		Model(&m.Source{}).
-		Where("tenant_id = ?", s.TenantID).
-		Order("created_at asc").
-		Limit(limit).
+	query := DB.Debug().
 		Offset(offset).
-		Scan(ctx, &sources)
+		Where("tenant_id = ?", s.TenantID)
 
-	return sources, err
+	err := applyFilters(query, filters)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// getting the total count (filters included) for pagination
+	count := int64(0)
+	query.Model(&m.Source{}).Count(&count)
+
+	// limiting + running the actual query.
+	result := query.Limit(limit).Find(&sources)
+
+	return sources, &count, result.Error
 }
 
 func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	src := &m.Source{Id: *id}
-	err := DB.NewSelect().
-		Model(src).
-		WherePK().
-		Where("tenant_id = ?", s.TenantID).
-		Scan(ctx, src)
+	result := DB.First(src)
 
-	return src, err
+	return src, result.Error
 }
 
-func (s *SourceDaoImpl) Create(src *m.Source) (*int64, error) {
-	now := time.Now()
-	src.TimeStamps = m.TimeStamps{
-		CreatedAt: &now,
-		UpdatedAt: &now,
-	}
-
-	id := int64(0)
-	_, err := DB.NewInsert().
-		Model(src).
-		Returning("id").
-		Exec(ctx, &id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &id, err
+func (s *SourceDaoImpl) Create(src *m.Source) error {
+	result := DB.Create(src)
+	return result.Error
 }
 
 func (s *SourceDaoImpl) Update(src *m.Source) error {
-	now := time.Now()
-	src.UpdatedAt = &now
-
-	_, err := DB.NewUpdate().
-		Model(src).
-		WherePK().
-		Where("tenant_id = ?", s.TenantID).
-		Exec(ctx)
-
-	return err
+	result := DB.Updates(src)
+	return result.Error
 }
 
 func (s *SourceDaoImpl) Delete(id *int64) error {
-	var count int64
-	_, err := DB.NewDelete().
-		Model(&m.Source{Id: *id}).
-		WherePK().
-		Where("tenant_id = ?", s.TenantID).
-		Returning("id").
-		Exec(ctx, &count)
+	src := &m.Source{Id: *id}
+	result := DB.Delete(src)
 
-	if count != *id {
-		return err
-	} else {
-		return nil
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("faile to delete source id %v", *id)
 	}
+
+	return nil
+}
+
+func (s *SourceDaoImpl) Tenant() *int64 {
+	return s.TenantID
 }

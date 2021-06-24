@@ -10,7 +10,7 @@ import (
 	"github.com/lindgrenj6/sources-api-go/util"
 )
 
-var keyRegex = regexp.MustCompile(`^filter\[(.+)]\[(.*)]$`)
+var keyRegex = regexp.MustCompile(`^filter\[(\w+)](\[\w*]|$)`)
 
 type Filter struct {
 	Name      string
@@ -25,12 +25,12 @@ func ParseFilter(next echo.HandlerFunc) echo.HandlerFunc {
 			if strings.HasPrefix(key, "filter") {
 				matches := keyRegex.FindAllStringSubmatch(key, -1)
 
-				f = append(f, Filter{
-					Name:      matches[0][1],
-					Operation: matches[0][2],
-					Value:     values,
-				})
+				filter := Filter{Name: matches[0][1], Value: values}
+				if len(matches[0]) == 3 {
+					filter.Operation = matches[0][2]
+				}
 
+				f = append(f, filter)
 			}
 		}
 
