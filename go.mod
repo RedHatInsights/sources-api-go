@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/labstack/echo/v4 v4.3.0
 	github.com/labstack/gommon v0.3.0
