@@ -10,30 +10,36 @@ import (
 
 func ParsePagination(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		err := setFromQueryWithDefault(c, "limit", 99)
+		err := parsePaginationIntoContext(c)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing limit", "399"))
-		}
-
-		err = setFromQueryWithDefault(c, "offset", -1)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing offset", "399"))
+			return err
 		}
 
 		return next(c)
 	}
 }
 
-func setFromQueryWithDefault(c echo.Context, name string, def int) error {
-	if c.QueryParam(name) != "" {
-		val, err := strconv.Atoi(c.QueryParam(name))
+func parsePaginationIntoContext(c echo.Context) error {
+	if c.QueryParam("limit") != "" {
+		val, err := strconv.Atoi(c.QueryParam("limit"))
 		if err != nil {
-			return err
+			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing limit", "400"))
 		}
 
-		c.Set(name, val)
+		c.Set("limit", val)
 	} else {
-		c.Set(name, def)
+		c.Set("limit", 100)
+	}
+
+	if c.QueryParam("offset") != "" {
+		val, err := strconv.Atoi(c.QueryParam("offset"))
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing offset", "400"))
+		}
+
+		c.Set("offset", val)
+	} else {
+		c.Set("offset", 0)
 	}
 
 	return nil
