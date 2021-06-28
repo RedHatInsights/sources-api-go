@@ -17,22 +17,25 @@ type Filter struct {
 
 func ParseFilter(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		f := make([]Filter, 0)
-		for key, values := range c.QueryParams() {
-			if strings.HasPrefix(key, "filter") {
-				matches := filterRegex.FindAllStringSubmatch(key, -1)
-
-				filter := Filter{Name: matches[0][1], Value: values}
-				if len(matches[0]) == 3 {
-					filter.Operation = matches[0][2]
-				}
-
-				f = append(f, filter)
-			}
-		}
-
-		c.Set("filters", f)
-
+		parseFilterIntoRequest(c)
 		return next(c)
 	}
+}
+
+func parseFilterIntoRequest(c echo.Context) {
+	f := make([]Filter, 0)
+	for key, values := range c.QueryParams() {
+		if strings.HasPrefix(key, "filter") {
+			matches := filterRegex.FindAllStringSubmatch(key, -1)
+
+			filter := Filter{Name: matches[0][1], Value: values}
+			if len(matches[0]) == 3 {
+				filter.Operation = matches[0][2]
+			}
+
+			f = append(f, filter)
+		}
+	}
+
+	c.Set("filters", f)
 }
