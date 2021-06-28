@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/lindgrenj6/sources-api-go/middleware"
 	"io/ioutil"
 	"net/http"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 
 	"github.com/labstack/echo/v4"
-	. "github.com/lindgrenj6/sources-api-go/middleware"
 	"github.com/lindgrenj6/sources-api-go/redis"
 )
 
@@ -33,9 +33,9 @@ func setupRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, out)
 	})
 
-	v3 := e.Group("/api/sources/v3.1", enforceTenancy)
+	v3 := e.Group("/api/sources/v3.1", enforceTenancy, middleware.HandleErrors)
 
-	v3.GET("/sources", SourceList, ParseFilter, ParsePagination)
+	v3.GET("/sources", SourceList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/sources/:id", SourceGet)
 	v3.POST("/sources", SourceCreate)
 	v3.PATCH("/sources/:id", SourceEdit)
