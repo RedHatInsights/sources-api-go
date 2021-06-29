@@ -1,10 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
-
-	"github.com/lindgrenj6/sources-api-go/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lindgrenj6/sources-api-go/dao"
@@ -16,7 +15,14 @@ import (
 var getSourceDao func(c echo.Context) (dao.SourceDao, error)
 
 func getSourceDaoWithTenant(c echo.Context) (dao.SourceDao, error) {
-	tenantID := c.Get("tenantID").(int64)
+	var tenantID int64
+	var ok bool
+
+	tenantVal := c.Get("tenantID")
+	if tenantID, ok = tenantVal.(int64); !ok {
+		return nil, fmt.Errorf("failed to pull tenant from request")
+	}
+
 	return &dao.SourceDaoImpl{TenantID: &tenantID}, nil
 }
 
@@ -26,10 +32,15 @@ func SourceList(c echo.Context) error {
 		return err
 	}
 
-	// TODO: maybe move to a common helper method?
-	filters := c.Get("filters").([]middleware.Filter)
-	limit := c.Get("limit").(int)
-	offset := c.Get("offset").(int)
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
 
 	sources, count, err := sourcesDB.List(limit, offset, filters)
 	if err != nil {

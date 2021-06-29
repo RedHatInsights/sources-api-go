@@ -1,9 +1,10 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"strconv"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // Source struct that includes all of the fields on the table

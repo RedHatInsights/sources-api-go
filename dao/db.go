@@ -2,6 +2,7 @@ package dao
 
 import (
 	"fmt"
+
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/lindgrenj6/sources-api-go/config"
 	"gorm.io/driver/postgres"

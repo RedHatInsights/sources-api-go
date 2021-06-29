@@ -2,15 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+
 	"github.com/labstack/echo/v4"
 	"github.com/lindgrenj6/sources-api-go/dao"
 	"github.com/lindgrenj6/sources-api-go/middleware"
 	m "github.com/lindgrenj6/sources-api-go/model"
 	"github.com/lindgrenj6/sources-api-go/util"
-	"net/http"
-	"net/http/httptest"
-	"os"
-	"testing"
 )
 
 var sources = `[

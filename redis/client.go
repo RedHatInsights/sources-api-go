@@ -2,6 +2,7 @@ package redis
 
 import (
 	"fmt"
+
 	"github.com/go-redis/redis"
 	"github.com/lindgrenj6/sources-api-go/config"
 )

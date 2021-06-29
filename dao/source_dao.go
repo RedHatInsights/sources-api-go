@@ -51,9 +51,7 @@ func (s *SourceDaoImpl) Update(src *m.Source) error {
 
 func (s *SourceDaoImpl) Delete(id *int64) error {
 	src := &m.Source{Id: *id}
-	result := DB.Delete(src)
-
-	if result.RowsAffected == 0 {
+	if result := DB.Delete(src); result.RowsAffected == 0 {
 		return fmt.Errorf("faile to delete source id %v", *id)
 	}
 
