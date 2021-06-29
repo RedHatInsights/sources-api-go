@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/lindgrenj6/sources-api-go/util"
 	"net/http"
 	"strconv"
+
+	"github.com/labstack/echo/v4"
+	"github.com/lindgrenj6/sources-api-go/util"
 )
 
 func ParsePagination(next echo.HandlerFunc) echo.HandlerFunc {

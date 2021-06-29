@@ -4,23 +4,22 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/lindgrenj6/sources-api-go/middleware"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
 	"github.com/lindgrenj6/sources-api-go/dao"
+	"github.com/lindgrenj6/sources-api-go/middleware"
+	"github.com/lindgrenj6/sources-api-go/redis"
 	"github.com/lindgrenj6/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
-
-	"github.com/labstack/echo/v4"
-	"github.com/lindgrenj6/sources-api-go/redis"
 )
 
 func setupRoutes(e *echo.Echo) {
 	e.GET("/openapi.json", func(c echo.Context) error {
 		out, err := redis.Client.Get("openapi").Result()
 		if err != nil {
-			file, err := ioutil.ReadFile("openapi-3-v3.1.json")
+			file, err := ioutil.ReadFile("public/openapi-3-v3.1.json")
 			if err != nil {
 				return c.NoContent(http.StatusBadRequest)
 			}

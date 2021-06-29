@@ -1,0 +1,2522 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "Sources",
+    "version": "3.1.0",
+    "title": "Sources",
+    "contact": {
+      "email": "support@redhat.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "security": [
+    {
+      "UserSecurity": []
+    }
+  ],
+  "paths": {
+    "/application_authentications": {
+      "get": {
+        "summary": "List ApplicationAuthentications",
+        "operationId": "listAllApplicationAuthentications",
+        "description": "Returns an array of ApplicationAuthentication objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ApplicationAuthentications collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationAuthenticationsCollection"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new ApplicationAuthentication",
+        "operationId": "createApplicationAuthentication",
+        "description": "Creates a ApplicationAuthentication object",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationAuthentication"
+              }
+            }
+          },
+          "description": "ApplicationAuthentication attributes to create",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "ApplicationAuthentication creation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationAuthentication"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/application_authentications/{id}": {
+      "get": {
+        "summary": "Show an existing ApplicationAuthentication",
+        "operationId": "showApplicationAuthentication",
+        "description": "Returns a ApplicationAuthentication object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ApplicationAuthentication info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationAuthentication"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an existing ApplicationAuthentication",
+        "operationId": "updateApplicationAuthentication",
+        "description": "Updates a ApplicationAuthentication object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationAuthentication"
+              }
+            }
+          },
+          "description": "ApplicationAuthentication attributes to update",
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Updated, no content"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an existing ApplicationAuthentication",
+        "operationId": "deleteApplicationAuthentication",
+        "description": "Deletes a ApplicationAuthentication object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "ApplicationAuthentication deleted"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/application_types": {
+      "get": {
+        "summary": "List ApplicationTypes",
+        "operationId": "listApplicationTypes",
+        "description": "Returns an array of ApplicationType objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ApplicationTypes collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationTypesCollection"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/application_types/{id}": {
+      "get": {
+        "summary": "Show an existing ApplicationType",
+        "operationId": "showApplicationType",
+        "description": "Returns a ApplicationType object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ApplicationType info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationType"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/application_types/{id}/sources": {
+      "get": {
+        "summary": "List Sources for ApplicationType",
+        "operationId": "listApplicationTypeSources",
+        "description": "Returns an array of Source objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sources collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcesCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/application_types/{id}/app_meta_data": {
+      "get": {
+        "summary": "List AppMetaData for ApplicationType",
+        "operationId": "listApplicationTypeAppMetaData",
+        "description": "Returns an array of AppMetaData objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AppMetaData collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppMetaDataCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications": {
+      "get": {
+        "summary": "List Applications",
+        "operationId": "listApplications",
+        "description": "Returns an array of Application objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Applications collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationsCollection"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new Application",
+        "operationId": "createApplication",
+        "description": "Creates a Application object",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Application"
+              }
+            }
+          },
+          "description": "Application attributes to create",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Application creation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{id}": {
+      "get": {
+        "summary": "Show an existing Application",
+        "operationId": "showApplication",
+        "description": "Returns a Application object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Application info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an existing Application",
+        "operationId": "updateApplication",
+        "description": "Updates a Application object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Application"
+              }
+            }
+          },
+          "description": "Application attributes to update",
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Updated, no content"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an existing Application",
+        "operationId": "deleteApplication",
+        "description": "Deletes a Application object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Application deleted"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{id}/authentications": {
+      "get": {
+        "summary": "List Authentications for Application",
+        "operationId": "listApplicationAuthentications",
+        "description": "Returns an array of Authentication objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentications collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationsCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{id}/pause": {
+      "post": {
+        "summary": "Pauses an Application",
+        "operationId": "pauseApplication",
+        "description": "Pauses an Application",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Application Paused"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{id}/unpause": {
+      "post": {
+        "summary": "Un-Pauses an Application",
+        "operationId": "unpauseApplication",
+        "description": "Un-Pauses an Application",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Application Un-Paused"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authentications": {
+      "get": {
+        "summary": "List Authentications",
+        "operationId": "listAuthentications",
+        "description": "Returns an array of Authentication objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentications collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationsCollection"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new Authentication",
+        "operationId": "createAuthentication",
+        "description": "Creates a Authentication object",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Authentication"
+              }
+            }
+          },
+          "description": "Authentication attributes to create",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Authentication creation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Authentication"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authentications/{id}": {
+      "get": {
+        "summary": "Show an existing Authentication",
+        "operationId": "showAuthentication",
+        "description": "Returns a Authentication object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentication info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Authentication"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an existing Authentication",
+        "operationId": "updateAuthentication",
+        "description": "Updates a Authentication object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Authentication"
+              }
+            }
+          },
+          "description": "Authentication attributes to update",
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Updated, no content"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an existing Authentication",
+        "operationId": "deleteAuthentication",
+        "description": "Deletes a Authentication object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Authentication deleted"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/endpoints": {
+      "get": {
+        "summary": "List Endpoints",
+        "operationId": "listEndpoints",
+        "description": "Returns an array of Endpoint objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoints collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndpointsCollection"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new Endpoint",
+        "operationId": "createEndpoint",
+        "description": "Creates a Endpoint object",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Endpoint"
+              }
+            }
+          },
+          "description": "Endpoint attributes to create",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Endpoint creation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Endpoint"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/endpoints/{id}": {
+      "get": {
+        "summary": "Show an existing Endpoint",
+        "operationId": "showEndpoint",
+        "description": "Returns a Endpoint object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoint info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Endpoint"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an existing Endpoint",
+        "operationId": "updateEndpoint",
+        "description": "Updates a Endpoint object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Endpoint"
+              }
+            }
+          },
+          "description": "Endpoint attributes to update",
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Updated, no content"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an existing Endpoint",
+        "operationId": "deleteEndpoint",
+        "description": "Deletes a Endpoint object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Endpoint deleted"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/endpoints/{id}/authentications": {
+      "get": {
+        "summary": "List Authentications for Endpoint",
+        "operationId": "listEndpointAuthentications",
+        "description": "Returns an array of Authentication objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentications collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationsCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/graphql": {
+      "post": {
+        "summary": "Perform a GraphQL Query",
+        "operationId": "postGraphQL",
+        "description": "Performs a GraphQL Query",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GraphQLRequest"
+              }
+            }
+          },
+          "description": "GraphQL Query Request",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "GraphQL Query Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphQLResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "summary": "Return this API document in JSON format",
+        "operationId": "getDocumentation",
+        "responses": {
+          "200": {
+            "description": "The API document for this version of the API",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/source_types": {
+      "get": {
+        "summary": "List SourceTypes",
+        "operationId": "listSourceTypes",
+        "description": "Returns an array of SourceType objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SourceTypes collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceTypesCollection"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/source_types/{id}": {
+      "get": {
+        "summary": "Show an existing SourceType",
+        "operationId": "showSourceType",
+        "description": "Returns a SourceType object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SourceType info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceType"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/source_types/{id}/sources": {
+      "get": {
+        "summary": "List Sources for SourceType",
+        "operationId": "listSourceTypeSources",
+        "description": "Returns an array of Source objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sources collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcesCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources": {
+      "get": {
+        "summary": "List Sources",
+        "operationId": "listSources",
+        "description": "Returns an array of Source objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sources collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcesCollection"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new Source",
+        "operationId": "createSource",
+        "description": "Creates a Source object",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Source"
+              }
+            }
+          },
+          "description": "Source attributes to create",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Source creation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}": {
+      "get": {
+        "summary": "Show an existing Source",
+        "operationId": "showSource",
+        "description": "Returns a Source object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Source info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Source"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update an existing Source",
+        "operationId": "updateSource",
+        "description": "Updates a Source object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Source"
+              }
+            }
+          },
+          "description": "Source attributes to update",
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Updated, no content"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an existing Source",
+        "operationId": "deleteSource",
+        "description": "Deletes a Source object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Superkey Source Deletion queued."
+          },
+          "204": {
+            "description": "Source deleted"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}/application_types": {
+      "get": {
+        "summary": "List ApplicationTypes for Source",
+        "operationId": "listSourceApplicationTypes",
+        "description": "Returns an array of ApplicationType objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ApplicationTypes collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationTypesCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}/applications": {
+      "get": {
+        "summary": "List Applications for Source",
+        "operationId": "listSourceApplications",
+        "description": "Returns an array of Application objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Applications collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationsCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}/authentications": {
+      "get": {
+        "summary": "List Authentications for Source",
+        "operationId": "listSourceAuthentications",
+        "description": "Returns an array of Authentication objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentications collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationsCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}/check_availability": {
+      "post": {
+        "summary": "Checks Availability of a Source",
+        "operationId": "checkAvailabilitySource",
+        "description": "Checks Availability of a Source",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Availability Check Accepted"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}/endpoints": {
+      "get": {
+        "summary": "List Endpoints for Source",
+        "operationId": "listSourceEndpoints",
+        "description": "Returns an array of Endpoint objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoints collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndpointsCollection"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}/pause": {
+      "post": {
+        "summary": "Pauses a Source",
+        "operationId": "pauseSource",
+        "description": "Pauses a Source",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Source Paused"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sources/{id}/unpause": {
+      "post": {
+        "summary": "Un-Pauses a Source",
+        "operationId": "unpauseSource",
+        "description": "Un-Pauses a Source",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Source Un-Paused"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app_meta_data": {
+      "get": {
+        "summary": "List AppMetaData",
+        "operationId": "listAllAppMetaData",
+        "description": "Returns an array of AppMetaData objects",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AppMetaData collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppMetaDataCollection"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/app_meta_data/{id}": {
+      "get": {
+        "summary": "Show an existing AppMetaData",
+        "operationId": "showAppMetaData",
+        "description": "Returns a AppMetaData object",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AppMetaData info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppMetaData"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bulk_create": {
+      "post": {
+        "summary": "Bulk-create a Source and specified sub-resources",
+        "operationId": "bulkCreate",
+        "description": "Bulk-create a Source and specified sub-resources",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreatePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Resources Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://cloud.redhat.com/{basePath}",
+      "description": "Production Server",
+      "variables": {
+        "basePath": {
+          "default": "/api/sources/v3.1"
+        }
+      }
+    },
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "Development Server",
+      "variables": {
+        "port": {
+          "default": "3000"
+        },
+        "basePath": {
+          "default": "/api/sources/v3.1"
+        }
+      }
+    }
+  ],
+  "components": {
+    "parameters": {
+      "ID": {
+        "name": "id",
+        "in": "path",
+        "description": "ID of the resource",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        }
+      },
+      "QueryFilter": {
+        "in": "query",
+        "name": "filter",
+        "description": "Filter for querying collections.",
+        "required": false,
+        "style": "deepObject",
+        "explode": true,
+        "schema": {
+          "type": "object"
+        }
+      },
+      "QueryLimit": {
+        "in": "query",
+        "name": "limit",
+        "description": "The numbers of items to return per page.",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 100
+        }
+      },
+      "QueryOffset": {
+        "in": "query",
+        "name": "offset",
+        "description": "The number of items to skip before starting to collect the result set.",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      },
+      "QuerySortBy": {
+        "in": "query",
+        "name": "sort_by",
+        "description": "The list of attribute and order to sort the result set by.",
+        "required": false,
+        "style": "deepObject",
+        "explode": true,
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "securitySchemes": {
+      "UserSecurity": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    },
+    "schemas": {
+      "Application": {
+        "type": "object",
+        "properties": {
+          "application_type_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "availability_status": {
+            "type": "string"
+          },
+          "availability_status_error": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "extra": {
+            "type": "object"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "last_available_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "paused_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationAuthentication": {
+        "type": "object",
+        "properties": {
+          "application_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "authentication_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "created_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationAuthenticationsCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationAuthentication"
+            }
+          }
+        }
+      },
+      "ApplicationType": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "dependent_applications": {
+            "type": "object"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "supported_authentication_types": {
+            "type": "object"
+          },
+          "supported_source_types": {
+            "type": "object"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApplicationTypesCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationType"
+            }
+          }
+        }
+      },
+      "AppMetaData": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "application_type_id": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AppMetaDataCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppMetaData"
+            }
+          }
+        }
+      },
+      "ApplicationsCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Application"
+            }
+          }
+        }
+      },
+      "Authentication": {
+        "type": "object",
+        "properties": {
+          "authtype": {
+            "example": "openshift_default",
+            "type": "string",
+            "readOnly": true
+          },
+          "availability_status": {
+            "type": "string"
+          },
+          "availability_status_error": {
+            "type": "string"
+          },
+          "extra": {
+            "additionalProperties": false,
+            "properties": {
+              "azure": {
+                "additionalProperties": false,
+                "properties": {
+                  "tenant_id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "last_available_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "name": {
+            "example": "OpenShift default",
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "resource_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "resource_type": {
+            "example": "Endpoint",
+            "type": "string"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "username": {
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "paused_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AuthenticationsCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Authentication"
+            }
+          }
+        }
+      },
+      "CollectionLinks": {
+        "type": "object",
+        "properties": {
+          "first": {
+            "type": "string"
+          },
+          "last": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          },
+          "prev": {
+            "type": "string"
+          }
+        }
+      },
+      "CollectionMetadata": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          }
+        }
+      },
+      "Endpoint": {
+        "type": "object",
+        "properties": {
+          "availability_status": {
+            "type": "string"
+          },
+          "availability_status_error": {
+            "type": "string"
+          },
+          "certificate_authority": {
+            "description": "Optional X.509 Certificate Authority",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "default": {
+            "type": "boolean"
+          },
+          "host": {
+            "description": "URI host component",
+            "example": "www.example.com",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "last_available_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "path": {
+            "description": "URI path component",
+            "example": "/api/v1",
+            "type": "string"
+          },
+          "port": {
+            "description": "URI port component",
+            "example": 80,
+            "type": "integer"
+          },
+          "receptor_node": {
+            "description": "Identifier of a receptor node",
+            "type": "string"
+          },
+          "role": {
+            "example": "default",
+            "type": "string"
+          },
+          "scheme": {
+            "description": "URI scheme component",
+            "example": "https",
+            "type": "string"
+          },
+          "source_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "verify_ssl": {
+            "description": "Should SSL be verified",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EndpointsCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Endpoint"
+            }
+          }
+        }
+      },
+      "ErrorNotFound": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "404"
+                },
+                "detail": {
+                  "type": "string",
+                  "example": "Record not found"
+                }
+              }
+            }
+          }
+        }
+      },
+      "GraphQLRequest": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The GraphQL query",
+            "default": "{}"
+          },
+          "operationName": {
+            "type": "string",
+            "description": "If the Query contains several named operations, the operationName controls which one should be executed",
+            "default": ""
+          },
+          "variables": {
+            "type": "object",
+            "description": "Optional Query variables",
+            "nullable": true
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "GraphQLResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "Results from the GraphQL query"
+          },
+          "errors": {
+            "type": "array",
+            "description": "Errors resulting from the GraphQL query",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "ID": {
+        "type": "string",
+        "description": "ID of the resource",
+        "pattern": "^\\d+$",
+        "readOnly": true
+      },
+      "Source": {
+        "type": "object",
+        "properties": {
+          "app_creation_workflow": {
+            "type": "string",
+            "enum": [
+              "manual_configuration",
+              "account_authorization"
+            ]
+          },
+          "availability_status": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "imported": {
+            "type": "string"
+          },
+          "last_available_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "last_checked_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "name": {
+            "example": "Sample Provider",
+            "title": "Name",
+            "type": "string"
+          },
+          "source_ref": {
+            "type": "string"
+          },
+          "source_type_id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "uid": {
+            "readOnly": true,
+            "title": "Unique ID of the inventory source installation",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "version": {
+            "example": "6.5.0",
+            "readOnly": true,
+            "title": "Version",
+            "type": "string"
+          },
+          "paused_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SourceType": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "icon_url": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "name": {
+            "example": "openshift",
+            "type": "string"
+          },
+          "product_name": {
+            "example": "OpenShift",
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "vendor": {
+            "example": "Red Hat",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SourceTypesCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SourceType"
+            }
+          }
+        }
+      },
+      "SourcesCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            }
+          }
+        }
+      },
+      "BulkCreatePayload": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "description": "Array of Source objects to create. Only supported fields are name + type, source_type_id will automatically\nbe set based on the `source_type_name`.\n",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "source_type_name": {
+                  "type": "string",
+                  "description": "Source Type from supported types",
+                  "enum": [
+                    "amazon",
+                    "azure",
+                    "ansible-tower",
+                    "openshift",
+                    "satellite",
+                    "google"
+                  ]
+                },
+                "source_ref": {
+                  "type": "string"
+                },
+                "source_type_id": {
+                  "type": "string"
+                },
+                "app_creation_workflow": {
+                  "type": "string",
+                  "enum": [
+                    "manual_configuration",
+                    "account_authorization"
+                  ]
+                }
+              }
+            }
+          },
+          "endpoints": {
+            "description": "Array of Endpoint objects to create. The operation looks up the parent source by the `source_name` attribute\nso the `source_name` must match one of the `source`'s names in the payload.\n",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "scheme": {
+                  "type": "string"
+                },
+                "host": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "integer"
+                },
+                "verify_ssl": {
+                  "type": "boolean"
+                },
+                "source_name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "applications": {
+            "description": "Array of Application objects to create. The operation looks up the parent Source by the `source_name` attribute\nso the `source_name` must match one of the `source`'s names in the payload.\n\napplication_type_id will be automatically looked up and set by the `application_type_name` attribute via regex.\n",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "application_type_name": {
+                  "type": "string"
+                },
+                "application_type_id": {
+                  "type": "string"
+                },
+                "extra": {
+                  "type": "object"
+                },
+                "source_name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "authentications": {
+            "description": "Array of Authentications to create. This one is a bit more tricky. `resource_type` tells the action where to look for the parent, must be either application/endpoint/source\n\nif the parent is a source, it looks up by name.\nif the parent is an endpoint, it looks up via host so the hostname must match.\nif the parent is an application, it looks up via application type so the value must match the application type which matches\n",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "authtype": {
+                  "type": "string"
+                },
+                "extra": {
+                  "type": "object"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                },
+                "resource_name": {
+                  "type": "string"
+                },
+                "resource_type": {
+                  "type": "string",
+                  "enum": [
+                    "application",
+                    "endpoint",
+                    "source"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "BulkCreateResponse": {
+        "type": "object",
+        "properties": {
+          "superkey": {
+            "type": "boolean",
+            "default": false
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            }
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Endpoint"
+            }
+          },
+          "applications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Application"
+            }
+          },
+          "authentications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Authentication"
+            }
+          }
+        }
+      }
+    }
+  }
+}

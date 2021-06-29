@@ -2,9 +2,10 @@ package dao
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/lindgrenj6/sources-api-go/middleware"
 	"gorm.io/gorm"
-	"strings"
 )
 
 func applyFilters(query *gorm.DB, filters []middleware.Filter) error {

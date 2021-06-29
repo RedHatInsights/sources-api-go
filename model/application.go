@@ -1,9 +1,10 @@
 package model
 
 import (
+	"time"
+
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
-	"time"
 )
 
 type Application struct {

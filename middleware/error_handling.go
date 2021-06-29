@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/lindgrenj6/sources-api-go/util"
-	"net/http"
 )
 
 func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
