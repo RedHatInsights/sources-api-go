@@ -6,11 +6,19 @@ on:
   pull_request:
 jobs:
   gofmt:
-    name: gofmt
+    name: go fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: Jerome1337/gofmt-action@v1.0.4
+
+  govet:
+    name: go vet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          go vet ./...
 
   golangci:
     name: golangci-lint
@@ -23,3 +31,4 @@ jobs:
           version: latest
           only-new-issues: true
           skip-go-installation: true
+          args: --enable gci,bodyclose,forcetypeassert,misspell
