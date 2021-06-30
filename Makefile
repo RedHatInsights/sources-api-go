@@ -34,4 +34,7 @@ lint:
 	go vet ./...
 	golangci-lint run -E gofmt,gci,bodyclose,forcetypeassert,misspell
 
-.PHONY: setup tidy build clean run container remotedebug debug test lint
+gci:
+	golangci-lint run -E gci --fix
+
+.PHONY: setup tidy build clean run container remotedebug debug test lint gci

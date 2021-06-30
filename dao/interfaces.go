@@ -13,3 +13,11 @@ type SourceDao interface {
 	Delete(id *int64) error
 	Tenant() *int64
 }
+type ApplicationTypeDao interface {
+	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error)
+	GetById(id *int64) (*m.ApplicationType, error)
+	Create(src *m.ApplicationType) error
+	Update(src *m.ApplicationType) error
+	Delete(id *int64) error
+	Tenant() *int64
+}
