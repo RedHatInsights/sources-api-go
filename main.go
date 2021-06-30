@@ -18,7 +18,10 @@ func main() {
 	e.Use(middleware.Recover())
 
 	setupRoutes(e)
+
+	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant
+	getApplicationTypeDao = getApplicationTypeWithoutTenant
 
 	e.Logger.Fatal(e.Start(":8000"))
 }

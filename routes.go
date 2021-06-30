@@ -34,11 +34,16 @@ func setupRoutes(e *echo.Echo) {
 
 	v3 := e.Group("/api/sources/v3.1", enforceTenancy, middleware.HandleErrors)
 
+	// Sources
 	v3.GET("/sources", SourceList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/sources/:id", SourceGet)
 	v3.POST("/sources", SourceCreate)
 	v3.PATCH("/sources/:id", SourceEdit)
 	v3.DELETE("/sources/:id", SourceDelete)
+
+	// ApplicationTypes
+	v3.GET("/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/application_types/:id", ApplicationTypeGet)
 }
 
 func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
