@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/lindgrenj6/sources-api-go/util"
 )
 
 func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {

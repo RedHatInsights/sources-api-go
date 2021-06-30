@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lindgrenj6/sources-api-go/middleware"
+	"github.com/RedHatInsights/sources-api-go/middleware"
 	"gorm.io/gorm"
 )
 

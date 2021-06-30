@@ -1,4 +1,4 @@
-module github.com/lindgrenj6/sources-api-go
+module github.com/RedHatInsights/sources-api-go
 
 go 1.16
 

@@ -3,8 +3,8 @@ package redis
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/go-redis/redis"
-	"github.com/lindgrenj6/sources-api-go/config"
 )
 
 var Client *redis.Client

@@ -1,7 +1,7 @@
 package dao
 
 import (
-	m "github.com/lindgrenj6/sources-api-go/model"
+	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
 func GetOrCreateTenantID(accountNumber string) *int64 {
