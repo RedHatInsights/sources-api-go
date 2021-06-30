@@ -11,20 +11,19 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-var sources = `[
-	{ "id": 1, "name": "Source1", "source_type_id": 1 },
-	{ "id": 2, "name": "Source2", "source_type_id": 1 }
+var apptypes = `[
+	{"id": 1, "display_name": "test app type"}
 ]`
 
-func TestSourceList(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources", nil)
+func TestApplicationTypeList(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.Set("limit", 99)
-	c.Set("offset", -1)
+	c.Set("limit", 100)
+	c.Set("offset", 0)
 	c.Set("filters", []middleware.Filter{})
 
-	err := SourceList(c)
+	err := ApplicationTypeList(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -39,38 +38,38 @@ func TestSourceList(t *testing.T) {
 		t.Error("Failed unmarshaling output")
 	}
 
-	if out.Meta.Limit != 99 {
+	if out.Meta.Limit != 100 {
 		t.Error("limit not set correctly")
 	}
 
-	if out.Meta.Offset != -1 {
+	if out.Meta.Offset != 0 {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != 1 {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, src := range out.Data {
-		s, ok := src.(map[string]interface{})
+	for _, apptype := range out.Data {
+		s, ok := apptype.(map[string]interface{})
 		if !ok {
-			t.Error("model did not deserialize as a source")
+			t.Error("model did not deserialize as a application type response")
 		}
 
-		if s["name"] != "Source1" && s["name"] != "Source2" {
+		if s["display_name"] != "test app type" {
 			t.Error("ghosts infected the return")
 		}
 	}
 }
 
-func TestSourceGet(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/1", nil)
+func TestApplicationTypeGet(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/1", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := SourceGet(c)
+	err := ApplicationTypeGet(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -79,13 +78,13 @@ func TestSourceGet(t *testing.T) {
 		t.Error("Did not return 200")
 	}
 
-	var outSrc m.SourceResponse
-	err = json.Unmarshal(rec.Body.Bytes(), &outSrc)
+	var outAppType m.ApplicationTypeResponse
+	err = json.Unmarshal(rec.Body.Bytes(), &outAppType)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
 	}
 
-	if *outSrc.Name != "Source1" {
+	if outAppType.DisplayName != "test app type" {
 		t.Error("ghosts infected the return")
 	}
 }

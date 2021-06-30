@@ -64,5 +64,5 @@ func ApplicationTypeGet(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, appType)
+	return c.JSON(http.StatusOK, appType.ToResponse())
 }
