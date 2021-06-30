@@ -3,8 +3,8 @@ package dao
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/lindgrenj6/sources-api-go/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/labstack/echo/v4"
-	"github.com/lindgrenj6/sources-api-go/middleware"
 )
 
 func getFilters(c echo.Context) ([]middleware.Filter, error) {

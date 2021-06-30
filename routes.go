@@ -7,11 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/middleware"
+	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/lindgrenj6/sources-api-go/dao"
-	"github.com/lindgrenj6/sources-api-go/middleware"
-	"github.com/lindgrenj6/sources-api-go/redis"
-	"github.com/lindgrenj6/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 

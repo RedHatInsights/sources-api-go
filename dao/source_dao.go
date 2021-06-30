@@ -3,8 +3,8 @@ package dao
 import (
 	"fmt"
 
-	"github.com/lindgrenj6/sources-api-go/middleware"
-	m "github.com/lindgrenj6/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/middleware"
+	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
 type SourceDaoImpl struct {

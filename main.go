@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/lindgrenj6/sources-api-go/dao"
-	"github.com/lindgrenj6/sources-api-go/redis"
 )
 
 func main() {
