@@ -21,3 +21,11 @@ type ApplicationTypeDao interface {
 	Update(src *m.ApplicationType) error
 	Delete(id *int64) error
 }
+
+type SourceTypeDao interface {
+	List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, *int64, error)
+	GetById(id *int64) (*m.SourceType, error)
+	Create(src *m.SourceType) error
+	Update(src *m.SourceType) error
+	Delete(id *int64) error
+}

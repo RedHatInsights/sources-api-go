@@ -44,6 +44,10 @@ func setupRoutes(e *echo.Echo) {
 	// ApplicationTypes
 	v3.GET("/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/application_types/:id", ApplicationTypeGet)
+
+	// SourceTypes
+	v3.GET("/source_types", SourceTypeList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/source_types/:id",SourceTypeGet)
 }
 
 func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
