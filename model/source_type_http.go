@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/datatypes"
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 type SourceTypeResponse struct {
