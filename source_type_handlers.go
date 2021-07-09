@@ -19,7 +19,7 @@ func getSourceTypeWithoutTenant(_ echo.Context) (dao.SourceTypeDao, error) {
 }
 
 func SourceTypeList(c echo.Context) error {
-	SourceTypeDB, err := getSourceTypeDao(c)
+	sourceTypeDB, err := getSourceTypeDao(c)
 
 	if err != nil {
 		return err
@@ -35,8 +35,7 @@ func SourceTypeList(c echo.Context) error {
 		return err
 	}
 
-	sourceTypes, count, err := SourceTypeDB.List(limit, offset, filters)
-
+	sourceTypes, count, err := sourceTypeDB.List(limit, offset, filters)
 	if err != nil {
 		return err
 	}
