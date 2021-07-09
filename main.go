@@ -21,8 +21,8 @@ func main() {
 
 	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant
-	getApplicationTypeDao = getApplicationTypeWithoutTenant
-	getSourceTypeDao = getSourceTypeWithoutTenant
+	getApplicationTypeDao = getApplicationTypeDaoWithoutTenant
+	getSourceTypeDao = getSourceTypeDaoWithoutTenant
 
 	e.Logger.Fatal(e.Start(":8000"))
 }

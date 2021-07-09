@@ -12,7 +12,7 @@ import (
 // function that defines how we get the dao - default implementation below.
 var getApplicationTypeDao func(c echo.Context) (dao.ApplicationTypeDao, error)
 
-func getApplicationTypeWithoutTenant(_ echo.Context) (dao.ApplicationTypeDao, error) {
+func getApplicationTypeDaoWithoutTenant(_ echo.Context) (dao.ApplicationTypeDao, error) {
 	// we do not need tenancy for application type.
 	return &dao.ApplicationTypeDaoImpl{}, nil
 }
