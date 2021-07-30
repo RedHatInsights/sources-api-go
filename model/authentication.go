@@ -3,7 +3,6 @@ package model
 type Authentication struct {
 	AvailabilityStatus
 	Pause
-	Tenancy
 	TimeStamps
 
 	Id int64 `json:"id"`
@@ -15,7 +14,11 @@ type Authentication struct {
 	Extra                   map[string]interface{} `json:"extra,omitempty"`
 	AvailabilityStatusError *string                `json:"availability_status_error,omitempty"`
 
-	SourceId     *int64  `json:"source_id"`
-	ResourceType *string `json:"resource_type"`
-	ResourceId   *int64  `json:"resource_id"`
+	SourceID int64 `json:"source_id"`
+	Source   Source
+	TenantID int64 `json:"tenant_id"`
+	Tenant   Tenant
+
+	ResourceType string `json:"resource_type"`
+	ResourceId   int64  `json:"resource_id"`
 }

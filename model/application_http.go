@@ -10,7 +10,7 @@ type ApplicationResponse struct {
 	AvailabilityStatus
 	Pause
 
-	Id        string    `json:"id"`
+	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 

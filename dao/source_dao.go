@@ -33,7 +33,7 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]
 }
 
 func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {
-	src := &m.Source{Id: *id}
+	src := &m.Source{ID: *id}
 	result := DB.First(src)
 
 	return src, result.Error
@@ -50,7 +50,7 @@ func (s *SourceDaoImpl) Update(src *m.Source) error {
 }
 
 func (s *SourceDaoImpl) Delete(id *int64) error {
-	src := &m.Source{Id: *id}
+	src := &m.Source{ID: *id}
 	if result := DB.Delete(src); result.RowsAffected == 0 {
 		return fmt.Errorf("failed to delete source id %v", *id)
 	}

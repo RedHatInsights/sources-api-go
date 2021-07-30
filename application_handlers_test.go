@@ -9,12 +9,24 @@ import (
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/datatypes"
 )
 
-var applications = `[
-	{ "id": 1, "extra": {"extra": true}, "application_type_id": 1 },
-	{ "id": 2, "extra": {"extra": true}, "application_type_id": 1 }
-]`
+var testApplicationData = []m.Application{
+	{ID: 1, Extra: datatypes.JSON(getExtraValue("{\"extra\": true}")), ApplicationTypeID: 1, SourceID: 1, TenantID: 1},
+	{ID: 2, Extra: datatypes.JSON(getExtraValue("{\"extra\": false}")), ApplicationTypeID: 1, SourceID: 1, TenantID: 1},
+}
+
+func getExtraValue(val string) json.RawMessage {
+	var out json.RawMessage
+
+	err := json.Unmarshal([]byte(val), &out)
+	if err != nil {
+		panic(err)
+	}
+
+	return out
+}
 
 func TestApplicationList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/applications", nil)
@@ -23,6 +35,7 @@ func TestApplicationList(t *testing.T) {
 	c.Set("limit", 100)
 	c.Set("offset", 0)
 	c.Set("filters", []middleware.Filter{})
+	c.Set("tenantID", int64(1))
 
 	err := ApplicationList(c)
 	if err != nil {
@@ -69,6 +82,7 @@ func TestApplicationGet(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetParamNames("id")
 	c.SetParamValues("1")
+	c.Set("tenantID", int64(1))
 
 	err := ApplicationGet(c)
 	if err != nil {
