@@ -55,7 +55,11 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		switch {
 		case c.Request().Header.Get("x-rh-sources-account-number") != "":
 			accountNumber := c.Request().Header.Get("x-rh-sources-account-number")
-			t := dao.GetOrCreateTenantID(accountNumber)
+			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
+			t, err := dao.GetOrCreateTenantID(accountNumber)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
+			}
 			c.Set("tenantID", *t)
 
 		case c.Request().Header.Get("x-rh-identity") != "":
@@ -74,7 +78,11 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant Id!", "401"))
 			}
 
-			t := dao.GetOrCreateTenantID(jsonData.Identity.AccountNumber)
+			c.Logger().Debugf("Looking up Tenant ID for account number %v", jsonData.Identity.AccountNumber)
+			t, err := dao.GetOrCreateTenantID(jsonData.Identity.AccountNumber)
+			if err != nil {
+				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
+			}
 			c.Set("tenantID", *t)
 
 		default:

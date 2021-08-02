@@ -4,11 +4,18 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
-func GetOrCreateTenantID(accountNumber string) *int64 {
-	tenant := &m.Tenant{ExternalTenant: accountNumber}
-	if result := DB.First(&tenant); result.Error != nil {
-		DB.Create(&tenant)
+func GetOrCreateTenantID(accountNumber string) (*int64, error) {
+	tenant := m.Tenant{ExternalTenant: accountNumber}
+
+	// Find the tenant, scanning into the struct above
+	result := DB.
+		Where("external_tenant = ?", accountNumber).
+		First(&tenant)
+
+	// Looks like we didn't find it, create it and return the ID.
+	if result.Error != nil {
+		result = DB.Create(&tenant)
 	}
 
-	return &tenant.Id
+	return &tenant.Id, result.Error
 }
