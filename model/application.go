@@ -1,28 +1,48 @@
 package model
 
 import (
+	"strconv"
 	"time"
 
 	"gorm.io/datatypes"
-	"gorm.io/gorm"
 )
 
 type Application struct {
 	AvailabilityStatus
 	Pause
-	Tenancy
 
-	// gorm Fields
-	Id        int64          `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"column:paused_at" json:"paused_at"`
+	Id        int64     `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
-	ApplicationTypeId       int64          `json:"application_type_id"`
-	AvailabilityStatusError *string        `json:"availability_status_error,omitempty"`
+	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
-	SuperkeyData            datatypes.JSON `json:"superkey_data"`
+	SuperkeyData            datatypes.JSON
 
-	SourceId int64 `json:"source_id"`
-	Source   *Source
+	TenantID int64
+	Tenant   Tenant
+
+	SourceID int64 `json:"source_id"`
+	Source   Source
+
+	ApplicationTypeID int64 `json:"application_type_id"`
+	ApplicationType   ApplicationType
+}
+
+func (app *Application) ToResponse() *ApplicationResponse {
+	id := strconv.FormatInt(app.Id, 10)
+	sourceId := strconv.FormatInt(app.SourceID, 10)
+	appTypeId := strconv.FormatInt(app.ApplicationTypeID, 10)
+
+	return &ApplicationResponse{
+		AvailabilityStatus:      app.AvailabilityStatus,
+		Id:                      id,
+		CreatedAt:               app.CreatedAt,
+		UpdatedAt:               app.UpdatedAt,
+		Pause:                   app.Pause,
+		AvailabilityStatusError: app.AvailabilityStatusError,
+		Extra:                   app.Extra,
+		SourceID:                sourceId,
+		ApplicationTypeID:       appTypeId,
+	}
 }

@@ -11,6 +11,10 @@ type MockSourceDao struct {
 	Sources []m.Source
 }
 
+type MockApplicationDao struct {
+	Applications []m.Application
+}
+
 type MockApplicationTypeDao struct {
 	ApplicationTypes []m.ApplicationType
 }
@@ -103,4 +107,36 @@ func (a *MockSourceTypeDao) Update(src *m.SourceType) error {
 
 func (a *MockSourceTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
+}
+
+func (a *MockApplicationDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, *int64, error) {
+	count := int64(len(a.Applications))
+	return a.Applications, &count, nil
+}
+
+func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
+	for _, app := range a.Applications {
+		if app.Id == *id {
+			return &app, nil
+		}
+	}
+
+	return nil, fmt.Errorf("application not found")
+}
+
+func (a *MockApplicationDao) Create(src *m.Application) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (a *MockApplicationDao) Update(src *m.Application) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (a *MockApplicationDao) Delete(id *int64) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (a *MockApplicationDao) Tenant() *int64 {
+	tenant := int64(1)
+	return &tenant
 }

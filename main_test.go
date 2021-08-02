@@ -17,6 +17,7 @@ var (
 	mockSourceDao          dao.SourceDao
 	mockApplicationTypeDao dao.ApplicationTypeDao
 	mockSourceTypeDao      dao.SourceTypeDao
+	mockApplicationDao     dao.ApplicationDao
 )
 
 func TestMain(t *testing.M) {
@@ -30,12 +31,17 @@ func TestMain(t *testing.M) {
 		os.Exit(1)
 	} else {
 		mockSourceDao = setupSourceMockDao(sources)
+		mockApplicationDao = setupApplicationMockDao(applications)
 		mockApplicationTypeDao = setupApplicationTypeMockDao(apptypes)
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) {
 			return mockApplicationTypeDao, nil
 		}
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) {
 			return mockSourceDao, nil
+		}
+
+		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) {
+			return mockApplicationDao, nil
 		}
 
 		mockSourceTypeDao = setupSourceTypeMockDao(sourceTypesData)
@@ -56,6 +62,15 @@ func setupSourceMockDao(sources string) dao.SourceDao {
 		panic(err)
 	}
 	return &dao.MockSourceDao{Sources: a}
+}
+
+func setupApplicationMockDao(applications string) dao.ApplicationDao {
+	a := make([]m.Application, 0, 10)
+	err := json.Unmarshal([]byte(applications), &a)
+	if err != nil {
+		panic(err)
+	}
+	return &dao.MockApplicationDao{Applications: a}
 }
 
 func setupApplicationTypeMockDao(apptypes string) dao.ApplicationTypeDao {

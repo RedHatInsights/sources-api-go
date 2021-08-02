@@ -94,7 +94,7 @@ func SourceCreate(c echo.Context) error {
 		Version:             input.Version,
 		Imported:            input.Imported,
 		SourceRef:           input.SourceRef,
-		AppCreationWorkflow: *input.AppCreationWorkflow,
+		AppCreationWorkflow: input.AppCreationWorkflow,
 		AvailabilityStatus: m.AvailabilityStatus{
 			AvailabilityStatus: input.AvailabilityStatus,
 		},
