@@ -21,6 +21,7 @@ func main() {
 
 	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant
+	getApplicationDao = getApplicationDaoWithTenant
 	getApplicationTypeDao = getApplicationTypeDaoWithoutTenant
 	getSourceTypeDao = getSourceTypeDaoWithoutTenant
 

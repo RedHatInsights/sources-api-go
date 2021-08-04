@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // SourceCreateRequest is a struct representing a request coming
 // from the outside to create a struct, this is the way we will be marking
 // fields as write-once. They are accepted on create but not edit.
@@ -9,8 +11,8 @@ type SourceCreateRequest struct {
 	Version             *string `json:"version,omitempty"`
 	Imported            *string `json:"imported,omitempty"`
 	SourceRef           *string `json:"source_ref,omitempty"`
-	AppCreationWorkflow *string `json:"app_creation_workflow"`
-	AvailabilityStatus  *string `json:"availability_status"`
+	AppCreationWorkflow string  `json:"app_creation_workflow"`
+	AvailabilityStatus  string  `json:"availability_status"`
 
 	SourceTypeId *int64 `json:"source_type_id"`
 }
@@ -30,15 +32,16 @@ type SourceEditRequest struct {
 type SourceResponse struct {
 	AvailabilityStatus
 	Pause
-	TimeStamps
 
-	Id                  *string `json:"id"`
-	Name                *string `json:"name"`
-	Uid                 *string `json:"uid,omitempty"`
-	Version             *string `json:"version,omitempty"`
-	Imported            *string `json:"imported,omitempty"`
-	SourceRef           *string `json:"source_ref,omitempty"`
-	AppCreationWorkflow *string `json:"app_creation_workflow"`
+	Id                  *string   `json:"id"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
+	Name                *string   `json:"name"`
+	Uid                 *string   `json:"uid,omitempty"`
+	Version             *string   `json:"version,omitempty"`
+	Imported            *string   `json:"imported,omitempty"`
+	SourceRef           *string   `json:"source_ref,omitempty"`
+	AppCreationWorkflow *string   `json:"app_creation_workflow"`
 
 	SourceTypeId *string `json:"source_type_id"`
 }
@@ -58,7 +61,7 @@ func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
 	}
 	if update.AvailabilityStatus != nil {
 		src.AvailabilityStatus = AvailabilityStatus{
-			AvailabilityStatus: update.AvailabilityStatus,
+			AvailabilityStatus: *update.AvailabilityStatus,
 		}
 	}
 }

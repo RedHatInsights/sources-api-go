@@ -3,8 +3,6 @@ package model
 import (
 	"strconv"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // Source struct that includes all of the fields on the table
@@ -15,10 +13,9 @@ type Source struct {
 	Tenancy
 
 	//fields for gorm
-	Id        int64          `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `gorm:"column:paused_at" json:"paused_at"`
+	Id        int64     `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 
 	// standard source fields
 	Name                string  `json:"name"`
@@ -41,8 +38,9 @@ func (src *Source) ToResponse() *SourceResponse {
 	return &SourceResponse{
 		AvailabilityStatus:  src.AvailabilityStatus,
 		Pause:               src.Pause,
-		TimeStamps:          TimeStamps{CreatedAt: &src.CreatedAt, UpdatedAt: &src.UpdatedAt},
 		Id:                  &id,
+		CreatedAt:           src.CreatedAt,
+		UpdatedAt:           src.UpdatedAt,
 		Name:                &src.Name,
 		Uid:                 src.Uid,
 		Version:             src.Version,

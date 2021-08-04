@@ -8,13 +8,13 @@ type TimeStamps struct {
 }
 
 type Pause struct {
-	PausedAt *time.Time `json:"paused_at,omitempty"`
+	PausedAt time.Time `json:"paused_at,omitempty"`
 }
 
 type AvailabilityStatus struct {
-	AvailabilityStatus *string    `json:"availability_status,omitempty"`
-	LastCheckedAt      *time.Time `json:"last_checked_at,omitempty"`
-	LastAvailableAt    *time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatus string    `json:"availability_status,omitempty"`
+	LastCheckedAt      time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt    time.Time `json:"last_available_at,omitempty"`
 }
 
 type Tenancy struct {
