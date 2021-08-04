@@ -56,6 +56,8 @@ func applyFilters(query *gorm.DB, filters []middleware.Filter) error {
 			query = query.Where(fmt.Sprintf("%v ILIKE ?", filterName), fmt.Sprintf("%s%%", filter.Value[0]))
 		case "[ends_with_i]":
 			query = query.Where(fmt.Sprintf("%v ILIKE ?", filterName), fmt.Sprintf("%%%s", filter.Value[0]))
+		case "sort_by":
+			query = query.Order(filter.Value[0])
 		default:
 			return fmt.Errorf("unsupported operation %v", filter.Operation)
 		}

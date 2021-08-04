@@ -21,12 +21,7 @@ func TestParseFilterWithOperation(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[name][eq]=test", nil)
 	c := e.NewContext(req, nil)
 
-	parseFilterIntoRequest(c)
-
-	filters, ok := c.Get("filters").([]Filter)
-	if !ok {
-		t.Error("filter did not parse correctly")
-	}
+	filters := parseFilter(c)
 
 	if len(filters) != 1 {
 		t.Error("wrong number of filters")
@@ -51,12 +46,7 @@ func TestParseFilterWithoutOperation(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[name]=test", nil)
 	c := e.NewContext(req, nil)
 
-	parseFilterIntoRequest(c)
-
-	filters, ok := c.Get("filters").([]Filter)
-	if !ok {
-		t.Error("filter did not parse correctly")
-	}
+	filters := parseFilter(c)
 
 	if len(filters) != 1 {
 		t.Error("wrong number of filters")
@@ -74,5 +64,51 @@ func TestParseFilterWithoutOperation(t *testing.T) {
 
 	if f.Value[0] != "test" {
 		t.Error("did not parse value correctly")
+	}
+}
+
+func TestParseSorting(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?sort_by=name", nil)
+	c := e.NewContext(req, nil)
+
+	sortFilter := parseSorting(c)
+
+	if sortFilter == nil {
+		t.Error("sorting did not parse correctly")
+		t.FailNow()
+	}
+
+	if len(sortFilter.Value) != 1 {
+		t.Error("wrong number of sorts")
+	}
+
+	s := sortFilter.Value[0]
+
+	if s != "name" {
+		t.Error("sort value did not get parsed correctly")
+	}
+}
+
+func TestParseSortingMultiple(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?sort_by=name&sort_by=uid", nil)
+	c := e.NewContext(req, nil)
+
+	sortFilter := parseSorting(c)
+
+	if sortFilter == nil {
+		t.Error("sorting did not parse correctly")
+		t.FailNow()
+	}
+
+	if len(sortFilter.Value) != 2 {
+		t.Error("wrong number of sorts")
+	}
+
+	if sortFilter.Value[0] != "name" {
+		t.Error("sort[0] value did not get parsed correctly")
+	}
+
+	if sortFilter.Value[1] != "uid" {
+		t.Error("sort[1] value did not get parsed correctly")
 	}
 }
