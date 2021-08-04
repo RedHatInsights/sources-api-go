@@ -3,10 +3,11 @@ package logger
 import (
 	"context"
 	"errors"
-	"github.com/sirupsen/logrus"
-	gormlogger "gorm.io/gorm/logger"
-	"gorm.io/gorm/utils"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	gormLogger "gorm.io/gorm/logger"
+	"gorm.io/gorm/utils"
 )
 
 type CustomGORMLogger struct {
@@ -16,7 +17,7 @@ type CustomGORMLogger struct {
 	LogLevelForSqlLogs      string
 }
 
-func (l *CustomGORMLogger) LogMode(gormlogger.LogLevel) gormlogger.Interface {
+func (l *CustomGORMLogger) LogMode(gormLogger.LogLevel) gormLogger.Interface {
 	return l
 }
 

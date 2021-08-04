@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	echoLog "github.com/labstack/gommon/log"
-	logrusEcho "github.com/neko-neko/echo-logrus/v2/log"
 	"os"
 	"time"
 
 	appconf "github.com/RedHatInsights/sources-api-go/config"
 	"github.com/labstack/echo/v4"
+	echoLog "github.com/labstack/gommon/log"
+	logrusEcho "github.com/neko-neko/echo-logrus/v2/log"
 	"github.com/sirupsen/logrus"
 )
 
