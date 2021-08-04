@@ -133,6 +133,40 @@ func logLevelToEchoLogLevel(configLogLevel string) echoLog.Lvl {
 	return logLevel
 }
 
+func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
+	// fields of default format from (converted to JSON): labstack/echo/v4@v4.4.0/middleware/logger.go
+	defaultFormat := `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}",` +
+		`"host":"${host}","method":"${method}","uri":"${uri}","user_agent":"${user_agent}",` +
+		`"status":"${status}","error":"${error}","latency":"${latency}","latency_human":"${latency_human}"` +
+		`,"bytes_in":"${bytes_in}","bytes_out":"${bytes_out}"}` + "\n"
+
+	fieldsDefaultFormat := make(map[string]interface{})
+
+	err := json.Unmarshal([]byte(defaultFormat), &fieldsDefaultFormat)
+
+	if err != nil {
+		Log.Warn("Unmarshalling Error in FormatForMiddleware: " + err.Error())
+		return defaultFormat
+	}
+
+	for k, v := range basicLogFields(config.LogLevelForMiddlewareLogs, config.AppName, config.Hostname) {
+		fieldsDefaultFormat[k] = v
+	}
+
+	j, err := json.Marshal(fieldsDefaultFormat)
+
+	if err != nil {
+		Log.Warn("Marshalling Error in FormatForMiddleware: " + err.Error())
+		return defaultFormat
+	}
+
+	return string(j)
+}
+
+func AllowedForMiddleware(logLevel echoLog.Lvl, logLevelForMiddleware string) bool {
+	return logLevelToEchoLogLevel(logLevelForMiddleware) >= logLevel
+}
+
 func InitEchoLogger(e *echo.Echo, config *appconf.SourcesApiConfig) {
 	logger := logrusEcho.Logger()
 	logger.SetOutput(LogOutputFrom(config.LogHandler))

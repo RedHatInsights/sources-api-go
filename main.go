@@ -20,8 +20,15 @@ func main() {
 	dao.Init()
 	redis.Init()
 
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: logging.FormatForMiddleware(conf),
+		Skipper: func(c echo.Context) bool {
+			logLevel := c.Echo().Logger.Level()
+			return !logging.AllowedForMiddleware(logLevel, conf.LogLevelForMiddlewareLogs)
+		},
+		Output: logging.LogOutputFrom(conf.LogHandler),
+	}))
 
 	setupRoutes(e)
 

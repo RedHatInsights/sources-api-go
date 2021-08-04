@@ -19,6 +19,7 @@ type SourcesApiConfig struct {
 	KafkaGroupID              string
 	MetricsPort               int
 	LogLevel                  string
+	LogLevelForMiddlewareLogs string
 	LogGroup                  string
 	LogHandler                string
 	AwsRegion                 string
@@ -90,6 +91,7 @@ func Get() *SourcesApiConfig {
 
 	options.SetDefault("LogLevel", os.Getenv("LOG_LEVEL"))
 	options.SetDefault("LogHandler", os.Getenv("LOG_HANDLER"))
+	options.SetDefault("LogLevelForMiddlewareLogs", "DEBUG")
 
 	var (
 		err      error
@@ -112,6 +114,7 @@ func Get() *SourcesApiConfig {
 		KafkaGroupID:              options.GetString("KafkaGroupID"),
 		MetricsPort:               options.GetInt("MetricsPort"),
 		LogLevel:                  options.GetString("LogLevel"),
+		LogLevelForMiddlewareLogs: options.GetString("LogLevelForMiddlewareLogs"),
 		LogHandler:                options.GetString("LogHandler"),
 		LogGroup:                  options.GetString("LogGroup"),
 		AwsRegion:                 options.GetString("AwsRegion"),
