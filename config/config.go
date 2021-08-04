@@ -22,6 +22,7 @@ type SourcesApiConfig struct {
 	LogLevelForMiddlewareLogs string
 	LogGroup                  string
 	LogHandler                string
+	LogLevelForSqlLogs        string
 	AwsRegion                 string
 	AwsAccessKeyID            string
 	AwsSecretAccessKey        string
@@ -33,6 +34,7 @@ type SourcesApiConfig struct {
 	CacheHost                 string
 	CachePort                 int
 	CachePassword             string
+	SlowSQLThreshold          int
 }
 
 // Get - returns the config parsed from runtime vars
@@ -92,6 +94,8 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("LogLevel", os.Getenv("LOG_LEVEL"))
 	options.SetDefault("LogHandler", os.Getenv("LOG_HANDLER"))
 	options.SetDefault("LogLevelForMiddlewareLogs", "DEBUG")
+	options.SetDefault("LogLevelForSqlLogs", "DEBUG")
+	options.SetDefault("SlowSQLThreshold", 2) //seconds
 
 	var (
 		err      error
