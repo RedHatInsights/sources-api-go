@@ -10,10 +10,9 @@ import (
 type Source struct {
 	AvailabilityStatus
 	Pause
-	Tenancy
 
 	//fields for gorm
-	Id        int64     `gorm:"primarykey" json:"id"`
+	ID        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
@@ -25,20 +24,24 @@ type Source struct {
 	SourceRef           *string `json:"source_ref,omitempty"`
 	AppCreationWorkflow string  `gorm:"default:manual_configuration" json:"app_creation_workflow"`
 
-	SourceTypeId *int64 `json:"source_type_id"`
+	SourceType   SourceType
+	SourceTypeID int64 `json:"source_type_id"`
+
+	Tenant   Tenant
+	TenantID int64 `json:"tenant_id"`
 
 	Applications []Application
 	Endpoints    []Endpoint
 }
 
 func (src *Source) ToResponse() *SourceResponse {
-	id := strconv.FormatInt(src.Id, 10)
-	stid := strconv.FormatInt(*src.SourceTypeId, 10)
+	id := strconv.FormatInt(src.ID, 10)
+	stid := strconv.FormatInt(src.SourceTypeID, 10)
 
 	return &SourceResponse{
 		AvailabilityStatus:  src.AvailabilityStatus,
 		Pause:               src.Pause,
-		Id:                  &id,
+		ID:                  &id,
 		CreatedAt:           src.CreatedAt,
 		UpdatedAt:           src.UpdatedAt,
 		Name:                &src.Name,

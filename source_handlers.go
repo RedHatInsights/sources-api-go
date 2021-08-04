@@ -98,8 +98,7 @@ func SourceCreate(c echo.Context) error {
 		AvailabilityStatus: m.AvailabilityStatus{
 			AvailabilityStatus: input.AvailabilityStatus,
 		},
-		SourceTypeId: input.SourceTypeId,
-		Tenancy:      m.Tenancy{TenantId: sourcesDB.Tenant()},
+		SourceTypeID: *input.SourceTypeID,
 	}
 
 	err = sourcesDB.Create(source)

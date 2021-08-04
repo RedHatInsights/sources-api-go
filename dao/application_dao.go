@@ -30,7 +30,7 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Fi
 }
 
 func (a *ApplicationDaoImpl) GetById(id *int64) (*m.Application, error) {
-	app := &m.Application{Id: *id}
+	app := &m.Application{ID: *id}
 	result := DB.First(&app)
 
 	return app, result.Error
@@ -47,7 +47,7 @@ func (a *ApplicationDaoImpl) Update(app *m.Application) error {
 }
 
 func (a *ApplicationDaoImpl) Delete(id *int64) error {
-	app := &m.Application{Id: *id}
+	app := &m.Application{ID: *id}
 	if result := DB.Delete(app); result.RowsAffected == 0 {
 		return fmt.Errorf("failed to delete application id %v", *id)
 	}

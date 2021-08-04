@@ -14,7 +14,7 @@ type SourceCreateRequest struct {
 	AppCreationWorkflow string  `json:"app_creation_workflow"`
 	AvailabilityStatus  string  `json:"availability_status"`
 
-	SourceTypeId *int64 `json:"source_type_id"`
+	SourceTypeID *int64 `json:"source_type_id"`
 }
 
 // SourceEditRequest manages what we can/cannot update on the source
@@ -33,7 +33,7 @@ type SourceResponse struct {
 	AvailabilityStatus
 	Pause
 
-	Id                  *string   `json:"id"`
+	ID                  *string   `json:"id"`
 	CreatedAt           time.Time `json:"created_at"`
 	UpdatedAt           time.Time `json:"updated_at"`
 	Name                *string   `json:"name"`

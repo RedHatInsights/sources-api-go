@@ -30,7 +30,7 @@ func (m *MockSourceDao) List(limit, offset int, filters []middleware.Filter) ([]
 
 func (m *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 	for _, i := range m.Sources {
-		if i.Id == *id {
+		if i.ID == *id {
 			return &i, nil
 		}
 	}
@@ -116,7 +116,7 @@ func (a *MockApplicationDao) List(limit int, offset int, filters []middleware.Fi
 
 func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
 	for _, app := range a.Applications {
-		if app.Id == *id {
+		if app.ID == *id {
 			return &app, nil
 		}
 	}

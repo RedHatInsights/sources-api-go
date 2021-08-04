@@ -11,7 +11,7 @@ type Application struct {
 	AvailabilityStatus
 	Pause
 
-	Id        int64     `gorm:"primarykey" json:"id"`
+	ID        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
@@ -30,13 +30,13 @@ type Application struct {
 }
 
 func (app *Application) ToResponse() *ApplicationResponse {
-	id := strconv.FormatInt(app.Id, 10)
+	id := strconv.FormatInt(app.ID, 10)
 	sourceId := strconv.FormatInt(app.SourceID, 10)
 	appTypeId := strconv.FormatInt(app.ApplicationTypeID, 10)
 
 	return &ApplicationResponse{
 		AvailabilityStatus:      app.AvailabilityStatus,
-		Id:                      id,
+		ID:                      id,
 		CreatedAt:               app.CreatedAt,
 		UpdatedAt:               app.UpdatedAt,
 		Pause:                   app.Pause,

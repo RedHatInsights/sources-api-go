@@ -16,7 +16,3 @@ type AvailabilityStatus struct {
 	LastCheckedAt      time.Time `json:"last_checked_at,omitempty"`
 	LastAvailableAt    time.Time `json:"last_available_at,omitempty"`
 }
-
-type Tenancy struct {
-	TenantId *int64 `json:"tenant_id"`
-}

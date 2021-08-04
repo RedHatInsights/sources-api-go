@@ -11,10 +11,10 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-var sources = `[
-	{ "id": 1, "name": "Source1", "source_type_id": 1 },
-	{ "id": 2, "name": "Source2", "source_type_id": 1 }
-]`
+var testSourceData = []m.Source{
+	{ID: 1, Name: "Source1", SourceTypeID: 1, TenantID: 1},
+	{ID: 2, Name: "Source2", SourceTypeID: 1, TenantID: 1},
+}
 
 func TestSourceList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources", nil)
@@ -23,6 +23,7 @@ func TestSourceList(t *testing.T) {
 	c.Set("limit", 99)
 	c.Set("offset", -1)
 	c.Set("filters", []middleware.Filter{})
+	c.Set("tenantID", int64(1))
 
 	err := SourceList(c)
 	if err != nil {
@@ -69,6 +70,7 @@ func TestSourceGet(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetParamNames("id")
 	c.SetParamValues("1")
+	c.Set("tenantID", int64(1))
 
 	err := SourceGet(c)
 	if err != nil {
