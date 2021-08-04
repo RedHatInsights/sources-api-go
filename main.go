@@ -15,6 +15,8 @@ func main() {
 	e := echo.New()
 
 	logging.InitLogger(conf)
+	logging.InitEchoLogger(e, conf)
+
 	dao.Init()
 	redis.Init()
 

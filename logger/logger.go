@@ -6,10 +6,12 @@ import (
 	"flag"
 	"fmt"
 	echoLog "github.com/labstack/gommon/log"
+	logrusEcho "github.com/neko-neko/echo-logrus/v2/log"
 	"os"
 	"time"
 
 	appconf "github.com/RedHatInsights/sources-api-go/config"
+	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
 
@@ -114,6 +116,31 @@ func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func logLevelToEchoLogLevel(configLogLevel string) echoLog.Lvl {
+	var logLevel echoLog.Lvl
+
+	switch configLogLevel {
+	case "DEBUG":
+		logLevel = echoLog.DEBUG
+	case "ERROR":
+		logLevel = echoLog.ERROR
+	case "WARN":
+		logLevel = echoLog.WARN
+	default:
+		logLevel = echoLog.INFO
+	}
+
+	return logLevel
+}
+
+func InitEchoLogger(e *echo.Echo, config *appconf.SourcesApiConfig) {
+	logger := logrusEcho.Logger()
+	logger.SetOutput(LogOutputFrom(config.LogHandler))
+	logger.SetFormatter(NewCustomLoggerFormatter(config, true))
+
+	e.Logger = logger
+	e.Logger.SetLevel(logLevelToEchoLogLevel(config.LogLevel))
+}
 
 func LogOutputFrom(logHandler string) *os.File {
 	var logOutput *os.File
