@@ -23,6 +23,15 @@ type ApplicationDao interface {
 	Tenant() *int64
 }
 
+type ApplicationAuthenticationDao interface {
+	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, *int64, error)
+	GetById(id *int64) (*m.ApplicationAuthentication, error)
+	Create(src *m.ApplicationAuthentication) error
+	Update(src *m.ApplicationAuthentication) error
+	Delete(id *int64) error
+	Tenant() *int64
+}
+
 type ApplicationTypeDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error)
 	GetById(id *int64) (*m.ApplicationType, error)

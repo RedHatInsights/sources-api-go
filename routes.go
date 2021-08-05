@@ -53,6 +53,10 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/endpoints", EndpointList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/endpoints/:id", EndpointGet)
 
+	// ApplicationAuthentications
+	v3.GET("/application_authentications", ApplicationAuthenticationList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet)
+
 	// SourceTypes
 	v3.GET("/source_types", SourceTypeList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/source_types/:id", SourceTypeGet)
