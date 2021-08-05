@@ -24,6 +24,7 @@ func main() {
 	getApplicationDao = getApplicationDaoWithTenant
 	getApplicationTypeDao = getApplicationTypeDaoWithoutTenant
 	getSourceTypeDao = getSourceTypeDaoWithoutTenant
+	getEndpointDao = getEndpointDaoWithTenant
 
 	e.Logger.Fatal(e.Start(":8000"))
 }

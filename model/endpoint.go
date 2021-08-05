@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strconv"
 	"time"
 )
 
@@ -28,4 +29,28 @@ type Endpoint struct {
 
 	TenantID int64
 	Tenant   Tenant
+}
+
+func (endpoint *Endpoint) ToResponse() *EndpointResponse {
+	id := strconv.FormatInt(endpoint.ID, 10)
+	sourceId := strconv.FormatInt(endpoint.SourceID, 10)
+
+	return &EndpointResponse{
+		AvailabilityStatus:      endpoint.AvailabilityStatus,
+		ID:                      id,
+		CreatedAt:               endpoint.CreatedAt,
+		UpdatedAt:               endpoint.UpdatedAt,
+		Pause:                   endpoint.Pause,
+		Role:                    endpoint.Role,
+		Port:                    endpoint.Port,
+		Default:                 endpoint.Default,
+		Scheme:                  endpoint.Scheme,
+		Host:                    endpoint.Host,
+		Path:                    endpoint.Path,
+		VerifySsl:               endpoint.VerifySsl,
+		CertificateAuthority:    endpoint.CertificateAuthority,
+		ReceptorNode:            endpoint.ReceptorNode,
+		AvailabilityStatusError: endpoint.AvailabilityStatusError,
+		SourceID:                sourceId,
+	}
 }
