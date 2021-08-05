@@ -18,6 +18,7 @@ var (
 	e                      *echo.Echo
 	mockSourceDao          dao.SourceDao
 	mockApplicationTypeDao dao.ApplicationTypeDao
+	mockEndpointDao        dao.EndpointDao
 	mockSourceTypeDao      dao.SourceTypeDao
 	mockApplicationDao     dao.ApplicationDao
 
@@ -44,6 +45,7 @@ func TestMain(t *testing.M) {
 		connectToTestDB()
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
+		getEndpointDao = getEndpointDaoWithTenant
 		getApplicationTypeDao = getApplicationTypeDaoWithoutTenant
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
 
@@ -54,14 +56,17 @@ func TestMain(t *testing.M) {
 
 		dao.DB.Create(testSourceData)
 		dao.DB.Create(testApplicationData)
+		dao.DB.Create(testEndpointData)
 	} else {
 		mockSourceDao = &dao.MockSourceDao{Sources: testSourceData}
 		mockApplicationDao = &dao.MockApplicationDao{Applications: testApplicationData}
+		mockEndpointDao = &dao.MockEndpointDao{Endpoints: testEndpointData}
 		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: testSourceTypeData}
 		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: testApplicationTypeData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }
+		getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) { return mockEndpointDao, nil }
 		getSourceTypeDao = func(c echo.Context) (dao.SourceTypeDao, error) { return mockSourceTypeDao, nil }
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) { return mockApplicationTypeDao, nil }
 	}
@@ -71,11 +76,13 @@ func TestMain(t *testing.M) {
 
 	if *integration {
 		dao.DB.Exec("DROP TABLE applications")
+		dao.DB.Exec("DROP TABLE endpoints")
 		dao.DB.Exec("DROP TABLE sources")
 		dao.DB.Exec("DROP TABLE application_types")
 		dao.DB.Exec("DROP TABLE source_types")
 		dao.DB.Exec("DROP TABLE tenants")
 	}
+
 	os.Exit(code)
 }
 
@@ -99,6 +106,7 @@ func connectToTestDB() {
 
 		&m.Source{},
 		&m.Application{},
+		&m.Endpoint{},
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error automigrating the schema: %v", err)

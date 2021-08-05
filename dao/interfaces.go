@@ -31,6 +31,15 @@ type ApplicationTypeDao interface {
 	Delete(id *int64) error
 }
 
+type EndpointDao interface {
+	List(limit, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error)
+	GetById(id *int64) (*m.Endpoint, error)
+	Create(src *m.Endpoint) error
+	Update(src *m.Endpoint) error
+	Delete(id *int64) error
+	Tenant() *int64
+}
+
 type SourceTypeDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, *int64, error)
 	GetById(id *int64) (*m.SourceType, error)

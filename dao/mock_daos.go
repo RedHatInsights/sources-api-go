@@ -15,6 +15,9 @@ type MockApplicationDao struct {
 	Applications []m.Application
 }
 
+type MockEndpointDao struct {
+	Endpoints []m.Endpoint
+}
 type MockApplicationTypeDao struct {
 	ApplicationTypes []m.ApplicationType
 }
@@ -137,6 +140,38 @@ func (a *MockApplicationDao) Delete(id *int64) error {
 }
 
 func (a *MockApplicationDao) Tenant() *int64 {
+	tenant := int64(1)
+	return &tenant
+}
+
+func (a *MockEndpointDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error) {
+	count := int64(len(a.Endpoints))
+	return a.Endpoints, &count, nil
+}
+
+func (a *MockEndpointDao) GetById(id *int64) (*m.Endpoint, error) {
+	for _, app := range a.Endpoints {
+		if app.ID == *id {
+			return &app, nil
+		}
+	}
+
+	return nil, fmt.Errorf("endpoint not found")
+}
+
+func (a *MockEndpointDao) Create(src *m.Endpoint) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (a *MockEndpointDao) Update(src *m.Endpoint) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (a *MockEndpointDao) Delete(id *int64) error {
+	panic("not implemented") // TODO: Implement
+}
+
+func (m *MockEndpointDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
