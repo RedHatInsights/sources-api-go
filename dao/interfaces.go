@@ -49,6 +49,14 @@ type EndpointDao interface {
 	Tenant() *int64
 }
 
+type MetaDataDao interface {
+	List(limit, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error)
+	GetById(id *int64) (*m.MetaData, error)
+	Create(src *m.MetaData) error
+	Update(src *m.MetaData) error
+	Delete(id *int64) error
+}
+
 type SourceTypeDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, *int64, error)
 	GetById(id *int64) (*m.SourceType, error)
