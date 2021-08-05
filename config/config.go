@@ -12,25 +12,29 @@ var parsedConfig *SourcesApiConfig
 
 // SourcesApiConfig is the struct for storing runtime configuration
 type SourcesApiConfig struct {
-	Hostname           string
-	KafkaBrokers       []string
-	KafkaTopics        map[string]string
-	KafkaGroupID       string
-	MetricsPort        int
-	LogLevel           string
-	LogGroup           string
-	LogHandler         string
-	AwsRegion          string
-	AwsAccessKeyID     string
-	AwsSecretAccessKey string
-	DatabaseHost       string
-	DatabasePort       int
-	DatabaseUser       string
-	DatabasePassword   string
-	DatabaseName       string
-	CacheHost          string
-	CachePort          int
-	CachePassword      string
+	AppName                   string
+	Hostname                  string
+	KafkaBrokers              []string
+	KafkaTopics               map[string]string
+	KafkaGroupID              string
+	MetricsPort               int
+	LogLevel                  string
+	LogLevelForMiddlewareLogs string
+	LogGroup                  string
+	LogHandler                string
+	LogLevelForSqlLogs        string
+	AwsRegion                 string
+	AwsAccessKeyID            string
+	AwsSecretAccessKey        string
+	DatabaseHost              string
+	DatabasePort              int
+	DatabaseUser              string
+	DatabasePassword          string
+	DatabaseName              string
+	CacheHost                 string
+	CachePort                 int
+	CachePassword             string
+	SlowSQLThreshold          int
 }
 
 // Get - returns the config parsed from runtime vars
@@ -86,33 +90,48 @@ func Get() *SourcesApiConfig {
 
 	options.SetDefault("KafkaGroupID", "sources-api-go")
 	options.SetDefault("KafkaTopics", kafkaTopics)
-	options.SetDefault("LogLevel", "DEBUG")
-	options.SetDefault("LogHandler", os.Getenv("LOG_HANDLER"))
 
-	hostname, _ := os.Hostname()
+	options.SetDefault("LogLevel", os.Getenv("LOG_LEVEL"))
+	options.SetDefault("LogHandler", os.Getenv("LOG_HANDLER"))
+	options.SetDefault("LogLevelForMiddlewareLogs", "DEBUG")
+	options.SetDefault("LogLevelForSqlLogs", "DEBUG")
+	options.SetDefault("SlowSQLThreshold", 2) //seconds
+
+	var (
+		err      error
+		hostname string
+	)
+
+	if hostname, err = os.Hostname(); err != nil {
+		hostname = "unknown"
+	}
+
 	options.SetDefault("Hostname", hostname)
+	options.SetDefault("AppName", "source-api-go")
 
 	options.AutomaticEnv()
 	parsedConfig = &SourcesApiConfig{
-		Hostname:           options.GetString("Hostname"),
-		KafkaBrokers:       options.GetStringSlice("KafkaBrokers"),
-		KafkaTopics:        options.GetStringMapString("KafkaTopics"),
-		KafkaGroupID:       options.GetString("KafkaGroupID"),
-		MetricsPort:        options.GetInt("MetricsPort"),
-		LogLevel:           options.GetString("LogLevel"),
-		LogHandler:         options.GetString("LogHandler"),
-		LogGroup:           options.GetString("LogGroup"),
-		AwsRegion:          options.GetString("AwsRegion"),
-		AwsAccessKeyID:     options.GetString("AwsAccessKeyID"),
-		AwsSecretAccessKey: options.GetString("AwsSecretAccessKey"),
-		DatabaseHost:       options.GetString("DatabaseHost"),
-		DatabasePort:       options.GetInt("DatabasePort"),
-		DatabaseUser:       options.GetString("DatabaseUser"),
-		DatabasePassword:   options.GetString("DatabasePassword"),
-		DatabaseName:       options.GetString("DatabaseName"),
-		CacheHost:          options.GetString("CacheHost"),
-		CachePort:          options.GetInt("CachePort"),
-		CachePassword:      options.GetString("CachePassword"),
+		AppName:                   options.GetString("AppName"),
+		Hostname:                  options.GetString("Hostname"),
+		KafkaBrokers:              options.GetStringSlice("KafkaBrokers"),
+		KafkaTopics:               options.GetStringMapString("KafkaTopics"),
+		KafkaGroupID:              options.GetString("KafkaGroupID"),
+		MetricsPort:               options.GetInt("MetricsPort"),
+		LogLevel:                  options.GetString("LogLevel"),
+		LogLevelForMiddlewareLogs: options.GetString("LogLevelForMiddlewareLogs"),
+		LogHandler:                options.GetString("LogHandler"),
+		LogGroup:                  options.GetString("LogGroup"),
+		AwsRegion:                 options.GetString("AwsRegion"),
+		AwsAccessKeyID:            options.GetString("AwsAccessKeyID"),
+		AwsSecretAccessKey:        options.GetString("AwsSecretAccessKey"),
+		DatabaseHost:              options.GetString("DatabaseHost"),
+		DatabasePort:              options.GetInt("DatabasePort"),
+		DatabaseUser:              options.GetString("DatabaseUser"),
+		DatabasePassword:          options.GetString("DatabasePassword"),
+		DatabaseName:              options.GetString("DatabaseName"),
+		CacheHost:                 options.GetString("CacheHost"),
+		CachePort:                 options.GetInt("CachePort"),
+		CachePassword:             options.GetString("CachePassword"),
 	}
 
 	return parsedConfig

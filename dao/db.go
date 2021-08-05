@@ -2,17 +2,34 @@ package dao
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
+var conf = config.Get()
 
 func Init() {
-	db, err := gorm.Open(postgres.Open(dbString()), &gorm.Config{})
+	logger := &logrus.Logger{
+		Out:       logging.LogOutputFrom(conf.LogHandler),
+		Level:     logging.LogrusLogLevelFrom(conf.LogLevel),
+		Formatter: logging.NewCustomLoggerFormatter(conf, true),
+	}
+
+	l := &logging.CustomGORMLogger{
+		SkipErrorRecordNotFound: true,
+		Logger:                  logger,
+		SlowThreshold:           time.Duration(conf.SlowSQLThreshold) * time.Second,
+		LogLevelForSqlLogs:      conf.LogLevelForSqlLogs,
+	}
+
+	db, err := gorm.Open(postgres.Open(dbString()), &gorm.Config{Logger: l})
 	if err != nil {
 		panic(err)
 	}
