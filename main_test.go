@@ -22,6 +22,7 @@ var (
 	mockSourceTypeDao                dao.SourceTypeDao
 	mockApplicationDao               dao.ApplicationDao
 	mockApplicationAuthenticationDao dao.ApplicationAuthenticationDao
+	mockMetaDataDao                  dao.MetaDataDao
 
 	testDbName = "sources_api_test_go"
 )
@@ -50,6 +51,7 @@ func TestMain(t *testing.M) {
 		getApplicationTypeDao = getApplicationTypeDaoWithoutTenant
 		getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
+		getMetaDataDao = getMetaDataDaoWithoutTenant
 
 		dao.DB.Create(&m.Tenant{Id: 1})
 
@@ -64,6 +66,8 @@ func TestMain(t *testing.M) {
 		dao.DB.Create(testAuthentication)
 		dao.DB.Create(testApplicationAuthenticationData)
 		dao.DB.Create(testEndpointData)
+
+		dao.DB.Create(testMetaData)
 	} else {
 		mockSourceDao = &dao.MockSourceDao{Sources: testSourceData}
 		mockApplicationDao = &dao.MockApplicationDao{Applications: testApplicationData}
@@ -71,15 +75,20 @@ func TestMain(t *testing.M) {
 		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: testSourceTypeData}
 		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: testApplicationTypeData}
 		mockApplicationAuthenticationDao = &dao.MockApplicationAuthenticationDao{ApplicationAuthentications: testApplicationAuthenticationData}
+		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: testMetaData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }
 		getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) { return mockEndpointDao, nil }
 		getSourceTypeDao = func(c echo.Context) (dao.SourceTypeDao, error) { return mockSourceTypeDao, nil }
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) { return mockApplicationTypeDao, nil }
+
 		getApplicationAuthenticationDao = func(c echo.Context) (dao.ApplicationAuthenticationDao, error) {
 			return mockApplicationAuthenticationDao, nil
 		}
+
+		getMetaDataDao = func(c echo.Context) (dao.MetaDataDao, error) { return mockMetaDataDao, nil }
+
 	}
 
 	e = echo.New()
@@ -88,11 +97,13 @@ func TestMain(t *testing.M) {
 	if *integration {
 		dao.DB.Exec("DROP TABLE endpoints")
 		dao.DB.Exec("DROP TABLE application_authentications")
+		dao.DB.Exec("DROP TABLE authentications")
+		dao.DB.Exec("DROP TABLE meta_data")
 		dao.DB.Exec("DROP TABLE applications")
 		dao.DB.Exec("DROP TABLE application_types")
-		//dao.DB.Exec("DROP TABLE tenants")
-		//dao.DB.Exec("DROP TABLE source_types")
-		//dao.DB.Exec("DROP TABLE sources")
+		dao.DB.Exec("DROP TABLE sources")
+		dao.DB.Exec("DROP TABLE source_types")
+		dao.DB.Exec("DROP TABLE tenants")
 	}
 
 	os.Exit(code)
@@ -118,8 +129,10 @@ func connectToTestDB() {
 
 		&m.Source{},
 		&m.Application{},
+
 		&m.ApplicationAuthentication{},
 		&m.Endpoint{},
+		&m.MetaData{},
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error automigrating the schema: %v", err)
