@@ -48,6 +48,12 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/applications", ApplicationList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/applications/:id", ApplicationGet)
 
+	// Authentications
+	v3.GET("/authentications", AuthenticationList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.POST("/authentications", AuthenticationCreate)
+	v3.GET("/authentications/:uid", AuthenticationGet)
+	v3.DELETE("/authentications/:uid", AuthenticationDelete)
+
 	// ApplicationTypes
 	v3.GET("/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination, withoutTenancy)
 	v3.GET("/application_types/:id", ApplicationTypeGet, withoutTenancy)

@@ -6,6 +6,8 @@ require (
 	github.com/aws/aws-sdk-go v1.40.46
 	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/google/uuid v1.1.2
+	github.com/hashicorp/vault/api v1.1.1
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jackc/pgx/v4 v4.11.0
 	github.com/labstack/echo/v4 v4.4.0
