@@ -7,6 +7,7 @@ import (
 
 type SourceDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error)
+	SubCollectionList(secondaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error)
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error
 	Update(src *m.Source) error

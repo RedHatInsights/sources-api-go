@@ -34,13 +34,19 @@ type MockMetaDataDao struct {
 	MetaDatas []m.MetaData
 }
 
-func (m *MockSourceDao) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
-	count := int64(len(m.Sources))
-	return m.Sources, count, nil
+func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error) {
+	count := int64(1) // Source ID=1
+
+	return []m.Source{src.Sources[0]}, &count, nil
 }
 
-func (m *MockSourceDao) GetById(id *int64) (*m.Source, error) {
-	for _, i := range m.Sources {
+func (src *MockSourceDao) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
+	count := int64(len(src.Sources))
+	return src.Sources, count, nil
+}
+
+func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
+	for _, i := range src.Sources {
 		if i.ID == *id {
 			return &i, nil
 		}
@@ -49,19 +55,19 @@ func (m *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 	return nil, fmt.Errorf("source not found")
 }
 
-func (m *MockSourceDao) Create(src *m.Source) error {
+func (src *MockSourceDao) Create(s *m.Source) error {
 	return nil
 }
 
-func (m *MockSourceDao) Update(src *m.Source) error {
+func (src *MockSourceDao) Update(s *m.Source) error {
 	panic("implement me")
 }
 
-func (m *MockSourceDao) Delete(id *int64) error {
+func (src *MockSourceDao) Delete(id *int64) error {
 	panic("implement me")
 }
 
-func (m *MockSourceDao) Tenant() *int64 {
+func (src *MockSourceDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }

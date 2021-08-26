@@ -19,6 +19,14 @@ type ApplicationType struct {
 	SupportedAuthenticationTypes datatypes.JSON `json:"supported_authentication_types"`
 }
 
+func (a *ApplicationType) RelationInfo() map[string]RelationSetting {
+	var settings = make(map[string]RelationSetting)
+
+	settings["source"] = RelationSetting{RelationType: "through", Through: "applications"}
+
+	return settings
+}
+
 func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {
 	id := strconv.Itoa(int(a.Id))
 

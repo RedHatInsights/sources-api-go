@@ -42,7 +42,21 @@ func SourceList(c echo.Context) error {
 		return err
 	}
 
-	sources, count, err := sourcesDB.List(limit, offset, filters)
+	var (
+		sources []m.Source
+		count   *int64
+	)
+	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+
+	if requestURL.IsSubCollection() {
+		sources, count, err = sourcesDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
+	} else {
+		sources, count, err = sourcesDB.List(limit, offset, filters)
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
 	}
