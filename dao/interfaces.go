@@ -35,6 +35,7 @@ type ApplicationAuthenticationDao interface {
 
 type ApplicationTypeDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error)
+	SubCollectionList(secondaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error)
 	GetById(id *int64) (*m.ApplicationType, error)
 	Create(src *m.ApplicationType) error
 	Update(src *m.ApplicationType) error

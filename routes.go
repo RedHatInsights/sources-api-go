@@ -40,6 +40,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.POST("/sources", SourceCreate)
 	v3.PATCH("/sources/:id", SourceEdit)
 	v3.DELETE("/sources/:id", SourceDelete)
+	v3.GET("/sources/:id/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination)
 
 	// Applications
 	v3.GET("/applications", ApplicationList, middleware.ParseFilter, middleware.ParsePagination)

@@ -125,6 +125,11 @@ func (a *MockApplicationTypeDao) Update(src *m.ApplicationType) error {
 func (a *MockApplicationTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
+func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error) {
+	count := int64(1) // ApplicationType ID=1
+
+	return []m.ApplicationType{a.ApplicationTypes[0]}, &count, nil
+}
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []middleware.Filter) ([]m.SourceType, int64, error) {
 	count := int64(len(a.SourceTypes))

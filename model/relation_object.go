@@ -95,6 +95,13 @@ func (relationObject *RelationObject) setRelationInfo(query * gorm.DB) error {
 		if resultPrimaryCollection.Error != nil {
 			return resultPrimaryCollection.Error
 		}
+	case Source:
+		relationObject.Id = object.ID
+		relationObject.settings = object.RelationInfo()
+		resultPrimaryCollection := query.First(&object)
+		if resultPrimaryCollection.Error != nil {
+			return resultPrimaryCollection.Error
+		}
 	default:
 		return fmt.Errorf("can't check presence of primary resource")
 	}

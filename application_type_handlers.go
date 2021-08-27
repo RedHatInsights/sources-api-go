@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"net/http"
 	"strconv"
 
@@ -12,9 +14,25 @@ import (
 // function that defines how we get the dao - default implementation below.
 var getApplicationTypeDao func(c echo.Context) (dao.ApplicationTypeDao, error)
 
-func getApplicationTypeDaoWithoutTenant(_ echo.Context) (dao.ApplicationTypeDao, error) {
-	// we do not need tenancy for application type.
-	return &dao.ApplicationTypeDaoImpl{}, nil
+func getApplicationTypeDaoWithoutTenant(c echo.Context) (dao.ApplicationTypeDao, error) {
+	var tenantID int64
+	var ok bool
+
+	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	if err != nil {
+		return nil, err
+	}
+
+	if requestURL.IsSubCollection() {
+		tenantVal := c.Get("tenantID")
+		if tenantID, ok = tenantVal.(int64); !ok {
+			return nil, fmt.Errorf("failed to pull tenant from request")
+		}
+		return &dao.ApplicationTypeDaoImpl{TenantID: &tenantID}, nil
+	}else
+	{
+		return &dao.ApplicationTypeDaoImpl{}, nil
+	}
 }
 
 func ApplicationTypeList(c echo.Context) error {
@@ -33,7 +51,22 @@ func ApplicationTypeList(c echo.Context) error {
 		return err
 	}
 
-	apptypes, count, err := applicationTypeDB.List(limit, offset, filters)
+	var (
+		apptypes []m.ApplicationType
+		count    *int64
+	)
+
+	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+
+	if requestURL.IsSubCollection() {
+		apptypes, count, err = applicationTypeDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
+	} else {
+		apptypes, count, err = applicationTypeDB.List(limit, offset, filters)
+	}
+
 	if err != nil {
 		return err
 	}

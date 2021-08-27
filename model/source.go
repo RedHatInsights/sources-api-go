@@ -34,6 +34,14 @@ type Source struct {
 	Endpoints    []Endpoint
 }
 
+func (src *Source) RelationInfo() map[string]RelationSetting {
+	var settings = make(map[string]RelationSetting)
+
+	settings["application_type"] = RelationSetting{RelationType: "through", Through: "applications"}
+
+	return settings
+}
+
 func (src *Source) ToResponse() *SourceResponse {
 	id := strconv.FormatInt(src.ID, 10)
 	stid := strconv.FormatInt(src.SourceTypeID, 10)
