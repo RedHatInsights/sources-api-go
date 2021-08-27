@@ -59,6 +59,8 @@ func (request *RequestURL) PrimaryResource() interface{} {
 		return m.ApplicationType{Id: request.ParsedID}
 	case "sources":
 		return m.Source{ID: request.ParsedID}
+	case "source_types":
+		return m.SourceType{Id: request.ParsedID}
 	default:
 		panic("Collection " + request.PrimaryCollection + " not found.")
 	}

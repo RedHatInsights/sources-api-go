@@ -35,9 +35,25 @@ type MockMetaDataDao struct {
 }
 
 func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error) {
-	count := int64(1) // Source ID=1
+	count := int64(1)
 
-	return []m.Source{src.Sources[0]}, &count, nil
+	var sources []m.Source
+
+	for index, i := range src.Sources {
+		switch object := primaryCollection.(type) {
+		case m.SourceType:
+			if i.SourceTypeID == object.Id {
+				sources = append(sources, src.Sources[index])
+			}
+		case m.ApplicationType:
+			if i.ID == 1 { // Source with ID=1 is relevant for application types/:id/sources test
+				sources = append(sources, src.Sources[index])
+			}
+		}
+
+	}
+
+	return sources, &count, nil
 }
 
 func (src *MockSourceDao) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {

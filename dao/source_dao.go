@@ -31,7 +31,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 	// getting the total count (filters included) for pagination
 	count := int64(0)
-	query.Count(&count)
+	query.Model(&m.Source{}).Count(&count)
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&sources)

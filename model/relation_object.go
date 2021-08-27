@@ -28,8 +28,7 @@ func (relationObject *RelationObject) HasManyRelation(query *gorm.DB, model inte
 		Value: relationObject.Id},
 	}
 
-	query.Statement.AddClause(clause.Where{Exprs: expression})
-	return query.Model(model)
+	return query.Clauses(clause.Where{Exprs: expression}).Model(model)
 }
 
 func (relationObject *RelationObject) HasMany(model interface{}, query *gorm.DB) *gorm.DB {
@@ -88,19 +87,32 @@ func (relationObject *RelationObject) foreignKeyFrom() string {
 
 func (relationObject *RelationObject) setRelationInfo(query * gorm.DB) error {
 	switch object := relationObject.baseObject.(type) {
+	case SourceType:
+		relationObject.Id = object.Id
+		relationObject.settings = object.RelationInfo()
+		if query != nil {
+			resultPrimaryCollection := query.First(&object)
+			if resultPrimaryCollection.Error != nil {
+				return resultPrimaryCollection.Error
+			}
+		}
 	case ApplicationType:
 		relationObject.Id = object.Id
 		relationObject.settings = object.RelationInfo()
-		resultPrimaryCollection := query.First(&object)
-		if resultPrimaryCollection.Error != nil {
-			return resultPrimaryCollection.Error
+		if query != nil {
+			resultPrimaryCollection := query.First(&object)
+			if resultPrimaryCollection.Error != nil {
+				return resultPrimaryCollection.Error
+			}
 		}
 	case Source:
 		relationObject.Id = object.ID
 		relationObject.settings = object.RelationInfo()
-		resultPrimaryCollection := query.First(&object)
-		if resultPrimaryCollection.Error != nil {
-			return resultPrimaryCollection.Error
+		if query != nil {
+			resultPrimaryCollection := query.First(&object)
+			if resultPrimaryCollection.Error != nil {
+				return resultPrimaryCollection.Error
+			}
 		}
 	default:
 		return fmt.Errorf("can't check presence of primary resource")
@@ -109,9 +121,10 @@ func (relationObject *RelationObject) setRelationInfo(query * gorm.DB) error {
 	return nil
 }
 
-func NewRelationObject(objectModel interface {}, currentTenantID int64, DB *gorm.DB) (RelationObject, error) {
+
+func NewRelationObject(objectModel interface {}, currentTenantID int64, db *gorm.DB) (RelationObject, error) {
 	object := RelationObject{baseObject: objectModel, CurrentTenantID: currentTenantID}
-	err := object.setRelationInfo(DB)
+	err := object.setRelationInfo(db)
 	return object, err
 }
 
