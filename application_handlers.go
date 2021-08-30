@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"net/http"
 	"strconv"
 
@@ -41,7 +42,22 @@ func ApplicationList(c echo.Context) error {
 		return err
 	}
 
-	applications, count, err := applicationDB.List(limit, offset, filters)
+	var (
+		applications []m.Application
+		count        *int64
+	)
+
+	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+
+	if requestURL.IsSubCollection() {
+		applications, count, err = applicationDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
+	} else {
+		applications, count, err = applicationDB.List(limit, offset, filters)
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
 	}

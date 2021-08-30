@@ -174,6 +174,11 @@ func (a *MockSourceTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
 
+func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Application, *int64, error) {
+	count := int64(len(a.Applications))
+	return a.Applications, &count, nil
+}
+
 func (a *MockApplicationDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, int64, error) {
 	count := int64(len(a.Applications))
 	return a.Applications, count, nil

@@ -17,6 +17,7 @@ type SourceDao interface {
 
 type ApplicationDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.Application, int64, error)
+	SubCollectionList(secondaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Application, *int64, error)
 	GetById(id *int64) (*m.Application, error)
 	Create(src *m.Application) error
 	Update(src *m.Application) error

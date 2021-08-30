@@ -37,6 +37,7 @@ type Source struct {
 func (src *Source) RelationInfo() map[string]RelationSetting {
 	var settings = make(map[string]RelationSetting)
 
+	settings["application"] = RelationSetting{RelationType: "HasMany"}
 	settings["application_type"] = RelationSetting{RelationType: "through", Through: "applications"}
 
 	return settings
