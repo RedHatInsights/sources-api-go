@@ -45,6 +45,7 @@ type ApplicationTypeDao interface {
 
 type EndpointDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error)
+	SubCollectionList(secondaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error)
 	GetById(id *int64) (*m.Endpoint, error)
 	Create(src *m.Endpoint) error
 	Update(src *m.Endpoint) error

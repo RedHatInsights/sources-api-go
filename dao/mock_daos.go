@@ -211,6 +211,11 @@ func (a *MockApplicationDao) Tenant() *int64 {
 	return &tenant
 }
 
+func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error) {
+	count := int64(len(a.Endpoints))
+	return a.Endpoints, &count, nil
+}
+
 func (a *MockEndpointDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error) {
 	count := int64(len(a.Endpoints))
 	return a.Endpoints, count, nil

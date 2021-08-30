@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"net/http"
 	"strconv"
 
@@ -41,7 +42,22 @@ func EndpointList(c echo.Context) error {
 		return err
 	}
 
-	endpoints, count, err := endpointDB.List(limit, offset, filters)
+	var (
+		endpoints []m.Endpoint
+		count     *int64
+	)
+
+	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	if requestURL.IsSubCollection() {
+		endpoints, count, err = endpointDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
+	} else {
+		endpoints, count, err = endpointDB.List(limit, offset, filters)
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
 	}
