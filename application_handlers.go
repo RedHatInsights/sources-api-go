@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	m "github.com/RedHatInsights/sources-api-go/model"
 	"net/http"
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )

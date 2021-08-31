@@ -13,12 +13,12 @@ func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	applicationTypes := make([]m.ApplicationType, 0, limit)
-	query := DB.Debug()
+
 	applicationType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, nil, err
 	}
-	query = applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
+	query := applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
 
 	// getting the total count (filters included) for pagination
 	count := int64(0)

@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	m "github.com/RedHatInsights/sources-api-go/model"
 	"net/http"
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -29,8 +29,7 @@ func getMetaDataDaoWithoutTenant(c echo.Context) (dao.MetaDataDao, error) {
 			return nil, fmt.Errorf("failed to pull tenant from request")
 		}
 		return &dao.MetaDataDaoImpl{TenantID: &tenantID}, nil
-	}else
-	{
+	} else {
 		return &dao.MetaDataDaoImpl{}, nil
 	}
 }

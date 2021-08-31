@@ -2,30 +2,30 @@ package model
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/iancoleman/strcase"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"reflect"
-	"strings"
 )
 
 type RelationSetting struct {
 	RelationType string
-	Through string
+	Through      string
 }
 
 type RelationObject struct {
-	Id int64
+	Id              int64
 	CurrentTenantID int64
-	foreignKey string
-	baseObject interface{}
-	settings map[string]RelationSetting
+	baseObject      interface{}
+	settings        map[string]RelationSetting
 }
 
 func (relationObject *RelationObject) HasManyRelation(query *gorm.DB, model interface{}) *gorm.DB {
 	expression := []clause.Expression{clause.Eq{
 		Column: clause.Column{Table: clause.CurrentTable, Name: relationObject.foreignKeyFrom()},
-		Value: relationObject.Id},
+		Value:  relationObject.Id},
 	}
 
 	return query.Clauses(clause.Where{Exprs: expression}).Model(model)
@@ -42,11 +42,14 @@ func (relationObject *RelationObject) HasMany(model interface{}, query *gorm.DB)
 
 func (relationObject *RelationObject) SelectStatementFor(query *gorm.DB, model interface{}) string {
 	statement := &gorm.Statement{DB: query}
-	statement.Parse(model)
+	err := statement.Parse(model)
+	if err != nil {
+		fmt.Println(fmt.Errorf("failed to parse statement: %v", err))
+	}
 
 	var statementFields []string
-	for field, _ := range statement.Schema.FieldsByDBName {
-		statementFields = append(statementFields, statement.Table+"."+field)
+	for field := range statement.Schema.FieldsByDBName {
+		statementFields = append(statementFields, statement.Table + "." + field)
 	}
 
 	return strings.Join(statementFields, ", ")
@@ -61,12 +64,12 @@ func (relationObject *RelationObject) HasManyThrough(query *gorm.DB, model inter
 	relationSetting := relationObject.settings[subCollectionModel]
 	expression := []clause.Expression{clause.Eq{
 		Column: clause.Column{Table: clause.CurrentTable, Name: "id"},
-		Value:  clause.Column{Table: relationSetting.Through, Name: subCollectionModel  + "_id"},
-	} }
+		Value:  clause.Column{Table: relationSetting.Through, Name: subCollectionModel + "_id"},
+	}}
 
 	if relationObject.CurrentTenantID != 0 {
 		expression = append(expression, clause.Eq{Column: clause.Column{Table: relationSetting.Through, Name: "tenant_id"},
-			                                      Value: relationObject.CurrentTenantID})
+			Value: relationObject.CurrentTenantID})
 	}
 
 	joins := append([]clause.Join{}, clause.Join{
@@ -76,7 +79,7 @@ func (relationObject *RelationObject) HasManyThrough(query *gorm.DB, model inter
 	})
 
 	query.Statement.AddClause(clause.From{Joins: joins})
-	query.Where(relationSetting.Through + "." + relationObject.foreignKeyFrom() +" = ?", relationObject.Id)
+	query.Where(relationSetting.Through+"."+relationObject.foreignKeyFrom()+" = ?", relationObject.Id)
 
 	return query
 }
@@ -85,7 +88,7 @@ func (relationObject *RelationObject) foreignKeyFrom() string {
 	return strcase.ToSnake(reflect.TypeOf(relationObject.baseObject).Name()) + "_id"
 }
 
-func (relationObject *RelationObject) setRelationInfo(query * gorm.DB) error {
+func (relationObject *RelationObject) setRelationInfo(query *gorm.DB) error {
 	switch object := relationObject.baseObject.(type) {
 	case SourceType:
 		relationObject.Id = object.Id
@@ -121,12 +124,8 @@ func (relationObject *RelationObject) setRelationInfo(query * gorm.DB) error {
 	return nil
 }
 
-
-func NewRelationObject(objectModel interface {}, currentTenantID int64, db *gorm.DB) (RelationObject, error) {
+func NewRelationObject(objectModel interface{}, currentTenantID int64, db *gorm.DB) (RelationObject, error) {
 	object := RelationObject{baseObject: objectModel, CurrentTenantID: currentTenantID}
 	err := object.setRelationInfo(db)
 	return object, err
 }
-
-
-

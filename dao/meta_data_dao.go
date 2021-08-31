@@ -13,14 +13,12 @@ type MetaDataDaoImpl struct {
 
 func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error) {
 	endpoints := make([]m.MetaData, 0, limit)
-	query := DB.Debug().Offset(offset)
-
 	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, nil, err
 	}
 
-	query = sourceType.HasMany(&m.MetaData{}, DB.Debug())
+	query := sourceType.HasMany(&m.MetaData{}, DB.Debug())
 	query = query.Where("meta_data.type = 'AppMetaData'")
 
 	err = applyFilters(query, filters)
@@ -31,7 +29,7 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	count := int64(0)
 	query.Model(&m.MetaData{}).Count(&count)
 
-	result := query.Limit(limit).Find(&endpoints)
+	result := query.Limit(limit).Offset(offset).Find(&endpoints)
 	return endpoints, &count, result.Error
 }
 

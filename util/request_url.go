@@ -2,16 +2,17 @@ package util
 
 import (
 	"fmt"
-	m "github.com/RedHatInsights/sources-api-go/model"
 	"strconv"
 	"strings"
+
+	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
 type RequestURL struct {
-	ParamID string
-	ParsedID int64
-	Path string
-	PrimaryCollection string
+	ParamID             string
+	ParsedID            int64
+	Path                string
+	PrimaryCollection   string
 	SecondaryCollection string
 }
 

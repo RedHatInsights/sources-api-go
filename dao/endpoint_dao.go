@@ -13,13 +13,12 @@ type EndpointDaoImpl struct {
 
 func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
-	query := DB.Debug().Offset(offset)
 
 	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, nil, err
 	}
-	query = sourceType.HasMany(&m.Endpoint{}, DB.Debug())
+	query := sourceType.HasMany(&m.Endpoint{}, DB.Debug())
 	query = query.Where("endpoints.tenant_id = ?", a.TenantID)
 
 	err = applyFilters(query, filters)
@@ -30,7 +29,7 @@ func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	count := int64(0)
 	query.Model(&m.Endpoint{}).Count(&count)
 
-	result := query.Limit(limit).Find(&endpoints)
+	result := query.Limit(limit).Offset(offset).Find(&endpoints)
 	return endpoints, &count, result.Error
 }
 

@@ -10,7 +10,10 @@ import (
 
 func applyFilters(query *gorm.DB, filters []middleware.Filter) error {
 	if query.Statement.Table == "" {
-		query.Statement.Parse(query.Statement.Model)
+		err := query.Statement.Parse(query.Statement.Model)
+		if err != nil {
+			fmt.Println(fmt.Errorf("failed to parse statement: %v", err))
+		}
 	}
 	var filterName string
 	for _, filter := range filters {
