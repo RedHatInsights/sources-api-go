@@ -22,6 +22,14 @@ type MetaData struct {
 	ApplicationType   ApplicationType
 }
 
+func (app *MetaData) RelationInfo() map[string]RelationSetting {
+	var settings = make(map[string]RelationSetting)
+
+	settings["application_type"] = RelationSetting{RelationType: "HasMany"}
+
+	return settings
+}
+
 func (app *MetaData) ToResponse() *MetaDataResponse {
 	id := strconv.FormatInt(app.ID, 10)
 

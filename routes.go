@@ -63,6 +63,7 @@ func setupRoutes(e *echo.Echo) {
 
 	v3.GET("/app_meta_data", MetaDataList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/app_meta_data/:id", MetaDataGet)
+	v3.GET("/application_types/:id/app_meta_data", MetaDataList, middleware.ParseFilter, middleware.ParsePagination)
 
 	// SourceTypes
 	v3.GET("/source_types", SourceTypeList, middleware.ParseFilter, middleware.ParsePagination)

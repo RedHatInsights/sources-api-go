@@ -55,6 +55,7 @@ type EndpointDao interface {
 
 type MetaDataDao interface {
 	List(limit, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error)
+	SubCollectionList(secondaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error)
 	GetById(id *int64) (*m.MetaData, error)
 	Create(src *m.MetaData) error
 	Update(src *m.MetaData) error

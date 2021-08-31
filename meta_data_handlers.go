@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"net/http"
 	"strconv"
 
@@ -12,10 +14,25 @@ import (
 // function that defines how we get the dao - default implementation below.
 var getMetaDataDao func(c echo.Context) (dao.MetaDataDao, error)
 
-func getMetaDataDaoWithoutTenant(_ echo.Context) (dao.MetaDataDao, error) {
-	// we do not need tenancy for metadata.
+func getMetaDataDaoWithoutTenant(c echo.Context) (dao.MetaDataDao, error) {
+	var tenantID int64
+	var ok bool
 
-	return &dao.MetaDataDaoImpl{}, nil
+	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	if err != nil {
+		return nil, err
+	}
+
+	if requestURL.IsSubCollection() {
+		tenantVal := c.Get("tenantID")
+		if tenantID, ok = tenantVal.(int64); !ok {
+			return nil, fmt.Errorf("failed to pull tenant from request")
+		}
+		return &dao.MetaDataDaoImpl{TenantID: &tenantID}, nil
+	}else
+	{
+		return &dao.MetaDataDaoImpl{}, nil
+	}
 }
 
 func MetaDataList(c echo.Context) error {
@@ -34,7 +51,22 @@ func MetaDataList(c echo.Context) error {
 		return err
 	}
 
-	metaDatas, count, err := applicationDB.List(limit, offset, filters)
+	var (
+		metaDatas []m.MetaData
+		count     *int64
+	)
+
+	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	if requestURL.IsSubCollection() {
+		metaDatas, count, err = applicationDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
+	} else {
+		metaDatas, count, err = applicationDB.List(limit, offset, filters)
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
 	}

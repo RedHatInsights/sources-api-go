@@ -108,6 +108,11 @@ func (a *MockMetaDataDao) List(limit int, offset int, filters []middleware.Filte
 	return a.MetaDatas, count, nil
 }
 
+func (a *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error) {
+	count := int64(len(a.MetaDatas))
+	return a.MetaDatas, &count, nil
+}
+
 func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
 	for _, i := range a.MetaDatas {
 		if i.ID == *id {
