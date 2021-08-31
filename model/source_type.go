@@ -18,16 +18,10 @@ type SourceType struct {
 	Vendor      string         `json:"vendor"`
 	Schema      datatypes.JSON `json:"schema"`
 	IconUrl     string         `json:"icon_url"`
-
-	RelationObject
 }
 
 func (a *SourceType) RelationInfo() map[string]RelationSetting {
-	var settings = make(map[string]RelationSetting)
-
-	settings["source"] = RelationSetting{RelationType: "hasMany"}
-
-	return settings
+	return map[string]RelationSetting{}
 }
 
 func (a *SourceType) ToResponse() *SourceTypeResponse {

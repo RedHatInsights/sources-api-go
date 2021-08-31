@@ -49,7 +49,7 @@ func (relationObject *RelationObject) SelectStatementFor(query *gorm.DB, model i
 
 	var statementFields []string
 	for field := range statement.Schema.FieldsByDBName {
-		statementFields = append(statementFields, statement.Table + "." + field)
+		statementFields = append(statementFields, statement.Table+"."+field)
 	}
 
 	return strings.Join(statementFields, ", ")

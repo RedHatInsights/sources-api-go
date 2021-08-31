@@ -23,11 +23,7 @@ type MetaData struct {
 }
 
 func (app *MetaData) RelationInfo() map[string]RelationSetting {
-	var settings = make(map[string]RelationSetting)
-
-	settings["application_type"] = RelationSetting{RelationType: "HasMany"}
-
-	return settings
+	return map[string]RelationSetting{}
 }
 
 func (app *MetaData) ToResponse() *MetaDataResponse {
