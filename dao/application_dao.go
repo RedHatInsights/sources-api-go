@@ -34,7 +34,7 @@ func (a *ApplicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 
 func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
-	query := DB.Debug().
+	query := DB.Debug().Model(&m.Application{}).
 		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)
 
@@ -44,7 +44,7 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Fi
 	}
 
 	count := int64(0)
-	query.Model(&m.Application{}).Count(&count)
+	query.Count(&count)
 
 	result := query.Limit(limit).Find(&applications)
 	return applications, count, result.Error

@@ -41,7 +41,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
-	query := DB.Debug().
+	query := DB.Debug().Model(&m.Source{}).
 		Offset(offset).
 		Where("tenant_id = ?", s.TenantID)
 
@@ -52,7 +52,7 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]
 
 	// getting the total count (filters included) for pagination
 	count := int64(0)
-	query.Model(&m.Source{}).Count(&count)
+	query.Count(&count)
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Find(&sources)

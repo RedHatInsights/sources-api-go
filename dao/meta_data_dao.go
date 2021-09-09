@@ -35,7 +35,7 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 
 func (a *MetaDataDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
-	query := DB.Debug()
+	query := DB.Debug().Model(&m.MetaData{})
 
 	err := applyFilters(query, filters)
 	if err != nil {
@@ -43,7 +43,7 @@ func (a *MetaDataDaoImpl) List(limit int, offset int, filters []middleware.Filte
 	}
 
 	count := int64(0)
-	query.Model(&m.MetaData{}).Count(&count)
+	query.Count(&count)
 
 	result := query.Limit(limit).Find(&metaData)
 	return metaData, count, result.Error
