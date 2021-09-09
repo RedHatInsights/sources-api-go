@@ -5,9 +5,11 @@ import (
 	"reflect"
 	"strings"
 
+	pluralize "github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 )
 
 type RelationSetting struct {
@@ -19,7 +21,6 @@ type RelationObject struct {
 	Id              int64
 	CurrentTenantID int64
 	baseObject      interface{}
-	settings        map[string]RelationSetting
 }
 
 func (relationObject *RelationObject) HasManyRelation(query *gorm.DB, model interface{}) *gorm.DB {
@@ -31,10 +32,22 @@ func (relationObject *RelationObject) HasManyRelation(query *gorm.DB, model inte
 	return query.Clauses(clause.Where{Exprs: expression}).Model(model)
 }
 
+func (relationObject *RelationObject) tagsFromRelationDefinedAs(model interface{}) map[string]string {
+	elemName := reflect.TypeOf(model).Elem().Name()
+	p := pluralize.NewClient()
+	relationName := p.Plural(elemName)
+
+	statement := reflect.TypeOf(relationObject.baseObject)
+	field, _ := statement.FieldByName(relationName)
+	tag := field.Tag.Get("gorm")
+	return schema.ParseTagSetting(tag, ";")
+}
+
 func (relationObject *RelationObject) HasMany(model interface{}, query *gorm.DB) *gorm.DB {
-	modelName := strcase.ToSnake(reflect.TypeOf(model).Elem().Name())
-	if relationObject.settings[modelName].RelationType == "through" {
-		return relationObject.HasManyThrough(query, model)
+	for key, throughTable := range relationObject.tagsFromRelationDefinedAs(model) {
+		if key == "MANY2MANY" {
+			return relationObject.HasManyThrough(query, model, throughTable)
+		}
 	}
 
 	return relationObject.HasManyRelation(query, model)
@@ -55,31 +68,30 @@ func (relationObject *RelationObject) SelectStatementFor(query *gorm.DB, model i
 	return strings.Join(statementFields, ", ")
 }
 
-func (relationObject *RelationObject) HasManyThrough(query *gorm.DB, model interface{}) *gorm.DB {
+func (relationObject *RelationObject) HasManyThrough(query *gorm.DB, model interface{}, throughTable string) *gorm.DB {
 	query = query.Debug().Select(relationObject.SelectStatementFor(query, model))
 	query.Statement.Distinct = true
 
 	subCollectionModel := strcase.ToSnake(reflect.TypeOf(model).Elem().Name())
 	query.Model(model)
-	relationSetting := relationObject.settings[subCollectionModel]
 	expression := []clause.Expression{clause.Eq{
 		Column: clause.Column{Table: clause.CurrentTable, Name: "id"},
-		Value:  clause.Column{Table: relationSetting.Through, Name: subCollectionModel + "_id"},
+		Value:  clause.Column{Table: throughTable, Name: subCollectionModel + "_id"},
 	}}
 
 	if relationObject.CurrentTenantID != 0 {
-		expression = append(expression, clause.Eq{Column: clause.Column{Table: relationSetting.Through, Name: "tenant_id"},
+		expression = append(expression, clause.Eq{Column: clause.Column{Table: throughTable, Name: "tenant_id"},
 			Value: relationObject.CurrentTenantID})
 	}
 
 	joins := append([]clause.Join{}, clause.Join{
 		Type:  clause.InnerJoin,
-		Table: clause.Table{Name: relationSetting.Through},
+		Table: clause.Table{Name: throughTable},
 		ON:    clause.Where{Exprs: expression},
 	})
 
 	query.Statement.AddClause(clause.From{Joins: joins})
-	query.Where(relationSetting.Through+"."+relationObject.foreignKeyFrom()+" = ?", relationObject.Id)
+	query.Where(throughTable+"."+relationObject.foreignKeyFrom()+" = ?", relationObject.Id)
 
 	return query
 }
@@ -88,44 +100,47 @@ func (relationObject *RelationObject) foreignKeyFrom() string {
 	return strcase.ToSnake(reflect.TypeOf(relationObject.baseObject).Name()) + "_id"
 }
 
-func (relationObject *RelationObject) setRelationInfo(query *gorm.DB) error {
+func (relationObject *RelationObject) setRelationObjectID() error {
 	switch object := relationObject.baseObject.(type) {
 	case SourceType:
 		relationObject.Id = object.Id
-		relationObject.settings = object.RelationInfo()
-		if query != nil {
-			resultPrimaryCollection := query.First(&object)
-			if resultPrimaryCollection.Error != nil {
-				return resultPrimaryCollection.Error
-			}
-		}
 	case ApplicationType:
 		relationObject.Id = object.Id
-		relationObject.settings = object.RelationInfo()
-		if query != nil {
-			resultPrimaryCollection := query.First(&object)
-			if resultPrimaryCollection.Error != nil {
-				return resultPrimaryCollection.Error
-			}
-		}
 	case Source:
 		relationObject.Id = object.ID
-		relationObject.settings = object.RelationInfo()
-		if query != nil {
-			resultPrimaryCollection := query.First(&object)
-			if resultPrimaryCollection.Error != nil {
-				return resultPrimaryCollection.Error
-			}
-		}
 	default:
-		return fmt.Errorf("can't check presence of primary resource")
+		return fmt.Errorf("can't set ID to relation object, object type is not recognized")
 	}
 
 	return nil
 }
 
-func NewRelationObject(objectModel interface{}, currentTenantID int64, db *gorm.DB) (RelationObject, error) {
+func (relationObject *RelationObject) checkIfPrimaryRecordExists(query *gorm.DB) error {
+	if relationObject.Id == 0 {
+		return fmt.Errorf("can't check presence of primary resource, ID is not set")
+	}
+
+	result := map[string]interface{}{}
+	query.Model(relationObject.baseObject).Find(&result, relationObject.Id)
+
+	if len(result) == 0 {
+		return fmt.Errorf("record not found")
+	}
+
+	return nil
+}
+
+func NewRelationObject(objectModel interface{}, currentTenantID int64, query *gorm.DB) (RelationObject, error) {
 	object := RelationObject{baseObject: objectModel, CurrentTenantID: currentTenantID}
-	err := object.setRelationInfo(db)
+	err := object.setRelationObjectID()
+	if err != nil {
+		return object, err
+	}
+
+	err = object.checkIfPrimaryRecordExists(query)
+	if err != nil {
+		return object, err
+	}
+
 	return object, err
 }

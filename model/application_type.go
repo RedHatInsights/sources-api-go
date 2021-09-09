@@ -17,14 +17,10 @@ type ApplicationType struct {
 	DependentApplications        datatypes.JSON `json:"dependent_applications"`
 	SupportedSourceTypes         datatypes.JSON `json:"supported_source_types"`
 	SupportedAuthenticationTypes datatypes.JSON `json:"supported_authentication_types"`
-}
 
-func (a *ApplicationType) RelationInfo() map[string]RelationSetting {
-	var settings = make(map[string]RelationSetting)
-
-	settings["source"] = RelationSetting{RelationType: "through", Through: "applications"}
-
-	return settings
+	Applications []Application
+	Sources      []*Source `gorm:"many2many:applications;"`
+	MetaData     []MetaData
 }
 
 func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {

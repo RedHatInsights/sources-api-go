@@ -30,16 +30,9 @@ type Source struct {
 	Tenant   Tenant
 	TenantID int64 `json:"tenant_id"`
 
-	Applications []Application
-	Endpoints    []Endpoint
-}
-
-func (src *Source) RelationInfo() map[string]RelationSetting {
-	var settings = make(map[string]RelationSetting)
-
-	settings["application_type"] = RelationSetting{RelationType: "through", Through: "applications"}
-
-	return settings
+	ApplicationTypes []*ApplicationType `gorm:"many2many:applications"`
+	Applications     []Application
+	Endpoints        []Endpoint
 }
 
 func (src *Source) ToResponse() *SourceResponse {

@@ -23,4 +23,6 @@ type Authentication struct {
 
 	ResourceType string `json:"resource_type"`
 	ResourceId   int64  `json:"resource_id"`
+
+	ApplicationAuthentications []ApplicationAuthentication
 }
