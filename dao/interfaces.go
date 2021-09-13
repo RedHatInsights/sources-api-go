@@ -6,7 +6,7 @@ import (
 )
 
 type SourceDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error)
+	List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error)
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error
 	Update(src *m.Source) error
@@ -15,7 +15,7 @@ type SourceDao interface {
 }
 
 type ApplicationDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.Application, *int64, error)
+	List(limit, offset int, filters []middleware.Filter) ([]m.Application, int64, error)
 	GetById(id *int64) (*m.Application, error)
 	Create(src *m.Application) error
 	Update(src *m.Application) error
@@ -24,7 +24,7 @@ type ApplicationDao interface {
 }
 
 type ApplicationAuthenticationDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, *int64, error)
+	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, int64, error)
 	GetById(id *int64) (*m.ApplicationAuthentication, error)
 	Create(src *m.ApplicationAuthentication) error
 	Update(src *m.ApplicationAuthentication) error
@@ -33,7 +33,7 @@ type ApplicationAuthenticationDao interface {
 }
 
 type ApplicationTypeDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error)
+	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error)
 	GetById(id *int64) (*m.ApplicationType, error)
 	Create(src *m.ApplicationType) error
 	Update(src *m.ApplicationType) error
@@ -41,7 +41,7 @@ type ApplicationTypeDao interface {
 }
 
 type EndpointDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error)
+	List(limit, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error)
 	GetById(id *int64) (*m.Endpoint, error)
 	Create(src *m.Endpoint) error
 	Update(src *m.Endpoint) error
@@ -50,7 +50,7 @@ type EndpointDao interface {
 }
 
 type MetaDataDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error)
+	List(limit, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error)
 	GetById(id *int64) (*m.MetaData, error)
 	Create(src *m.MetaData) error
 	Update(src *m.MetaData) error
@@ -58,7 +58,7 @@ type MetaDataDao interface {
 }
 
 type SourceTypeDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, *int64, error)
+	List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, int64, error)
 	GetById(id *int64) (*m.SourceType, error)
 	Create(src *m.SourceType) error
 	Update(src *m.SourceType) error

@@ -11,7 +11,7 @@ type ApplicationAuthenticationDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, *int64, error) {
+func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, int64, error) {
 	applications := make([]m.ApplicationAuthentication, 0, limit)
 	query := DB.Debug().
 		Offset(offset).
@@ -19,14 +19,14 @@ func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 
 	err := applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	count := int64(0)
 	query.Model(&m.ApplicationAuthentication{}).Count(&count)
 
 	result := query.Limit(limit).Find(&applications)
-	return applications, &count, result.Error
+	return applications, count, result.Error
 }
 
 func (a *ApplicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {

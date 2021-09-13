@@ -11,7 +11,7 @@ type EndpointDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *EndpointDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error) {
+func (a *EndpointDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
 	query := DB.Debug().
 		Offset(offset).
@@ -19,14 +19,14 @@ func (a *EndpointDaoImpl) List(limit int, offset int, filters []middleware.Filte
 
 	err := applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	count := int64(0)
 	query.Model(&m.Endpoint{}).Count(&count)
 
 	result := query.Limit(limit).Find(&endpoints)
-	return endpoints, &count, result.Error
+	return endpoints, count, result.Error
 }
 
 func (a *EndpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {

@@ -8,7 +8,7 @@ import (
 type ApplicationTypeDaoImpl struct {
 }
 
-func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error) {
+func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	apptypes := make([]m.ApplicationType, 0, limit)
@@ -16,7 +16,7 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Fi
 
 	err := applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	// getting the total count (filters included) for pagination
@@ -26,7 +26,7 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Fi
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&apptypes)
 
-	return apptypes, &count, result.Error
+	return apptypes, count, result.Error
 }
 
 func (a *ApplicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
