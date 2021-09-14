@@ -90,10 +90,11 @@ func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
 		return err
 	}
 
-	_, err = Vault.Write(path, data)
+	out, err := Vault.Write(path, data)
 	if err != nil {
 		return err
 	}
+	auth.Version = out.Data["version"].(json.Number).String()
 
 	return nil
 }
@@ -106,10 +107,11 @@ func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
 		return err
 	}
 
-	_, err = Vault.Write(path, data)
+	out, err := Vault.Write(path, data)
 	if err != nil {
 		return err
 	}
+	auth.Version = out.Data["version"].(json.Number).String()
 
 	return nil
 }
