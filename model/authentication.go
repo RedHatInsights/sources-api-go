@@ -1,28 +1,23 @@
 package model
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
-
-	"gorm.io/datatypes"
 )
 
 type Authentication struct {
-	AvailabilityStatus
-	Pause
-
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	// UpdatedAt time.Time `json:"updated_at"`
 
-	Name                    string         `json:"name,omitempty"`
-	AuthType                string         `json:"authtype"`
-	Username                string         `json:"username"`
-	Password                string         `json:"password"`
-	Extra                   datatypes.JSON `json:"extra,omitempty"`
-	Version                 string         `json:"version"`
-	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
+	Name                    string                 `json:"name,omitempty"`
+	AuthType                string                 `json:"authtype"`
+	Username                string                 `json:"username"`
+	Password                string                 `json:"password"`
+	Extra                   map[string]interface{} `json:"extra,omitempty"`
+	Version                 string                 `json:"version"`
+	AvailabilityStatus      string                 `json:"availability_status,omitempty"`
+	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
 
 	SourceID int64 `json:"source_id"`
 	Source   Source
@@ -38,18 +33,17 @@ type Authentication struct {
 func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 	return &AuthenticationResponse{
-		//AvailabilityStatus: auth.AvailabilityStatus,
-		//Pause:              auth.Pause,
 		ID:        auth.ID,
 		CreatedAt: auth.CreatedAt,
-		UpdatedAt: auth.UpdatedAt,
-		Name:      auth.Name,
-		Version:   auth.Version,
-		AuthType:  auth.AuthType,
-		Username:  auth.Username,
+		// UpdatedAt: auth.UpdatedAt,
+		Name:     auth.Name,
+		Version:  auth.Version,
+		AuthType: auth.AuthType,
+		Username: auth.Username,
 		// TODO: remove this?
 		Password:                auth.Password,
 		Extra:                   auth.Extra,
+		AvailabilityStatus:      auth.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              resourceID,
@@ -57,21 +51,12 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 }
 
 func (a *Authentication) ToVaultMap() (map[string]interface{}, error) {
-	var extra []byte
-	if a.Extra != nil {
-		var err error
-		extra, err = json.Marshal(a.Extra)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	data := map[string]interface{}{
 		"name":                      a.Name,
 		"authtype":                  a.AuthType,
 		"username":                  a.Username,
 		"password":                  a.Password,
-		"extra":                     extra,
+		"extra":                     a.Extra,
 		"availability_status":       a.AvailabilityStatus,
 		"availability_status_error": a.AvailabilityStatusError,
 		"resource_type":             a.ResourceType,

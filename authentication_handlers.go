@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -51,7 +50,20 @@ func AuthenticationList(c echo.Context) error {
 		out = append(out, *auth.ToResponse())
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(count), limit, offset))
+}
+
+func AuthenticationGet(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	auth, err := authDao.GetById(c.Param("uid"))
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, auth.ToResponse())
 }
 
 func AuthenticationCreate(c echo.Context) error {
@@ -66,20 +78,12 @@ func AuthenticationCreate(c echo.Context) error {
 		return err
 	}
 
-	var extra []byte
-	if createRequest.Extra != nil {
-		extra, err = json.Marshal(createRequest.Extra)
-		if err != nil {
-			return err
-		}
-	}
-
 	auth := &m.Authentication{
 		Name:         createRequest.Name,
 		AuthType:     createRequest.AuthType,
 		Username:     createRequest.Username,
 		Password:     createRequest.Password,
-		Extra:        extra,
+		Extra:        createRequest.Extra,
 		ResourceType: createRequest.ResourceType,
 		ResourceID:   createRequest.ResourceID,
 	}
@@ -91,16 +95,29 @@ func AuthenticationCreate(c echo.Context) error {
 	return c.JSON(http.StatusOK, auth.ToResponse())
 }
 
-func AuthenticationGet(c echo.Context) error {
+func AuthenticationUpdate(c echo.Context) error {
 	authDao, err := getAuthenticationDao(c)
 	if err != nil {
 		return err
 	}
 
+	updateRequest := &m.AuthenticationEditRequest{}
+	err = c.Bind(updateRequest)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
 	auth, err := authDao.GetById(c.Param("uid"))
 	if err != nil {
-		return err
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(fmt.Sprintf("Authentication %v not found", c.Param("uid")), "404"))
 	}
+
+	auth.UpdateFromRequest(updateRequest)
+	err = authDao.Update(auth)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+
 	return c.JSON(http.StatusOK, auth.ToResponse())
 }
 

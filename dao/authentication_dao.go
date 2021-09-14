@@ -17,21 +17,31 @@ type AuthenticationDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Authentication, *int64, error) {
+func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
+	}
+
+	end := 0
+	if limit > len(keys) {
+		end = len(keys)
+	} else {
+		end = limit
 	}
 
 	out := make([]m.Authentication, 0, len(keys))
-	for _, val := range keys {
-		// TODO: I would _really_ like to change this to a different schema. The current
-		// Authentication schema doesn't make sense here.
-		out = append(out, m.Authentication{Username: val})
+	for _, val := range keys[offset:end] {
+		secret, err := a.getKey(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, val))
+		if err != nil {
+			return nil, 0, err
+		}
+
+		out = append(out, *secret)
 	}
 	count := int64(len(out))
 
-	return out, &count, nil
+	return out, count, nil
 }
 
 func (a *AuthenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
@@ -71,8 +81,20 @@ func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
 	return nil
 }
 
-func (a *AuthenticationDaoImpl) Update(_ *m.Authentication) error {
-	panic("not implemented") // TODO: Implement
+func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
+	path := fmt.Sprintf("secret/data/%d/%s_%v_%s", *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
+
+	data, err := auth.ToVaultMap()
+	if err != nil {
+		return err
+	}
+
+	_, err = Vault.Write(path, data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *AuthenticationDaoImpl) Delete(uid string) error {
@@ -83,7 +105,7 @@ func (a *AuthenticationDaoImpl) Delete(uid string) error {
 
 	for _, key := range keys {
 		if strings.HasSuffix(key, uid) {
-			path := fmt.Sprintf("secret/data/%d/%s", *a.TenantID, key)
+			path := fmt.Sprintf("secret/metadata/%d/%s", *a.TenantID, key)
 			out, err := Vault.Delete(path)
 			fmt.Println(out)
 			return err
@@ -139,7 +161,7 @@ func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 }
 
 func authFromVault(secret *api.Secret) *m.Authentication {
-	var data, metadata map[string]interface{}
+	var data, metadata, extra map[string]interface{}
 	var ok bool
 	if data, ok = secret.Data["data"].(map[string]interface{}); !ok {
 		return nil
@@ -153,10 +175,8 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		return nil
 	}
 
-	var extra []byte
 	if data["extra"] != nil {
-		err = json.Unmarshal(extra, data["extra"])
-		if err != nil {
+		if extra, ok = data["extra"].(map[string]interface{}); !ok {
 			return nil
 		}
 	}
@@ -164,7 +184,10 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	auth := &m.Authentication{}
 	auth.CreatedAt = createdAt
 	auth.Version = metadata["version"].(json.Number).String()
-	auth.Extra = extra
+
+	if extra != nil {
+		auth.Extra = extra
+	}
 
 	if data["name"] != nil {
 		if auth.Name, ok = data["name"].(string); !ok {
