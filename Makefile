@@ -37,4 +37,8 @@ lint:
 gci:
 	golangci-lint run -E gci --fix
 
-.PHONY: setup tidy build clean run container remotedebug debug test lint gci
+vault:
+	# runs a server locally - with `root` as the token. useful for development
+	vault server -dev -dev-root-token-id root
+
+.PHONY: setup tidy build clean run container remotedebug debug test lint gci vault
