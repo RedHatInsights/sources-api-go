@@ -50,6 +50,12 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	}
 }
 
+/*
+	This method translates an Authentication struct to a hash that will be
+	accepted by vault, this format will also be deserialized properly by
+	dao.authFromVault, so if we are to add more fields they will need to be
+	added here as well.
+*/
 func (a *Authentication) ToVaultMap() (map[string]interface{}, error) {
 	data := map[string]interface{}{
 		"name":                      a.Name,

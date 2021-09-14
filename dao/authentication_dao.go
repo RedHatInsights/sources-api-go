@@ -17,12 +17,22 @@ type AuthenticationDaoImpl struct {
 	TenantID *int64
 }
 
+/*
+	Listing is kind of tough here - it is basically O(N) where N is the results
+	returned from vault. It will get slow probably when there are 100 results to
+	fetch. In Vault's documentation they do say fetching is handled in parallel
+	so we could potentially fetch multiple at once.
+
+	TODO: Maybe parallelize fetching multiple records with goroutines +
+	waitgroup
+*/
 func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
 	}
 
+	// Handle if the limit is longer than the keys available
 	end := 0
 	if limit > len(keys) {
 		end = len(keys)
@@ -44,11 +54,18 @@ func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []middleware
 	return out, count, nil
 }
 
+/*
+	Getting by the UID is tough as well - we have to list all the keys and find
+	the one with the right suffix before fetching it. So every "show" request
+	will always incur 2 reqs to vault. It may be slower but that is a casualty
+	of not having an RDMS.
+*/
 func (a *AuthenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, err
 	}
+
 	var fullKey string
 	for _, key := range keys {
 		if strings.HasSuffix(key, uid) {
@@ -106,8 +123,8 @@ func (a *AuthenticationDaoImpl) Delete(uid string) error {
 	for _, key := range keys {
 		if strings.HasSuffix(key, uid) {
 			path := fmt.Sprintf("secret/metadata/%d/%s", *a.TenantID, key)
-			out, err := Vault.Delete(path)
-			fmt.Println(out)
+			_, err := Vault.Delete(path)
+
 			return err
 		}
 	}
@@ -119,13 +136,21 @@ func (a *AuthenticationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
+/*
+	This method lists all keys for a certain tenant - this is necessary because
+	of the fact that we can't search for a key based on name, type etc much like
+	a k/v store. (almost like the `vault kv get` and `vault kv put`)
+*/
 func (a *AuthenticationDaoImpl) listKeys() ([]string, error) {
+	// List all the keys
 	path := fmt.Sprintf("secret/metadata/%d/", *a.TenantID)
 	list, err := Vault.List(path)
 	if err != nil || list == nil {
 		return nil, err
 	}
 
+	// data["keys"] is where the objects are returned. it's an array of
+	// interfaces but we know they are strings
 	var data []interface{}
 	var ok bool
 	if data, ok = list.Data["keys"].([]interface{}); !ok {
@@ -142,8 +167,12 @@ func (a *AuthenticationDaoImpl) listKeys() ([]string, error) {
 	return keys, nil
 }
 
+/*
+	Fetch a key from Vault (full path, type and id included)
+*/
 func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 	paths := strings.Split(path, "_")
+	// the uid is the last part of the path, e.g. Source_2_435-bnsd-4362
 	uid := paths[len(paths)-1]
 
 	secret, err := Vault.Read(path)
@@ -151,6 +180,8 @@ func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 		return nil, fmt.Errorf("authentication not found")
 	}
 
+	// parse the secret using our wild and crazy mapping function
+	// if it comes back as nil - something went wrong.
 	auth := authFromVault(secret)
 	if auth == nil {
 		return nil, fmt.Errorf("failed to deserialize secret from vault")
@@ -160,7 +191,18 @@ func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 	return auth, nil
 }
 
+/*
+	*VERY* important function. This is the function that parses data from Vault
+	into an Authentication object. It is basically the inverse of
+	Authentication#ToVaultMap().
+
+	If we are to add more fields - they will need to be added here.
+*/
 func authFromVault(secret *api.Secret) *m.Authentication {
+	// first step is to _actually_ extract the data/metadata hashes - which are
+	// just map[string]interface{} but the response data type is very generic so
+	// we need to infer it ourselves. which is good because we get a lot of type
+	// checking this way.
 	var data, metadata, extra map[string]interface{}
 	var ok bool
 	if data, ok = secret.Data["data"].(map[string]interface{}); !ok {
@@ -170,17 +212,23 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		return nil
 	}
 
+	// time comes back as a Go time.RFC3339Nano which is nice!
 	createdAt, err := time.Parse(time.RFC3339Nano, metadata["created_time"].(string))
 	if err != nil {
 		return nil
 	}
 
+	// the `extra` field also comes back as a map just like we stored which is
+	// pretty cool. No need to marshal/unmarshal strings!
 	if data["extra"] != nil {
 		if extra, ok = data["extra"].(map[string]interface{}); !ok {
 			return nil
 		}
 	}
 
+	// Create the authentication object and fill it in - checking types as we
+	// go. We explicitly check each type so we can handle it gracefully rather
+	// than a panic happening at runtime.
 	auth := &m.Authentication{}
 	auth.CreatedAt = createdAt
 	auth.Version = metadata["version"].(json.Number).String()
