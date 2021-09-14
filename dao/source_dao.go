@@ -11,7 +11,7 @@ type SourceDaoImpl struct {
 	TenantID *int64
 }
 
-func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error) {
+func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
 	query := DB.Debug().
 		Offset(offset).
@@ -19,7 +19,7 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]
 
 	err := applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	// getting the total count (filters included) for pagination
@@ -29,7 +29,7 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]
 	// limiting + running the actual query.
 	result := query.Limit(limit).Find(&sources)
 
-	return sources, &count, result.Error
+	return sources, count, result.Error
 }
 
 func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {

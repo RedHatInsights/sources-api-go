@@ -8,7 +8,7 @@ import (
 type SourceTypeDaoImpl struct {
 }
 
-func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, *int64, error) {
+func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sourceTypes := make([]m.SourceType, 0, limit)
@@ -16,7 +16,7 @@ func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter)
 
 	err := applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	// getting the total count (filters included) for pagination
@@ -26,7 +26,7 @@ func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter)
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&sourceTypes)
 
-	return sourceTypes, &count, result.Error
+	return sourceTypes, count, result.Error
 }
 
 func (a *SourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {

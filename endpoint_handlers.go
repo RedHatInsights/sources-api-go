@@ -52,7 +52,7 @@ func EndpointList(c echo.Context) error {
 		out[i] = *a.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(count), limit, offset))
 }
 
 func EndpointGet(c echo.Context) error {

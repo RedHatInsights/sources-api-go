@@ -11,7 +11,7 @@ type ApplicationDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, *int64, error) {
+func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
 	query := DB.Debug().
 		Offset(offset).
@@ -19,14 +19,14 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Fi
 
 	err := applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	count := int64(0)
 	query.Model(&m.Application{}).Count(&count)
 
 	result := query.Limit(limit).Find(&applications)
-	return applications, &count, result.Error
+	return applications, count, result.Error
 }
 
 func (a *ApplicationDaoImpl) GetById(id *int64) (*m.Application, error) {

@@ -47,7 +47,7 @@ func SourceTypeList(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(count), limit, offset))
 }
 
 func SourceTypeGet(c echo.Context) error {
