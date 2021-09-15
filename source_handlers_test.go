@@ -24,10 +24,10 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	c.Set("offset", -1)
 	c.Set("filters", []middleware.Filter{})
 	c.Set("tenantID", int64(1))
-	c.SetParamNames("id")
+	c.SetParamNames("source_type_id")
 	c.SetParamValues("1")
 
-	err := SourceList(c)
+	err := SourceTypeListSource(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,10 +72,10 @@ func TestApplicationSourceSubcollectionList(t *testing.T) {
 	c.Set("offset", -1)
 	c.Set("filters", []middleware.Filter{})
 	c.Set("tenantID", int64(1))
-	c.SetParamNames("id")
+	c.SetParamNames("application_type_id")
 	c.SetParamValues("1")
 
-	err := SourceList(c)
+	err := ApplicationTypeListSource(c)
 	if err != nil {
 		t.Error(err)
 	}

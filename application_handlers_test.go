@@ -36,10 +36,10 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 	c.Set("offset", -1)
 	c.Set("filters", []middleware.Filter{})
 	c.Set("tenantID", int64(1))
-	c.SetParamNames("id")
+	c.SetParamNames("source_id")
 	c.SetParamValues("1")
 
-	err := ApplicationList(c)
+	err := SourceListApplications(c)
 	if err != nil {
 		t.Error(err)
 	}

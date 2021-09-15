@@ -18,16 +18,14 @@ func getMetaDataDaoWithoutTenant(c echo.Context) (dao.MetaDataDao, error) {
 	var tenantID int64
 	var ok bool
 
-	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
-	if err != nil {
-		return nil, err
-	}
+	tenancyRequired := !(c.Get("withoutTenancy") == true)
 
-	if requestURL.IsSubCollection() {
+	if tenancyRequired {
 		tenantVal := c.Get("tenantID")
 		if tenantID, ok = tenantVal.(int64); !ok {
 			return nil, fmt.Errorf("failed to pull tenant from request")
 		}
+
 		return &dao.MetaDataDaoImpl{TenantID: &tenantID}, nil
 	} else {
 		return &dao.MetaDataDaoImpl{}, nil
@@ -55,16 +53,47 @@ func MetaDataList(c echo.Context) error {
 		count     *int64
 	)
 
-	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
+	metaDatas, count, err = applicationDB.List(limit, offset, filters)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+
+	out := make([]interface{}, len(metaDatas))
+	for i, a := range metaDatas {
+		out[i] = *a.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+}
+
+func ApplicationTypeListMetaData(c echo.Context) error {
+	applicationDB, err := getMetaDataDao(c)
 	if err != nil {
 		return err
 	}
 
-	if requestURL.IsSubCollection() {
-		metaDatas, count, err = applicationDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
-	} else {
-		metaDatas, count, err = applicationDB.List(limit, offset, filters)
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
 	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("application_type_id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	var (
+		metaDatas []m.MetaData
+		count     *int64
+	)
+
+	metaDatas, count, err = applicationDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))

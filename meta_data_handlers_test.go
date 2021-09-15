@@ -17,17 +17,17 @@ var testMetaData = []m.MetaData{
 }
 
 func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/:id/app_meta_data", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/:application_type_id/app_meta_data", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	c.Set("limit", 99)
 	c.Set("offset", -1)
 	c.Set("filters", []middleware.Filter{})
 	c.Set("tenantID", int64(1))
-	c.SetParamNames("id")
+	c.SetParamNames("application_type_id")
 	c.SetParamValues("1")
 
-	err := MetaDataList(c)
+	err := ApplicationTypeListMetaData(c)
 	if err != nil {
 		t.Error(err)
 	}

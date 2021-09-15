@@ -18,20 +18,60 @@ func getApplicationTypeDaoWithoutTenant(c echo.Context) (dao.ApplicationTypeDao,
 	var tenantID int64
 	var ok bool
 
-	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
-	if err != nil {
-		return nil, err
-	}
+	tenancyRequired := !(c.Get("withoutTenancy") == true)
 
-	if requestURL.IsSubCollection() {
+	if tenancyRequired {
 		tenantVal := c.Get("tenantID")
 		if tenantID, ok = tenantVal.(int64); !ok {
 			return nil, fmt.Errorf("failed to pull tenant from request")
 		}
+
 		return &dao.ApplicationTypeDaoImpl{TenantID: &tenantID}, nil
 	} else {
 		return &dao.ApplicationTypeDaoImpl{}, nil
 	}
+}
+
+func SourceListApplicationTypes(c echo.Context) error {
+	applicationTypeDB, err := getApplicationTypeDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		apptypes []m.ApplicationType
+		count    *int64
+	)
+
+	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	apptypes, count, err = applicationTypeDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+
+	// converting the objects to the interface type so the collection response can process it
+	// allocating the length of our collection (so it doesn't have to resize)
+	out := make([]interface{}, len(apptypes))
+	for i, s := range apptypes {
+		out[i] = *s.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
 }
 
 func ApplicationTypeList(c echo.Context) error {
@@ -55,16 +95,7 @@ func ApplicationTypeList(c echo.Context) error {
 		count    *int64
 	)
 
-	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
-	}
-
-	if requestURL.IsSubCollection() {
-		apptypes, count, err = applicationTypeDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
-	} else {
-		apptypes, count, err = applicationTypeDB.List(limit, offset, filters)
-	}
+	apptypes, count, err = applicationTypeDB.List(limit, offset, filters)
 
 	if err != nil {
 		return err

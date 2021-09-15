@@ -40,18 +40,18 @@ func setupRoutes(e *echo.Echo) {
 	v3.POST("/sources", SourceCreate)
 	v3.PATCH("/sources/:id", SourceEdit)
 	v3.DELETE("/sources/:id", SourceDelete)
-	v3.GET("/sources/:id/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/sources/:id/applications", ApplicationList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/sources/:id/endpoints", EndpointList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/sources/:source_id/applications", SourceListApplications, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, middleware.ParseFilter, middleware.ParsePagination)
 
 	// Applications
 	v3.GET("/applications", ApplicationList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/applications/:id", ApplicationGet)
 
 	// ApplicationTypes
-	v3.GET("/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/application_types/:id", ApplicationTypeGet)
-	v3.GET("/application_types/:id/sources", SourceList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination, withoutTenancy)
+	v3.GET("/application_types/:id", ApplicationTypeGet, withoutTenancy)
+	v3.GET("/application_types/:application_type_id/sources", ApplicationTypeListSource, middleware.ParseFilter, middleware.ParsePagination)
 
 	// Endpoints
 	v3.GET("/endpoints", EndpointList, middleware.ParseFilter, middleware.ParsePagination)
@@ -61,14 +61,21 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/application_authentications", ApplicationAuthenticationList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet)
 
-	v3.GET("/app_meta_data", MetaDataList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/app_meta_data/:id", MetaDataGet)
-	v3.GET("/application_types/:id/app_meta_data", MetaDataList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/app_meta_data", MetaDataList, middleware.ParseFilter, middleware.ParsePagination, withoutTenancy)
+	v3.GET("/app_meta_data/:id", MetaDataGet, withoutTenancy)
+	v3.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, middleware.ParseFilter, middleware.ParsePagination)
 
 	// SourceTypes
 	v3.GET("/source_types", SourceTypeList, middleware.ParseFilter, middleware.ParsePagination)
 	v3.GET("/source_types/:id", SourceTypeGet)
-	v3.GET("/source_types/:id/sources", SourceList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, middleware.ParseFilter, middleware.ParsePagination)
+}
+
+func withoutTenancy(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Set("withoutTenancy", true)
+		return next(c)
+	}
 }
 
 func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {

@@ -16,17 +16,17 @@ var testApplicationTypeData = []m.ApplicationType{
 }
 
 func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/1/application_types", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/:source_id/application_types", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	c.Set("limit", 99)
 	c.Set("offset", -1)
 	c.Set("filters", []middleware.Filter{})
 	c.Set("tenantID", int64(1))
-	c.SetParamNames("id")
+	c.SetParamNames("source_id")
 	c.SetParamValues("1")
 
-	err := ApplicationTypeList(c)
+	err := SourceListApplicationTypes(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -72,6 +72,7 @@ func TestApplicationTypeList(t *testing.T) {
 	c.Set("limit", 100)
 	c.Set("offset", 0)
 	c.Set("filters", []middleware.Filter{})
+	c.Set("withoutTenancy", true)
 
 	err := ApplicationTypeList(c)
 	if err != nil {
@@ -118,6 +119,7 @@ func TestApplicationTypeGet(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetParamNames("id")
 	c.SetParamValues("1")
+	c.Set("withoutTenancy", true)
 
 	err := ApplicationTypeGet(c)
 	if err != nil {

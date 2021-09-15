@@ -26,6 +26,47 @@ func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
 	return &dao.ApplicationDaoImpl{TenantID: &tenantID}, nil
 }
 
+func SourceListApplications(c echo.Context) error {
+	applicationDB, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		applications []m.Application
+		count        *int64
+	)
+
+	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
+
+	out := make([]interface{}, len(applications))
+	for i, a := range applications {
+		out[i] = *a.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+}
+
 func ApplicationList(c echo.Context) error {
 	applicationDB, err := getApplicationDao(c)
 	if err != nil {
@@ -47,20 +88,12 @@ func ApplicationList(c echo.Context) error {
 		count        *int64
 	)
 
-	requestURL, err := util.NewRequestURL(c.Request().RequestURI, c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
-	}
-
-	if requestURL.IsSubCollection() {
-		applications, count, err = applicationDB.SubCollectionList(requestURL.PrimaryResource(), limit, offset, filters)
-	} else {
-		applications, count, err = applicationDB.List(limit, offset, filters)
-	}
+	applications, count, err = applicationDB.List(limit, offset, filters)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
 	}
+
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
 
 	out := make([]interface{}, len(applications))
