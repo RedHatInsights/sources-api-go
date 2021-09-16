@@ -85,7 +85,7 @@ func EndpointList(c echo.Context) error {
 
 	var (
 		endpoints []m.Endpoint
-		count     *int64
+		count     int64
 	)
 
 	endpoints, count, err = endpointDB.List(limit, offset, filters)

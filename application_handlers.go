@@ -85,7 +85,7 @@ func ApplicationList(c echo.Context) error {
 
 	var (
 		applications []m.Application
-		count        *int64
+		count        int64
 	)
 
 	applications, count, err = applicationDB.List(limit, offset, filters)

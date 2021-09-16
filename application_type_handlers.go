@@ -92,7 +92,7 @@ func ApplicationTypeList(c echo.Context) error {
 
 	var (
 		apptypes []m.ApplicationType
-		count    *int64
+		count    int64
 	)
 
 	apptypes, count, err = applicationTypeDB.List(limit, offset, filters)

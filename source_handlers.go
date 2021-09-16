@@ -44,7 +44,7 @@ func SourceList(c echo.Context) error {
 
 	var (
 		sources []m.Source
-		count   *int64
+		count   int64
 	)
 
 	sources, count, err = sourcesDB.List(limit, offset, filters)
@@ -59,7 +59,7 @@ func SourceList(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(count), limit, offset))
 }
 func SourceTypeListSource(c echo.Context) error {
 	sourcesDB, err := getSourceDao(c)
@@ -140,7 +140,7 @@ func ApplicationTypeListSource(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
 }
 
 func SourceGet(c echo.Context) error {
