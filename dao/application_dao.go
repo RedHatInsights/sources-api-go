@@ -11,9 +11,30 @@ type ApplicationDaoImpl struct {
 	TenantID *int64
 }
 
+func (a *ApplicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.Application, *int64, error) {
+	applications := make([]m.Application, 0, limit)
+	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	query := sourceType.HasMany(&m.Application{}, DB.Debug())
+
+	err = applyFilters(query, filters)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	count := int64(0)
+	query.Model(&m.Application{}).Count(&count)
+
+	result := query.Limit(limit).Offset(offset).Find(&applications)
+	return applications, &count, result.Error
+}
+
 func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
-	query := DB.Debug().
+	query := DB.Debug().Model(&m.Application{}).
 		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)
 
@@ -23,7 +44,7 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Fi
 	}
 
 	count := int64(0)
-	query.Model(&m.Application{}).Count(&count)
+	query.Count(&count)
 
 	result := query.Limit(limit).Find(&applications)
 	return applications, count, result.Error

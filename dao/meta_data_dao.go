@@ -8,11 +8,34 @@ import (
 )
 
 type MetaDataDaoImpl struct {
+	TenantID *int64
+}
+
+func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error) {
+	endpoints := make([]m.MetaData, 0, limit)
+	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	query := sourceType.HasMany(&m.MetaData{}, DB.Debug())
+	query = query.Where("meta_data.type = 'AppMetaData'")
+
+	err = applyFilters(query, filters)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	count := int64(0)
+	query.Model(&m.MetaData{}).Count(&count)
+
+	result := query.Limit(limit).Offset(offset).Find(&endpoints)
+	return endpoints, &count, result.Error
 }
 
 func (a *MetaDataDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
-	query := DB.Debug()
+	query := DB.Debug().Model(&m.MetaData{})
 
 	err := applyFilters(query, filters)
 	if err != nil {
@@ -20,7 +43,7 @@ func (a *MetaDataDaoImpl) List(limit int, offset int, filters []middleware.Filte
 	}
 
 	count := int64(0)
-	query.Model(&m.MetaData{}).Count(&count)
+	query.Count(&count)
 
 	result := query.Limit(limit).Find(&metaData)
 	return metaData, count, result.Error

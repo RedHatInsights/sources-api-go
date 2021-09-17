@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -25,6 +26,47 @@ func getEndpointDaoWithTenant(c echo.Context) (dao.EndpointDao, error) {
 	return &dao.EndpointDaoImpl{TenantID: &tenantID}, nil
 }
 
+func SourceListEndpoint(c echo.Context) error {
+	endpointDB, err := getEndpointDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		endpoints []m.Endpoint
+		count     *int64
+	)
+
+	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	endpoints, count, err = endpointDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+	}
+	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
+
+	out := make([]interface{}, len(endpoints))
+	for i, a := range endpoints {
+		out[i] = *a.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+}
+
 func EndpointList(c echo.Context) error {
 	endpointDB, err := getEndpointDao(c)
 	if err != nil {
@@ -41,7 +83,13 @@ func EndpointList(c echo.Context) error {
 		return err
 	}
 
-	endpoints, count, err := endpointDB.List(limit, offset, filters)
+	var (
+		endpoints []m.Endpoint
+		count     int64
+	)
+
+	endpoints, count, err = endpointDB.List(limit, offset, filters)
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
 	}

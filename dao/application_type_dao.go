@@ -6,13 +6,35 @@ import (
 )
 
 type ApplicationTypeDaoImpl struct {
+	TenantID *int64
+}
+
+func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error) {
+	// allocating a slice of application types, initial length of
+	// 0, size of limit (since we will not be returning more than that)
+	applicationTypes := make([]m.ApplicationType, 0, limit)
+
+	applicationType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	if err != nil {
+		return nil, nil, err
+	}
+	query := applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
+
+	// getting the total count (filters included) for pagination
+	count := int64(0)
+	query.Model(&m.ApplicationType{}).Count(&count)
+
+	// limiting + running the actual query.
+	result := query.Limit(limit).Offset(offset).Find(&applicationTypes)
+
+	return applicationTypes, &count, result.Error
 }
 
 func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	apptypes := make([]m.ApplicationType, 0, limit)
-	query := DB.Debug()
+	query := DB.Model(&m.ApplicationType{}).Debug()
 
 	err := applyFilters(query, filters)
 	if err != nil {
@@ -21,7 +43,7 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Fi
 
 	// getting the total count (filters included) for pagination
 	count := int64(0)
-	query.Model(&m.ApplicationType{}).Count(&count)
+	query.Count(&count)
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&apptypes)

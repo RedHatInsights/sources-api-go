@@ -34,13 +34,35 @@ type MockMetaDataDao struct {
 	MetaDatas []m.MetaData
 }
 
-func (m *MockSourceDao) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
-	count := int64(len(m.Sources))
-	return m.Sources, count, nil
+func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error) {
+	count := int64(1)
+
+	var sources []m.Source
+
+	for index, i := range src.Sources {
+		switch object := primaryCollection.(type) {
+		case m.SourceType:
+			if i.SourceTypeID == object.Id {
+				sources = append(sources, src.Sources[index])
+			}
+		case m.ApplicationType:
+			if i.ID == 1 { // Source with ID=1 is relevant for application types/:id/sources test
+				sources = append(sources, src.Sources[index])
+			}
+		}
+
+	}
+
+	return sources, &count, nil
 }
 
-func (m *MockSourceDao) GetById(id *int64) (*m.Source, error) {
-	for _, i := range m.Sources {
+func (src *MockSourceDao) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
+	count := int64(len(src.Sources))
+	return src.Sources, count, nil
+}
+
+func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
+	for _, i := range src.Sources {
 		if i.ID == *id {
 			return &i, nil
 		}
@@ -49,19 +71,19 @@ func (m *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 	return nil, fmt.Errorf("source not found")
 }
 
-func (m *MockSourceDao) Create(src *m.Source) error {
+func (src *MockSourceDao) Create(s *m.Source) error {
 	return nil
 }
 
-func (m *MockSourceDao) Update(src *m.Source) error {
+func (src *MockSourceDao) Update(s *m.Source) error {
 	panic("implement me")
 }
 
-func (m *MockSourceDao) Delete(id *int64) error {
+func (src *MockSourceDao) Delete(id *int64) error {
 	panic("implement me")
 }
 
-func (m *MockSourceDao) Tenant() *int64 {
+func (src *MockSourceDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
@@ -84,6 +106,11 @@ func (a *MockApplicationTypeDao) GetById(id *int64) (*m.ApplicationType, error) 
 func (a *MockMetaDataDao) List(limit int, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {
 	count := int64(len(a.MetaDatas))
 	return a.MetaDatas, count, nil
+}
+
+func (a *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error) {
+	count := int64(len(a.MetaDatas))
+	return a.MetaDatas, &count, nil
 }
 
 func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
@@ -119,6 +146,11 @@ func (a *MockApplicationTypeDao) Update(src *m.ApplicationType) error {
 func (a *MockApplicationTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
+func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error) {
+	count := int64(1) // ApplicationType ID=1
+
+	return []m.ApplicationType{a.ApplicationTypes[0]}, &count, nil
+}
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []middleware.Filter) ([]m.SourceType, int64, error) {
 	count := int64(len(a.SourceTypes))
@@ -145,6 +177,11 @@ func (a *MockSourceTypeDao) Update(src *m.SourceType) error {
 
 func (a *MockSourceTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
+}
+
+func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Application, *int64, error) {
+	count := int64(len(a.Applications))
+	return a.Applications, &count, nil
 }
 
 func (a *MockApplicationDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, int64, error) {
@@ -177,6 +214,11 @@ func (a *MockApplicationDao) Delete(id *int64) error {
 func (a *MockApplicationDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
+}
+
+func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error) {
+	count := int64(len(a.Endpoints))
+	return a.Endpoints, &count, nil
 }
 
 func (a *MockEndpointDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error) {

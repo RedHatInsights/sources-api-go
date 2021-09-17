@@ -22,6 +22,10 @@ type MetaData struct {
 	ApplicationType   ApplicationType
 }
 
+func (app *MetaData) RelationInfo() map[string]RelationSetting {
+	return map[string]RelationSetting{}
+}
+
 func (app *MetaData) ToResponse() *MetaDataResponse {
 	id := strconv.FormatInt(app.ID, 10)
 

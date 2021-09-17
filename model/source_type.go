@@ -18,6 +18,8 @@ type SourceType struct {
 	Vendor      string         `json:"vendor"`
 	Schema      datatypes.JSON `json:"schema"`
 	IconUrl     string         `json:"icon_url"`
+
+	Sources []Source
 }
 
 func (a *SourceType) ToResponse() *SourceTypeResponse {

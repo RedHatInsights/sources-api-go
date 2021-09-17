@@ -30,8 +30,9 @@ type Source struct {
 	Tenant   Tenant
 	TenantID int64 `json:"tenant_id"`
 
-	Applications []Application
-	Endpoints    []Endpoint
+	ApplicationTypes []*ApplicationType `gorm:"many2many:applications"`
+	Applications     []Application
+	Endpoints        []Endpoint
 }
 
 func (src *Source) ToResponse() *SourceResponse {

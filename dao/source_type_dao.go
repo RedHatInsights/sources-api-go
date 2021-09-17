@@ -12,7 +12,7 @@ func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter)
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sourceTypes := make([]m.SourceType, 0, limit)
-	query := DB.Debug()
+	query := DB.Debug().Model(&m.SourceType{})
 
 	err := applyFilters(query, filters)
 	if err != nil {
@@ -21,7 +21,7 @@ func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter)
 
 	// getting the total count (filters included) for pagination
 	count := int64(0)
-	query.Model(&m.SourceType{}).Count(&count)
+	query.Count(&count)
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&sourceTypes)
