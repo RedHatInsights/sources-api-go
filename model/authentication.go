@@ -8,7 +8,6 @@ import (
 type Authentication struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
-	// UpdatedAt time.Time `json:"updated_at"`
 
 	Name                    string                 `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`
@@ -35,11 +34,10 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	return &AuthenticationResponse{
 		ID:        auth.ID,
 		CreatedAt: auth.CreatedAt,
-		// UpdatedAt: auth.UpdatedAt,
-		Name:     auth.Name,
-		Version:  auth.Version,
-		AuthType: auth.AuthType,
-		Username: auth.Username,
+		Name:      auth.Name,
+		Version:   auth.Version,
+		AuthType:  auth.AuthType,
+		Username:  auth.Username,
 		// TODO: remove this?
 		Password:                auth.Password,
 		Extra:                   auth.Extra,
@@ -56,17 +54,17 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	dao.authFromVault, so if we are to add more fields they will need to be
 	added here as well.
 */
-func (a *Authentication) ToVaultMap() (map[string]interface{}, error) {
+func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 	data := map[string]interface{}{
-		"name":                      a.Name,
-		"authtype":                  a.AuthType,
-		"username":                  a.Username,
-		"password":                  a.Password,
-		"extra":                     a.Extra,
-		"availability_status":       a.AvailabilityStatus,
-		"availability_status_error": a.AvailabilityStatusError,
-		"resource_type":             a.ResourceType,
-		"resource_id":               strconv.FormatInt(a.ResourceID, 10),
+		"name":                      auth.Name,
+		"authtype":                  auth.AuthType,
+		"username":                  auth.Username,
+		"password":                  auth.Password,
+		"extra":                     auth.Extra,
+		"availability_status":       auth.AvailabilityStatus,
+		"availability_status_error": auth.AvailabilityStatusError,
+		"resource_type":             auth.ResourceType,
+		"resource_id":               strconv.FormatInt(auth.ResourceID, 10),
 	}
 
 	// Vault requires the hash to be wrapped in a "data" object in order to be accepted.
