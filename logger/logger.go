@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"os"
 	"time"
 
@@ -16,6 +19,37 @@ import (
 )
 
 var Log *logrus.Logger
+
+func AddHooksTo(logger *logrus.Logger, config *appconf.SourcesApiConfig) {
+	hook := cloudWatchLogrusHook(config)
+	if hook == nil {
+		Log.Warn("Key or Secret are missing for logging to Cloud Watch.")
+	}else {
+		logger.AddHook(hook)
+	}
+}
+
+
+func cloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
+	key := config.AwsAccessKeyID
+	secret := config.AwsSecretAccessKey
+	region := config.AwsRegion
+	group := config.LogGroup
+	stream := config.Hostname
+
+	if key != "" && secret != "" {
+		cred := credentials.NewStaticCredentials(key, secret, "")
+		awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
+		hook, err := lc.NewBatchingHook(group, stream, awsconf, 10*time.Second)
+		if err != nil {
+			Log.Info(err)
+		}
+
+		return hook
+	}
+
+	return nil
+}
 
 func forwardLogsToStderr(logHandler string) bool {
 	return logHandler == "haberdasher"
@@ -168,6 +202,7 @@ func InitEchoLogger(e *echo.Echo, config *appconf.SourcesApiConfig) {
 	logger.SetOutput(LogOutputFrom(config.LogHandler))
 	logger.SetFormatter(NewCustomLoggerFormatter(config, true))
 
+	AddHooksTo(logger.Logger, config)
 	e.Logger = logger
 	e.Logger.SetLevel(logLevelToEchoLogLevel(config.LogLevel))
 }
@@ -192,6 +227,8 @@ func InitLogger(config *appconf.SourcesApiConfig) *logrus.Logger {
 		Hooks:        make(logrus.LevelHooks),
 		ReportCaller: true,
 	}
+
+	AddHooksTo(Log, config)
 
 	return Log
 }
