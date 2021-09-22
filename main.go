@@ -14,7 +14,7 @@ var conf = config.Get()
 func main() {
 	e := echo.New()
 
-	logging.InitLogger(conf)
+	log := logging.InitLogger(conf)
 	logging.InitEchoLogger(e, conf)
 
 	dao.Init()
@@ -23,11 +23,9 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: logging.FormatForMiddleware(conf),
-		Skipper: func(c echo.Context) bool {
-			logLevel := c.Echo().Logger.Level()
-			return !logging.AllowedForMiddleware(logLevel, conf.LogLevelForMiddlewareLogs)
-		},
-		Output: logging.LogOutputFrom(conf.LogHandler),
+		Output: &logging.LogWritter{Output: logging.LogOutputFrom(conf.LogHandler),
+			Logger: log,
+			LogLevel: conf.LogLevelForMiddlewareLogs},
 	}))
 
 	setupRoutes(e)

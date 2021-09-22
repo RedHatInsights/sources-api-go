@@ -163,10 +163,6 @@ func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
 	return string(j)
 }
 
-func AllowedForMiddleware(logLevel echoLog.Lvl, logLevelForMiddleware string) bool {
-	return logLevelToEchoLogLevel(logLevelForMiddleware) >= logLevel
-}
-
 func InitEchoLogger(e *echo.Echo, config *appconf.SourcesApiConfig) {
 	logger := logrusEcho.Logger()
 	logger.SetOutput(LogOutputFrom(config.LogHandler))
