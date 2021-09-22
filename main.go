@@ -23,8 +23,8 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: logging.FormatForMiddleware(conf),
-		Output: &logging.LogWritter{Output: logging.LogOutputFrom(conf.LogHandler),
-			Logger: log,
+		Output: &logging.LogWriter{Output: logging.LogOutputFrom(conf.LogHandler),
+			Logger:   log,
 			LogLevel: conf.LogLevelForMiddlewareLogs},
 	}))
 

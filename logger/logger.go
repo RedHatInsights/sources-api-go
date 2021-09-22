@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"os"
 	"time"
 
 	appconf "github.com/RedHatInsights/sources-api-go/config"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/labstack/echo/v4"
 	echoLog "github.com/labstack/gommon/log"
 	logrusEcho "github.com/neko-neko/echo-logrus/v2/log"
+	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,11 +24,10 @@ func AddHooksTo(logger *logrus.Logger, config *appconf.SourcesApiConfig) {
 	hook := cloudWatchLogrusHook(config)
 	if hook == nil {
 		Log.Warn("Key or Secret are missing for logging to Cloud Watch.")
-	}else {
+	} else {
 		logger.AddHook(hook)
 	}
 }
-
 
 func cloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
 	key := config.AwsAccessKeyID
