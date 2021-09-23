@@ -64,7 +64,7 @@ func MetaDataList(c echo.Context) error {
 		out[i] = *a.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(count), limit, offset))
 }
 
 func ApplicationTypeListMetaData(c echo.Context) error {
@@ -104,7 +104,7 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 		out[i] = *a.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(*count), limit, offset))
 }
 
 func MetaDataGet(c echo.Context) error {
