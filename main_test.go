@@ -9,6 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -160,4 +161,16 @@ func testDbString(dbname string) string {
 		config.Get().DatabaseHost,
 		config.Get().DatabasePort,
 	)
+}
+
+func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset int) {
+	expectedFirstLink := fmt.Sprintf("%s/?limit=%d&offset=%d", path, limit, offset)
+	expectedLastLink := fmt.Sprintf("%s/?limit=%d&offset=%d", path, limit, limit+offset)
+	if links.First != expectedFirstLink {
+		t.Error("first link is not correct for " + path)
+	}
+
+	if links.Last != expectedLastLink {
+		t.Error("last link is not correct for " + path)
+	}
 }
