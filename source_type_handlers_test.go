@@ -62,4 +62,6 @@ func TestSourceTypeList(t *testing.T) {
 			t.Error("ghosts infected the return")
 		}
 	}
+
+	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
 }

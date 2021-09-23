@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"net/url"
 )
 
 type Collection struct {
@@ -34,8 +33,8 @@ func CollectionResponse(collection []interface{}, path string, count, limit, off
 			Offset: offset,
 		},
 		Links: Links{
-			First: fmt.Sprintf("%s/?%s", path, url.QueryEscape(first)),
-			Last:  fmt.Sprintf("%s/?%s", path, url.QueryEscape(last)),
+			First: fmt.Sprintf("%s/?%s", path, first),
+			Last:  fmt.Sprintf("%s/?%s", path, last),
 		},
 	}
 }

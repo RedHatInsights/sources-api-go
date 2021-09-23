@@ -20,8 +20,8 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/:application_type_id/app_meta_data", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.Set("limit", 99)
-	c.Set("offset", -1)
+	c.Set("limit", 100)
+	c.Set("offset", 0)
 	c.Set("filters", []middleware.Filter{})
 	c.Set("tenantID", int64(1))
 	c.SetParamNames("application_type_id")
@@ -42,11 +42,11 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 		t.Error("Failed unmarshaling output")
 	}
 
-	if out.Meta.Limit != 99 {
+	if out.Meta.Limit != 100 {
 		t.Error("limit not set correctly")
 	}
 
-	if out.Meta.Offset != -1 {
+	if out.Meta.Offset != 0 {
 		t.Error("offset not set correctly")
 	}
 
@@ -65,6 +65,8 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 			t.Error("ghosts infected the return")
 		}
 	}
+
+	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
 }
 
 func TestMetaDataList(t *testing.T) {
@@ -109,6 +111,8 @@ func TestMetaDataList(t *testing.T) {
 			t.Error("model did not deserialize as a application")
 		}
 	}
+
+	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
 }
 
 func TestMetaDataGet(t *testing.T) {
