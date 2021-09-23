@@ -20,7 +20,10 @@ func Init() {
 		Out:       logging.LogOutputFrom(conf.LogHandler),
 		Level:     logging.LogrusLogLevelFrom(conf.LogLevel),
 		Formatter: logging.NewCustomLoggerFormatter(conf, true),
+		Hooks:     make(logrus.LevelHooks),
 	}
+
+	logging.AddHooksTo(logger, conf)
 
 	l := &logging.CustomGORMLogger{
 		SkipErrorRecordNotFound: true,

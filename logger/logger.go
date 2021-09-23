@@ -9,13 +9,46 @@ import (
 	"time"
 
 	appconf "github.com/RedHatInsights/sources-api-go/config"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/labstack/echo/v4"
 	echoLog "github.com/labstack/gommon/log"
 	logrusEcho "github.com/neko-neko/echo-logrus/v2/log"
+	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 )
 
 var Log *logrus.Logger
+
+func AddHooksTo(logger *logrus.Logger, config *appconf.SourcesApiConfig) {
+	hook := cloudWatchLogrusHook(config)
+	if hook == nil {
+		Log.Warn("Key or Secret are missing for logging to Cloud Watch.")
+	} else {
+		logger.AddHook(hook)
+	}
+}
+
+func cloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
+	key := config.AwsAccessKeyID
+	secret := config.AwsSecretAccessKey
+	region := config.AwsRegion
+	group := config.LogGroup
+	stream := config.Hostname
+
+	if key != "" && secret != "" {
+		cred := credentials.NewStaticCredentials(key, secret, "")
+		awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
+		hook, err := lc.NewBatchingHook(group, stream, awsconf, 10*time.Second)
+		if err != nil {
+			Log.Info(err)
+		}
+
+		return hook
+	}
+
+	return nil
+}
 
 func forwardLogsToStderr(logHandler string) bool {
 	return logHandler == "haberdasher"
@@ -163,15 +196,12 @@ func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
 	return string(j)
 }
 
-func AllowedForMiddleware(logLevel echoLog.Lvl, logLevelForMiddleware string) bool {
-	return logLevelToEchoLogLevel(logLevelForMiddleware) >= logLevel
-}
-
 func InitEchoLogger(e *echo.Echo, config *appconf.SourcesApiConfig) {
 	logger := logrusEcho.Logger()
 	logger.SetOutput(LogOutputFrom(config.LogHandler))
 	logger.SetFormatter(NewCustomLoggerFormatter(config, true))
 
+	AddHooksTo(logger.Logger, config)
 	e.Logger = logger
 	e.Logger.SetLevel(logLevelToEchoLogLevel(config.LogLevel))
 }
@@ -196,6 +226,8 @@ func InitLogger(config *appconf.SourcesApiConfig) *logrus.Logger {
 		Hooks:        make(logrus.LevelHooks),
 		ReportCaller: true,
 	}
+
+	AddHooksTo(Log, config)
 
 	return Log
 }

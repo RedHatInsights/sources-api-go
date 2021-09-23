@@ -3,8 +3,8 @@ module github.com/RedHatInsights/sources-api-go
 go 1.16
 
 require (
-	github.com/fatih/structtag v1.2.0 // indirect
-	github.com/gertd/go-pluralize v0.1.7 // indirect
+	github.com/aws/aws-sdk-go v1.40.46
+	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jackc/pgx/v4 v4.11.0
