@@ -14,14 +14,13 @@ import (
 // function that defines how we get the dao - default implementation below.
 var getMetaDataDao func(c echo.Context) (dao.MetaDataDao, error)
 
-func getMetaDataDaoWithoutTenant(c echo.Context) (dao.MetaDataDao, error) {
+func getMetaDataDaoWithTenant(c echo.Context) (dao.MetaDataDao, error) {
 	var tenantID int64
 	var ok bool
+	tenantVal := c.Get("tenantID")
 
-	tenancyRequired := !(c.Get("withoutTenancy") == true)
-
-	if tenancyRequired {
-		tenantVal := c.Get("tenantID")
+	// if we set the tenant on this request - include it. otherwise do not.
+	if tenantVal != nil {
 		if tenantID, ok = tenantVal.(int64); !ok {
 			return nil, fmt.Errorf("failed to pull tenant from request")
 		}

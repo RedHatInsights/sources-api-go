@@ -14,13 +14,13 @@ import (
 // function that defines how we get the dao - default implementation below.
 var getApplicationTypeDao func(c echo.Context) (dao.ApplicationTypeDao, error)
 
-func getApplicationTypeDaoWithoutTenant(c echo.Context) (dao.ApplicationTypeDao, error) {
+func getApplicationTypeDaoWithTenant(c echo.Context) (dao.ApplicationTypeDao, error) {
 	var tenantID int64
 	var ok bool
+	tenantVal := c.Get("tenantID")
 
-	tenancyRequired := !(c.Get("withoutTenancy") == true)
-
-	if tenancyRequired {
+	// if we set the tenant on this request - include it. otherwise do not.
+	if tenantVal != nil {
 		tenantVal := c.Get("tenantID")
 		if tenantID, ok = tenantVal.(int64); !ok {
 			return nil, fmt.Errorf("failed to pull tenant from request")

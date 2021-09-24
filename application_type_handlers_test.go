@@ -74,7 +74,6 @@ func TestApplicationTypeList(t *testing.T) {
 	c.Set("limit", 100)
 	c.Set("offset", 0)
 	c.Set("filters", []middleware.Filter{})
-	c.Set("withoutTenancy", true)
 
 	err := ApplicationTypeList(c)
 	if err != nil {
@@ -123,7 +122,6 @@ func TestApplicationTypeGet(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetParamNames("id")
 	c.SetParamValues("1")
-	c.Set("withoutTenancy", true)
 
 	err := ApplicationTypeGet(c)
 	if err != nil {

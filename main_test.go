@@ -49,10 +49,10 @@ func TestMain(t *testing.M) {
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
 		getEndpointDao = getEndpointDaoWithTenant
-		getApplicationTypeDao = getApplicationTypeDaoWithoutTenant
+		getApplicationTypeDao = getApplicationTypeDaoWithTenant
 		getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
-		getMetaDataDao = getMetaDataDaoWithoutTenant
+		getMetaDataDao = getMetaDataDaoWithTenant
 
 		dao.DB.Create(&m.Tenant{Id: 1})
 
