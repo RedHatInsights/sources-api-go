@@ -1,10 +1,11 @@
 package model
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/RedHatInsights/sources-api-go/util/source"
 	"github.com/google/uuid"
 )
@@ -54,31 +55,18 @@ func (req *SourceCreateRequest) Validate() error {
 		return fmt.Errorf("invalid status")
 	}
 
-	switch value := req.SourceTypeIDRaw.(type) {
-	case *int64:
-		if *value < 1 {
-			return fmt.Errorf("invalid ID. Must be greater than 0")
-		}
-
-		req.SourceTypeID = value
-	case *string:
-		if value == nil || *value == "" {
-			return fmt.Errorf("invalid ID. Must not be empty")
-		}
-
-		id, err := strconv.ParseInt(*value, 10, 64)
-		if err != nil {
-			return fmt.Errorf("invalid ID provided. It must be a number")
-		}
-
-		if id < 1 {
-			return fmt.Errorf("invalid ID. Must be greater than 0")
-		}
-
-		req.SourceTypeID = &id
-	default:
-		return fmt.Errorf("invalid ID format")
+	// Try to get the SourceTypeID. If an error occurs, the user gets a generic error message, as they are not
+	// interested in the underlying ones
+	value, err := util.InterfaceToInt64(req.SourceTypeIDRaw)
+	if err != nil {
+		return errors.New("the source type id is not valid")
 	}
+
+	if value < 1 {
+		return fmt.Errorf("source type id must be greater than 0")
+	}
+
+	req.SourceTypeID = &value
 
 	return nil
 }

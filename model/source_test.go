@@ -1,6 +1,7 @@
 package model
 
 import (
+	"math"
 	"regexp"
 	"strconv"
 	"testing"
@@ -227,61 +228,71 @@ func TestValidSourceTypeIdParsing(t *testing.T) {
 	}
 }
 
-// TestInvalidSourceTypeIdParsing tests that when passed an ID of an unexpected type, or if the given ID is less or
-// equal to 0, the errors are correctly reported. What's being validated?
-// - "0" *string
-// - "50" string
-// - 0 *int64
-// - 50 int64
-// - 50.2 *float64
-func TestInvalidSourceTypeIdParsing(t *testing.T) {
+// TestSourceTypeIdLowerOne tests that when given a SourceTypeID lower than one, the Validate function returns an
+// error
+func TestSourceTypeIdLowerOne(t *testing.T) {
 	request := setUp()
 
-	invalidString := "0"
-	request.SourceTypeIDRaw = &invalidString
+	var pointerNegativeInt int64 = -10
+	var pointerNegativeFloat float64 = -1921
+	var pointerNegativeString = "-12345"
 
-	err := request.Validate()
-	if err == nil {
-		t.Errorf("Error expected when passing a string containing a number lower than 0, none gotten")
+	lowerZero := []struct {
+		value interface{}
+	}{
+		{int64(-5)},
+		{int64(0)},
+		{&pointerNegativeInt},
+		{int64(math.MinInt64)},
+		{0.9999999999999},
+		{-1123.12},
+		{&pointerNegativeFloat},
+		{"0"},
+		{"-9"},
+		{&pointerNegativeString},
 	}
 
-	// The validator expects an *string, not a string
-	invalidStringByValue := "50"
-	request.SourceTypeIDRaw = invalidStringByValue
+	for _, tt := range lowerZero {
+		request.SourceTypeIDRaw = tt.value
 
-	err = request.Validate()
-	if err == nil {
-		t.Errorf("Error expected when passing a string by value, none gotten")
+		err := request.Validate()
+
+		if err == nil {
+			t.Errorf("Error expected, got none")
+		}
+
+		if err.Error() != "source type id must be greater than 0" {
+			t.Errorf("got \"%s\", want \"%s\"", err.Error(), "source type id must be greater than 0")
+		}
+	}
+}
+
+// TestInvalidSourceTypeIdFormat tests that upon receiving a source type id in an incorrect format, the validate
+// function reports an error
+func TestInvalidSourceTypeIdFormat(t *testing.T) {
+	request := setUp()
+
+	invalidTypes := []struct {
+		value interface{}
+	}{
+		{true},
+		{false},
+		{"-0.9"},
+		{"0.5"},
+		{complex(14, 3)},
+		{'5'},
 	}
 
-	var invalidInt int64 = 0
-	request.SourceTypeIDRaw = &invalidInt
+	for _, tt := range invalidTypes {
+		request.SourceTypeIDRaw = tt.value
+		err := request.Validate()
 
-	err = request.Validate()
-	if err == nil {
-		t.Errorf("Error expected when passing an int64 lower than 0, none gotten")
-	}
+		if err == nil {
+			t.Errorf("Error expected, got none")
+		}
 
-	var invalidIntValue int64 = 50
-	request.SourceTypeIDRaw = invalidIntValue
-
-	err = request.Validate()
-	if err == nil {
-		t.Errorf("Error expected when passing an int64 by value, none gotten")
-	}
-
-	invalidFloat := 50.2
-	request.SourceTypeIDRaw = &invalidFloat
-
-	err = request.Validate()
-	if err == nil {
-		t.Errorf("Error expected when passing a float, none gotten")
-	}
-
-	invalidBoolean := false
-	request.SourceTypeIDRaw = &invalidBoolean
-	err = request.Validate()
-	if err == nil {
-		t.Errorf("Error expected when passing a bool, none gotten")
+		if err.Error() != "the source type id is not valid" {
+			t.Errorf("got \"%s\", want \"%s\"", err.Error(), "the source type id is not valid")
+		}
 	}
 }
