@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/RedHatInsights/sources-api-go/util/source"
 	"github.com/google/uuid"
 )
 
@@ -41,16 +40,16 @@ func (req *SourceCreateRequest) Validate() error {
 	}
 
 	if req.AppCreationWorkflow == "" ||
-		req.AppCreationWorkflow != source_utils.AccountAuth &&
-			req.AppCreationWorkflow != source_utils.ManualConfig {
+		req.AppCreationWorkflow != AccountAuth &&
+			req.AppCreationWorkflow != ManualConfig {
 		return fmt.Errorf("invalid workflow specified")
 	}
 
 	if req.AvailabilityStatus != "" &&
-		req.AvailabilityStatus != source_utils.Available &&
-		req.AvailabilityStatus != source_utils.InProgress &&
-		req.AvailabilityStatus != source_utils.PartiallyAvailable &&
-		req.AvailabilityStatus != source_utils.Unavailable {
+		req.AvailabilityStatus != Available &&
+		req.AvailabilityStatus != InProgress &&
+		req.AvailabilityStatus != PartiallyAvailable &&
+		req.AvailabilityStatus != Unavailable {
 
 		return fmt.Errorf("invalid status")
 	}

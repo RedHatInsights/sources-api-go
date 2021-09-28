@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"testing"
-
-	sourceConstants "github.com/RedHatInsights/sources-api-go/util/source"
 )
 
 var uuidRegex = regexp.MustCompile(`[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`)
@@ -26,8 +24,8 @@ func setUp() SourceCreateRequest {
 		Version:             &version,
 		Imported:            &imported,
 		SourceRef:           &sourceRef,
-		AppCreationWorkflow: sourceConstants.AccountAuth,
-		AvailabilityStatus:  sourceConstants.Available,
+		AppCreationWorkflow: AccountAuth,
+		AvailabilityStatus:  Available,
 		SourceTypeIDRaw:     &sourceTypeId,
 	}
 
@@ -113,8 +111,8 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 
 	// The request already has a valid value, but just in case we're going to test all the valid cases again
 	var validValues = []string{
-		sourceConstants.AccountAuth,
-		sourceConstants.ManualConfig,
+		AccountAuth,
+		ManualConfig,
 	}
 
 	for _, validValue := range validValues {
@@ -152,10 +150,10 @@ func TestAvailabilityStatusValues(t *testing.T) {
 	// The request already has a valid status, but we're testing all the values just in case
 	var validStatuses = []string{
 		"",
-		sourceConstants.Available,
-		sourceConstants.InProgress,
-		sourceConstants.PartiallyAvailable,
-		sourceConstants.Unavailable,
+		Available,
+		InProgress,
+		PartiallyAvailable,
+		Unavailable,
 	}
 
 	for _, validStatus := range validStatuses {
