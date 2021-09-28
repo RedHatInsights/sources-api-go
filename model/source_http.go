@@ -39,18 +39,13 @@ func (req *SourceCreateRequest) Validate() error {
 		req.Uid = &stringId
 	}
 
-	if req.AppCreationWorkflow == "" ||
-		req.AppCreationWorkflow != AccountAuth &&
-			req.AppCreationWorkflow != ManualConfig {
+	var validWorkflowStatuses = []string{AccountAuth, ManualConfig}
+	if !util.IsStringPresentInSlice(req.AppCreationWorkflow, validWorkflowStatuses) {
 		return fmt.Errorf("invalid workflow specified")
 	}
 
-	if req.AvailabilityStatus != "" &&
-		req.AvailabilityStatus != Available &&
-		req.AvailabilityStatus != InProgress &&
-		req.AvailabilityStatus != PartiallyAvailable &&
-		req.AvailabilityStatus != Unavailable {
-
+	var validAvailabilityStatuses = []string{"", Available, InProgress, PartiallyAvailable, Unavailable}
+	if !util.IsStringPresentInSlice(req.AvailabilityStatus, validAvailabilityStatuses) {
 		return fmt.Errorf("invalid status")
 	}
 
