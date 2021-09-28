@@ -3,7 +3,6 @@ package model
 import (
 	"math"
 	"regexp"
-	"strconv"
 	"testing"
 )
 
@@ -180,49 +179,6 @@ func TestAvailabilityStatusValues(t *testing.T) {
 		if err == nil {
 			t.Errorf("Error expected when validating \"AvailabilityStatus\", none gotten")
 		}
-	}
-}
-
-// TestSourceTypeIdParsing tests that when given an *int64 greater than 0, or a *string containing a number greater
-// than 0, the parsing is done correctly.
-func TestValidSourceTypeIdParsing(t *testing.T) {
-	request := setUp()
-
-	var validId int64 = 5
-	request.SourceTypeIDRaw = &validId
-
-	err := request.Validate()
-	if err != nil {
-		t.Errorf("No errors expected, got \"%s\"", err)
-	}
-
-	if validId != *request.SourceTypeID {
-		t.Errorf(
-			"Error when validating that the \"SourceTypeID\" is the same. Expected %d, got %d",
-			validId,
-			*request.SourceTypeID,
-		)
-	}
-
-	validStringId := "519"
-	validParsedId, err := strconv.ParseInt(validStringId, 10, 64)
-	if err != nil {
-		t.Errorf("Error converting string \"%d\" to int", validId)
-	}
-
-	request.SourceTypeIDRaw = &validStringId
-
-	err = request.Validate()
-	if err != nil {
-		t.Errorf("No errors expected, got \"%s\"", err)
-	}
-
-	if validParsedId != *request.SourceTypeID {
-		t.Errorf(
-			"Error when validating that the \"SourceTypeID\" is the same. Expected %d, got %d",
-			validId,
-			*request.SourceTypeID,
-		)
 	}
 }
 
