@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -228,5 +229,83 @@ func TestSourceGetNotFound(t *testing.T) {
 
 	if rec.Code != 404 {
 		t.Error("Did not return 404")
+	}
+}
+
+// TestSourceCreateBadRequest tests that the handler responds with an 400 when an invalid JSON is received
+func TestSourceCreateBadRequest(t *testing.T) {
+	emptyName := ""
+	requestBody := m.SourceCreateRequest{
+		Name: &emptyName,
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := testutils.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err = SourceCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Did not return 400. Body: %s", rec.Body.String())
+	}
+}
+
+// TestSourceCreate tests that a 201 is received when a proper JSON message is received
+func TestSourceCreate(t *testing.T) {
+	// Test with a proper JSON
+	name := "TestRequest"
+	uid := "5"
+	version := "10.5"
+	imported := "true"
+	sourceRef := "Source reference #5"
+	var sourceTypeId int64 = 5
+
+	requestBody := m.SourceCreateRequest{
+		Name:                &name,
+		Uid:                 &uid,
+		Version:             &version,
+		Imported:            &imported,
+		SourceRef:           &sourceRef,
+		AppCreationWorkflow: m.AccountAuth,
+		AvailabilityStatus:  m.Available,
+		SourceTypeIDRaw:     &sourceTypeId,
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := testutils.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err = SourceCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusCreated {
+		t.Errorf("Did not return 200. Body: %s", rec.Body.String())
 	}
 }

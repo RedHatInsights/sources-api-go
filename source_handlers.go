@@ -176,6 +176,11 @@ func SourceCreate(c echo.Context) error {
 		return err
 	}
 
+	err = input.Validate()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(fmt.Sprintf("Validation failed: %s", err.Error()), "400"))
+	}
+
 	source := &m.Source{
 		Name:                *input.Name,
 		Uid:                 input.Uid,
