@@ -9,6 +9,10 @@ import (
 	"github.com/google/uuid"
 )
 
+// Declare the valid workflow statuses at package level to avoid instantiating the slice every time a request
+// needs to be validated.
+var validWorkflowStatuses = []string{AccountAuth, ManualConfig}
+
 // SourceCreateRequest is a struct representing a request coming
 // from the outside to create a struct, this is the way we will be marking
 // fields as write-once. They are accepted on create but not edit.
@@ -39,7 +43,6 @@ func (req *SourceCreateRequest) Validate() error {
 		req.Uid = &stringId
 	}
 
-	var validWorkflowStatuses = []string{AccountAuth, ManualConfig}
 	if !util.IsStringPresentInSlice(req.AppCreationWorkflow, validWorkflowStatuses) {
 		return fmt.Errorf("invalid workflow specified")
 	}
