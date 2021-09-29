@@ -4,8 +4,7 @@ import (
 	"testing"
 )
 
-var sortedSlice = []string{"a", "b", "c", "d", "e", "f"}
-var unsortedSlice = []string{"f", "e", "d", "c", "b", "a"}
+var slice = []string{"f", "a", "c", "d", "b", "e"}
 var valuesToTest = []struct {
 	expectedResult   bool
 	valueToSearchFor string
@@ -21,35 +20,17 @@ var valuesToTest = []struct {
 	{false, "I'll give up then :("},
 }
 
-// TestIsStringPresentInSlice tests that the IsStringPresentInSlice function returns the expected result when
-// searching for a target string in a sorted slice.
-func TestIsStringPresentInSlice(t *testing.T) {
+// TestSliceContainsString tests that the SliceContainsString function returns the expected result when
+// searching for a target string in a slice.
+func TestSliceContainsString(t *testing.T) {
 	for _, tt := range valuesToTest {
-		isPresent := IsStringPresentInSlice(tt.valueToSearchFor, sortedSlice)
+		isPresent := SliceContainsString(slice, tt.valueToSearchFor)
 		if tt.expectedResult != isPresent {
 			t.Errorf(
 				"got %t, want %t. Slice: %#v, target %#v",
 				isPresent,
 				tt.expectedResult,
-				sortedSlice,
-				tt.valueToSearchFor,
-			)
-		}
-	}
-}
-
-// TestSortAndIsStringPresentInSlice tests that the SortAndIsStringPresentInSlice function returns the expected result
-// when searching for a target string in an unsorted slice. The sorting algorithm only has to do the sorting work once,
-//as the slice will be modified by it.
-func TestSortAndIsStringPresentInSlice(t *testing.T) {
-	for _, tt := range valuesToTest {
-		isPresent := SortAndIsStringPresentInSlice(tt.valueToSearchFor, unsortedSlice)
-		if tt.expectedResult != isPresent {
-			t.Errorf(
-				"got %t, want %t. Slice: %#v, target %#v",
-				isPresent,
-				tt.expectedResult,
-				sortedSlice,
+				slice,
 				tt.valueToSearchFor,
 			)
 		}

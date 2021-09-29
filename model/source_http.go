@@ -43,11 +43,11 @@ func (req *SourceCreateRequest) Validate() error {
 		req.Uid = &stringId
 	}
 
-	if !util.IsStringPresentInSlice(req.AppCreationWorkflow, validWorkflowStatuses) {
+	if !util.SliceContainsString(validWorkflowStatuses, req.AppCreationWorkflow) {
 		return fmt.Errorf("invalid workflow specified")
 	}
 
-	if !util.IsStringPresentInSlice(req.AvailabilityStatus, availabilityStatuses) {
+	if !util.SliceContainsString(availabilityStatuses, req.AvailabilityStatus) {
 		return fmt.Errorf("invalid status")
 	}
 
