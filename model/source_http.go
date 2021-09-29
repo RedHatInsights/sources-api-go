@@ -44,8 +44,7 @@ func (req *SourceCreateRequest) Validate() error {
 		return fmt.Errorf("invalid workflow specified")
 	}
 
-	var validAvailabilityStatuses = []string{"", Available, InProgress, PartiallyAvailable, Unavailable}
-	if !util.IsStringPresentInSlice(req.AvailabilityStatus, validAvailabilityStatuses) {
+	if !util.IsStringPresentInSlice(req.AvailabilityStatus, availabilityStatuses) {
 		return fmt.Errorf("invalid status")
 	}
 

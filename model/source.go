@@ -11,14 +11,6 @@ const (
 	ManualConfig string = "manual_configuration"
 )
 
-// Availability statuses
-const (
-	Available          string = "available"
-	InProgress         string = "in_progress"
-	PartiallyAvailable string = "partially_available"
-	Unavailable        string = "unavailable"
-)
-
 // Source struct that includes all of the fields on the table
 // used internally for business logic
 type Source struct {
