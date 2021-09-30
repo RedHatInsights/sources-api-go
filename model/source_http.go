@@ -36,12 +36,10 @@ func (req *SourceCreateRequest) Validate() error {
 		return fmt.Errorf("name cannot be empty")
 	}
 
-	// If no valid UUID is provided in the request, we generate one
-	if req.Uid == nil || *req.Uid == "" {
-		id := uuid.New()
-		stringId := id.String()
-		req.Uid = &stringId
-	}
+	// Generate a new UUID and assign it to the source, as the field is not received from the
+	generatedUuid := uuid.New()
+	uuids := generatedUuid.String()
+	req.Uid = &uuids
 
 	if !util.SliceContainsString(validWorkflowStatuses, req.AppCreationWorkflow) {
 		req.AppCreationWorkflow = ManualConfig

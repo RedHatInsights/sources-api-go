@@ -11,7 +11,6 @@ var uuidRegex = regexp.MustCompile(`[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-
 // setUp returns a freshly created and valid SourceCreateRequest.
 func setUp() SourceCreateRequest {
 	name := "TestRequest"
-	uid := "5"
 	version := "10.5"
 	imported := "true"
 	sourceRef := "Source reference #5"
@@ -19,7 +18,6 @@ func setUp() SourceCreateRequest {
 
 	return SourceCreateRequest{
 		Name:                &name,
-		Uid:                 &uid,
 		Version:             &version,
 		Imported:            &imported,
 		SourceRef:           &sourceRef,
@@ -58,48 +56,19 @@ func TestInvalidName(t *testing.T) {
 	}
 }
 
-// TestNonEmptyUuid tests that when a "valid" UUID is passed, it is not overwritten by the UUID generator.
-func TestNonEmptyUuid(t *testing.T) {
-	request := setUp()
-	originalUuid := *request.Uid // we store the original uuid to do checks later
-
-	err := request.Validate()
-	if err != nil {
-		t.Errorf("No errors are expected, got \"%s\"", err)
-	}
-
-	if *request.Uid != originalUuid {
-		t.Errorf("Unexpected UUID change detected. Expected \"%s\", got \"%s\"", originalUuid, *request.Uid)
-	}
-}
-
-// TestEmptyUuid tests that when an empty or a nil UUID is passed, a new one is generated.
-func TestEmptyUuid(t *testing.T) {
+// TestUuidGeneration tests that UUIDs are correctly generated when validating a new source.
+func TestUuidGeneration(t *testing.T) {
 	request := setUp()
 
-	// Check that when passing a nil as a UUID, a new one is generated
-	request.Uid = nil
+	for i := 0; i < 5; i++ {
+		err := request.Validate()
+		if err != nil {
+			t.Errorf("No errors are expected, got \"%s\"", err)
+		}
 
-	err := request.Validate()
-	if err != nil {
-		t.Errorf("No errors are expected, got \"%s\"", err)
-	}
-
-	if !uuidRegex.MatchString(*request.Uid) {
-		t.Errorf("A generated UUID expected, got \"%s\"", *request.Uid)
-	}
-
-	// Check that when passing an empty string as a UUID, a new one is generated
-	emptyUid := ""
-	request.Uid = &emptyUid
-
-	err = request.Validate()
-	if err != nil {
-		t.Errorf("No errors expected, got \"%s\"", err)
-	}
-
-	if !uuidRegex.MatchString(*request.Uid) {
-		t.Errorf("A generated UUID expected, got \"%s\"", *request.Uid)
+		if !uuidRegex.MatchString(*request.Uid) {
+			t.Errorf("A generated UUID expected, got \"%s\"", *request.Uid)
+		}
 	}
 }
 
