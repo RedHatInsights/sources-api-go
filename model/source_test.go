@@ -104,7 +104,7 @@ func TestEmptyUuid(t *testing.T) {
 }
 
 // TestAppCreationWorkflowValues tests that the defined acceptable "AppCreationWorkflow" values are accepted. It also
-// performs tests with invalid values to test the opposite.
+// performs tests with invalid values to test if the default value is correctly set.
 func TestAppCreationWorkflowValues(t *testing.T) {
 	request := setUp()
 
@@ -135,8 +135,12 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 		request.AppCreationWorkflow = invalidValue
 		err := request.Validate()
 
-		if err == nil {
-			t.Errorf("Error expected when validating \"AppCreationWorkflow\", none gotten")
+		if err != nil {
+			t.Errorf("No errors expected, got %s", err)
+		}
+
+		if request.AppCreationWorkflow != ManualConfig {
+			t.Errorf("want %s, got %s", ManualConfig, request.AppCreationWorkflow)
 		}
 	}
 }

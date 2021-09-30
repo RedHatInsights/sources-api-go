@@ -44,7 +44,7 @@ func (req *SourceCreateRequest) Validate() error {
 	}
 
 	if !util.SliceContainsString(validWorkflowStatuses, req.AppCreationWorkflow) {
-		return fmt.Errorf("invalid workflow specified")
+		req.AppCreationWorkflow = ManualConfig
 	}
 
 	if !util.SliceContainsString(availabilityStatuses, req.AvailabilityStatus) {
