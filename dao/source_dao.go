@@ -68,6 +68,7 @@ func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 }
 
 func (s *SourceDaoImpl) Create(src *m.Source) error {
+	src.TenantID = *s.TenantID // the TenantID gets injected in the middleware
 	result := DB.Create(src)
 	return result.Error
 }
