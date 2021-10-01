@@ -8,11 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func applyFilters(query *gorm.DB, filters []middleware.Filter) error {
+func applyFilters(query *gorm.DB, filters []middleware.Filter) (*gorm.DB, error) {
 	if query.Statement.Table == "" {
 		err := query.Statement.Parse(query.Statement.Model)
 		if err != nil {
-			return fmt.Errorf("failed to parse statement: %v", err)
+			return nil, fmt.Errorf("failed to parse statement: %v", err)
 		}
 	}
 	var filterName string
@@ -59,9 +59,9 @@ func applyFilters(query *gorm.DB, filters []middleware.Filter) error {
 		case "sort_by":
 			query = query.Order(filter.Value[0])
 		default:
-			return fmt.Errorf("unsupported operation %v", filter.Operation)
+			return nil, fmt.Errorf("unsupported operation %v", filter.Operation)
 		}
 	}
 
-	return nil
+	return query, nil
 }

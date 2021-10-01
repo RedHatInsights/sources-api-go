@@ -24,7 +24,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 	query = query.Where("sources.tenant_id = ?", s.TenantID)
 
-	err = applyFilters(query, filters)
+	query, err = applyFilters(query, filters)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -45,7 +45,7 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]
 		Offset(offset).
 		Where("tenant_id = ?", s.TenantID)
 
-	err := applyFilters(query, filters)
+	query, err := applyFilters(query, filters)
 	if err != nil {
 		return nil, 0, err
 	}

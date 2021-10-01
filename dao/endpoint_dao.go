@@ -21,7 +21,7 @@ func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	query := sourceType.HasMany(&m.Endpoint{}, DB.Debug())
 	query = query.Where("endpoints.tenant_id = ?", a.TenantID)
 
-	err = applyFilters(query, filters)
+	query, err = applyFilters(query, filters)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -39,7 +39,7 @@ func (a *EndpointDaoImpl) List(limit int, offset int, filters []middleware.Filte
 		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)
 
-	err := applyFilters(query, filters)
+	query, err := applyFilters(query, filters)
 	if err != nil {
 		return nil, 0, err
 	}

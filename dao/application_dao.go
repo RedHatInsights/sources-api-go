@@ -20,7 +20,7 @@ func (a *ApplicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 
 	query := sourceType.HasMany(&m.Application{}, DB.Debug())
 
-	err = applyFilters(query, filters)
+	query, err = applyFilters(query, filters)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -38,7 +38,7 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []middleware.Fi
 		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)
 
-	err := applyFilters(query, filters)
+	query, err := applyFilters(query, filters)
 	if err != nil {
 		return nil, 0, err
 	}
