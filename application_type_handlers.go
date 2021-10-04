@@ -50,7 +50,7 @@ func SourceListApplicationTypes(c echo.Context) error {
 
 	var (
 		apptypes []m.ApplicationType
-		count    *int64
+		count    int64
 	)
 
 	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
@@ -71,7 +71,7 @@ func SourceListApplicationTypes(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func ApplicationTypeList(c echo.Context) error {

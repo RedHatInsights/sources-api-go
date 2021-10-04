@@ -11,11 +11,11 @@ type MetaDataDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error) {
+func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {
 	metadatas := make([]m.MetaData, 0, limit)
 	collection, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	query := collection.HasMany(&m.MetaData{}, DB.Debug())
@@ -23,14 +23,14 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	count := int64(0)
 	query.Model(&m.MetaData{}).Count(&count)
 
 	result := query.Limit(limit).Offset(offset).Find(&metadatas)
-	return metadatas, &count, result.Error
+	return metadatas, count, result.Error
 }
 
 func (a *MetaDataDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {

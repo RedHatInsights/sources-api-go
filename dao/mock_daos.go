@@ -34,7 +34,7 @@ type MockMetaDataDao struct {
 	MetaDatas []m.MetaData
 }
 
-func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error) {
+func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
 	count := int64(1)
 
 	var sources []m.Source
@@ -53,7 +53,7 @@ func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit
 
 	}
 
-	return sources, &count, nil
+	return sources, count, nil
 }
 
 func (src *MockSourceDao) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
@@ -108,9 +108,9 @@ func (a *MockMetaDataDao) List(limit int, offset int, filters []middleware.Filte
 	return a.MetaDatas, count, nil
 }
 
-func (a *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.MetaData, *int64, error) {
+func (a *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {
 	count := int64(len(a.MetaDatas))
-	return a.MetaDatas, &count, nil
+	return a.MetaDatas, count, nil
 }
 
 func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
@@ -146,10 +146,10 @@ func (a *MockApplicationTypeDao) Update(src *m.ApplicationType) error {
 func (a *MockApplicationTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
-func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error) {
+func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error) {
 	count := int64(1) // ApplicationType ID=1
 
-	return []m.ApplicationType{a.ApplicationTypes[0]}, &count, nil
+	return []m.ApplicationType{a.ApplicationTypes[0]}, count, nil
 }
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []middleware.Filter) ([]m.SourceType, int64, error) {
@@ -179,9 +179,9 @@ func (a *MockSourceTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
 
-func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Application, *int64, error) {
+func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Application, int64, error) {
 	count := int64(len(a.Applications))
-	return a.Applications, &count, nil
+	return a.Applications, count, nil
 }
 
 func (a *MockApplicationDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Application, int64, error) {
@@ -216,9 +216,9 @@ func (a *MockApplicationDao) Tenant() *int64 {
 	return &tenant
 }
 
-func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Endpoint, *int64, error) {
+func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error) {
 	count := int64(len(a.Endpoints))
-	return a.Endpoints, &count, nil
+	return a.Endpoints, count, nil
 }
 
 func (a *MockEndpointDao) List(limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error) {

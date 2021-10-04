@@ -11,14 +11,14 @@ type SourceDaoImpl struct {
 	TenantID *int64
 }
 
-func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, *int64, error) {
+func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sources := make([]m.Source, 0, limit)
 
 	sourceType, err := m.NewRelationObject(primaryCollection, *s.TenantID, DB.Debug())
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 	query := sourceType.HasMany(&m.Source{}, DB.Debug())
 
@@ -26,7 +26,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 
 	// getting the total count (filters included) for pagination
@@ -36,7 +36,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&sources)
 
-	return sources, &count, result.Error
+	return sources, count, result.Error
 }
 
 func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
