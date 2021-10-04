@@ -62,8 +62,7 @@ func TestMain(t *testing.M) {
 		dao.DB.Create(testSourceData)
 		dao.DB.Create(testApplicationData)
 		var testAuthentication = []m.Authentication{
-			{Id: 1, SourceID: 1, TenantID: 1},
-			{Id: 2, SourceID: 1, TenantID: 1},
+			{ID: "1", SourceID: 1, TenantID: 1},
 		}
 		dao.DB.Create(testAuthentication)
 		dao.DB.Create(testApplicationAuthenticationData)
