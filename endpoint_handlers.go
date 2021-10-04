@@ -64,7 +64,7 @@ func SourceListEndpoint(c echo.Context) error {
 		out[i] = *a.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(*count), limit, offset))
 }
 
 func EndpointList(c echo.Context) error {
@@ -100,7 +100,7 @@ func EndpointList(c echo.Context) error {
 		out[i] = *a.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func EndpointGet(c echo.Context) error {

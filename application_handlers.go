@@ -64,7 +64,7 @@ func SourceListApplications(c echo.Context) error {
 		out[i] = *a.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(*count), limit, offset))
 }
 
 func ApplicationList(c echo.Context) error {
@@ -101,7 +101,7 @@ func ApplicationList(c echo.Context) error {
 		out[i] = *a.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func ApplicationGet(c echo.Context) error {

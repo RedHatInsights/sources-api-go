@@ -2,6 +2,9 @@ package util
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
 )
 
 type Collection struct {
@@ -21,9 +24,26 @@ type Links struct {
 	Last  string `json:"last"`
 }
 
-func CollectionResponse(collection []interface{}, path string, count, limit, offset int) *Collection {
-	first := fmt.Sprintf("limit=%d&offset=%d", limit, offset)
-	last := fmt.Sprintf("limit=%d&offset=%d", limit, offset+limit)
+func CollectionResponse(collection []interface{}, req *http.Request, count, limit, offset int) *Collection {
+	var first, last string
+	q := req.URL.Query()
+
+	// set the "first" link with same limit+offset (what they requested)
+	q.Set("limit", strconv.Itoa(limit))
+	q.Set("offset", strconv.Itoa(offset))
+	params, _ := url.PathUnescape(q.Encode())
+	first = fmt.Sprintf("%v?%v", req.URL.Path, params)
+
+	// set the "last" link with limit+offset set for the next page
+	q.Set("offset", strconv.Itoa(offset+limit))
+	params, _ = url.PathUnescape(q.Encode())
+	last = fmt.Sprintf("%v?%v", req.URL.Path, params)
+
+	// set offset based on limit size aka page size
+	links := Links{
+		First: first,
+		Last:  last,
+	}
 
 	return &Collection{
 		Data: collection,
@@ -32,9 +52,6 @@ func CollectionResponse(collection []interface{}, path string, count, limit, off
 			Limit:  limit,
 			Offset: offset,
 		},
-		Links: Links{
-			First: fmt.Sprintf("%s/?%s", path, first),
-			Last:  fmt.Sprintf("%s/?%s", path, last),
-		},
+		Links: links,
 	}
 }
