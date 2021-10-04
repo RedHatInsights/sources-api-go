@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func ParsePagination(next echo.HandlerFunc) echo.HandlerFunc {
+func Pagination(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := parsePaginationIntoContext(c)
 		if err != nil {

@@ -15,14 +15,19 @@ type Filter struct {
 	Value     []string
 }
 
-func ParseFilter(next echo.HandlerFunc) echo.HandlerFunc {
+func SortAndFilter(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		parseFilterIntoRequest(c)
+		filters := parseFilter(c)
+		if sort := parseSorting(c); sort != nil {
+			filters = append(filters, *sort)
+		}
+
+		c.Set("filters", filters)
 		return next(c)
 	}
 }
 
-func parseFilterIntoRequest(c echo.Context) {
+func parseFilter(c echo.Context) []Filter {
 	f := make([]Filter, 0)
 	for key, values := range c.QueryParams() {
 		if strings.HasPrefix(key, "filter") {
@@ -37,5 +42,15 @@ func parseFilterIntoRequest(c echo.Context) {
 		}
 	}
 
-	c.Set("filters", f)
+	return f
+}
+
+func parseSorting(c echo.Context) *Filter {
+	for k, v := range c.QueryParams() {
+		if k == "sort_by" {
+			return &Filter{Operation: "sort_by", Value: v}
+		}
+	}
+
+	return nil
 }

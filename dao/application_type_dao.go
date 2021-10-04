@@ -36,7 +36,7 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Fi
 	apptypes := make([]m.ApplicationType, 0, limit)
 	query := DB.Model(&m.ApplicationType{}).Debug()
 
-	err := applyFilters(query, filters)
+	query, err := applyFilters(query, filters)
 	if err != nil {
 		return nil, 0, err
 	}

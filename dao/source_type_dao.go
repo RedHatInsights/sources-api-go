@@ -14,7 +14,7 @@ func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter)
 	sourceTypes := make([]m.SourceType, 0, limit)
 	query := DB.Debug().Model(&m.SourceType{})
 
-	err := applyFilters(query, filters)
+	query, err := applyFilters(query, filters)
 	if err != nil {
 		return nil, 0, err
 	}

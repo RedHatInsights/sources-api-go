@@ -15,6 +15,12 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
+var listMiddleware = []echo.MiddlewareFunc{
+	middleware.SortAndFilter, middleware.Pagination,
+}
+
+var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{enforceTenancy}, listMiddleware...)
+
 func setupRoutes(e *echo.Echo) {
 	e.GET("/openapi.json", func(c echo.Context) error {
 		out, err := redis.Client.Get("openapi").Result()
@@ -32,50 +38,44 @@ func setupRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, out)
 	})
 
-	v3 := e.Group("/api/sources/v3.1", enforceTenancy, middleware.HandleErrors)
+	v3 := e.Group("/api/sources/v3.1", middleware.HandleErrors)
 
 	// Sources
-	v3.GET("/sources", SourceList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/sources/:id", SourceGet)
-	v3.POST("/sources", SourceCreate)
-	v3.PATCH("/sources/:id", SourceEdit)
-	v3.DELETE("/sources/:id", SourceDelete)
-	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/sources/:source_id/applications", SourceListApplications, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)
+	v3.GET("/sources/:id", SourceGet, enforceTenancy)
+	v3.POST("/sources", SourceCreate, enforceTenancy)
+	v3.PATCH("/sources/:id", SourceEdit, enforceTenancy)
+	v3.DELETE("/sources/:id", SourceDelete, enforceTenancy)
+	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
+	v3.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
+	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
 
 	// Applications
-	v3.GET("/applications", ApplicationList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/applications/:id", ApplicationGet)
+	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
+	v3.GET("/applications/:id", ApplicationGet, enforceTenancy)
 
 	// ApplicationTypes
-	v3.GET("/application_types", ApplicationTypeList, middleware.ParseFilter, middleware.ParsePagination, withoutTenancy)
-	v3.GET("/application_types/:id", ApplicationTypeGet, withoutTenancy)
-	v3.GET("/application_types/:application_type_id/sources", ApplicationTypeListSource, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/application_types", ApplicationTypeList, listMiddleware...)
+	v3.GET("/application_types/:id", ApplicationTypeGet)
+	v3.GET("/application_types/:application_type_id/sources", ApplicationTypeListSource, tenancyWithListMiddleware...)
 
 	// Endpoints
-	v3.GET("/endpoints", EndpointList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/endpoints/:id", EndpointGet)
+	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
+	v3.GET("/endpoints/:id", EndpointGet, enforceTenancy)
 
 	// ApplicationAuthentications
-	v3.GET("/application_authentications", ApplicationAuthenticationList, middleware.ParseFilter, middleware.ParsePagination)
-	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet)
+	v3.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
+	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet, enforceTenancy)
 
-	v3.GET("/app_meta_data", MetaDataList, middleware.ParseFilter, middleware.ParsePagination, withoutTenancy)
-	v3.GET("/app_meta_data/:id", MetaDataGet, withoutTenancy)
-	v3.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, middleware.ParseFilter, middleware.ParsePagination)
+	// AppMetaData
+	v3.GET("/app_meta_data", MetaDataList, listMiddleware...)
+	v3.GET("/app_meta_data/:id", MetaDataGet)
+	v3.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, listMiddleware...)
 
 	// SourceTypes
-	v3.GET("/source_types", SourceTypeList, middleware.ParseFilter, middleware.ParsePagination)
+	v3.GET("/source_types", SourceTypeList, listMiddleware...)
 	v3.GET("/source_types/:id", SourceTypeGet)
-	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, middleware.ParseFilter, middleware.ParsePagination)
-}
-
-func withoutTenancy(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Set("withoutTenancy", true)
-		return next(c)
-	}
+	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
 }
 
 func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
