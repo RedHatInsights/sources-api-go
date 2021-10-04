@@ -22,6 +22,10 @@ var listMiddleware = []echo.MiddlewareFunc{
 var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{enforceTenancy}, listMiddleware...)
 
 func setupRoutes(e *echo.Echo) {
+	e.GET("/health", func(c echo.Context) error {
+		return c.String(http.StatusOK, "OK")
+	})
+
 	e.GET("/openapi.json", func(c echo.Context) error {
 		out, err := redis.Client.Get("openapi").Result()
 		if err != nil {
