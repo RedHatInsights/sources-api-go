@@ -43,8 +43,10 @@ func ApplicationAuthenticationList(c echo.Context) error {
 
 	applications, count, err := applicationDB.List(limit, offset, filters)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error()}
+		return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 	}
+
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
 
 	out := make([]interface{}, len(applications))

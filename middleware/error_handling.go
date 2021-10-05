@@ -12,9 +12,11 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := next(c)
 		if err != nil {
+			errorLog := util.ErrorLog{Logger: c.Logger(), Status: "500"}
+			errorLog.Message = fmt.Sprintf("Internal Server Error: %v", err.Error())
 			return c.JSON(
 				http.StatusInternalServerError,
-				util.ErrorDoc(fmt.Sprintf("Internal Server Error: %v", err.Error()), "500"),
+				errorLog.ErrorDocument(),
 			)
 		}
 		return err

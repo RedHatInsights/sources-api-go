@@ -23,7 +23,8 @@ func parsePaginationIntoContext(c echo.Context) error {
 	if c.QueryParam("limit") != "" {
 		val, err := strconv.Atoi(c.QueryParam("limit"))
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing limit", "400"))
+			errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error(), Message: "error parsing limit"}
+			return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 		}
 
 		c.Set("limit", val)
@@ -34,7 +35,8 @@ func parsePaginationIntoContext(c echo.Context) error {
 	if c.QueryParam("offset") != "" {
 		val, err := strconv.Atoi(c.QueryParam("offset"))
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing offset", "400"))
+			errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error(), Message: "error parsing offset"}
+			return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 		}
 
 		c.Set("offset", val)

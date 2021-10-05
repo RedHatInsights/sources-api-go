@@ -97,35 +97,43 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
 			t, err := dao.GetOrCreateTenantID(accountNumber)
 			if err != nil {
-				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
+				errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error(), Message: "Failed to get or create tenant for request", Status: "500"}
+				return c.JSON(http.StatusInternalServerError, errorLog.ErrorDocument())
 			}
 			c.Set("tenantID", *t)
 
 		case c.Request().Header.Get("x-rh-identity") != "":
 			idRaw, err := base64.StdEncoding.DecodeString(c.Request().Header.Get("x-rh-identity"))
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc(fmt.Sprintf("Error decoding Identity: %v", err), "401"))
+				message := fmt.Sprintf("Error decoding Identity: %v", err.Error())
+				errorLog := util.ErrorLog{Logger: c.Logger(), Message: message, Status: "401"}
+				return c.JSON(http.StatusUnauthorized, errorLog.ErrorDocument())
 			}
 
 			var jsonData identity.XRHID
 			err = json.Unmarshal(idRaw, &jsonData)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("x-rh-identity header is does not contain valid JSON", "401"))
+				errorLog := util.ErrorLog{Logger: c.Logger(), Message: "x-rh-identity header is does not contain valid JSON", Status: "401"}
+				return c.JSON(http.StatusUnauthorized, errorLog.ErrorDocument())
 			}
 
 			if jsonData.Identity.AccountNumber == "" {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant Id!", "401"))
+				errorLog := util.ErrorLog{Logger: c.Logger(), Message: "No Tenant Id!", Status: "401"}
+				return c.JSON(http.StatusUnauthorized, errorLog.ErrorDocument())
 			}
 
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", jsonData.Identity.AccountNumber)
 			t, err := dao.GetOrCreateTenantID(jsonData.Identity.AccountNumber)
 			if err != nil {
-				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
+				message := "Failed to get or create tenant for request"
+				errorLog := util.ErrorLog{Logger: c.Logger(), Message: message, Status: "401"}
+				return c.JSON(http.StatusInternalServerError, errorLog.ErrorDocument())
 			}
 			c.Set("tenantID", *t)
 
 		default:
-			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant Id!", "401"))
+			errorLog := util.ErrorLog{Logger: c.Logger(), Message: "No Tenant Id!", Status: "401"}
+			return c.JSON(http.StatusUnauthorized, errorLog.ErrorDocument())
 		}
 		return next(c)
 	}
