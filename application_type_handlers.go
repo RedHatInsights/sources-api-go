@@ -61,7 +61,8 @@ func SourceListApplicationTypes(c echo.Context) error {
 	apptypes, count, err = applicationTypeDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error()}
+		return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 	}
 
 	// converting the objects to the interface type so the collection response can process it

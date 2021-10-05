@@ -55,7 +55,8 @@ func MetaDataList(c echo.Context) error {
 	metaDatas, count, err = applicationDB.List(limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error()}
+		return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 	}
 
 	out := make([]interface{}, len(metaDatas))
@@ -95,7 +96,8 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 	metaDatas, count, err = applicationDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error()}
+		return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 	}
 
 	out := make([]interface{}, len(metaDatas))

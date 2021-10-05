@@ -50,7 +50,8 @@ func SourceList(c echo.Context) error {
 	sources, count, err = sourcesDB.List(limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error()}
+		return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 	}
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
@@ -90,7 +91,8 @@ func SourceTypeListSource(c echo.Context) error {
 	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error()}
+		return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 	}
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
@@ -131,7 +133,8 @@ func ApplicationTypeListSource(c echo.Context) error {
 	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		errorLog := util.ErrorLog{Logger: c.Logger(), LogMessage: err.Error()}
+		return c.JSON(http.StatusBadRequest, errorLog.ErrorDocument())
 	}
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
