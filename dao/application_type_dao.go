@@ -9,14 +9,14 @@ type ApplicationTypeDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, *int64, error) {
+func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	applicationTypes := make([]m.ApplicationType, 0, limit)
 
 	applicationType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 	query := applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
 
@@ -27,7 +27,7 @@ func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&applicationTypes)
 
-	return applicationTypes, &count, result.Error
+	return applicationTypes, count, result.Error
 }
 
 func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error) {

@@ -59,7 +59,7 @@ func SourceList(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 func SourceTypeListSource(c echo.Context) error {
 	sourcesDB, err := getSourceDao(c)
@@ -79,7 +79,7 @@ func SourceTypeListSource(c echo.Context) error {
 
 	var (
 		sources []m.Source
-		count   *int64
+		count   int64
 	)
 
 	id, err := strconv.ParseInt(c.Param("source_type_id"), 10, 64)
@@ -99,7 +99,7 @@ func SourceTypeListSource(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func ApplicationTypeListSource(c echo.Context) error {
@@ -120,7 +120,7 @@ func ApplicationTypeListSource(c echo.Context) error {
 
 	var (
 		sources []m.Source
-		count   *int64
+		count   int64
 	)
 
 	id, err := strconv.ParseInt(c.Param("application_type_id"), 10, 64)
@@ -140,7 +140,7 @@ func ApplicationTypeListSource(c echo.Context) error {
 		out[i] = *s.ToResponse()
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request().RequestURI, int(*count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func SourceGet(c echo.Context) error {

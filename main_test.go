@@ -163,8 +163,8 @@ func testDbString(dbname string) string {
 }
 
 func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset int) {
-	expectedFirstLink := fmt.Sprintf("%s/?limit=%d&offset=%d", path, limit, offset)
-	expectedLastLink := fmt.Sprintf("%s/?limit=%d&offset=%d", path, limit, limit+offset)
+	expectedFirstLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, offset)
+	expectedLastLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, limit+offset)
 	if links.First != expectedFirstLink {
 		t.Error("first link is not correct for " + path)
 	}

@@ -50,7 +50,7 @@ func AuthenticationList(c echo.Context) error {
 		out = append(out, *auth.ToResponse())
 	}
 
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Path(), int(count), limit, offset))
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func AuthenticationGet(c echo.Context) error {
