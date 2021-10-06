@@ -6,12 +6,16 @@ import (
 	"os"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/labstack/echo/v4"
 )
 
 var e *echo.Echo
+var conf = config.Get()
 
 func TestMain(t *testing.M) {
+	l.InitLogger(conf)
 	e = echo.New()
 	code := t.Run()
 	os.Exit(code)
