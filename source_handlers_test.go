@@ -195,3 +195,21 @@ func TestSourceGet(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 }
+
+func TestSourceGetNotFound(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/9872034520975", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("9872034520975")
+	c.Set("tenantID", int64(1))
+
+	err := SourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 404 {
+		t.Error("Did not return 404")
+	}
+}

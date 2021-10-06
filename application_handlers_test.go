@@ -159,3 +159,21 @@ func TestApplicationGet(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 }
+
+func TestApplicationGetNotFound(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/applications/9843762095", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("9843762095")
+	c.Set("tenantID", int64(1))
+
+	err := ApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 404 {
+		t.Error("Did not return 404")
+	}
+}

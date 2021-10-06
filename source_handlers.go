@@ -61,6 +61,7 @@ func SourceList(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
+
 func SourceTypeListSource(c echo.Context) error {
 	sourcesDB, err := getSourceDao(c)
 	if err != nil {
@@ -84,7 +85,7 @@ func SourceTypeListSource(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_type_id"), 10, 64)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
@@ -125,7 +126,7 @@ func ApplicationTypeListSource(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("application_type_id"), 10, 64)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
@@ -151,14 +152,14 @@ func SourceGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	c.Logger().Infof("Getting Source Id %v", id)
 
 	s, err := sourcesDB.GetById(&id)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
 	}
 
 	return c.JSON(http.StatusOK, s.ToResponse())
