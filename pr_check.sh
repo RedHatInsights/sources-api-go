@@ -19,9 +19,36 @@ IQE_FILTER_EXPRESSION=""
 # source $CICD_ROOT/deploy_ephemeral_env.sh
 # source $CICD_ROOT/smoke_test.sh
 
-make container
+DB_CONTAINER="sources-api-db-$(uuidgen)"
+echo "Spinning up container: ${DB_CONTAINER}"
 
-if [[ $? != 0 ]]; then
+docker run -d \
+    --name $DB_CONTAINER \
+    -p 5432 \
+    -e POSTGRESQL_USER=root \
+    -e POSTGRESQL_PASSWORD=toor \
+    -e POSTGRESQL_DATABASE=sources_api_test_go \
+    quay.io/cloudservices/postgresql-rds:12-1
+
+PORT=$(docker inspect $DB_CONTAINER | grep HostPort | sort | uniq | grep -o [0-9]*)
+echo "DB Listening on Port: ${PORT}"
+
+export DATABASE_HOST=localhost 
+export DATABASE_PORT=$PORT 
+export DATABASE_USER=root 
+export DATABASE_PASSWORD=toor 
+export DATABASE_NAME=sources_api_test_go
+
+echo "Running tests...here we go"
+go test -integration
+OUT_CODE=$?
+
+echo "Killing DB Container..."
+docker kill $DB_CONTAINER
+echo "Removing DB Container..."
+docker rm -f $DB_CONTAINER
+
+if [[ $OUT_CODE != 0 ]]; then
     exit 1
 fi
 
