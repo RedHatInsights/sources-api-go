@@ -1,28 +1,30 @@
-package model
+package service
 
 import (
 	"math"
 	"regexp"
 	"testing"
+
+	"github.com/RedHatInsights/sources-api-go/model"
 )
 
 var uuidRegex = regexp.MustCompile(`[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`)
 
 // setUp returns a freshly created and valid SourceCreateRequest.
-func setUp() SourceCreateRequest {
+func setUp() model.SourceCreateRequest {
 	name := "TestRequest"
 	version := "10.5"
 	imported := "true"
 	sourceRef := "Source reference #5"
 	sourceTypeId := "501"
 
-	return SourceCreateRequest{
+	return model.SourceCreateRequest{
 		Name:                &name,
 		Version:             &version,
 		Imported:            &imported,
 		SourceRef:           &sourceRef,
-		AppCreationWorkflow: AccountAuth,
-		AvailabilityStatus:  Available,
+		AppCreationWorkflow: model.AccountAuth,
+		AvailabilityStatus:  model.Available,
 		SourceTypeIDRaw:     &sourceTypeId,
 	}
 
@@ -32,7 +34,7 @@ func setUp() SourceCreateRequest {
 func TestValidRequest(t *testing.T) {
 	request := setUp()
 
-	err := request.Validate()
+	err := ValidateSourceCreationRequest(&request)
 	if err != nil {
 		t.Errorf("Request validation went wrong. No errors expected, got \"%s\"", err)
 	}
@@ -43,7 +45,7 @@ func TestInvalidName(t *testing.T) {
 	request := setUp()
 	request.Name = nil
 
-	err := request.Validate()
+	err := ValidateSourceCreationRequest(&request)
 	if err == nil {
 		t.Errorf("Name validation went wrong. Invalid name error expected, none gotten")
 	}
@@ -61,7 +63,7 @@ func TestUuidGeneration(t *testing.T) {
 	request := setUp()
 
 	for i := 0; i < 5; i++ {
-		err := request.Validate()
+		err := ValidateSourceCreationRequest(&request)
 		if err != nil {
 			t.Errorf("No errors are expected, got \"%s\"", err)
 		}
@@ -79,13 +81,13 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 
 	// The request already has a valid value, but just in case we're going to test all the valid cases again
 	var validValues = []string{
-		AccountAuth,
-		ManualConfig,
+		model.AccountAuth,
+		model.ManualConfig,
 	}
 
 	for _, validValue := range validValues {
 		request.AppCreationWorkflow = validValue
-		err := request.Validate()
+		err := ValidateSourceCreationRequest(&request)
 
 		if err != nil {
 			t.Errorf("No errors expected, got \"%s\"", err)
@@ -102,14 +104,14 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 
 	for _, invalidValue := range invalidValues {
 		request.AppCreationWorkflow = invalidValue
-		err := request.Validate()
+		err := ValidateSourceCreationRequest(&request)
 
 		if err != nil {
 			t.Errorf("No errors expected, got %s", err)
 		}
 
-		if request.AppCreationWorkflow != ManualConfig {
-			t.Errorf("want %s, got %s", ManualConfig, request.AppCreationWorkflow)
+		if request.AppCreationWorkflow != model.ManualConfig {
+			t.Errorf("want %s, got %s", model.ManualConfig, request.AppCreationWorkflow)
 		}
 	}
 }
@@ -122,16 +124,16 @@ func TestAvailabilityStatusValues(t *testing.T) {
 	// The request already has a valid status, but we're testing all the values just in case
 	var validStatuses = []string{
 		"",
-		Available,
-		InProgress,
-		PartiallyAvailable,
-		Unavailable,
+		model.Available,
+		model.InProgress,
+		model.PartiallyAvailable,
+		model.Unavailable,
 	}
 
 	for _, validStatus := range validStatuses {
 		request.AvailabilityStatus = validStatus
 
-		err := request.Validate()
+		err := ValidateSourceCreationRequest(&request)
 		if err != nil {
 			t.Errorf("No errors expected, got \"%s\"", err)
 		}
@@ -148,7 +150,7 @@ func TestAvailabilityStatusValues(t *testing.T) {
 	for _, invalidStatus := range invalidStatuses {
 		request.AvailabilityStatus = invalidStatus
 
-		err := request.Validate()
+		err := ValidateSourceCreationRequest(&request)
 		if err == nil {
 			t.Errorf("Error expected when validating \"AvailabilityStatus\", none gotten")
 		}
@@ -182,7 +184,7 @@ func TestSourceTypeIdLowerOne(t *testing.T) {
 	for _, tt := range lowerZero {
 		request.SourceTypeIDRaw = tt.value
 
-		err := request.Validate()
+		err := ValidateSourceCreationRequest(&request)
 
 		if err == nil {
 			t.Errorf("Error expected, got none")
@@ -212,7 +214,7 @@ func TestInvalidSourceTypeIdFormat(t *testing.T) {
 
 	for _, tt := range invalidTypes {
 		request.SourceTypeIDRaw = tt.value
-		err := request.Validate()
+		err := ValidateSourceCreationRequest(&request)
 
 		if err == nil {
 			t.Errorf("Error expected, got none")

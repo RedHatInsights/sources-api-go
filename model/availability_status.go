@@ -8,8 +8,8 @@ const (
 	Unavailable        string = "unavailable"
 )
 
-// A package level defined slice to avoid instantiating it every time.
-var availabilityStatuses = []string{
+// AvailabilityStatuses contains the possible valid values of the status of a source
+var AvailabilityStatuses = []string{
 	"",
 	Available,
 	InProgress,
