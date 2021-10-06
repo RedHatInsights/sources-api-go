@@ -55,7 +55,7 @@ func SourceListEndpoint(c echo.Context) error {
 	endpoints, count, err = endpointDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
 
@@ -91,7 +91,7 @@ func EndpointList(c echo.Context) error {
 	endpoints, count, err = endpointDB.List(limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
 

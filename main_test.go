@@ -8,6 +8,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -33,6 +34,7 @@ func TestMain(t *testing.M) {
 	integration := flag.Bool("integration", false, "run unit or integration tests")
 	createdb := flag.Bool("createdb", false, "create the test database")
 	flag.Parse()
+	l.InitLogger(conf)
 
 	if *createdb {
 		fmt.Fprintf(os.Stderr, "creating database %v...", testDbName)
