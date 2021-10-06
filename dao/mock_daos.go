@@ -22,10 +22,6 @@ type MockApplicationTypeDao struct {
 	ApplicationTypes []m.ApplicationType
 }
 
-type MockApplicationAuthenticationDao struct {
-	ApplicationAuthentications []m.ApplicationAuthentication
-}
-
 type MockSourceTypeDao struct {
 	SourceTypes []m.SourceType
 }
@@ -249,38 +245,6 @@ func (a *MockEndpointDao) Delete(id *int64) error {
 }
 
 func (m *MockEndpointDao) Tenant() *int64 {
-	tenant := int64(1)
-	return &tenant
-}
-
-func (a *MockApplicationAuthenticationDao) GetById(id *int64) (*m.ApplicationAuthentication, error) {
-	for _, app := range a.ApplicationAuthentications {
-		if app.ID == *id {
-			return &app, nil
-		}
-	}
-
-	return nil, fmt.Errorf("endpoint not found")
-}
-
-func (a *MockApplicationAuthenticationDao) List(limit int, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, int64, error) {
-	count := int64(len(a.ApplicationAuthentications))
-	return a.ApplicationAuthentications, count, nil
-}
-
-func (a *MockApplicationAuthenticationDao) Create(src *m.ApplicationAuthentication) error {
-	panic("not implemented") // TODO: Implement
-}
-
-func (a *MockApplicationAuthenticationDao) Update(src *m.ApplicationAuthentication) error {
-	panic("not implemented") // TODO: Implement
-}
-
-func (a *MockApplicationAuthenticationDao) Delete(id *int64) error {
-	panic("not implemented") // TODO: Implement
-}
-
-func (a *MockApplicationAuthenticationDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }

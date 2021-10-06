@@ -16,14 +16,13 @@ import (
 )
 
 var (
-	e                                *echo.Echo
-	mockSourceDao                    dao.SourceDao
-	mockApplicationTypeDao           dao.ApplicationTypeDao
-	mockEndpointDao                  dao.EndpointDao
-	mockSourceTypeDao                dao.SourceTypeDao
-	mockApplicationDao               dao.ApplicationDao
-	mockApplicationAuthenticationDao dao.ApplicationAuthenticationDao
-	mockMetaDataDao                  dao.MetaDataDao
+	e                      *echo.Echo
+	mockSourceDao          dao.SourceDao
+	mockApplicationTypeDao dao.ApplicationTypeDao
+	mockEndpointDao        dao.EndpointDao
+	mockSourceTypeDao      dao.SourceTypeDao
+	mockApplicationDao     dao.ApplicationDao
+	mockMetaDataDao        dao.MetaDataDao
 
 	testDbName = "sources_api_test_go"
 )
@@ -50,7 +49,6 @@ func TestMain(t *testing.M) {
 		getApplicationDao = getApplicationDaoWithTenant
 		getEndpointDao = getEndpointDaoWithTenant
 		getApplicationTypeDao = getApplicationTypeDaoWithTenant
-		getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
 		getMetaDataDao = getMetaDataDaoWithTenant
 
@@ -61,11 +59,6 @@ func TestMain(t *testing.M) {
 
 		dao.DB.Create(testSourceData)
 		dao.DB.Create(testApplicationData)
-		var testAuthentication = []m.Authentication{
-			{ID: "1", SourceID: 1, TenantID: 1},
-		}
-		dao.DB.Create(testAuthentication)
-		dao.DB.Create(testApplicationAuthenticationData)
 		dao.DB.Create(testEndpointData)
 
 		dao.DB.Create(testMetaData)
@@ -75,7 +68,6 @@ func TestMain(t *testing.M) {
 		mockEndpointDao = &dao.MockEndpointDao{Endpoints: testEndpointData}
 		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: testSourceTypeData}
 		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: testApplicationTypeData}
-		mockApplicationAuthenticationDao = &dao.MockApplicationAuthenticationDao{ApplicationAuthentications: testApplicationAuthenticationData}
 		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: testMetaData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
@@ -83,10 +75,6 @@ func TestMain(t *testing.M) {
 		getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) { return mockEndpointDao, nil }
 		getSourceTypeDao = func(c echo.Context) (dao.SourceTypeDao, error) { return mockSourceTypeDao, nil }
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) { return mockApplicationTypeDao, nil }
-
-		getApplicationAuthenticationDao = func(c echo.Context) (dao.ApplicationAuthenticationDao, error) {
-			return mockApplicationAuthenticationDao, nil
-		}
 
 		getMetaDataDao = func(c echo.Context) (dao.MetaDataDao, error) { return mockMetaDataDao, nil }
 
@@ -97,8 +85,6 @@ func TestMain(t *testing.M) {
 
 	if *integration {
 		dao.DB.Exec("DROP TABLE endpoints")
-		dao.DB.Exec("DROP TABLE application_authentications")
-		dao.DB.Exec("DROP TABLE authentications")
 		dao.DB.Exec("DROP TABLE meta_data")
 		dao.DB.Exec("DROP TABLE applications")
 		dao.DB.Exec("DROP TABLE application_types")
@@ -131,7 +117,6 @@ func connectToTestDB() {
 		&m.Source{},
 		&m.Application{},
 
-		&m.ApplicationAuthentication{},
 		&m.Endpoint{},
 		&m.MetaData{},
 	)
