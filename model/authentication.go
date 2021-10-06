@@ -9,6 +9,7 @@ type Authentication struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 
+	
 	Name                    string                 `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`
 	Username                string                 `json:"username"`
