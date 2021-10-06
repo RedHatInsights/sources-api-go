@@ -109,13 +109,13 @@ func AuthenticationUpdate(c echo.Context) error {
 
 	auth, err := authDao.GetById(c.Param("uid"))
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(fmt.Sprintf("Authentication %v not found", c.Param("uid")), "404"))
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(fmt.Sprintf("Authentication %v not found (%s)", c.Param("uid"), err.Error()), "404"))
 	}
 
 	auth.UpdateFromRequest(updateRequest)
 	err = authDao.Update(auth)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	return c.JSON(http.StatusOK, auth.ToResponse())

@@ -120,7 +120,7 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", jsonData.Identity.AccountNumber)
 			t, err := dao.GetOrCreateTenantID(jsonData.Identity.AccountNumber)
 			if err != nil {
-				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
+				return c.JSON(http.StatusInternalServerError, util.ErrorDoc(fmt.Sprintf("Failed to get or create tenant for request: %s", err.Error()), "500"))
 			}
 			c.Set("tenantID", *t)
 

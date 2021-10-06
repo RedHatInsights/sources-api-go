@@ -43,7 +43,7 @@ func ApplicationAuthenticationList(c echo.Context) error {
 
 	applications, count, err := applicationDB.List(limit, offset, filters)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("Bad Request", "400"))
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
 
