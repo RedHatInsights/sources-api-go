@@ -138,3 +138,21 @@ func TestEndpointGet(t *testing.T) {
 		t.Error("Failed unmarshaling output")
 	}
 }
+
+func TestEndpointGetNotFound(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/endpoints/970283452983", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("970283452983")
+	c.Set("tenantID", int64(1))
+
+	err := EndpointGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 404 {
+		t.Error("Did not return 404")
+	}
+}

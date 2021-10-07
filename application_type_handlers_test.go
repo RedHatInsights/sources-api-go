@@ -142,3 +142,20 @@ func TestApplicationTypeGet(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 }
+
+func TestApplicationTypeGetNotFound(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/123", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("123")
+
+	err := ApplicationTypeGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 404 {
+		t.Error("Did not return 404")
+	}
+}

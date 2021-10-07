@@ -49,7 +49,7 @@ func SourceListEndpoint(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	endpoints, count, err = endpointDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
@@ -111,14 +111,14 @@ func EndpointGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	c.Logger().Infof("Getting Endpoint ID %v", id)
 
 	app, err := endpointDB.GetById(&id)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())

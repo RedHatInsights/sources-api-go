@@ -49,7 +49,7 @@ func SourceListApplications(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
@@ -112,14 +112,14 @@ func ApplicationGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	c.Logger().Infof("Getting Application ID %v", id)
 
 	app, err := applicationDB.GetById(&id)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())

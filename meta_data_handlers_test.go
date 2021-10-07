@@ -138,3 +138,21 @@ func TestMetaDataGet(t *testing.T) {
 		t.Error("Failed unmarshaling output")
 	}
 }
+
+func TestMetaDataGetNotFound(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/app_meta_data/1234", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetParamNames("id")
+	c.SetParamValues("1234")
+	c.Set("tenantID", int64(1))
+
+	err := MetaDataGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 404 {
+		t.Error("Did not return 404")
+	}
+}
