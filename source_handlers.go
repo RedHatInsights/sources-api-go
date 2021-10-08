@@ -177,7 +177,7 @@ func SourceCreate(c echo.Context) error {
 		return err
 	}
 
-	err = service.ValidateSourceCreationRequest(input)
+	err = service.ValidateSourceCreationRequest(sourcesDB, input)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(fmt.Sprintf("Validation failed: %s", err.Error()), "400"))
 	}

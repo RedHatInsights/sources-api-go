@@ -90,3 +90,11 @@ func (s *SourceDaoImpl) Delete(id *int64) error {
 func (s *SourceDaoImpl) Tenant() *int64 {
 	return s.TenantID
 }
+
+func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
+	src := &m.Source{Name: name}
+	result := DB.Where("name LIKE ? AND tenant_id = ?", name, s.TenantID).First(src)
+
+	// If the name is found, GORM returns one row and no errors.
+	return result.Error == nil
+}

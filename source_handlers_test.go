@@ -272,7 +272,7 @@ func TestSourceCreate(t *testing.T) {
 	version := "10.5"
 	imported := "true"
 	sourceRef := "Source reference #5"
-	var sourceTypeId int64 = 5
+	var sourceTypeId int64 = 1
 
 	requestBody := m.SourceCreateRequest{
 		Name:                &name,

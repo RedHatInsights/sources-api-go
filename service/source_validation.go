@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/uuid"
@@ -16,10 +17,14 @@ var validWorkflowStatuses = []string{model.AccountAuth, model.ManualConfig}
 // ValidateSourceCreationRequest validates that the required fields of the SourceCreateRequest request hold proper
 // values. In the specific case of the UUID, if an empty or nil one is provided, a new random UUID is generated and
 // appended to the request.
-func ValidateSourceCreationRequest(req *model.SourceCreateRequest) error {
+func ValidateSourceCreationRequest(dao dao.SourceDao, req *model.SourceCreateRequest) error {
 
 	if req.Name == nil || *req.Name == "" {
 		return fmt.Errorf("name cannot be empty")
+	}
+
+	if dao.NameExistsInCurrentTenant(*req.Name) {
+		return fmt.Errorf("name already exists in tenant")
 	}
 
 	// Generate a new UUID and assign it to the source, as the field is not received from the

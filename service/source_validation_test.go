@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/model"
 )
 
@@ -34,7 +35,7 @@ func setUp() model.SourceCreateRequest {
 func TestValidRequest(t *testing.T) {
 	request := setUp()
 
-	err := ValidateSourceCreationRequest(&request)
+	err := ValidateSourceCreationRequest(sourceDao, &request)
 	if err != nil {
 		t.Errorf("Request validation went wrong. No errors expected, got \"%s\"", err)
 	}
@@ -45,7 +46,7 @@ func TestInvalidName(t *testing.T) {
 	request := setUp()
 	request.Name = nil
 
-	err := ValidateSourceCreationRequest(&request)
+	err := ValidateSourceCreationRequest(sourceDao, &request)
 	if err == nil {
 		t.Errorf("Name validation went wrong. Invalid name error expected, none gotten")
 	}
@@ -58,12 +59,41 @@ func TestInvalidName(t *testing.T) {
 	}
 }
 
+// TestInvalidDuplicatedNameInTenant tests that the validation fails if the given source's name is not unique in the
+// tenant. For this purpose it creates a new source in the database and then deletes it instead of using the existing
+// fixture that is inserted in the main function. The reason is that it is easier to control this new fixture here
+// than having to track the name of the previously inserted fixture, or exporting it to variable or whatever.
+func TestInvalidDuplicatedNameInTenant(t *testing.T) {
+	if !runningIntegration {
+		t.Skipf("not running integration tests")
+	}
+
+	sourceName := "Source350"
+	newSource := model.Source{ID: 350, Name: sourceName, SourceTypeID: 1, TenantID: 1}
+	dao.DB.Create(&newSource)
+
+	request := setUp()
+	request.Name = &sourceName
+
+	err := ValidateSourceCreationRequest(sourceDao, &request)
+
+	if err == nil {
+		t.Errorf("Error expected, got none")
+	}
+
+	if err.Error() != "name already exists in tenant" {
+		t.Errorf("want %#v, got %#v", "name already exists in tenant", err.Error())
+	}
+
+	dao.DB.Delete(newSource)
+}
+
 // TestUuidGeneration tests that UUIDs are correctly generated when validating a new source.
 func TestUuidGeneration(t *testing.T) {
 	request := setUp()
 
 	for i := 0; i < 5; i++ {
-		err := ValidateSourceCreationRequest(&request)
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 		if err != nil {
 			t.Errorf("No errors are expected, got \"%s\"", err)
 		}
@@ -87,7 +117,7 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 
 	for _, validValue := range validValues {
 		request.AppCreationWorkflow = validValue
-		err := ValidateSourceCreationRequest(&request)
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 
 		if err != nil {
 			t.Errorf("No errors expected, got \"%s\"", err)
@@ -104,7 +134,7 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 
 	for _, invalidValue := range invalidValues {
 		request.AppCreationWorkflow = invalidValue
-		err := ValidateSourceCreationRequest(&request)
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 
 		if err != nil {
 			t.Errorf("No errors expected, got %s", err)
@@ -133,7 +163,7 @@ func TestAvailabilityStatusValues(t *testing.T) {
 	for _, validStatus := range validStatuses {
 		request.AvailabilityStatus = validStatus
 
-		err := ValidateSourceCreationRequest(&request)
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 		if err != nil {
 			t.Errorf("No errors expected, got \"%s\"", err)
 		}
@@ -150,7 +180,7 @@ func TestAvailabilityStatusValues(t *testing.T) {
 	for _, invalidStatus := range invalidStatuses {
 		request.AvailabilityStatus = invalidStatus
 
-		err := ValidateSourceCreationRequest(&request)
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 		if err == nil {
 			t.Errorf("Error expected when validating \"AvailabilityStatus\", none gotten")
 		}
@@ -184,7 +214,7 @@ func TestSourceTypeIdLowerOne(t *testing.T) {
 	for _, tt := range lowerZero {
 		request.SourceTypeIDRaw = tt.value
 
-		err := ValidateSourceCreationRequest(&request)
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 
 		if err == nil {
 			t.Errorf("Error expected, got none")
@@ -214,7 +244,7 @@ func TestInvalidSourceTypeIdFormat(t *testing.T) {
 
 	for _, tt := range invalidTypes {
 		request.SourceTypeIDRaw = tt.value
-		err := ValidateSourceCreationRequest(&request)
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 
 		if err == nil {
 			t.Errorf("Error expected, got none")
