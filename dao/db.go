@@ -8,7 +8,6 @@ import (
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	vault "github.com/hashicorp/vault/api"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -23,18 +22,9 @@ var (
 )
 
 func Init() {
-	logger := &logrus.Logger{
-		Out:       logging.LogOutputFrom(conf.LogHandler),
-		Level:     logging.LogrusLogLevelFrom(conf.LogLevel),
-		Formatter: logging.NewCustomLoggerFormatter(conf, true),
-		Hooks:     make(logrus.LevelHooks),
-	}
-
-	logging.AddHooksTo(logger, conf)
-
 	l := &logging.CustomGORMLogger{
 		SkipErrorRecordNotFound: true,
-		Logger:                  logger,
+		Logger:                  logging.Log,
 		SlowThreshold:           time.Duration(conf.SlowSQLThreshold) * time.Second,
 		LogLevelForSqlLogs:      conf.LogLevelForSqlLogs,
 	}

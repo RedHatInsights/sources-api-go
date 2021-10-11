@@ -14,7 +14,7 @@ var conf = config.Get()
 func main() {
 	e := echo.New()
 
-	log := logging.InitLogger(conf)
+	logging.InitLogger(conf)
 	logging.InitEchoLogger(e, conf)
 
 	dao.Init()
@@ -24,7 +24,7 @@ func main() {
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: logging.FormatForMiddleware(conf),
 		Output: &logging.LogWriter{Output: logging.LogOutputFrom(conf.LogHandler),
-			Logger:   log,
+			Logger:   logging.Log,
 			LogLevel: conf.LogLevelForMiddlewareLogs},
 	}))
 
