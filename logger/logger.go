@@ -218,7 +218,7 @@ func LogOutputFrom(logHandler string) *os.File {
 	return logOutput
 }
 
-func InitLogger(config *appconf.SourcesApiConfig) *logrus.Logger {
+func InitLogger(config *appconf.SourcesApiConfig) {
 	Log = &logrus.Logger{
 		Out:          LogOutputFrom(config.LogHandler),
 		Level:        LogrusLogLevelFrom(config.LogLevel),
@@ -228,6 +228,4 @@ func InitLogger(config *appconf.SourcesApiConfig) *logrus.Logger {
 	}
 
 	AddHooksTo(Log, config)
-
-	return Log
 }
