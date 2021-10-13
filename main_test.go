@@ -44,21 +44,21 @@ func TestMain(t *testing.M) {
 
 		dao.DB.Create(&m.Tenant{Id: 1})
 
-		dao.DB.Create(testSourceTypeData)
-		dao.DB.Create(testApplicationTypeData)
+		dao.DB.Create(testutils.TestSourceTypeData)
+		dao.DB.Create(testutils.TestApplicationTypeData)
 
-		dao.DB.Create(testSourceData)
-		dao.DB.Create(testApplicationData)
-		dao.DB.Create(testEndpointData)
+		dao.DB.Create(testutils.TestSourceData)
+		dao.DB.Create(testutils.TestApplicationData)
+		dao.DB.Create(testutils.TestEndpointData)
 
-		dao.DB.Create(testMetaData)
+		dao.DB.Create(testutils.TestMetaDataData)
 	} else {
-		mockSourceDao = &dao.MockSourceDao{Sources: testSourceData}
-		mockApplicationDao = &dao.MockApplicationDao{Applications: testApplicationData}
-		mockEndpointDao = &dao.MockEndpointDao{Endpoints: testEndpointData}
-		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: testSourceTypeData}
-		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: testApplicationTypeData}
-		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: testMetaData}
+		mockSourceDao = &dao.MockSourceDao{Sources: testutils.TestSourceData}
+		mockApplicationDao = &dao.MockApplicationDao{Applications: testutils.TestApplicationData}
+		mockEndpointDao = &dao.MockEndpointDao{Endpoints: testutils.TestEndpointData}
+		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: testutils.TestSourceTypeData}
+		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: testutils.TestApplicationTypeData}
+		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: testutils.TestMetaDataData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }

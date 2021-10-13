@@ -9,24 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"gorm.io/datatypes"
 )
-
-var testApplicationData = []m.Application{
-	{ID: 1, Extra: datatypes.JSON(getExtraValue("{\"extra\": true}")), ApplicationTypeID: 1, SourceID: 1, TenantID: 1},
-	{ID: 2, Extra: datatypes.JSON(getExtraValue("{\"extra\": false}")), ApplicationTypeID: 1, SourceID: 1, TenantID: 1},
-}
-
-func getExtraValue(val string) json.RawMessage {
-	var out json.RawMessage
-
-	err := json.Unmarshal([]byte(val), &out)
-	if err != nil {
-		panic(err)
-	}
-
-	return out
-}
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/1/applications", nil)

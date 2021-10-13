@@ -11,11 +11,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-var testMetaData = []m.MetaData{
-	{ID: 1, ApplicationTypeID: 1, Type: "AppMetaData"},
-	{ID: 2, ApplicationTypeID: 1, Type: "AppMetaData"},
-}
-
 func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/:application_type_id/app_meta_data", nil)
 	rec := httptest.NewRecorder()

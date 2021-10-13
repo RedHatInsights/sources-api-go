@@ -11,10 +11,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-var testApplicationTypeData = []m.ApplicationType{
-	{Id: 1, DisplayName: "test app type"},
-}
-
 func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/1/application_types", nil)
 	rec := httptest.NewRecorder()

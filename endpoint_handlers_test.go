@@ -11,11 +11,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-var testEndpointData = []m.Endpoint{
-	{ID: 1, SourceID: 1, TenantID: 1},
-	{ID: 2, SourceID: 1, TenantID: 1},
-}
-
 func TestSourceEndpointSubcollectionList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/1/endpoints", nil)
 	rec := httptest.NewRecorder()

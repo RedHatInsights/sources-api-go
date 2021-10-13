@@ -7,13 +7,8 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/middleware"
-	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
-
-var testSourceTypeData = []m.SourceType{
-	{Id: 1, Name: "amazon"},
-}
 
 func TestSourceTypeList(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/source_types", nil)
