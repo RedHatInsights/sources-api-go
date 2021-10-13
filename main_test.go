@@ -36,13 +36,7 @@ func TestMain(t *testing.M) {
 
 	if *createdb {
 		fmt.Fprintf(os.Stderr, "creating database %v...", testDbName)
-		err := testutils.CreateTestDB()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating test DB: %v", err)
-			os.Exit(1)
-		}
-
-		os.Exit(0)
+		testutils.CreateTestDB()
 	} else if *integration {
 		testutils.ConnectToTestDB()
 		getSourceDao = getSourceDaoWithTenant

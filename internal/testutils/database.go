@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -32,15 +33,19 @@ func ConnectToTestDB() {
 	MigrateSchema()
 }
 
-// CreateTestDB creates a test database.
-func CreateTestDB() error {
+// CreateTestDB creates a test database. The function terminates the program with a code 0 if the creating is
+// successful.
+func CreateTestDB() {
 	db, err := gorm.Open(postgres.Open(testDbString("postgres")), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error opening the database connection: %s", err)
 	}
 
-	out := db.Exec(fmt.Sprintf("CREATE DATABASE %v", testDbName))
-	return out.Error
+	if out := db.Exec(fmt.Sprintf("CREATE DATABASE %v", testDbName)); out.Error != nil {
+		log.Fatalf("Error creating the test database: %s", out.Error)
+	}
+
+	os.Exit(0)
 }
 
 // DropSchema drops the database schema entirely.
