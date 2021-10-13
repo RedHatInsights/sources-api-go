@@ -2,12 +2,13 @@ package testutils
 
 import (
 	"fmt"
+
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/labstack/gommon/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"os"
 )
 
 var testDbName = "sources_api_test_go"
@@ -16,13 +17,12 @@ var testDbName = "sources_api_test_go"
 func ConnectToTestDB() {
 	db, err := gorm.Open(postgres.Open(testDbString(testDbName)), &gorm.Config{})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "db must not exist - create the database '%v' first with '-createdb'.", testDbName)
-		panic(err)
+		log.Fatalf("db must not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
 	}
 
 	rawDB, err := db.DB()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	rawDB.SetMaxOpenConns(20)
 
@@ -36,7 +36,7 @@ func ConnectToTestDB() {
 func CreateTestDB() error {
 	db, err := gorm.Open(postgres.Open(testDbString("postgres")), &gorm.Config{})
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error opening the database connection: %s", err)
 	}
 
 	out := db.Exec(fmt.Sprintf("CREATE DATABASE %v", testDbName))
@@ -69,8 +69,7 @@ func MigrateSchema() {
 	)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error automigrating the schema: %v", err)
-		os.Exit(1)
+		log.Fatalf("Error automigrating the schema: %s", err)
 	}
 }
 
