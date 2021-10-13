@@ -33,6 +33,29 @@ func ConnectToTestDB() {
 	MigrateSchema()
 }
 
+// CreateFixtures creates the following fixtures for the database —listed in order—:
+// - Tenant
+// - SourceType
+// - ApplicationType
+// - Source
+// - Application
+// - Endpoint
+// - MetaData
+func CreateFixtures() {
+	dao.DB.Create(&TestTenantData)
+
+	dao.DB.Create(&TestSourceTypeData)
+	dao.DB.Create(&TestApplicationTypeData)
+
+	dao.DB.Create(&TestSourceData)
+	dao.DB.Create(&TestApplicationData)
+	dao.DB.Create(&TestEndpointData)
+
+	dao.DB.Create(&TestMetaDataData)
+
+	UpdateTablesSequences()
+}
+
 // CreateTestDB creates a test database. The function terminates the program with a code 0 if the creating is
 // successful.
 func CreateTestDB() {
@@ -86,6 +109,29 @@ func MigrateSchema() {
 
 	if err != nil {
 		log.Fatalf("Error automigrating the schema: %s", err)
+	}
+}
+
+// UpdateTablesSequences loops over all the tables from the database to update the tables' sequences to the latest id.
+// When inserting data with an ID, for example `INSERT INTO mytable(id, desc) VALUES (1, "My description")`, the
+// sequence doesn't get updated because an explicit ID was given. Therefore, if in the subsequent calls the ID is
+// omitted, this could lead to "unique constraint violation" errors because of a duplicate id.
+func UpdateTablesSequences() {
+	tables := []string{
+		"endpoints",
+		"meta_data",
+		"applications",
+		"application_types",
+		"sources",
+		"source_types",
+		"tenants",
+	}
+
+	for _, table := range tables {
+		dao.DB.Exec(fmt.Sprintf(
+			"SELECT setval('%[1]s_id_seq', (SELECT MAX(id) FROM %[1]s) + 1)",
+			table,
+		))
 	}
 }
 

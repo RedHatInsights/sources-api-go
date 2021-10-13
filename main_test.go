@@ -8,7 +8,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	l "github.com/RedHatInsights/sources-api-go/logger"
-	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -42,16 +41,7 @@ func TestMain(t *testing.M) {
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
 		getMetaDataDao = getMetaDataDaoWithTenant
 
-		dao.DB.Create(&m.Tenant{Id: 1})
-
-		dao.DB.Create(testutils.TestSourceTypeData)
-		dao.DB.Create(testutils.TestApplicationTypeData)
-
-		dao.DB.Create(testutils.TestSourceData)
-		dao.DB.Create(testutils.TestApplicationData)
-		dao.DB.Create(testutils.TestEndpointData)
-
-		dao.DB.Create(testutils.TestMetaDataData)
+		testutils.CreateFixtures()
 	} else {
 		mockSourceDao = &dao.MockSourceDao{Sources: testutils.TestSourceData}
 		mockApplicationDao = &dao.MockApplicationDao{Applications: testutils.TestApplicationData}
