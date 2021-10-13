@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"testing"
@@ -27,17 +26,14 @@ var (
 )
 
 func TestMain(t *testing.M) {
-	// flag to control running unit tests or connecting to a real db, usage:
-	// go test -integration
-	integration := flag.Bool("integration", false, "run unit or integration tests")
-	createdb := flag.Bool("createdb", false, "create the test database")
-	flag.Parse()
 	l.InitLogger(conf)
 
-	if *createdb {
+	createDb, integration := testutils.ParseFlags()
+
+	if createDb {
 		fmt.Fprintf(os.Stderr, "creating database %v...", testDbName)
 		testutils.CreateTestDB()
-	} else if *integration {
+	} else if integration {
 		testutils.ConnectToTestDB()
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
@@ -77,7 +73,7 @@ func TestMain(t *testing.M) {
 	e = echo.New()
 	code := t.Run()
 
-	if *integration {
+	if integration {
 		testutils.DropSchema()
 	}
 
