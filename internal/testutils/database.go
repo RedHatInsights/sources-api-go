@@ -50,13 +50,25 @@ func CreateTestDB() {
 
 // DropSchema drops the database schema entirely.
 func DropSchema() {
-	dao.DB.Exec("DROP TABLE endpoints")
-	dao.DB.Exec("DROP TABLE meta_data")
-	dao.DB.Exec("DROP TABLE applications")
-	dao.DB.Exec("DROP TABLE application_types")
-	dao.DB.Exec("DROP TABLE sources")
-	dao.DB.Exec("DROP TABLE source_types")
-	dao.DB.Exec("DROP TABLE tenants")
+	tables := []string{
+		"endpoints",
+		"meta_data",
+		"applications",
+		"application_types",
+		"sources",
+		"source_types",
+		"tenants",
+	}
+
+	for _, table := range tables {
+		if result := dao.DB.Exec(fmt.Sprintf("DROP table %s", table)); result.Error != nil {
+			log.Fatalf(
+				"Error dropping table '%s'. Please manually delete the tables. Error: %s",
+				table,
+				result.Error,
+			)
+		}
+	}
 }
 
 // MigrateSchema migrates all the models.
