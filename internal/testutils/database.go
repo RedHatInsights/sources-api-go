@@ -59,6 +59,7 @@ func CreateFixtures() {
 // CreateTestDB creates a test database. The function terminates the program with a code 0 if the creating is
 // successful.
 func CreateTestDB() {
+	fmt.Printf("Creating database '%s'...", testDbName)
 	db, err := gorm.Open(postgres.Open(testDbString("postgres")), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error opening the database connection: %s", err)

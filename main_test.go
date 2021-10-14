@@ -19,8 +19,6 @@ var (
 	mockSourceTypeDao      dao.SourceTypeDao
 	mockApplicationDao     dao.ApplicationDao
 	mockMetaDataDao        dao.MetaDataDao
-
-	testDbName = "sources_api_test_go"
 )
 
 func TestMain(t *testing.M) {
@@ -29,7 +27,6 @@ func TestMain(t *testing.M) {
 	createDb, integration := testutils.ParseFlags()
 
 	if createDb {
-		fmt.Fprintf(os.Stderr, "creating database %v...", testDbName)
 		testutils.CreateTestDB()
 	} else if integration {
 		testutils.ConnectToTestDB()
