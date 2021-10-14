@@ -3,22 +3,27 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/1/applications", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.Set("limit", 100)
-	c.Set("offset", 0)
-	c.Set("filters", []middleware.Filter{})
-	c.Set("tenantID", int64(1))
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []middleware.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
 	c.SetParamNames("source_id")
 	c.SetParamValues("1")
 
@@ -61,18 +66,21 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationList(t *testing.T) {
-	path := "/api/sources/v3.1/applications"
-	req := httptest.NewRequest(http.MethodGet, path, nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.Set("limit", 100)
-	c.Set("offset", 0)
-	c.Set("filters", []middleware.Filter{})
-	c.Set("tenantID", int64(1))
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []middleware.Filter{},
+			"tenantID": int64(1),
+		},
+	)
 
 	err := ApplicationList(c)
 	if err != nil {
@@ -112,16 +120,21 @@ func TestApplicationList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationGet(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/applications/1", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
 	c.SetParamNames("id")
 	c.SetParamValues("1")
-	c.Set("tenantID", int64(1))
 
 	err := ApplicationGet(c)
 	if err != nil {
@@ -144,12 +157,17 @@ func TestApplicationGet(t *testing.T) {
 }
 
 func TestApplicationGetNotFound(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/applications/9843762095", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/9843762095",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
 	c.SetParamNames("id")
 	c.SetParamValues("9843762095")
-	c.Set("tenantID", int64(1))
 
 	err := ApplicationGet(c)
 	if err != nil {

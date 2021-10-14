@@ -3,20 +3,24 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestSourceTypeList(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/source_types", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.Set("limit", 100)
-	c.Set("offset", 0)
-	c.Set("filters", []middleware.Filter{})
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types",
+		nil,
+		map[string]interface{}{
+			"limit":   100,
+			"offset":  0,
+			"filters": []middleware.Filter{},
+		},
+	)
 
 	err := SourceTypeList(c)
 
@@ -58,5 +62,5 @@ func TestSourceTypeList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }

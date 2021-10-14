@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	e                      *echo.Echo
 	mockSourceDao          dao.SourceDao
 	mockApplicationTypeDao dao.ApplicationTypeDao
 	mockEndpointDao        dao.EndpointDao
@@ -60,7 +59,6 @@ func TestMain(t *testing.M) {
 
 	}
 
-	e = echo.New()
 	code := t.Run()
 
 	if integration {
