@@ -29,6 +29,10 @@ type ApplicationDao interface {
 type AuthenticationDao interface {
 	List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	GetById(id string) (*m.Authentication, error)
+	ListForSource(sourceID int64, limit, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error)
+	ListForApplication(applicationID int64, limit, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error)
+	ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error)
+	ListForEndpoint(endpointID int64, limit, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error)
 	Create(src *m.Authentication) error
 	Update(src *m.Authentication) error
 	Delete(id string) error

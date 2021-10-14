@@ -75,3 +75,27 @@ func ApplicationAuthenticationGet(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, app.ToResponse())
 }
+
+func ApplicationAuthenticationListAuthentications(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("application_authentication_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	auths, count, err := authDao.ListForApplicationAuthentication(id, 100, 0, nil)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+	}
+
+	out := make([]interface{}, count)
+	for i := 0; i < int(count); i++ {
+		out[i] = auths[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), 100, 0))
+}

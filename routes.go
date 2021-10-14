@@ -49,10 +49,12 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
+	v3.GET("/sources/:source_id/authentications", SourceListAuthentications, tenancyWithListMiddleware...)
 
 	// Applications
 	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
 	v3.GET("/applications/:id", ApplicationGet, middleware.Tenancy)
+	v3.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
 
 	// Authentications
 	v3.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
@@ -70,10 +72,12 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
 	v3.POST("/endpoints", EndpointCreate, permissionMiddleware...)
 	v3.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
+	v3.GET("/endpoints/:endpoint_id", EndpointListAuthentications, tenancyWithListMiddleware...)
 
 	// ApplicationAuthentications
 	v3.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
 	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet, middleware.Tenancy)
+	v3.GET("/application_authentications/:application_authentication_id/authentications", ApplicationAuthenticationListAuthentications, tenancyWithListMiddleware...)
 
 	// AppMetaData
 	v3.GET("/app_meta_data", MetaDataList, listMiddleware...)

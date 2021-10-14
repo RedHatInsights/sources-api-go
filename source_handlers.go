@@ -253,3 +253,28 @@ func SourceDelete(c echo.Context) (err error) {
 
 	return c.NoContent(http.StatusNoContent)
 }
+
+func SourceListAuthentications(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	auths, count, err := authDao.ListForSource(sourceID, 100, 0, nil)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+	}
+
+	out := make([]interface{}, count)
+	for i := 0; i < int(count); i++ {
+		out[i] = auths[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), 100, 0))
+
+}
