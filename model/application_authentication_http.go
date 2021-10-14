@@ -9,6 +9,7 @@ type ApplicationAuthenticationResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	ApplicationID    string `json:"application_id"`
-	AuthenticationID string `json:"authentication_id"`
+	ApplicationID     string `json:"application_id"`
+	AuthenticationID  string `json:"authentication_id"`
+	AuthenticationUID string `json:"authentication_uid"`
 }

@@ -14,6 +14,8 @@ type ApplicationAuthentication struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
+	VaultPath string `json:"vault_path"`
+
 	TenantID int64
 	Tenant   Tenant
 
@@ -21,7 +23,8 @@ type ApplicationAuthentication struct {
 	Application   Application
 	// TODO: fix correctly PR#40
 	AuthenticationID int64 `json:"authentication_id"`
-	//Authentication   Authentication
+
+	AuthenticationUID string `json:"-"`
 }
 
 func (aa *ApplicationAuthentication) ToEvent() *ApplicationAuthenticationEvent {
@@ -44,10 +47,11 @@ func (aa *ApplicationAuthentication) ToResponse() *ApplicationAuthenticationResp
 	authId := strconv.FormatInt(aa.AuthenticationID, 10)
 
 	return &ApplicationAuthenticationResponse{
-		ID:               id,
-		CreatedAt:        aa.CreatedAt,
-		UpdatedAt:        aa.UpdatedAt,
-		ApplicationID:    appId,
-		AuthenticationID: authId,
+		ID:                id,
+		AuthenticationUID: aa.AuthenticationUID,
+		CreatedAt:         aa.CreatedAt,
+		UpdatedAt:         aa.UpdatedAt,
+		ApplicationID:     appId,
+		AuthenticationID:  authId,
 	}
 }

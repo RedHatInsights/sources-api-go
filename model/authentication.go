@@ -20,6 +20,7 @@ type Authentication struct {
 
 	SourceID int64 `json:"source_id"`
 	Source   Source
+
 	TenantID int64 `json:"tenant_id"`
 	Tenant   Tenant
 
