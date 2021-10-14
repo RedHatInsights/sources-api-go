@@ -25,30 +25,30 @@ func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 	count := int64(0)
 	query.Count(&count)
 
-	result := query.Limit(limit).Find(&applications)
-	return applications, count, result.Error
+	result := query.Limit(limit).Find(&appAuths)
+	return appAuths, count, result.Error
 }
 
 func (a *ApplicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
-	app := &m.ApplicationAuthentication{ID: *id}
-	result := DB.First(&app)
+	appAuth := &m.ApplicationAuthentication{ID: *id}
+	result := DB.First(&appAuth)
 
-	return app, result.Error
+	return appAuth, result.Error
 }
 
-func (a *ApplicationAuthenticationDaoImpl) Create(app *m.ApplicationAuthentication) error {
-	result := DB.Create(app)
+func (a *ApplicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {
+	result := DB.Create(appAuth)
 	return result.Error
 }
 
-func (a *ApplicationAuthenticationDaoImpl) Update(app *m.ApplicationAuthentication) error {
-	result := DB.Updates(app)
+func (a *ApplicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
+	result := DB.Updates(appAuth)
 	return result.Error
 }
 
 func (a *ApplicationAuthenticationDaoImpl) Delete(id *int64) error {
-	app := &m.ApplicationAuthentication{ID: *id}
-	if result := DB.Delete(app); result.RowsAffected == 0 {
+	appAuth := &m.ApplicationAuthentication{ID: *id}
+	if result := DB.Delete(appAuth); result.RowsAffected == 0 {
 		return fmt.Errorf("failed to delete application id %v", *id)
 	}
 
