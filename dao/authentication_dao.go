@@ -271,6 +271,13 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 		auth.ResourceID = id
 	}
+	if data["source_id"] != nil {
+		id, err := strconv.ParseInt(data["source_id"].(string), 10, 64)
+		if err != nil {
+			return nil
+		}
+		auth.SourceID = id
+	}
 
 	return auth
 }

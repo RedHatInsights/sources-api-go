@@ -31,6 +31,7 @@ type AuthenticationCreateRequest struct {
 
 	ResourceType string `json:"resource_type"`
 	ResourceID   int64  `json:"resource_id"`
+	SourceID     int64  `json:"source_id"`
 }
 
 type AuthenticationEditRequest struct {

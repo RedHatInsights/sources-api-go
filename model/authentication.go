@@ -77,6 +77,7 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 		"availability_status_error": auth.AvailabilityStatusError,
 		"resource_type":             auth.ResourceType,
 		"resource_id":               strconv.FormatInt(auth.ResourceID, 10),
+		"source_id":                 strconv.FormatInt(auth.SourceID, 10),
 	}
 
 	// Vault requires the hash to be wrapped in a "data" object in order to be accepted.
