@@ -39,6 +39,9 @@ gci:
 
 vault:
 	# runs a server locally - with `root` as the token. useful for development
-	vault server -dev -dev-root-token-id root
+	docker run -it --rm --cap-add=IPC_LOCK \
+		-e 'VAULT_DEV_ROOT_TOKEN_ID=root' \
+		-e 'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200' \
+		-p 8200:8200 vault
 
 .PHONY: setup tidy build clean run container remotedebug debug test lint gci vault
