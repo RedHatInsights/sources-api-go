@@ -2,21 +2,28 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/segmentio/kafka-go"
 )
 
-func (manager *Manager) Produce(message *Message) {
+func (manager *Manager) Produce(message *Message) error {
 	if manager.Producer() == nil {
-		return
+		return fmt.Errorf("producer is not initialized")
 	}
 
 	if !message.isEmpty() {
-		manager.Producer().WriteMessages(context.Background(),
+		err := manager.Producer().WriteMessages(context.Background(),
 			kafka.Message{
 				Headers: message.Headers,
 				Value:   message.Value,
 			})
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func (manager *Manager) Producer() *kafka.Writer {
@@ -29,16 +36,16 @@ func (manager *Manager) Producer() *kafka.Writer {
 	}
 
 	manager.producer = &kafka.Writer{
-		Addr:  kafka.TCP(manager.Config.KafkaBrokers[0]),
+		Addr:  kafka.TCP(manager.Config.KafkaBrokers...),
 		Topic: manager.Config.ProducerConfig.Topic,
 	}
 
 	return manager.producer
 }
 
-func (manager *Manager) Consume(consumerHandler func(Message)) {
+func (manager *Manager) Consume(consumerHandler func(Message)) error {
 	if manager.Consumer() == nil {
-		return
+		return fmt.Errorf("consumer is not initialized")
 	}
 
 	for {
