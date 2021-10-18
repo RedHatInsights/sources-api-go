@@ -3,26 +3,27 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-var testApplicationTypeData = []m.ApplicationType{
-	{Id: 1, DisplayName: "test app type"},
-}
-
 func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources/1/application_types", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.Set("limit", 100)
-	c.Set("offset", 0)
-	c.Set("filters", []middleware.Filter{})
-	c.Set("tenantID", int64(1))
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []middleware.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
 	c.SetParamNames("source_id")
 	c.SetParamValues("1")
 
@@ -64,16 +65,20 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationTypeList(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	c.Set("limit", 100)
-	c.Set("offset", 0)
-	c.Set("filters", []middleware.Filter{})
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":   100,
+			"offset":  0,
+			"filters": []middleware.Filter{},
+		},
+	)
 
 	err := ApplicationTypeList(c)
 	if err != nil {
@@ -113,13 +118,17 @@ func TestApplicationTypeList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, req.RequestURI, out.Links, 100, 0)
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationTypeGet(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/1", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1",
+		nil,
+		map[string]interface{}{},
+	)
+
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
@@ -144,9 +153,13 @@ func TestApplicationTypeGet(t *testing.T) {
 }
 
 func TestApplicationTypeGetNotFound(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/application_types/123", nil)
-	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
+	c, rec := testutils.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/123",
+		nil,
+		map[string]interface{}{},
+	)
+
 	c.SetParamNames("id")
 	c.SetParamValues("123")
 
