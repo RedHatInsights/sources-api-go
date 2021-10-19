@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+// App creation workflow's constants
+const (
+	AccountAuth  string = "account_authorization"
+	ManualConfig string = "manual_configuration"
+)
+
 // Source struct that includes all of the fields on the table
 // used internally for business logic
 type Source struct {

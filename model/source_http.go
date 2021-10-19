@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // SourceCreateRequest is a struct representing a request coming
 // from the outside to create a struct, this is the way we will be marking
@@ -14,7 +16,8 @@ type SourceCreateRequest struct {
 	AppCreationWorkflow string  `json:"app_creation_workflow"`
 	AvailabilityStatus  string  `json:"availability_status"`
 
-	SourceTypeID *int64 `json:"source_type_id"`
+	SourceTypeID    *int64      `json:"-"`
+	SourceTypeIDRaw interface{} `json:"source_type_id"`
 }
 
 // SourceEditRequest manages what we can/cannot update on the source

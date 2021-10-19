@@ -68,6 +68,7 @@ func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 }
 
 func (s *SourceDaoImpl) Create(src *m.Source) error {
+	src.TenantID = *s.TenantID // the TenantID gets injected in the middleware
 	result := DB.Create(src)
 	return result.Error
 }
@@ -88,4 +89,12 @@ func (s *SourceDaoImpl) Delete(id *int64) error {
 
 func (s *SourceDaoImpl) Tenant() *int64 {
 	return s.TenantID
+}
+
+func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
+	src := &m.Source{Name: name}
+	result := DB.Where("name = ? AND tenant_id = ?", name, s.TenantID).First(src)
+
+	// If the name is found, GORM returns one row and no errors.
+	return result.Error == nil
 }

@@ -84,6 +84,12 @@ func (src *MockSourceDao) Tenant() *int64 {
 	return &tenant
 }
 
+// NameExistsInCurrentTenant returns always false because it's the safe default in case the request gets validated
+// in the tests.
+func (src *MockSourceDao) NameExistsInCurrentTenant(name string) bool {
+	return false
+}
+
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error) {
 	count := int64(len(a.ApplicationTypes))
 	return a.ApplicationTypes, count, nil

@@ -13,6 +13,7 @@ type SourceDao interface {
 	Update(src *m.Source) error
 	Delete(id *int64) error
 	Tenant() *int64
+	NameExistsInCurrentTenant(name string) bool
 }
 
 type ApplicationDao interface {
