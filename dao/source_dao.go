@@ -93,7 +93,7 @@ func (s *SourceDaoImpl) Tenant() *int64 {
 
 func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 	src := &m.Source{Name: name}
-	result := DB.Where("name LIKE ? AND tenant_id = ?", name, s.TenantID).First(src)
+	result := DB.Where("name = ? AND tenant_id = ?", name, s.TenantID).First(src)
 
 	// If the name is found, GORM returns one row and no errors.
 	return result.Error == nil
