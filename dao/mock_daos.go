@@ -254,3 +254,15 @@ func (m *MockEndpointDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
+
+func (m *MockEndpointDao) CanEndpointBeSetAsDefaultForSource(sourceId int64) bool {
+	return true
+}
+
+func (m *MockEndpointDao) IsRoleUniqueForSource(role string, sourceId int64) bool {
+	return true
+}
+
+func (m *MockEndpointDao) SourceHasEndpoints(sourceId int64) bool {
+	return true
+}
