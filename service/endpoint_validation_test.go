@@ -21,18 +21,17 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 	sourceId := strconv.FormatInt(testutils.TestSourceData[0].ID, 10)
 
 	return model.EndpointCreateRequest{
-		Default:                 &defaultVal,
-		ReceptorNode:            &receptorNode,
-		Role:                    &role,
-		Scheme:                  &scheme,
-		Host:                    &host,
-		Port:                    &port,
-		Path:                    "/example",
-		VerifySsl:               &verifySsl,
-		CertificateAuthority:    &certificateAuthority,
-		AvailabilityStatus:      model.Available,
-		AvailabilityStatusError: "",
-		SourceID:                &sourceId,
+		Default:              &defaultVal,
+		ReceptorNode:         &receptorNode,
+		Role:                 &role,
+		Scheme:               &scheme,
+		Host:                 &host,
+		Port:                 &port,
+		Path:                 "/example",
+		VerifySsl:            &verifySsl,
+		CertificateAuthority: &certificateAuthority,
+		AvailabilityStatus:   model.Available,
+		SourceID:             &sourceId,
 	}
 }
 
