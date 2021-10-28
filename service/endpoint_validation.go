@@ -57,10 +57,6 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 		*ecr.Default = true
 	}
 
-	if ecr.ReceptorNode == nil || *ecr.ReceptorNode == "" {
-		return fmt.Errorf("the receptor node cannot be empty")
-	}
-
 	if ecr.Role == nil || *ecr.Role == "" {
 		return fmt.Errorf("role cannot be empty")
 	}

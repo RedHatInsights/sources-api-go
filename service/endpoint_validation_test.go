@@ -147,38 +147,6 @@ func TestDefaultIsSetBecauseSourceHasNoEndpoints(t *testing.T) {
 	}
 }
 
-// TestReceptorNodeMissing tests if an error is returned when no receptor node is provided.
-func TestReceptorNodeMissing(t *testing.T) {
-	if !runningIntegration {
-		t.Skip("skipping integration tests...")
-	}
-
-	ecr := setUpEndpointCreateRequest()
-	ecr.ReceptorNode = nil
-
-	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
-	if err == nil {
-		t.Error("want error, got none")
-	}
-
-	want := "the receptor node cannot be empty"
-	if err.Error() != want {
-		t.Errorf("want '%s', got %s", want, err)
-	}
-
-	emptyString := ""
-	ecr.ReceptorNode = &emptyString
-
-	err = ValidateEndpointCreateRequest(endpointDao, &ecr)
-	if err == nil {
-		t.Error("want error, got none")
-	}
-
-	if err.Error() != want {
-		t.Errorf("want '%s', got %s", want, err)
-	}
-}
-
 // TestRoleMissing tests if an error is returned when no role has been given.
 func TestRoleMissing(t *testing.T) {
 	if !runningIntegration {
