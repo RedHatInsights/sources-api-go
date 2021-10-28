@@ -27,7 +27,7 @@ type EndpointResponse struct {
 }
 
 type EndpointCreateRequest struct {
-	Default              *bool       `json:"default"`
+	Default              bool        `json:"default"`
 	ReceptorNode         *string     `json:"receptor_node"`
 	Role                 string      `json:"role"`
 	Scheme               *string     `json:"scheme"`

@@ -10,7 +10,6 @@ import (
 )
 
 func setUpEndpointCreateRequest() model.EndpointCreateRequest {
-	defaultVal := false
 	receptorNode := "receptorNode"
 	scheme := "https"
 	port := int64(443)
@@ -19,7 +18,7 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 	sourceId := strconv.FormatInt(testutils.TestSourceData[0].ID, 10)
 
 	return model.EndpointCreateRequest{
-		Default:              &defaultVal,
+		Default:              false,
 		ReceptorNode:         &receptorNode,
 		Role:                 "role",
 		Scheme:               &scheme,
@@ -83,26 +82,6 @@ func TestInvalidSourceId(t *testing.T) {
 	}
 }
 
-// TestMissingDefault tests if an error is returned when not providing the "default" body parameter.
-func TestMissingDefault(t *testing.T) {
-	if !runningIntegration {
-		t.Skip("skipping integration tests...")
-	}
-
-	ecr := setUpEndpointCreateRequest()
-	ecr.Default = nil
-
-	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
-	if err == nil {
-		t.Error("want error, got none")
-	}
-
-	want := "default body parameter not provided"
-	if err.Error() != want {
-		t.Errorf("want '%s', got '%s'", want, err)
-	}
-}
-
 // TestDefaultEndpointAlreadyExists tests if an error is returned when the provided endpoint is marked as default when
 // the also provided source already has a default one.
 func TestDefaultEndpointAlreadyExists(t *testing.T) {
@@ -111,8 +90,7 @@ func TestDefaultEndpointAlreadyExists(t *testing.T) {
 	}
 
 	ecr := setUpEndpointCreateRequest()
-	trueValue := true
-	ecr.Default = &trueValue
+	ecr.Default = true
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
@@ -140,7 +118,7 @@ func TestDefaultIsSetBecauseSourceHasNoEndpoints(t *testing.T) {
 		t.Errorf("want no errors, got '%s'", err)
 	}
 
-	if *ecr.Default != true {
+	if ecr.Default != true {
 		t.Error("want endpoint marked as default, got regular endpoint instead")
 	}
 }

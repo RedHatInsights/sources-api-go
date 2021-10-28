@@ -45,16 +45,12 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 
 	ecr.SourceID = sourceId
 
-	if ecr.Default == nil {
-		return fmt.Errorf("default body parameter not provided")
-	}
-
-	if *ecr.Default && !dao.CanEndpointBeSetAsDefaultForSource(sourceId) {
+	if ecr.Default && !dao.CanEndpointBeSetAsDefaultForSource(sourceId) {
 		return fmt.Errorf("a default endpoint already exists for the provided source")
 	}
 
 	if !dao.SourceHasEndpoints(sourceId) {
-		*ecr.Default = true
+		ecr.Default = true
 	}
 
 	if !dao.IsRoleUniqueForSource(ecr.Role, sourceId) {
