@@ -31,7 +31,7 @@ type EndpointCreateRequest struct {
 	ReceptorNode         *string     `json:"receptor_node"`
 	Role                 string      `json:"role"`
 	Scheme               *string     `json:"scheme"`
-	Host                 *string     `json:"host"`
+	Host                 string      `json:"host"`
 	Port                 *int64      `json:"port"`
 	Path                 string      `json:"path"`
 	VerifySsl            *bool       `json:"verify_ssl"`

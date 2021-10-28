@@ -13,7 +13,6 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 	defaultVal := false
 	receptorNode := "receptorNode"
 	scheme := "https"
-	host := "example.com"
 	port := int64(443)
 	verifySsl := true
 	certificateAuthority := "letsEncrypt"
@@ -24,7 +23,7 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 		ReceptorNode:         &receptorNode,
 		Role:                 "role",
 		Scheme:               &scheme,
-		Host:                 &host,
+		Host:                 "example.com",
 		Port:                 &port,
 		Path:                 "/example",
 		VerifySsl:            &verifySsl,
@@ -210,34 +209,18 @@ func TestSchemeGetsDefaulted(t *testing.T) {
 	}
 }
 
-// TestEmptyHost tests if an error is returned when an empty host is given.
+// TestEmptyHost tests if no error is returned even when an empty host is given.
 func TestEmptyHost(t *testing.T) {
 	if !runningIntegration {
 		t.Skip("skipping integration tests...")
 	}
 
 	ecr := setUpEndpointCreateRequest()
-	ecr.Host = nil
+	ecr.Host = ""
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
-	if err == nil {
-		t.Error("want error, got none")
-	}
-
-	want := "the host cannot be empty"
-	if err.Error() != want {
-		t.Errorf("want '%s', got %s", want, err)
-	}
-
-	emptyString := ""
-	ecr.Host = &emptyString
-	err = ValidateEndpointCreateRequest(endpointDao, &ecr)
-	if err == nil {
-		t.Error("want error, got none")
-	}
-
-	if err.Error() != want {
-		t.Errorf("want '%s', got %s", want, err)
+	if err != nil {
+		t.Errorf("want no error, got '%s'", err)
 	}
 }
 
@@ -250,15 +233,13 @@ func TestHostFqdnTooLong(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
 	// The "longHostname" variable holds a 256 char hostname
-	longHostname := `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
+	ecr.Host = `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
 		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
 		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
 		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
 		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
 		aaaaaa
 	`
-
-	ecr.Host = &longHostname
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
@@ -291,7 +272,7 @@ func TestValidHosts(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
 	for _, tt := range testValues {
-		ecr.Host = &tt
+		ecr.Host = tt
 
 		err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 		if err != nil {
@@ -317,7 +298,7 @@ func TestInvalidHosts(t *testing.T) {
 
 	want := "the provided host is not valid"
 	for _, tt := range testValues {
-		ecr.Host = &tt
+		ecr.Host = tt
 
 		err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 		if err == nil {
@@ -335,8 +316,7 @@ func TestLabelNamesTooLong(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
 	// The first label is 64 characters long
-	longLabels := `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggg.example.org`
-	ecr.Host = &longLabels
+	ecr.Host = `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggg.example.org`
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {

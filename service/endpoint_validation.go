@@ -66,22 +66,20 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 		ecr.Scheme = &tmp
 	}
 
-	if ecr.Host == nil || *ecr.Host == "" {
-		return fmt.Errorf("the host cannot be empty")
-	}
+	if ecr.Host != "" {
+		if utf8.RuneCountInString(ecr.Host) > maxFqdnLength {
+			return fmt.Errorf("the provided host is longer than %d characters", maxFqdnLength)
+		}
 
-	if utf8.RuneCountInString(*ecr.Host) > maxFqdnLength {
-		return fmt.Errorf("the provided host is longer than %d characters", maxFqdnLength)
-	}
+		if !fqdnRegexp.MatchString(ecr.Host) {
+			return fmt.Errorf("the provided host is invalid")
+		}
 
-	if !fqdnRegexp.MatchString(*ecr.Host) {
-		return fmt.Errorf("the provided host is invalid")
-	}
-
-	labels := strings.Split(*ecr.Host, ".")
-	for _, label := range labels {
-		if utf8.RuneCountInString(*ecr.Host) > maxLabelLength {
-			return fmt.Errorf("the label '%s' is greater than %d characters", label, maxLabelLength)
+		labels := strings.Split(ecr.Host, ".")
+		for _, label := range labels {
+			if utf8.RuneCountInString(ecr.Host) > maxLabelLength {
+				return fmt.Errorf("the label '%s' is greater than %d characters", label, maxLabelLength)
+			}
 		}
 	}
 
