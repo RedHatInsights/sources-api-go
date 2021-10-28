@@ -17,11 +17,11 @@ var (
 )
 
 func TestMain(t *testing.M) {
-	createDb, integration := testutils.ParseFlags()
+	flags := testutils.ParseFlags()
 
-	if createDb {
+	if flags.CreateDb {
 		testutils.CreateTestDB()
-	} else if integration {
+	} else if flags.Integration {
 		runningIntegration = true
 		testutils.ConnectToTestDB()
 
@@ -35,7 +35,7 @@ func TestMain(t *testing.M) {
 
 	code := t.Run()
 
-	if integration {
+	if flags.Integration {
 		testutils.DropSchema()
 	}
 

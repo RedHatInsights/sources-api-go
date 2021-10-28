@@ -24,11 +24,11 @@ var (
 func TestMain(t *testing.M) {
 	l.InitLogger(conf)
 
-	createDb, integration := testutils.ParseFlags()
+	flags := testutils.ParseFlags()
 
-	if createDb {
+	if flags.CreateDb {
 		testutils.CreateTestDB()
-	} else if integration {
+	} else if flags.Integration {
 		testutils.ConnectToTestDB()
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
@@ -58,7 +58,7 @@ func TestMain(t *testing.M) {
 
 	code := t.Run()
 
-	if integration {
+	if flags.Integration {
 		testutils.DropSchema()
 	}
 
