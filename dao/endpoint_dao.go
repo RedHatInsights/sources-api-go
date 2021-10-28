@@ -84,7 +84,7 @@ func (a *EndpointDaoImpl) Tenant() *int64 {
 func (a *EndpointDaoImpl) CanEndpointBeSetAsDefaultForSource(sourceId int64) bool {
 	endpoint := &m.Endpoint{}
 	// add double quotes to the "default" column to avoid any clashes with postgres' "default" keyword
-	result := DB.Where("\"default\" = true AND source_id = ?", sourceId).First(&endpoint)
+	result := DB.Where(`"default" = true AND source_id = ?`, sourceId).First(&endpoint)
 
 	return result.Error == nil
 }
