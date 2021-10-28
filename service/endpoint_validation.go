@@ -34,7 +34,7 @@ const (
 )
 
 func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreateRequest) error {
-	sourceId, err := util.InterfaceToInt64(ecr.SourceID)
+	sourceId, err := util.InterfaceToInt64(ecr.SourceIDRaw)
 	if err != nil {
 		return fmt.Errorf("the provided source ID is not valid")
 	}
@@ -42,6 +42,8 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 	if sourceId < 1 {
 		return fmt.Errorf("invalid source id")
 	}
+
+	ecr.SourceID = sourceId
 
 	if ecr.Default == nil {
 		return fmt.Errorf("default body parameter not provided")

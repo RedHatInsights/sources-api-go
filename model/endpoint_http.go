@@ -27,15 +27,16 @@ type EndpointResponse struct {
 }
 
 type EndpointCreateRequest struct {
-	Default              *bool   `json:"default"`
-	ReceptorNode         *string `json:"receptor_node"`
-	Role                 *string `json:"role"`
-	Scheme               *string `json:"scheme"`
-	Host                 *string `json:"host"`
-	Port                 *int64  `json:"port"`
-	Path                 string  `json:"path"`
-	VerifySsl            *bool   `json:"verify_ssl"`
-	CertificateAuthority *string `json:"certificate_authority"`
-	AvailabilityStatus   string  `json:"availability_status"`
-	SourceID             *string `json:"source_id"`
+	Default              *bool       `json:"default"`
+	ReceptorNode         *string     `json:"receptor_node"`
+	Role                 *string     `json:"role"`
+	Scheme               *string     `json:"scheme"`
+	Host                 *string     `json:"host"`
+	Port                 *int64      `json:"port"`
+	Path                 string      `json:"path"`
+	VerifySsl            *bool       `json:"verify_ssl"`
+	CertificateAuthority *string     `json:"certificate_authority"`
+	AvailabilityStatus   string      `json:"availability_status"`
+	SourceID             int64       `json:"-"`
+	SourceIDRaw          interface{} `json:"source_id"`
 }

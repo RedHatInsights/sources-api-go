@@ -31,7 +31,7 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 		VerifySsl:            &verifySsl,
 		CertificateAuthority: &certificateAuthority,
 		AvailabilityStatus:   model.Available,
-		SourceID:             &sourceId,
+		SourceIDRaw:          sourceId,
 	}
 }
 
@@ -55,8 +55,7 @@ func TestValidateEndpointCreateRequest(t *testing.T) {
 func TestInvalidSourceIdFormat(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
-	invalidSourceId := "hello world"
-	ecr.SourceID = &invalidSourceId
+	ecr.SourceIDRaw = "hello world"
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
@@ -73,8 +72,7 @@ func TestInvalidSourceIdFormat(t *testing.T) {
 func TestInvalidSourceId(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
-	invalidSourceId := "0"
-	ecr.SourceID = &invalidSourceId
+	ecr.SourceIDRaw = "0"
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
@@ -137,8 +135,7 @@ func TestDefaultIsSetBecauseSourceHasNoEndpoints(t *testing.T) {
 	}
 
 	ecr := setUpEndpointCreateRequest()
-	nonExistingSourceId := "12345"
-	ecr.SourceID = &nonExistingSourceId
+	ecr.SourceIDRaw = "12345"
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err != nil {
