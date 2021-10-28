@@ -80,3 +80,27 @@ func (a *EndpointDaoImpl) Delete(id *int64) error {
 func (a *EndpointDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
+
+func (a *EndpointDaoImpl) CanEndpointBeSetAsDefaultForSource(sourceId int64) bool {
+	endpoint := &m.Endpoint{}
+	// add double quotes to the "default" column to avoid any clashes with postgres' "default" keyword
+	result := DB.Where(`"default" = true AND source_id = ?`, sourceId).First(&endpoint)
+
+	return result.Error == nil
+}
+
+func (a *EndpointDaoImpl) IsRoleUniqueForSource(role string, sourceId int64) bool {
+	endpoint := &m.Endpoint{}
+	result := DB.Where("role = ? AND source_id = ?", role, sourceId).First(&endpoint)
+
+	// If the record doesn't exist "result.Error" will have a "record not found" error
+	return result.Error != nil
+}
+
+func (a *EndpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
+	endpoint := &m.Endpoint{}
+
+	result := DB.Where("source_id = ?", sourceId).First(&endpoint)
+
+	return result.Error == nil
+}

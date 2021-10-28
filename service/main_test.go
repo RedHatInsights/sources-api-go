@@ -12,7 +12,8 @@ var (
 	// runningIntegration is used to skip integration tests if we're just running unit tests.
 	runningIntegration = false
 
-	sourceDao dao.SourceDao
+	endpointDao dao.EndpointDao
+	sourceDao   dao.SourceDao
 )
 
 func TestMain(t *testing.M) {
@@ -24,9 +25,11 @@ func TestMain(t *testing.M) {
 		runningIntegration = true
 		testutils.ConnectToTestDB()
 
+		endpointDao = &dao.EndpointDaoImpl{TenantID: &testutils.TestTenantData[0].Id}
 		sourceDao = &dao.SourceDaoImpl{TenantID: &testutils.TestTenantData[0].Id}
 		testutils.CreateFixtures()
 	} else {
+		endpointDao = &dao.MockEndpointDao{}
 		sourceDao = &dao.MockSourceDao{}
 	}
 

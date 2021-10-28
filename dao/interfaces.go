@@ -61,6 +61,13 @@ type EndpointDao interface {
 	Update(src *m.Endpoint) error
 	Delete(id *int64) error
 	Tenant() *int64
+	// CanEndpointBeSetAsDefaultForSource checks if the endpoint can be set as default, by checking if the given source
+	// id already has another endpoint marked as default.
+	CanEndpointBeSetAsDefaultForSource(sourceId int64) bool
+	// IsRoleUniqueForSource checks if the role is unique for the given source ID.
+	IsRoleUniqueForSource(role string, sourceId int64) bool
+	// SourceHasEndpoints returns true if the provided source has any associated endpoints.
+	SourceHasEndpoints(sourceId int64) bool
 }
 
 type MetaDataDao interface {
