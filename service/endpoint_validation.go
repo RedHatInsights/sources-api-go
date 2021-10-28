@@ -57,11 +57,7 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 		*ecr.Default = true
 	}
 
-	if ecr.Role == nil || *ecr.Role == "" {
-		return fmt.Errorf("role cannot be empty")
-	}
-
-	if !dao.IsRoleUniqueForSource(*ecr.Role, sourceId) {
+	if !dao.IsRoleUniqueForSource(ecr.Role, sourceId) {
 		return fmt.Errorf("the role already exists for the given source")
 	}
 

@@ -12,7 +12,6 @@ import (
 func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 	defaultVal := false
 	receptorNode := "receptorNode"
-	role := "role"
 	scheme := "https"
 	host := "example.com"
 	port := int64(443)
@@ -23,7 +22,7 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 	return model.EndpointCreateRequest{
 		Default:              &defaultVal,
 		ReceptorNode:         &receptorNode,
-		Role:                 &role,
+		Role:                 "role",
 		Scheme:               &scheme,
 		Host:                 &host,
 		Port:                 &port,
@@ -147,37 +146,6 @@ func TestDefaultIsSetBecauseSourceHasNoEndpoints(t *testing.T) {
 	}
 }
 
-// TestRoleMissing tests if an error is returned when no role has been given.
-func TestRoleMissing(t *testing.T) {
-	if !runningIntegration {
-		t.Skip("skipping integration tests...")
-	}
-
-	ecr := setUpEndpointCreateRequest()
-	ecr.Role = nil
-
-	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
-	if err == nil {
-		t.Error("want error, got none")
-	}
-
-	want := "role cannot be empty"
-	if err.Error() != want {
-		t.Errorf("want '%s', got '%s'", want, err)
-	}
-
-	emptyString := ""
-	ecr.Role = &emptyString
-
-	if err == nil {
-		t.Error("want error, got none")
-	}
-
-	if err.Error() != want {
-		t.Errorf("want '%s', got '%s'", want, err)
-	}
-}
-
 // TestNonUniqueRole tests if an error is returned when a role already exists for a source.
 func TestNonUniqueRole(t *testing.T) {
 	if !runningIntegration {
@@ -195,7 +163,7 @@ func TestNonUniqueRole(t *testing.T) {
 	}
 
 	ecr := setUpEndpointCreateRequest()
-	ecr.Role = &role
+	ecr.Role = role
 
 	err = ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
