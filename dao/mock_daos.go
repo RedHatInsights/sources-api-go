@@ -239,7 +239,7 @@ func (a *MockEndpointDao) GetById(id *int64) (*m.Endpoint, error) {
 }
 
 func (a *MockEndpointDao) Create(src *m.Endpoint) error {
-	panic("not implemented") // TODO: Implement
+	return nil
 }
 
 func (a *MockEndpointDao) Update(src *m.Endpoint) error {

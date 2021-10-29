@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -122,4 +123,43 @@ func EndpointGet(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())
+}
+
+func EndpointCreate(c echo.Context) error {
+	endpointDao, err := getEndpointDao(c)
+	if err != nil {
+		return err
+	}
+
+	input := &m.EndpointCreateRequest{}
+	err = c.Bind(input)
+	if err != nil {
+		return err
+	}
+
+	err = service.ValidateEndpointCreateRequest(endpointDao, input)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(fmt.Sprintf("Validation failed: %s", err.Error()), "400"))
+	}
+
+	endpoint := &m.Endpoint{
+		Default:              &input.Default,
+		ReceptorNode:         input.ReceptorNode,
+		Role:                 &input.Role,
+		Scheme:               input.Scheme,
+		Host:                 &input.Host,
+		Port:                 input.Port,
+		Path:                 &input.Path,
+		VerifySsl:            input.VerifySsl,
+		CertificateAuthority: input.CertificateAuthority,
+		AvailabilityStatus:   m.AvailabilityStatus{AvailabilityStatus: input.AvailabilityStatus},
+		SourceID:             input.SourceID,
+	}
+
+	err = endpointDao.Create(endpoint)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, endpoint.ToResponse())
 }
