@@ -12,7 +12,7 @@ import (
 func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 	receptorNode := "receptorNode"
 	scheme := "https"
-	port := int64(443)
+	port := 443
 	verifySsl := true
 	certificateAuthority := "letsEncrypt"
 	sourceId := strconv.FormatInt(testutils.TestSourceData[0].ID, 10)
@@ -316,10 +316,10 @@ func TestDefaultingPortWhenMissingOrLessThanZero(t *testing.T) {
 
 	ecr := setUpEndpointCreateRequest()
 
-	minusOne := int64(-1)
-	zero := int64(0)
+	minusOne := -1
+	zero := 0
 	testValues := []struct {
-		value *int64
+		value *int
 	}{
 		{nil},
 		{&minusOne},
@@ -346,7 +346,7 @@ func TestPortLargeValue(t *testing.T) {
 	}
 
 	ecr := setUpEndpointCreateRequest()
-	largePort := int64(999999)
+	largePort := 999999
 	ecr.Port = &largePort
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
