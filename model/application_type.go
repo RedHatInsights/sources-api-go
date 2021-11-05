@@ -13,6 +13,7 @@ type ApplicationType struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
+	Name                         string         `json:"name"`
 	DisplayName                  string         `json:"display_name"`
 	DependentApplications        datatypes.JSON `json:"dependent_applications"`
 	SupportedSourceTypes         datatypes.JSON `json:"supported_source_types"`
@@ -31,6 +32,7 @@ func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {
 		Id:                           id,
 		CreatedAt:                    a.CreatedAt,
 		UpdatedAt:                    a.UpdatedAt,
+		Name:                         a.Name,
 		DisplayName:                  a.DisplayName,
 		DependentApplications:        a.DependentApplications,
 		SupportedSourceTypes:         a.SupportedSourceTypes,
