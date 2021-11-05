@@ -64,7 +64,7 @@ func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("source not found")
+	return nil, fmt.Errorf("record not found")
 }
 
 func (src *MockSourceDao) Create(s *m.Source) error {
@@ -102,7 +102,7 @@ func (a *MockApplicationTypeDao) GetById(id *int64) (*m.ApplicationType, error) 
 		}
 	}
 
-	return nil, fmt.Errorf("application Type not found")
+	return nil, fmt.Errorf("record not found")
 }
 
 func (a *MockMetaDataDao) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
@@ -122,7 +122,7 @@ func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("application Type not found")
+	return nil, fmt.Errorf("record not found")
 }
 
 func (a *MockMetaDataDao) Create(src *m.MetaData) error {
@@ -166,7 +166,7 @@ func (a *MockSourceTypeDao) GetById(id *int64) (*m.SourceType, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("application Type not found")
+	return nil, fmt.Errorf("record not found")
 }
 
 func (a *MockSourceTypeDao) Create(src *m.SourceType) error {
@@ -198,7 +198,7 @@ func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("application not found")
+	return nil, fmt.Errorf("record not found")
 }
 
 func (a *MockApplicationDao) Create(src *m.Application) error {
@@ -235,7 +235,7 @@ func (a *MockEndpointDao) GetById(id *int64) (*m.Endpoint, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("endpoint not found")
+	return nil, fmt.Errorf("record not found")
 }
 
 func (a *MockEndpointDao) Create(src *m.Endpoint) error {

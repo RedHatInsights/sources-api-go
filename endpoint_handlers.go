@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -56,8 +57,12 @@ func SourceListEndpoint(c echo.Context) error {
 	endpoints, count, err = endpointDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
 
 	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
+
 	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
 
 	out := make([]interface{}, len(endpoints))
@@ -118,8 +123,12 @@ func EndpointGet(c echo.Context) error {
 	c.Logger().Infof("Getting Endpoint ID %v", id)
 
 	app, err := endpointDB.GetById(&id)
+
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())

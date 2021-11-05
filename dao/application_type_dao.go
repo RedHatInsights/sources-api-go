@@ -16,8 +16,9 @@ func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 
 	applicationType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrNotFound("application type")
 	}
+
 	query := applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
 
 	// getting the total count (filters included) for pagination
@@ -33,7 +34,7 @@ func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
-	apptypes := make([]m.ApplicationType, 0, limit)
+	appTypes := make([]m.ApplicationType, 0, limit)
 	query := DB.Model(&m.ApplicationType{}).Debug()
 
 	query, err := applyFilters(query, filters)
@@ -46,16 +47,19 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) 
 	query.Count(&count)
 
 	// limiting + running the actual query.
-	result := query.Limit(limit).Offset(offset).Find(&apptypes)
+	result := query.Limit(limit).Offset(offset).Find(&appTypes)
 
-	return apptypes, count, result.Error
+	return appTypes, count, result.Error
 }
 
 func (a *ApplicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
-	apptype := &m.ApplicationType{Id: *id}
-	result := DB.Debug().First(apptype)
+	appType := &m.ApplicationType{Id: *id}
+	result := DB.Debug().First(appType)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("application type")
+	}
 
-	return apptype, result.Error
+	return appType, nil
 }
 
 func (a *ApplicationTypeDaoImpl) Create(_ *m.ApplicationType) error {

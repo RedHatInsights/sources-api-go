@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -99,8 +100,12 @@ func SourceTypeListSource(c echo.Context) error {
 	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
 
 	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
+
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
 	out := make([]interface{}, len(sources))
@@ -140,8 +145,12 @@ func ApplicationTypeListSource(c echo.Context) error {
 	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
+
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
 	out := make([]interface{}, len(sources))
@@ -166,8 +175,12 @@ func SourceGet(c echo.Context) error {
 	c.Logger().Infof("Getting Source Id %v", id)
 
 	s, err := sourcesDB.GetById(&id)
+
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	return c.JSON(http.StatusOK, s.ToResponse())
