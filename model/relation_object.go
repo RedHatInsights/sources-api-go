@@ -116,10 +116,6 @@ func (relationObject *RelationObject) setRelationObjectID() error {
 }
 
 func (relationObject *RelationObject) checkIfPrimaryRecordExists(query *gorm.DB) error {
-	if relationObject.Id == 0 {
-		return fmt.Errorf("can't check presence of primary resource, ID is not set")
-	}
-
 	result := map[string]interface{}{}
 	query.Model(relationObject.baseObject).Find(&result, relationObject.Id)
 
