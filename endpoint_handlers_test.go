@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -168,5 +169,83 @@ func TestEndpointGetNotFound(t *testing.T) {
 
 	if rec.Code != 404 {
 		t.Error("Did not return 404")
+	}
+}
+
+// Tests that the endpoint is properly creating "endpoints" and returning a 201 code.
+func TestEndpointCreate(t *testing.T) {
+	receptorNode := "receptorNode"
+	scheme := "scheme"
+	port := 443
+	verifySsl := true
+	certificateAuthority := "Let's Encrypt"
+
+	requestBody := m.EndpointCreateRequest{
+		Default:              false,
+		ReceptorNode:         &receptorNode,
+		Role:                 "role",
+		Scheme:               &scheme,
+		Host:                 "example.com",
+		Port:                 &port,
+		Path:                 "",
+		VerifySsl:            &verifySsl,
+		CertificateAuthority: &certificateAuthority,
+		AvailabilityStatus:   m.Available,
+		SourceIDRaw:          testutils.TestSourceData[0].ID,
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := testutils.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/endpoints",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err = EndpointCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 201 {
+		t.Errorf("want 201, got %d", rec.Code)
+	}
+}
+
+// TestEndpointCreateBadRequest tests that if a bad input is given, the endpoint returns a 400 response.
+func TestEndpointCreateBadRequest(t *testing.T) {
+	requestBody := m.EndpointCreateRequest{
+		Host: "hello world",
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := testutils.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/endpoints",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err = EndpointCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 400 {
+		t.Errorf("want 400, got %d", rec.Code)
 	}
 }

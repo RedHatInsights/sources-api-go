@@ -32,7 +32,7 @@ type EndpointCreateRequest struct {
 	Role                 string      `json:"role"`
 	Scheme               *string     `json:"scheme"`
 	Host                 string      `json:"host"`
-	Port                 *int64      `json:"port"`
+	Port                 *int        `json:"port"`
 	Path                 string      `json:"path"`
 	VerifySsl            *bool       `json:"verify_ssl"`
 	CertificateAuthority *string     `json:"certificate_authority"`
