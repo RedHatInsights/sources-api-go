@@ -3,6 +3,8 @@ package model
 import (
 	"strconv"
 	"time"
+
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 // App creation workflow's constants
@@ -39,6 +41,34 @@ type Source struct {
 	ApplicationTypes []*ApplicationType `gorm:"many2many:applications"`
 	Applications     []Application
 	Endpoints        []Endpoint
+}
+
+func (src *Source) AsJSON() []byte {
+	return []byte{}
+}
+
+func (src *Source) ToEvent() *SourceEvent {
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
+		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(src.LastAvailableAt, "2006-01-02 15:04:05 MST")),
+		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(src.LastCheckedAt, "2006-01-02 15:04:05 MST"))}
+
+	sourceEvent := &SourceEvent{
+		AvailabilityStatusEvent: asEvent,
+		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(src.PausedAt, "2006-01-02 15:04:05 MST"))},
+		ID:                      &src.ID,
+		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.CreatedAt, "2006-01-02 15:04:05 MST")),
+		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.UpdatedAt, "2006-01-02 15:04:05 MST")),
+		Name:                    &src.Name,
+		UID:                     src.Uid,
+		Version:                 src.Version,
+		Imported:                src.Imported,
+		SourceRef:               src.SourceRef,
+		AppCreationWorkflow:     &src.AppCreationWorkflow,
+		SourceTypeID:            &src.SourceTypeID,
+		Tenant:                  &src.Tenant.ExternalTenant,
+	}
+
+	return sourceEvent
 }
 
 func (src *Source) ToResponse() *SourceResponse {

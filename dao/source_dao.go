@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/middleware"
@@ -97,4 +98,77 @@ func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 
 	// If the name is found, GORM returns one row and no errors.
 	return result.Error == nil
+}
+
+func (s *SourceDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
+	src := &m.Source{ID: *id}
+
+	resource := DB.Preload("Tenant").Preload("Applications.Tenant").Preload("Endpoints.Tenant").Find(&src)
+	if resource.Error != nil {
+		return nil, resource.Error
+	}
+
+	bulkMessage := map[string]interface{}{}
+
+	bulkMessage["source"] = *src.ToEvent()
+
+	applications := make([]m.ApplicationEvent, len(src.Applications))
+	applicationsIDs := make([]int64, len(src.Applications))
+	for i, application := range src.Applications {
+		applications[i] = *application.ToEvent()
+		applicationsIDs[i] = application.ID
+	}
+
+	bulkMessage["applications"] = applications
+
+	endpoints := make([]m.EndpointEvent, len(src.Endpoints))
+	for i, endpoint := range src.Endpoints {
+		endpoints[i] = *endpoint.ToEvent()
+	}
+
+	bulkMessage["endpoints"] = endpoints
+	bulkMessage["authentications"] = []m.Authentication{}
+
+	var appAuths []m.ApplicationAuthentication
+
+	DB.Model(&m.ApplicationAuthentication{}).Preload("Tenant").Where("application_id IN ?", applicationsIDs).Find(&appAuths)
+
+	applicationAuthentications := make([]m.ApplicationAuthenticationEvent, len(appAuths))
+	for i, applicationAuthentication := range appAuths {
+		applicationAuthentications[i] = *applicationAuthentication.ToEvent()
+	}
+
+	bulkMessage["application_authentications"] = applicationAuthentications
+
+	return bulkMessage, nil
+}
+
+func (s *SourceDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
+	src, err := s.GetById(id)
+	if err != nil {
+		err = DB.Model(src).Updates(updateAttributes).Error
+	}
+
+	return err
+}
+
+func (s *SourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {
+	src := &m.Source{ID: *id}
+	result := DB.Preload("Tenant").Find(&src)
+
+	return src, result.Error
+}
+
+func (s *SourceDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
+	src, err := s.FindWithTenant(id)
+	if err != nil {
+		return nil, err
+	}
+
+	data, errorJson := json.Marshal(src.ToEvent())
+	if errorJson != nil {
+		return nil, errorJson
+	}
+
+	return data, err
 }

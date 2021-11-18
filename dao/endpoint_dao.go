@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/middleware"
@@ -105,4 +106,58 @@ func (a *EndpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
 	result := DB.Where("source_id = ?", sourceId).First(&endpoint)
 
 	return result.Error == nil
+}
+
+func (a *EndpointDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
+	endpoint := &m.Endpoint{ID: *id}
+	resource := DB.Preload("Source.Tenant").Preload("Source.Applications.Tenant").Preload("Source.Endpoints.Tenant").Find(&endpoint)
+
+	if resource.Error != nil {
+		return nil, resource.Error
+	}
+
+	bulkMessage := map[string]interface{}{}
+	bulkMessage["source"] = endpoint.Source.ToEvent()
+
+	endpoints := make([]m.EndpointEvent, len(endpoint.Source.Endpoints))
+	for i, endpoint := range endpoint.Source.Endpoints {
+		endpoints[i] = *endpoint.ToEvent()
+	}
+
+	bulkMessage["endpoints"] = endpoints
+
+	applications := make([]m.ApplicationEvent, len(endpoint.Source.Applications))
+	for i, application := range endpoint.Source.Applications {
+		applications[i] = *application.ToEvent()
+	}
+
+	bulkMessage["applications"] = applications
+
+	bulkMessage["authentications"] = []m.Authentication{}
+	bulkMessage["application_authentications"] = []m.ApplicationAuthenticationEvent{}
+
+	return bulkMessage, nil
+}
+
+func (a *EndpointDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
+	endpoint, err := a.GetById(id)
+	if err == nil {
+		err = DB.Model(endpoint).Updates(updateAttributes).Error
+	}
+
+	return err
+}
+
+func (a *EndpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
+	endpoint := &m.Endpoint{ID: *id}
+	result := DB.Preload("Tenant").Find(&endpoint)
+
+	return endpoint, result.Error
+}
+
+func (a *EndpointDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
+	endpoint, err := a.FindWithTenant(id)
+	data, _ := json.Marshal(endpoint.ToEvent())
+
+	return data, err
 }

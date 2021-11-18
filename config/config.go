@@ -147,3 +147,12 @@ func Get() *SourcesApiConfig {
 
 	return parsedConfig
 }
+
+func (sourceConfig *SourcesApiConfig) KafkaTopic(requestedTopic string) string {
+	topic, found := sourceConfig.KafkaTopics[requestedTopic]
+	if !found {
+		topic = requestedTopic
+	}
+
+	return topic
+}

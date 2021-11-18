@@ -1,11 +1,14 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -13,13 +16,24 @@ import (
 var conf = config.Get()
 
 func main() {
-	e := echo.New()
-
 	logging.InitLogger(conf)
-	logging.InitEchoLogger(e, conf)
 
 	dao.Init()
 	redis.Init()
+
+	availabilityListener := flag.Bool("listener", false, "run unit or integration tests")
+	flag.Parse()
+
+	if *availabilityListener {
+		statuslistener.Run()
+	} else {
+		runServer()
+	}
+}
+
+func runServer() {
+	e := echo.New()
+	logging.InitEchoLogger(e, conf)
 
 	e.Use(middleware.Recover())
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{

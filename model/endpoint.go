@@ -3,6 +3,8 @@ package model
 import (
 	"strconv"
 	"time"
+
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type Endpoint struct {
@@ -29,6 +31,34 @@ type Endpoint struct {
 
 	TenantID int64
 	Tenant   Tenant
+}
+
+func (endpoint *Endpoint) ToEvent() *EndpointEvent {
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
+		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.LastAvailableAt, "2006-01-02 15:04:05 MST")),
+		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(endpoint.LastCheckedAt, "2006-01-02 15:04:05 MST"))}
+
+	endpointEvent := &EndpointEvent{
+		AvailabilityStatusEvent: asEvent,
+		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.PausedAt, "2006-01-02 15:04:05 MST"))},
+		ID:                      endpoint.ID,
+		CertificateAuthority:    endpoint.CertificateAuthority,
+		Host:                    endpoint.Host,
+		Port:                    endpoint.Port,
+		ReceptorNode:            endpoint.ReceptorNode,
+		Role:                    endpoint.Role,
+		Scheme:                  endpoint.Scheme,
+		SourceID:                endpoint.SourceID,
+		VerifySsl:               endpoint.VerifySsl,
+		Default:                 endpoint.Default,
+		Path:                    endpoint.Path,
+		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.CreatedAt, "2006-01-02 15:04:05 MST")),
+		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.UpdatedAt, "2006-01-02 15:04:05 MST")),
+		AvailabilityStatusError: util.StringValueOrNil(endpoint.AvailabilityStatusError),
+		Tenant:                  &endpoint.Tenant.ExternalTenant,
+	}
+
+	return endpointEvent
 }
 
 func (endpoint *Endpoint) ToResponse() *EndpointResponse {

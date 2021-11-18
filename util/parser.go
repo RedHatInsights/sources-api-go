@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 // InterfaceToInt64 takes an interface and returns an int64 for any float64, int64 or string received -whether they
@@ -45,4 +46,27 @@ func InterfaceToInt64(i interface{}) (int64, error) {
 	default:
 		return 0, fmt.Errorf("invalid format provided")
 	}
+}
+
+func StringValueOrNil(inputValue interface{}) *string {
+	switch value := inputValue.(type) {
+	case string:
+		if value == "" {
+			return nil
+		}
+
+		return &value
+	case *string:
+		return value
+	default:
+		return nil
+	}
+}
+
+func FormatTimeToString(inputTime time.Time, format string) string {
+	if inputTime.IsZero() {
+		return ""
+	}
+
+	return inputTime.Format(format)
 }
