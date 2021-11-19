@@ -52,9 +52,6 @@ if [[ $OUT_CODE != 0 ]]; then
     exit 1
 fi
 
-# Run the SonarQube scanner
-source scripts/sonarqube.bash
-
 # Need to make a dummy results file to make tests pass
 mkdir -p artifacts
 cat << EOF > artifacts/junit-dummy.xml
