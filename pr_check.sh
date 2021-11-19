@@ -53,7 +53,7 @@ if [[ $OUT_CODE != 0 ]]; then
 fi
 
 # Run the SonarQube scanner
-source sonarqube.bash
+source scripts/sonarqube.bash
 
 # Need to make a dummy results file to make tests pass
 mkdir -p artifacts
