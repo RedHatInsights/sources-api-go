@@ -4,151 +4,151 @@ kind: Template
 metadata:
   name: sources-api-go
 objects:
-- apiVersion: cloud.redhat.com/v1alpha1
-  kind: ClowdApp
-  metadata:
-    name: sources-api-go
-  spec:
-    envName: ${ENV_NAME}
-    deployments:
-    - name: svc
-      minReplicas: ${{MIN_REPLICAS}}
-      webServices:
-        public:
-          enabled: true
-      podSpec:
-        image: ${IMAGE}:${IMAGE_TAG}
-        env:
-        - name: LOG_LEVEL
-          value: ${LOG_LEVEL}
-        - name: CLOUD_METER_AVAILABILITY_CHECK_URL
-          value: ${CLOUD_METER_API_SCHEME}://${CLOUD_METER_API_HOST}:${CLOUD_METER_SOURCES_API_PORT}${CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH}
-        - name: COST_MANAGEMENT_AVAILABILITY_CHECK_URL
-          value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
-        - name: SOURCES_PSKS
-          valueFrom:
-            secretKeyRef:
-              name: sources-api-secrets
-              key: psks
-              optional: true
-        - name: RBAC_URL
-          value: ${RBAC_SCHEME}://${RBAC_HOST}:${RBAC_PORT}
-        readinessProbe:
-          tcpSocket:
-            port: 8000
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8000
-          initialDelaySeconds: 10
-        resources:
-          limits:
-            cpu: ${CPU_LIMIT}
-            memory: ${MEMORY_LIMIT}
-          requests:
-            cpu: ${CPU_REQUEST}
-            memory: ${MEMORY_REQUEST}
-    database:
-      sharedDbAppName: sources-api
-    kafkaTopics:
-    - topicName: platform.sources.event-stream
-      partitions: 3
-      replicas: 3
-    - topicName: platform.sources.status
-      partitions: 3
-      replicas: 3
-    - topicName: platform.sources.superkey-requests
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-amazon
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-ansible-tower
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-azure
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-google
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-openshift
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-satellite
-      partitions: 3
-      replicas: 3
-    inMemoryDb: true
-    dependencies:
-    - sources-api
-    optionalDependencies:
-    - rbac
+  - apiVersion: cloud.redhat.com/v1alpha1
+    kind: ClowdApp
+    metadata:
+      name: sources-api-go
+    spec:
+      envName: ${ENV_NAME}
+      deployments:
+        - name: svc
+          minReplicas: ${{MIN_REPLICAS}}
+          webServices:
+            public:
+              enabled: true
+          podSpec:
+            image: ${IMAGE}:${IMAGE_TAG}
+            env:
+              - name: LOG_LEVEL
+                value: ${LOG_LEVEL}
+              - name: CLOUD_METER_AVAILABILITY_CHECK_URL
+                value: ${CLOUD_METER_API_SCHEME}://${CLOUD_METER_API_HOST}:${CLOUD_METER_SOURCES_API_PORT}${CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH}
+              - name: COST_MANAGEMENT_AVAILABILITY_CHECK_URL
+                value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
+              - name: SOURCES_PSKS
+                valueFrom:
+                  secretKeyRef:
+                    name: sources-api-secrets
+                    key: psks
+                    optional: true
+              - name: RBAC_URL
+                value: ${RBAC_SCHEME}://${RBAC_HOST}:${RBAC_PORT}
+            readinessProbe:
+              tcpSocket:
+                port: 8000
+            livenessProbe:
+              httpGet:
+                path: /health
+                port: 8000
+              initialDelaySeconds: 10
+            resources:
+              limits:
+                cpu: ${CPU_LIMIT}
+                memory: ${MEMORY_LIMIT}
+              requests:
+                cpu: ${CPU_REQUEST}
+                memory: ${MEMORY_REQUEST}
+      database:
+        sharedDbAppName: sources-api
+      kafkaTopics:
+        - topicName: platform.sources.event-stream
+          partitions: 3
+          replicas: 3
+        - topicName: platform.sources.status
+          partitions: 3
+          replicas: 3
+        - topicName: platform.sources.superkey-requests
+          partitions: 3
+          replicas: 3
+        - topicName: platform.topological-inventory.operations-amazon
+          partitions: 3
+          replicas: 3
+        - topicName: platform.topological-inventory.operations-ansible-tower
+          partitions: 3
+          replicas: 3
+        - topicName: platform.topological-inventory.operations-azure
+          partitions: 3
+          replicas: 3
+        - topicName: platform.topological-inventory.operations-google
+          partitions: 3
+          replicas: 3
+        - topicName: platform.topological-inventory.operations-openshift
+          partitions: 3
+          replicas: 3
+        - topicName: platform.topological-inventory.operations-satellite
+          partitions: 3
+          replicas: 3
+      inMemoryDb: true
+      dependencies:
+        - sources-api
+      optionalDependencies:
+        - rbac
 parameters:
-- description: Scheme of the Cloud Meter API
-  displayName: Cloud Meter API Scheme
-  name: CLOUD_METER_API_SCHEME
-  value: http
-- description: Hostname of the Cloud Meter API
-  displayName: Cloud Meter API Hostname
-  name: CLOUD_METER_API_HOST
-  required: true
-  value: cloudigrade-api
-- name: CLOUD_METER_SOURCES_API_PORT
-  value: '8000'
-- name: CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH
-  value: /internal/api/cloudigrade/v1/availability_status
-- name: CPU_LIMIT
-  value: 500m
-- name: CPU_REQUEST
-  value: 100m
-- description: Clowder ENV
-  name: ENV_NAME
-  required: true
-- description: Image
-  name: IMAGE
-  value: quay.io/cloudservices/sources-api-go
-- description: Image tag
-  name: IMAGE_TAG
-  required: true
-- name: KOKU_SOURCES_API_SCHEME
-  value: http
-- description: Hostname of the koku sources API server
-  displayName: Koku Sources API Hostname
-  name: KOKU_SOURCES_API_HOST
-  required: true
-  value: koku-sources
-- name: KOKU_SOURCES_API_PORT
-  value: '8000'
-- name: KOKU_SOURCES_API_APP_CHECK_PATH
-  value: /api/cost-management/v1/source-status/
-- name: LOG_LEVEL
-  value: WARN
-- name: MEMORY_LIMIT
-  value: 1Gi
-- name: MEMORY_REQUEST
-  value: 100Mi
-- description: Prometheus Metrics Port
-  displayName: Metrics Port
-  name: METRICS_PORT
-  value: '9000'
-- description: The number of replicas to use for the prometheus deploy
-  name: MIN_REPLICAS
-  value: '1'
-- description: 'Options can be found in the doc: https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS'
-  displayName: Postgres SSL mode
-  name: PGSSLMODE
-  value: prefer
-- description: Host to use for the RBAC service URL.
-  displayName: Rbac Service Host
-  name: RBAC_HOST
-  value: rbac-service
-- description: Port to use for the RBAC service URL.
-  displayName: Rbac Service Port
-  name: RBAC_PORT
-  required: true
-  value: '8000'
-- description: Scheme to use for the RBAC service URL. Can be either http or https
-  displayName: Rbac Service Scheme
-  name: RBAC_SCHEME
-  required: true
-  value: http
+  - description: Scheme of the Cloud Meter API
+    displayName: Cloud Meter API Scheme
+    name: CLOUD_METER_API_SCHEME
+    value: http
+  - description: Hostname of the Cloud Meter API
+    displayName: Cloud Meter API Hostname
+    name: CLOUD_METER_API_HOST
+    required: true
+    value: cloudigrade-api
+  - name: CLOUD_METER_SOURCES_API_PORT
+    value: '8000'
+  - name: CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH
+    value: /internal/api/cloudigrade/v1/availability_status
+  - name: CPU_LIMIT
+    value: 500m
+  - name: CPU_REQUEST
+    value: 100m
+  - description: Clowder ENV
+    name: ENV_NAME
+    required: true
+  - description: Image
+    name: IMAGE
+    value: quay.io/cloudservices/sources-api-go
+  - description: Image tag
+    name: IMAGE_TAG
+    required: true
+  - name: KOKU_SOURCES_API_SCHEME
+    value: http
+  - description: Hostname of the koku sources API server
+    displayName: Koku Sources API Hostname
+    name: KOKU_SOURCES_API_HOST
+    required: true
+    value: koku-sources
+  - name: KOKU_SOURCES_API_PORT
+    value: '8000'
+  - name: KOKU_SOURCES_API_APP_CHECK_PATH
+    value: /api/cost-management/v1/source-status/
+  - name: LOG_LEVEL
+    value: WARN
+  - name: MEMORY_LIMIT
+    value: 1Gi
+  - name: MEMORY_REQUEST
+    value: 100Mi
+  - description: Prometheus Metrics Port
+    displayName: Metrics Port
+    name: METRICS_PORT
+    value: '9000'
+  - description: The number of replicas to use for the prometheus deploy
+    name: MIN_REPLICAS
+    value: '1'
+  - description: 'Options can be found in the doc: https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS'
+    displayName: Postgres SSL mode
+    name: PGSSLMODE
+    value: prefer
+  - description: Host to use for the RBAC service URL.
+    displayName: Rbac Service Host
+    name: RBAC_HOST
+    value: rbac-service
+  - description: Port to use for the RBAC service URL.
+    displayName: Rbac Service Port
+    name: RBAC_PORT
+    required: true
+    value: '8000'
+  - description: Scheme to use for the RBAC service URL. Can be either http or https
+    displayName: Rbac Service Scheme
+    name: RBAC_SCHEME
+    required: true
+    value: http
