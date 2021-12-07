@@ -128,17 +128,7 @@ func (s *SourceDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
 
 	bulkMessage["endpoints"] = endpoints
 	bulkMessage["authentications"] = []m.Authentication{}
-
-	var appAuths []m.ApplicationAuthentication
-
-	DB.Model(&m.ApplicationAuthentication{}).Preload("Tenant").Where("application_id IN ?", applicationsIDs).Find(&appAuths)
-
-	applicationAuthentications := make([]m.ApplicationAuthenticationEvent, len(appAuths))
-	for i, applicationAuthentication := range appAuths {
-		applicationAuthentications[i] = *applicationAuthentication.ToEvent()
-	}
-
-	bulkMessage["application_authentications"] = applicationAuthentications
+	bulkMessage["application_authentications"] = []m.ApplicationAuthentication{}
 
 	return bulkMessage, nil
 }
