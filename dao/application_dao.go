@@ -83,33 +83,13 @@ func (a *ApplicationDaoImpl) Tenant() *int64 {
 
 func (a *ApplicationDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
 	application := &m.Application{ID: *id}
-	resource := DB.Preload("Source.Tenant").Preload("Source.Applications.Tenant").Preload("Source.Endpoints.Tenant").Find(&application)
+	resource := DB.Preload("Source").Find(&application)
 
 	if resource.Error != nil {
 		return nil, resource.Error
 	}
 
-	bulkMessage := map[string]interface{}{}
-	bulkMessage["source"] = application.Source.ToEvent()
-
-	endpoints := make([]m.EndpointEvent, len(application.Source.Endpoints))
-	for i, endpoint := range application.Source.Endpoints {
-		endpoints[i] = *endpoint.ToEvent()
-	}
-
-	bulkMessage["endpoints"] = endpoints
-
-	applications := make([]m.ApplicationEvent, len(application.Source.Applications))
-	for i, application := range application.Source.Applications {
-		applications[i] = *application.ToEvent()
-	}
-
-	bulkMessage["applications"] = applications
-
-	bulkMessage["authentications"] = []m.Authentication{}
-	bulkMessage["application_authentications"] = []m.ApplicationAuthenticationEvent{}
-
-	return bulkMessage, nil
+	return BulkMessageFrom(&application.Source)
 }
 
 func (a *ApplicationDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {

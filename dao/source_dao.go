@@ -101,36 +101,13 @@ func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 }
 
 func (s *SourceDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
-	src := &m.Source{ID: *id}
-
-	resource := DB.Preload("Tenant").Preload("Applications.Tenant").Preload("Endpoints.Tenant").Find(&src)
-	if resource.Error != nil {
-		return nil, resource.Error
+	src := m.Source{ID: *id}
+	result := DB.Find(&src)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
-	bulkMessage := map[string]interface{}{}
-
-	bulkMessage["source"] = *src.ToEvent()
-
-	applications := make([]m.ApplicationEvent, len(src.Applications))
-	applicationsIDs := make([]int64, len(src.Applications))
-	for i, application := range src.Applications {
-		applications[i] = *application.ToEvent()
-		applicationsIDs[i] = application.ID
-	}
-
-	bulkMessage["applications"] = applications
-
-	endpoints := make([]m.EndpointEvent, len(src.Endpoints))
-	for i, endpoint := range src.Endpoints {
-		endpoints[i] = *endpoint.ToEvent()
-	}
-
-	bulkMessage["endpoints"] = endpoints
-	bulkMessage["authentications"] = []m.Authentication{}
-	bulkMessage["application_authentications"] = []m.ApplicationAuthentication{}
-
-	return bulkMessage, nil
+	return BulkMessageFrom(&src)
 }
 
 func (s *SourceDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
