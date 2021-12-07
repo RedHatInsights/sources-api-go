@@ -13,7 +13,18 @@ const EventStreamTopic = "platform.sources.event-stream"
 
 var config = c.Get()
 
-func raiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
+type EventStreamProducer struct {
+	Sender
+}
+
+type Sender interface {
+	RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error
+}
+
+type EventStreamSender struct {
+}
+
+func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
 	logging.Log.Debugf("\"publishing message to topic \"platform.sources.event-stream\"...")
 
 	producerConfig := kafka.ProducerConfig{Topic: config.KafkaTopic(EventStreamTopic)}
@@ -35,16 +46,16 @@ func raiseEvent(eventType string, payload []byte, headers []kafka.Header) error 
 	return nil
 }
 
-func raiseEventIf(allowed bool, eventType string, payload []byte, headers []kafka.Header) error {
+func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, payload []byte, headers []kafka.Header) error {
 	if allowed {
-		return raiseEvent(eventType, payload, headers)
+		return esp.Sender.RaiseEvent(eventType, payload, headers)
 	}
 
 	return nil
 }
 
-func RaiseEventForUpdate(resourceID int64, resourceType string, updateAttributes []string, headers []kafka.Header) error {
-	allowed := RaiseEventAllowed(resourceType, updateAttributes)
+func (esp *EventStreamProducer) RaiseEventForUpdate(resourceID int64, resourceType string, updateAttributes []string, headers []kafka.Header) error {
+	allowed := esp.RaiseEventAllowed(resourceType, updateAttributes)
 	eventModelDao, err := dao.GetFrom(resourceType)
 	if err != nil {
 		return err
@@ -55,7 +66,7 @@ func RaiseEventForUpdate(resourceID int64, resourceType string, updateAttributes
 		return errEvent
 	}
 
-	err = raiseEventIf(allowed, resourceType+".update", resourceJSON, headers)
+	err = esp.RaiseEventIf(allowed, resourceType+".update", resourceJSON, headers)
 	if err != nil {
 		return err
 	}
@@ -65,7 +76,7 @@ func RaiseEventForUpdate(resourceID int64, resourceType string, updateAttributes
 		return errMessage
 	}
 
-	err = raiseEventIf(allowed, "Records.update", message, headers)
+	err = esp.RaiseEventIf(allowed, "Records.update", message, headers)
 	if err != nil {
 		return err
 	}
@@ -73,7 +84,7 @@ func RaiseEventForUpdate(resourceID int64, resourceType string, updateAttributes
 	return nil
 }
 
-func RaiseEventAllowed(resourceType string, attributes []string) bool {
+func (esp *EventStreamProducer) RaiseEventAllowed(resourceType string, attributes []string) bool {
 	if resourceType != "Application" {
 		return true
 	}
