@@ -114,7 +114,7 @@ func (a *ApplicationDaoImpl) BulkMessage(id *int64) (map[string]interface{}, err
 
 func (a *ApplicationDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
 	src, err := a.GetById(id)
-	if err != nil {
+	if err == nil {
 		err = DB.Model(src).Updates(updateAttributes).Error
 	}
 
