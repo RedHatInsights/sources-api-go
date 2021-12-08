@@ -98,6 +98,8 @@ func DropSchema() {
 // MigrateSchema migrates all the models.
 func MigrateSchema() {
 	err := dao.DB.AutoMigrate(
+		&m.Tenant{},
+		
 		&m.SourceType{},
 		&m.ApplicationType{},
 
