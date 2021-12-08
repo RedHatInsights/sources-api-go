@@ -307,15 +307,11 @@ type TestData struct {
 }
 
 func TestConsumeStatusMessage(t *testing.T) {
-	flags := testutils.ParseFlags()
-
-	if !flags.Integration {
+	if !runningIntegration {
 		return
 	}
 
-	testutils.ConnectToTestDB()
-	testutils.DropSchema()
-	testutils.MigrateSchema()
+	testutils.ConnectAndMigrateDB("status_listener")
 	testutils.CreateFixtures()
 
 	log := logrus.Logger{
@@ -373,5 +369,5 @@ func TestConsumeStatusMessage(t *testing.T) {
 		}
 	}
 
-	testutils.DropSchema()
+	testutils.DropSchema("status_listener")
 }

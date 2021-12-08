@@ -20,6 +20,7 @@ var (
 	host2               = "tower.example.com"
 	path2               = "/"
 )
+
 var TestTenantData = []m.Tenant{
 	{Id: 1, ExternalTenant: "12345"},
 }
