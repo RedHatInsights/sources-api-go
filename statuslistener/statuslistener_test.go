@@ -307,6 +307,12 @@ type TestData struct {
 }
 
 func TestConsumeStatusMessage(t *testing.T) {
+	flags := testutils.ParseFlags()
+
+	if !flags.Integration {
+		return
+	}
+
 	testutils.ConnectToTestDB()
 	testutils.DropSchema()
 	testutils.MigrateSchema()
