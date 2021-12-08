@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"flag"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,6 +16,10 @@ var e *echo.Echo
 var conf = config.Get()
 
 func TestMain(t *testing.M) {
+	flag.Bool("createdb", false, "create the test database")
+	flag.Bool("integration", false, "run unit or integration tests")
+	flag.Parse()
+
 	l.InitLogger(conf)
 	e = echo.New()
 	code := t.Run()
