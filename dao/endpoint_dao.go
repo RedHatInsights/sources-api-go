@@ -2,6 +2,7 @@ package dao
 
 import (
 	"fmt"
+
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 )

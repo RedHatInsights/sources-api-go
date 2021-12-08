@@ -1,9 +1,10 @@
 package testutils
 
 import (
+	"time"
+
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"gorm.io/datatypes"
-	"time"
 )
 
 var TestTenantData = []m.Tenant{
