@@ -19,7 +19,9 @@ var listMiddleware = []echo.MiddlewareFunc{
 	middleware.SortAndFilter, middleware.Pagination,
 }
 
-var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{enforceTenancy}, listMiddleware...)
+var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{tenancy}, listMiddleware...)
+
+var permissionMiddleware = []echo.MiddlewareFunc{tenancy, permissionCheck}
 
 func setupRoutes(e *echo.Echo) {
 	e.GET("/health", func(c echo.Context) error {
@@ -46,24 +48,24 @@ func setupRoutes(e *echo.Echo) {
 
 	// Sources
 	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)
-	v3.GET("/sources/:id", SourceGet, enforceTenancy)
-	v3.POST("/sources", SourceCreate, enforceTenancy)
-	v3.PATCH("/sources/:id", SourceEdit, enforceTenancy)
-	v3.DELETE("/sources/:id", SourceDelete, enforceTenancy)
+	v3.GET("/sources/:id", SourceGet, tenancy)
+	v3.POST("/sources", SourceCreate, permissionMiddleware...)
+	v3.PATCH("/sources/:id", SourceEdit, permissionMiddleware...)
+	v3.DELETE("/sources/:id", SourceDelete, permissionMiddleware...)
 	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
 
 	// Applications
 	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
-	v3.GET("/applications/:id", ApplicationGet, enforceTenancy)
+	v3.GET("/applications/:id", ApplicationGet, tenancy)
 
 	// Authentications
 	v3.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
-	v3.POST("/authentications", AuthenticationCreate, enforceTenancy)
-	v3.GET("/authentications/:uid", AuthenticationGet, enforceTenancy)
-	v3.PATCH("/authentications/:uid", AuthenticationUpdate, enforceTenancy)
-	v3.DELETE("/authentications/:uid", AuthenticationDelete, enforceTenancy)
+	v3.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
+	v3.GET("/authentications/:uid", AuthenticationGet, tenancy)
+	v3.PATCH("/authentications/:uid", AuthenticationUpdate, permissionMiddleware...)
+	v3.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
 
 	// ApplicationTypes
 	v3.GET("/application_types", ApplicationTypeList, listMiddleware...)
@@ -72,12 +74,12 @@ func setupRoutes(e *echo.Echo) {
 
 	// Endpoints
 	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
-	v3.POST("/endpoints", EndpointCreate, enforceTenancy)
-	v3.GET("/endpoints/:id", EndpointGet, enforceTenancy)
+	v3.POST("/endpoints", EndpointCreate, permissionMiddleware...)
+	v3.GET("/endpoints/:id", EndpointGet, tenancy)
 
 	// ApplicationAuthentications
 	v3.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
-	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet, enforceTenancy)
+	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet, tenancy)
 
 	// AppMetaData
 	v3.GET("/app_meta_data", MetaDataList, listMiddleware...)
@@ -90,7 +92,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
 }
 
-func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
+func tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		switch {
 		case c.Request().Header.Get("x-rh-sources-account-number") != "":
@@ -101,6 +103,7 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
 			}
 			c.Set("tenantID", *t)
+			c.Set("psk", c.Request().Header.Get("x-rh-sources-psk"))
 
 		case c.Request().Header.Get("x-rh-identity") != "":
 			idRaw, err := base64.StdEncoding.DecodeString(c.Request().Header.Get("x-rh-identity"))
@@ -111,11 +114,11 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			var jsonData identity.XRHID
 			err = json.Unmarshal(idRaw, &jsonData)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("x-rh-identity header is does not contain valid JSON", "401"))
+				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("x-rh-identity header does not contain valid JSON", "401"))
 			}
 
 			if jsonData.Identity.AccountNumber == "" {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant Id!", "401"))
+				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Account number not present in x-rh-identity", "401"))
 			}
 
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", jsonData.Identity.AccountNumber)
@@ -124,9 +127,10 @@ func enforceTenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return c.JSON(http.StatusInternalServerError, util.ErrorDoc(fmt.Sprintf("Failed to get or create tenant for request: %s", err.Error()), "500"))
 			}
 			c.Set("tenantID", *t)
+			c.Set("x-rh-identity", idRaw)
 
 		default:
-			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("No Tenant Id!", "401"))
+			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}
 		return next(c)
 	}

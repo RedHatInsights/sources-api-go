@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/spf13/viper"
@@ -35,6 +36,7 @@ type SourcesApiConfig struct {
 	CachePort                 int
 	CachePassword             string
 	SlowSQLThreshold          int
+	Psks                      []string
 }
 
 // Get - returns the config parsed from runtime vars
@@ -109,6 +111,8 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("Hostname", hostname)
 	options.SetDefault("AppName", "source-api-go")
 
+	options.SetDefault("psks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
+
 	options.AutomaticEnv()
 	parsedConfig = &SourcesApiConfig{
 		AppName:                   options.GetString("AppName"),
@@ -132,6 +136,7 @@ func Get() *SourcesApiConfig {
 		CacheHost:                 options.GetString("CacheHost"),
 		CachePort:                 options.GetInt("CachePort"),
 		CachePassword:             options.GetString("CachePassword"),
+		Psks:                      options.GetStringSlice("psks"),
 	}
 
 	return parsedConfig
