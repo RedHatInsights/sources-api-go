@@ -31,7 +31,7 @@ objects:
               key: psks
               optional: true
         - name: RBAC_URL
-          value: ${RBAC_SCHEME}://${RBAC_HOST}:${RBAC_PORT}
+          value: ${RBAC_SCHEME}://${RBAC_HOST}:${RBAC_PORT}${RBAC_PATH}
         - name: SOURCES_PSKS
           valueFrom:
             secretKeyRef:
@@ -157,3 +157,8 @@ parameters:
   name: RBAC_SCHEME
   required: true
   value: http
+- description: Path to rbac
+  displayName: Rbac path
+  name: RBAC_PATH
+  required: true
+  value: /api/rbac/v1/

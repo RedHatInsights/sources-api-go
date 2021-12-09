@@ -92,6 +92,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
 }
 
+// TODO: move to middleware package after removing circular dependency
 func tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		switch {
@@ -127,11 +128,12 @@ func tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return c.JSON(http.StatusInternalServerError, util.ErrorDoc(fmt.Sprintf("Failed to get or create tenant for request: %s", err.Error()), "500"))
 			}
 			c.Set("tenantID", *t)
-			c.Set("x-rh-identity", idRaw)
+			c.Set("x-rh-identity", c.Request().Header.Get("x-rh-identity"))
 
 		default:
 			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}
+
 		return next(c)
 	}
 }
