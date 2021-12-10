@@ -1,7 +1,10 @@
 package kafka
 
-import "encoding/json"
-import "github.com/segmentio/kafka-go"
+import (
+	"encoding/json"
+
+	"github.com/segmentio/kafka-go"
+)
 
 func (message *Message) ParseTo(output interface{}) error {
 	err := json.Unmarshal(message.Value, &output)
@@ -17,6 +20,16 @@ func (message *Message) AddHeaders(headers []Header) {
 	for index, header := range headers {
 		message.Headers[index] = kafka.Header{Key: header.Key, Value: header.Value}
 	}
+}
+
+func (message *Message) GetHeader(name string) string {
+	for _, header := range message.Headers {
+		if header.Key == name {
+			return string(header.Value)
+		}
+	}
+
+	return ""
 }
 
 func (message *Message) AddValue(record []byte) {
