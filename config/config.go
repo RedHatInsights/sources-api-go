@@ -37,6 +37,7 @@ type SourcesApiConfig struct {
 	CachePassword             string
 	SlowSQLThreshold          int
 	Psks                      []string
+	BypassRbac                bool
 }
 
 // Get - returns the config parsed from runtime vars
@@ -98,6 +99,7 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("LogLevelForMiddlewareLogs", "DEBUG")
 	options.SetDefault("LogLevelForSqlLogs", "DEBUG")
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
+	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
 
 	var (
 		err      error
@@ -137,6 +139,7 @@ func Get() *SourcesApiConfig {
 		CachePort:                 options.GetInt("CachePort"),
 		CachePassword:             options.GetString("CachePassword"),
 		Psks:                      options.GetStringSlice("psks"),
+		BypassRbac:                options.GetBool("BypassRbac"),
 	}
 
 	return parsedConfig

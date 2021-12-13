@@ -9,6 +9,7 @@ import (
 
 var filterRegex = regexp.MustCompile(`^filter\[(\w+)](\[\w*]|$)`)
 
+// TODO: make the dao package not rely on this.
 type Filter struct {
 	Name      string
 	Operation string
