@@ -14,7 +14,6 @@ func GetToken(marketplaceHost string, apiKey string) (BearerToken, error) {
 	data.Set("apikey", apiKey)
 	data.Set("grant_type", "urn:ibm:params:oauth:grant-type:apikey")
 
-	client := http.Client{}
 	request, err := http.NewRequest(
 		"POST",
 		marketplaceHost+"/api-security/om-auth/cloud/token",
@@ -29,6 +28,7 @@ func GetToken(marketplaceHost string, apiKey string) (BearerToken, error) {
 	request.Header.Add("Accept", "application/json")
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
+	client := http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
 		return BearerToken{}, fmt.Errorf("could not perform the request to the marketplace: %s", err)
