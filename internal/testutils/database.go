@@ -10,13 +10,17 @@ import (
 	"github.com/labstack/gommon/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 var testDbName = "sources_api_test_go"
 
 // ConnectToTestDB connects to the test database, populates the "dao.DB" member, and runs a schema migration.
-func ConnectToTestDB() {
-	db, err := gorm.Open(postgres.Open(testDbString(testDbName)), &gorm.Config{})
+func ConnectToTestDB(dbSchema string) {
+	db, err := gorm.Open(postgres.Open(testDbString(testDbName)), &gorm.Config{NamingStrategy: schema.NamingStrategy{
+		TablePrefix: dbSchema + ".",
+	}})
+
 	if err != nil {
 		log.Fatalf("db must not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
 	}
@@ -71,33 +75,15 @@ func CreateTestDB() {
 }
 
 // DropSchema drops the database schema entirely.
-func DropSchema() {
-	tables := []string{
-		"endpoints",
-		"meta_data",
-		"applications",
-		"application_types",
-		"sources",
-		"source_types",
-		"tenants",
-	}
-
-	for _, table := range tables {
-		if result := dao.DB.Exec(fmt.Sprintf("DROP table %s", table)); result.Error != nil {
-			log.Fatalf(
-				"Error dropping table '%s'. Please manually delete the tables. Error: %s",
-				table,
-				result.Error,
-			)
-		}
-	}
+func DropSchema(dbSchema string) {
+	dao.DB.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", dbSchema))
 }
 
 // MigrateSchema migrates all the models.
 func MigrateSchema() {
 	err := dao.DB.AutoMigrate(
 		&m.Tenant{},
-		
+
 		&m.SourceType{},
 		&m.ApplicationType{},
 
@@ -146,4 +132,18 @@ func testDbString(dbname string) string {
 		config.Get().DatabaseHost,
 		config.Get().DatabasePort,
 	)
+}
+
+func ConnectAndMigrateDB(packageName string) {
+	ConnectToTestDB(packageName)
+
+	if out := dao.DB.Exec("CREATE SCHEMA IF NOT EXISTS " + packageName); out.Error != nil {
+		log.Fatalf("error in creating schema " + out.Error.Error())
+	}
+
+	MigrateSchema()
+
+	if out := dao.DB.Exec(`SET search_path TO "$user", ` + packageName); out.Error != nil {
+		log.Fatalf("error in setting schema" + out.Error.Error())
+	}
 }

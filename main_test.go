@@ -29,8 +29,8 @@ func TestMain(t *testing.M) {
 	if flags.CreateDb {
 		testutils.CreateTestDB()
 	} else if flags.Integration {
-		testutils.ConnectToTestDB()
-		testutils.MigrateSchema()
+		testutils.ConnectAndMigrateDB("public")
+
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
 		getEndpointDao = getEndpointDaoWithTenant
@@ -60,7 +60,7 @@ func TestMain(t *testing.M) {
 	code := t.Run()
 
 	if flags.Integration {
-		testutils.DropSchema()
+		testutils.DropSchema("public")
 	}
 
 	os.Exit(code)
