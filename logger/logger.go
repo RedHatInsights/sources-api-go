@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	appconf "github.com/RedHatInsights/sources-api-go/config"
@@ -57,7 +58,7 @@ func forwardLogsToStderr(logHandler string) bool {
 func LogrusLogLevelFrom(configLogLevel string) logrus.Level {
 	var logLevel logrus.Level
 
-	switch configLogLevel {
+	switch strings.ToUpper(configLogLevel) {
 	case "DEBUG":
 		logLevel = logrus.DebugLevel
 	case "ERROR":
@@ -152,7 +153,7 @@ func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 func logLevelToEchoLogLevel(configLogLevel string) echoLog.Lvl {
 	var logLevel echoLog.Lvl
 
-	switch configLogLevel {
+	switch strings.ToUpper(configLogLevel) {
 	case "DEBUG":
 		logLevel = echoLog.DEBUG
 	case "ERROR":

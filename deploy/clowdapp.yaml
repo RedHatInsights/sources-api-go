@@ -32,6 +32,12 @@ objects:
               optional: true
         - name: RBAC_URL
           value: ${RBAC_SCHEME}://${RBAC_HOST}:${RBAC_PORT}
+        - name: SOURCES_PSKS
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: psks
+              optional: true
         readinessProbe:
           tcpSocket:
             port: 8000
