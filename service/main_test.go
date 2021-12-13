@@ -24,6 +24,7 @@ func TestMain(t *testing.M) {
 	} else if flags.Integration {
 		runningIntegration = true
 		testutils.ConnectToTestDB()
+		testutils.MigrateSchema()
 
 		endpointDao = &dao.EndpointDaoImpl{TenantID: &testutils.TestTenantData[0].Id}
 		sourceDao = &dao.SourceDaoImpl{TenantID: &testutils.TestTenantData[0].Id}

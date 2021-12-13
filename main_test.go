@@ -30,6 +30,7 @@ func TestMain(t *testing.M) {
 		testutils.CreateTestDB()
 	} else if flags.Integration {
 		testutils.ConnectToTestDB()
+		testutils.MigrateSchema()
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
 		getEndpointDao = getEndpointDaoWithTenant

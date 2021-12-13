@@ -29,8 +29,6 @@ func ConnectToTestDB() {
 
 	// Set the dao.DB in case any tests want to use it
 	dao.DB = db
-	// Migrate the schema for the first time
-	MigrateSchema()
 }
 
 // CreateFixtures creates the following fixtures for the database —listed in order—:
