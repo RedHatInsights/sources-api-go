@@ -2,6 +2,7 @@ package marketplace
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -20,6 +21,10 @@ func DecodeMarketplaceTokenFromResponse(response *http.Response) (BearerToken, e
 	err := json.NewDecoder(response.Body).Decode(&token)
 	if err != nil {
 		return BearerToken{}, err
+	}
+
+	if token.Expiration == 0 || token.Token == "" {
+		return BearerToken{}, fmt.Errorf("unexpected JSON structure received from the marketplace")
 	}
 
 	return token, nil

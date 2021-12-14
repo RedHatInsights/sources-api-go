@@ -7,8 +7,14 @@ import (
 	"strings"
 )
 
+// httpClient abstracts away the client to be used in the GetToken function, and allows mocking it easily for the
+// tests.
+type httpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // GetToken sends a request to the marketplace to request a bearer token.
-func GetToken(marketplaceHost string, apiKey string) (BearerToken, error) {
+func GetToken(httpClient httpClient, marketplaceHost string, apiKey string) (BearerToken, error) {
 	// Reference docs for the request: https://marketplace.redhat.com/en-us/documentation/api-authentication
 	data := url.Values{}
 	data.Set("apikey", apiKey)
@@ -28,8 +34,7 @@ func GetToken(marketplaceHost string, apiKey string) (BearerToken, error) {
 	request.Header.Add("Accept", "application/json")
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	client := http.Client{}
-	response, err := client.Do(request)
+	response, err := httpClient.Do(request)
 	if err != nil {
 		return BearerToken{}, fmt.Errorf("could not perform the request to the marketplace: %s", err)
 	}

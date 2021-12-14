@@ -32,3 +32,35 @@ func TestBearerTokenUnmarshalling(t *testing.T) {
 		t.Errorf("want %d, got %d", expirationTimestamp, token.Expiration)
 	}
 }
+
+// TestInvalidJsonPassed tests that when an invalid JSON is given, the decoding function returns an error.
+func TestInvalidJsonPassed(t *testing.T) {
+	jsonText := `{"access_token":"abcde", "expiration"}`
+
+	readCloser := ioutil.NopCloser(strings.NewReader(jsonText))
+	fakeMarketplaceResponse := http.Response{Body: readCloser}
+
+	_, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
+
+	if err == nil {
+		t.Errorf("want error, got none")
+	}
+}
+
+// TestInvalidStructurePassed tests that an error is thrown when an unexpected JSON structure is sent by the
+// marketplace. For an "unexpected structure" we mean a structure that doesn't contain the access token or
+// the expiration timestamp of it.
+func TestInvalidStructurePassed(t *testing.T) {
+	jsonText := `{"hello": "world"}`
+
+	readCloser := ioutil.NopCloser(strings.NewReader(jsonText))
+	fakeMarketplaceResponse := http.Response{Body: readCloser}
+
+	token, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
+
+	if err == nil {
+		t.Errorf("want error, got none")
+	}
+
+	fmt.Println(token)
+}
