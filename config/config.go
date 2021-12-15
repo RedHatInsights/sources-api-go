@@ -24,6 +24,7 @@ type SourcesApiConfig struct {
 	LogGroup                  string
 	LogHandler                string
 	LogLevelForSqlLogs        string
+	MarketplaceHost           string
 	AwsRegion                 string
 	AwsAccessKeyID            string
 	AwsSecretAccessKey        string
@@ -128,6 +129,7 @@ func Get() *SourcesApiConfig {
 		LogLevelForMiddlewareLogs: options.GetString("LogLevelForMiddlewareLogs"),
 		LogHandler:                options.GetString("LogHandler"),
 		LogGroup:                  options.GetString("LogGroup"),
+		MarketplaceHost:           options.GetString("MarketplaceHost"),
 		AwsRegion:                 options.GetString("AwsRegion"),
 		AwsAccessKeyID:            options.GetString("AwsAccessKeyID"),
 		AwsSecretAccessKey:        options.GetString("AwsSecretAccessKey"),

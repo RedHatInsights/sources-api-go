@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/RedHatInsights/sources-api-go/config"
 )
 
 // httpClient abstracts away the client to be used in the GetToken function, and allows mocking it easily for the
@@ -14,7 +16,7 @@ type httpClient interface {
 }
 
 // GetToken sends a request to the marketplace to request a bearer token.
-func GetToken(httpClient httpClient, marketplaceHost string, apiKey string) (*BearerToken, error) {
+func GetToken(httpClient httpClient, apiKey string) (*BearerToken, error) {
 	// Reference docs for the request: https://marketplace.redhat.com/en-us/documentation/api-authentication
 	data := url.Values{}
 	data.Set("apikey", apiKey)
@@ -22,7 +24,7 @@ func GetToken(httpClient httpClient, marketplaceHost string, apiKey string) (*Be
 
 	request, err := http.NewRequest(
 		"POST",
-		marketplaceHost+"/api-security/om-auth/cloud/token",
+		config.Get().MarketplaceHost+"/api-security/om-auth/cloud/token",
 		strings.NewReader(data.Encode()),
 	)
 
