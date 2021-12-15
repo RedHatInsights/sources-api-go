@@ -14,7 +14,7 @@ type httpClient interface {
 }
 
 // GetToken sends a request to the marketplace to request a bearer token.
-func GetToken(httpClient httpClient, marketplaceHost string, apiKey string) (BearerToken, error) {
+func GetToken(httpClient httpClient, marketplaceHost string, apiKey string) (*BearerToken, error) {
 	// Reference docs for the request: https://marketplace.redhat.com/en-us/documentation/api-authentication
 	data := url.Values{}
 	data.Set("apikey", apiKey)
@@ -27,7 +27,7 @@ func GetToken(httpClient httpClient, marketplaceHost string, apiKey string) (Bea
 	)
 
 	if err != nil {
-		return BearerToken{}, fmt.Errorf("could not create the request object: %s", err)
+		return nil, fmt.Errorf("could not create the request object: %s", err)
 	}
 
 	// Set the proper headers to accept JSON, and let the server know we're sending urlencoded data.
@@ -36,11 +36,11 @@ func GetToken(httpClient httpClient, marketplaceHost string, apiKey string) (Bea
 
 	response, err := httpClient.Do(request)
 	if err != nil {
-		return BearerToken{}, fmt.Errorf("could not perform the request to the marketplace: %s", err)
+		return nil, fmt.Errorf("could not perform the request to the marketplace: %s", err)
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return BearerToken{}, fmt.Errorf("unexpected status code received from the marketplace: %d", response.StatusCode)
+		return nil, fmt.Errorf("unexpected status code received from the marketplace: %d", response.StatusCode)
 	}
 
 	return DecodeMarketplaceTokenFromResponse(response)

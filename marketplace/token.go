@@ -15,17 +15,17 @@ type BearerToken struct {
 
 // DecodeMarketplaceTokenFromResponse decodes the bearer token and the expiration timestamp from the received
 // response.
-func DecodeMarketplaceTokenFromResponse(response *http.Response) (BearerToken, error) {
+func DecodeMarketplaceTokenFromResponse(response *http.Response) (*BearerToken, error) {
 	token := BearerToken{}
 
 	err := json.NewDecoder(response.Body).Decode(&token)
 	if err != nil {
-		return BearerToken{}, err
+		return nil, err
 	}
 
 	if token.Expiration == 0 || token.Token == "" {
 		return BearerToken{}, fmt.Errorf("unexpected JSON structure received from the marketplace")
 	}
 
-	return token, nil
+	return &token, nil
 }
