@@ -24,11 +24,11 @@ func TestBearerTokenUnmarshalling(t *testing.T) {
 		t.Errorf("want no errors, got %s", err)
 	}
 
-	if accessTokenValue != token.Token {
-		t.Errorf("want %s, got %s", accessTokenValue, token.Token)
+	if accessTokenValue != *token.Token {
+		t.Errorf("want %s, got %s", accessTokenValue, *token.Token)
 	}
 
-	if expirationTimestamp != token.Expiration {
+	if expirationTimestamp != *token.Expiration {
 		t.Errorf("want %d, got %d", expirationTimestamp, token.Expiration)
 	}
 }

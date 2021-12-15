@@ -9,8 +9,8 @@ import (
 // BearerToken represents the bearer token sent by the marketplace, and includes the Unix timestamp of the time when
 // it expires.
 type BearerToken struct {
-	Expiration int    `json:"expiration"`
-	Token      string `json:"access_token"`
+	Expiration *int    `json:"expiration"`
+	Token      *string `json:"access_token"`
 }
 
 // DecodeMarketplaceTokenFromResponse decodes the bearer token and the expiration timestamp from the received
@@ -23,8 +23,8 @@ func DecodeMarketplaceTokenFromResponse(response *http.Response) (*BearerToken, 
 		return nil, err
 	}
 
-	if token.Expiration == 0 || token.Token == "" {
-		return BearerToken{}, fmt.Errorf("unexpected JSON structure received from the marketplace")
+	if token.Expiration == nil || token.Token == nil {
+		return nil, fmt.Errorf("unexpected JSON structure received from the marketplace")
 	}
 
 	return &token, nil
