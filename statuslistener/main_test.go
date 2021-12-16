@@ -24,6 +24,7 @@ func TestMain(t *testing.M) {
 	} else if flags.Integration {
 		runningIntegration = true
 		testutils.ConnectAndMigrateDB("status_listener")
+		testutils.CreateFixtures()
 	}
 
 	code := t.Run()

@@ -11,7 +11,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -311,9 +310,6 @@ func TestConsumeStatusMessage(t *testing.T) {
 		return
 	}
 
-	testutils.ConnectAndMigrateDB("status_listener")
-	testutils.CreateFixtures()
-
 	log := logrus.Logger{
 		Out:          os.Stdout,
 		Level:        logrus.DebugLevel,
@@ -368,6 +364,4 @@ func TestConsumeStatusMessage(t *testing.T) {
 			sender.TestSuite.Errorf("RaiseEvent was%scalled while it was%sexpected", wasOrWasNot, wasOrWasNotExpected)
 		}
 	}
-
-	testutils.DropSchema("status_listener")
 }
