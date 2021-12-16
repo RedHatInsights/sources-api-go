@@ -77,7 +77,11 @@ func CreateTestDB() {
 
 // DropSchema drops the database schema entirely.
 func DropSchema(dbSchema string) {
-	dao.DB.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", dbSchema))
+	result := dao.DB.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", dbSchema))
+	if result.Error != nil {
+		log.Fatalf("Error in drop schema %s %s: ", dbSchema, result.Error.Error())
+	}
+
 }
 
 // MigrateSchema migrates all the models.
