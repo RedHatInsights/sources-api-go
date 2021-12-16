@@ -23,7 +23,7 @@ func TestMain(t *testing.M) {
 		testutils.CreateTestDB()
 	} else if flags.Integration {
 		runningIntegration = true
-		testutils.ConnectToTestDB()
+		testutils.ConnectAndMigrateDB("service")
 
 		endpointDao = &dao.EndpointDaoImpl{TenantID: &testutils.TestTenantData[0].Id}
 		sourceDao = &dao.SourceDaoImpl{TenantID: &testutils.TestTenantData[0].Id}
@@ -36,7 +36,7 @@ func TestMain(t *testing.M) {
 	code := t.Run()
 
 	if flags.Integration {
-		testutils.DropSchema()
+		testutils.DropSchema("service")
 	}
 
 	os.Exit(code)
