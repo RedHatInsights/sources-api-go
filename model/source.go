@@ -49,15 +49,15 @@ func (src *Source) AsJSON() []byte {
 
 func (src *Source) ToEvent() *SourceEvent {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(src.LastAvailableAt, "2006-01-02 15:04:05 MST")),
-		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(src.LastCheckedAt, "2006-01-02 15:04:05 MST"))}
+		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(src.LastAvailableAt, util.RecordDateTimeFormat)),
+		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(src.LastCheckedAt, util.RecordDateTimeFormat))}
 
 	sourceEvent := &SourceEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(src.PausedAt, "2006-01-02 15:04:05 MST"))},
+		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(src.PausedAt, util.RecordDateTimeFormat))},
 		ID:                      &src.ID,
-		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.CreatedAt, "2006-01-02 15:04:05 MST")),
-		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.UpdatedAt, "2006-01-02 15:04:05 MST")),
+		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.CreatedAt, util.RecordDateTimeFormat)),
+		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.UpdatedAt, util.RecordDateTimeFormat)),
 		Name:                    &src.Name,
 		UID:                     src.Uid,
 		Version:                 src.Version,

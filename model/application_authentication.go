@@ -27,9 +27,9 @@ type ApplicationAuthentication struct {
 func (aa *ApplicationAuthentication) ToEvent() *ApplicationAuthenticationEvent {
 	aaEvent := &ApplicationAuthenticationEvent{
 		ID:               aa.ID,
-		PauseEvent:       PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(aa.PausedAt, "2006-01-02 15:04:05 MST"))},
-		CreatedAt:        util.StringValueOrNil(util.FormatTimeToString(aa.CreatedAt, "2006-01-02 15:04:05 MST")),
-		UpdatedAt:        util.StringValueOrNil(util.FormatTimeToString(aa.UpdatedAt, "2006-01-02 15:04:05 MST")),
+		PauseEvent:       PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(aa.PausedAt, util.RecordDateTimeFormat))},
+		CreatedAt:        util.StringValueOrNil(util.FormatTimeToString(aa.CreatedAt, util.RecordDateTimeFormat)),
+		UpdatedAt:        util.StringValueOrNil(util.FormatTimeToString(aa.UpdatedAt, util.RecordDateTimeFormat)),
 		ApplicationID:    aa.ApplicationID,
 		AuthenticationID: aa.AuthenticationID,
 		Tenant:           &aa.Tenant.ExternalTenant,

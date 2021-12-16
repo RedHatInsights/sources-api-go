@@ -35,12 +35,12 @@ type Endpoint struct {
 
 func (endpoint *Endpoint) ToEvent() *EndpointEvent {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.LastAvailableAt, "2006-01-02 15:04:05 MST")),
-		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(endpoint.LastCheckedAt, "2006-01-02 15:04:05 MST"))}
+		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.LastAvailableAt, util.RecordDateTimeFormat)),
+		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(endpoint.LastCheckedAt, util.RecordDateTimeFormat))}
 
 	endpointEvent := &EndpointEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.PausedAt, "2006-01-02 15:04:05 MST"))},
+		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.PausedAt, util.RecordDateTimeFormat))},
 		ID:                      endpoint.ID,
 		CertificateAuthority:    endpoint.CertificateAuthority,
 		Host:                    endpoint.Host,
@@ -52,8 +52,8 @@ func (endpoint *Endpoint) ToEvent() *EndpointEvent {
 		VerifySsl:               endpoint.VerifySsl,
 		Default:                 endpoint.Default,
 		Path:                    endpoint.Path,
-		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.CreatedAt, "2006-01-02 15:04:05 MST")),
-		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.UpdatedAt, "2006-01-02 15:04:05 MST")),
+		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.CreatedAt, util.RecordDateTimeFormat)),
+		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.UpdatedAt, util.RecordDateTimeFormat)),
 		AvailabilityStatusError: util.StringValueOrNil(endpoint.AvailabilityStatusError),
 		Tenant:                  &endpoint.Tenant.ExternalTenant,
 	}

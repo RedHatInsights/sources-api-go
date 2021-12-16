@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+var RecordDateTimeFormat = "2006-01-02 15:04:05 MST"
+
 // InterfaceToInt64 takes an interface and returns an int64 for any float64, int64 or string received -whether they
 // are pointers or not-.
 func InterfaceToInt64(i interface{}) (int64, error) {

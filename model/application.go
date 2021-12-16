@@ -32,16 +32,16 @@ type Application struct {
 
 func (app *Application) ToEvent() *ApplicationEvent {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(app.LastAvailableAt, "2006-01-02 15:04:05 MST")),
-		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(app.LastCheckedAt, "2006-01-02 15:04:05 MST"))}
+		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(app.LastAvailableAt, util.RecordDateTimeFormat)),
+		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(app.LastCheckedAt, util.RecordDateTimeFormat))}
 
 	appEvent := &ApplicationEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(app.PausedAt, "2006-01-02 15:04:05 MST"))},
+		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(app.PausedAt, util.RecordDateTimeFormat))},
 		Extra:                   app.Extra,
 		ID:                      app.ID,
-		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(app.CreatedAt, "2006-01-02 15:04:05 MST")),
-		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(app.UpdatedAt, "2006-01-02 15:04:05 MST")),
+		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(app.CreatedAt, util.RecordDateTimeFormat)),
+		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(app.UpdatedAt, util.RecordDateTimeFormat)),
 		ApplicationTypeID:       app.ApplicationTypeID,
 		AvailabilityStatusError: util.StringValueOrNil(app.AvailabilityStatusError),
 		SourceID:                app.SourceID,
