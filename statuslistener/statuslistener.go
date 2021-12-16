@@ -111,9 +111,9 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage StatusMessage,
 	}
 
 	updateAttributes := avs.attributesForUpdate(statusMessage)
-	modelEventDao, errorDao := dao.GetFrom(statusMessage.ResourceType)
+	modelEventDao, err := dao.GetFrom(statusMessage.ResourceType)
 	if err != nil {
-		logging.Log.Error(errorDao.Error())
+		logging.Log.Error(err.Error())
 		return
 	}
 
