@@ -21,7 +21,7 @@ func main() {
 	dao.Init()
 	redis.Init()
 
-	availabilityListener := flag.Bool("listener", false, "run unit or integration tests")
+	availabilityListener := flag.Bool("listener", false, "run availability status listener")
 	flag.Parse()
 
 	if *availabilityListener {
