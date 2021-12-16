@@ -93,12 +93,12 @@ func (a *ApplicationDaoImpl) BulkMessage(id *int64) (map[string]interface{}, err
 }
 
 func (a *ApplicationDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
-	src, err := a.GetById(id)
-	if err == nil {
-		err = DB.Model(src).Updates(updateAttributes).Error
+	result := DB.Model(&m.Application{ID: *id}).Updates(updateAttributes)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("application not found %v", id)
 	}
 
-	return err
+	return nil
 }
 
 func (a *ApplicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {

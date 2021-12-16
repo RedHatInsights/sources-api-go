@@ -120,12 +120,12 @@ func (a *EndpointDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error)
 }
 
 func (a *EndpointDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
-	endpoint, err := a.GetById(id)
-	if err == nil {
-		err = DB.Model(endpoint).Updates(updateAttributes).Error
+	result := DB.Model(&m.Endpoint{ID: *id}).Updates(updateAttributes)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("endpoint not found %v", id)
 	}
 
-	return err
+	return nil
 }
 
 func (a *EndpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {

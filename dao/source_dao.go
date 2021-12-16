@@ -111,12 +111,12 @@ func (s *SourceDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
 }
 
 func (s *SourceDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
-	src, err := s.GetById(id)
-	if err == nil {
-		err = DB.Model(src).Updates(updateAttributes).Error
+	result := DB.Model(&m.Source{ID: *id}).Updates(updateAttributes)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("source not found %v", id)
 	}
 
-	return err
+	return nil
 }
 
 func (s *SourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {
