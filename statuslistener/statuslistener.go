@@ -67,22 +67,19 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 
 	logging.Log.Infof("Kafka message %s, %s received with payload: %s", message.Headers, message.Key, message.Value)
 
-	headers := avs.headersWithoutEventType(message)
+	headers := avs.headersFrom(message)
 
 	avs.processEvent(statusMessage, headers)
 }
 
-func (avs *AvailabilityStatusListener) headersWithoutEventType(message kafka.Message) []kafka.Header {
+func (avs *AvailabilityStatusListener) headersFrom(message kafka.Message) []kafka.Header {
 	if len(message.Headers) < 1 {
 		return []kafka.Header{}
 	}
 
-	//headers := make([]kafka.Header, len(message.Headers))
-	var headers []kafka.Header
-	for _, header := range message.Headers {
-		if header.Key != "event_type" {
-			headers = append(headers, kafka.Header(header))
-		}
+	headers := make([]kafka.Header, len(message.Headers))
+	for index, header := range message.Headers {
+		headers[index] = kafka.Header{Key: header.Key, Value: header.Value}
 	}
 
 	return headers

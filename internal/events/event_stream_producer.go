@@ -32,7 +32,15 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 	kf := &kafka.Manager{Config: kafkaConfig}
 
 	m := &kafka.Message{}
-	headers = append(headers, kafka.Header{Key: "event_type", Value: []byte(eventType)})
+
+	for index, header := range headers {
+		if header.Key == "event_type" {
+			headers[index] = kafka.Header{Key: "event_type", Value: []byte(eventType)}
+			break
+		}
+	}
+	headers = append(headers, kafka.Header{Key: "encoding", Value: []byte("json")})
+
 	m.AddHeaders(headers)
 	m.AddValue(payload)
 
