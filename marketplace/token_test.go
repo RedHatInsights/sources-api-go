@@ -56,11 +56,9 @@ func TestInvalidStructurePassed(t *testing.T) {
 	readCloser := ioutil.NopCloser(strings.NewReader(jsonText))
 	fakeMarketplaceResponse := http.Response{Body: readCloser}
 
-	token, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
+	_, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
 
 	if err == nil {
 		t.Errorf("want error, got none")
 	}
-
-	fmt.Println(token)
 }
