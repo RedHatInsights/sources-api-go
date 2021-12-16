@@ -25,7 +25,7 @@ type EventStreamSender struct {
 }
 
 func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
-	logging.Log.Debugf("\"publishing message to topic \"platform.sources.event-stream\"...")
+	logging.Log.Debugf("publishing message to topic %q...", EventStreamTopic)
 
 	producerConfig := kafka.ProducerConfig{Topic: config.KafkaTopic(EventStreamTopic)}
 	kafkaConfig := kafka.Config{KafkaBrokers: config.KafkaBrokers, ProducerConfig: producerConfig}
@@ -41,7 +41,7 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 		return err
 	}
 
-	logging.Log.Debugf("\"publishing message to topic \"platform.sources.event-stream\"...Complete")
+	logging.Log.Debugf("publishing message to topic %q...Complete", EventStreamTopic)
 
 	return nil
 }

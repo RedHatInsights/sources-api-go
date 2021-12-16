@@ -25,7 +25,11 @@ func GetFrom(resourceType string) (*m.EventModelDao, error) {
 }
 
 func BulkMessageFrom(source *m.Source) (map[string]interface{}, error) {
-	result := DB.Preload("Tenant").Preload("Applications.Tenant").Preload("Endpoints.Tenant").Find(&source)
+	result := DB.
+		Preload("Tenant").
+		Preload("Applications.Tenant").
+		Preload("Endpoints.Tenant").
+		Find(&source)
 
 	if result.Error != nil {
 		return nil, result.Error
