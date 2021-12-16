@@ -32,16 +32,16 @@ type Application struct {
 
 func (app *Application) ToEvent() *ApplicationEvent {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(app.LastAvailableAt, util.RecordDateTimeFormat)),
-		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(app.LastCheckedAt, util.RecordDateTimeFormat))}
+		LastAvailableAt: util.DateTimeToRecordFormat(app.LastAvailableAt),
+		LastCheckedAt:   util.DateTimeToRecordFormat(app.LastCheckedAt)}
 
 	appEvent := &ApplicationEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(app.PausedAt, util.RecordDateTimeFormat))},
+		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(app.PausedAt)},
 		Extra:                   app.Extra,
 		ID:                      app.ID,
-		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(app.CreatedAt, util.RecordDateTimeFormat)),
-		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(app.UpdatedAt, util.RecordDateTimeFormat)),
+		CreatedAt:               util.DateTimeToRecordFormat(app.CreatedAt),
+		UpdatedAt:               util.DateTimeToRecordFormat(app.UpdatedAt),
 		ApplicationTypeID:       app.ApplicationTypeID,
 		AvailabilityStatusError: util.StringValueOrNil(app.AvailabilityStatusError),
 		SourceID:                app.SourceID,

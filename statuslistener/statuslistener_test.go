@@ -65,19 +65,19 @@ type DateFields struct {
 
 func UpdateDateFieldsTo(fieldsMap map[string]interface{}, dateFields DateFields) map[string]interface{} {
 	if !dateFields.CreatedAt.IsZero() {
-		fieldsMap["created_at"] = util.FormatTimeToString(dateFields.CreatedAt, "2006-01-02 15:04:05 MST")
+		fieldsMap["created_at"] = util.FormatTimeToString(dateFields.CreatedAt, util.RecordDateTimeFormat)
 	}
 
 	if !dateFields.LastAvailableAt.IsZero() {
-		fieldsMap["last_available_at"] = util.FormatTimeToString(dateFields.LastAvailableAt, "2006-01-02 15:04:05 MST")
+		fieldsMap["last_available_at"] = util.FormatTimeToString(dateFields.LastAvailableAt, util.RecordDateTimeFormat)
 	}
 
 	if !dateFields.LastCheckedAt.IsZero() {
-		fieldsMap["last_checked_at"] = util.FormatTimeToString(dateFields.LastCheckedAt, "2006-01-02 15:04:05 MST")
+		fieldsMap["last_checked_at"] = util.FormatTimeToString(dateFields.LastCheckedAt, util.RecordDateTimeFormat)
 	}
 
 	if !dateFields.UpdatedAt.IsZero() {
-		fieldsMap["updated_at"] = util.FormatTimeToString(dateFields.UpdatedAt, "2006-01-02 15:04:05 MST")
+		fieldsMap["updated_at"] = util.FormatTimeToString(dateFields.UpdatedAt, util.RecordDateTimeFormat)
 	}
 
 	return fieldsMap

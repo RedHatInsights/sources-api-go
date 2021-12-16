@@ -49,15 +49,15 @@ func (src *Source) AsJSON() []byte {
 
 func (src *Source) ToEvent() *SourceEvent {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(src.LastAvailableAt, util.RecordDateTimeFormat)),
-		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(src.LastCheckedAt, util.RecordDateTimeFormat))}
+		LastAvailableAt: util.DateTimeToRecordFormat(src.LastAvailableAt),
+		LastCheckedAt:   util.DateTimeToRecordFormat(src.LastCheckedAt)}
 
 	sourceEvent := &SourceEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(src.PausedAt, util.RecordDateTimeFormat))},
+		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(src.PausedAt)},
 		ID:                      &src.ID,
-		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.CreatedAt, util.RecordDateTimeFormat)),
-		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(src.UpdatedAt, util.RecordDateTimeFormat)),
+		CreatedAt:               util.DateTimeToRecordFormat(src.CreatedAt),
+		UpdatedAt:               util.DateTimeToRecordFormat(src.UpdatedAt),
 		Name:                    &src.Name,
 		UID:                     src.Uid,
 		Version:                 src.Version,

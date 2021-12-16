@@ -72,3 +72,7 @@ func FormatTimeToString(inputTime time.Time, format string) string {
 
 	return inputTime.Format(format)
 }
+
+func DateTimeToRecordFormat(inputTime time.Time) *string {
+	return StringValueOrNil(FormatTimeToString(inputTime, RecordDateTimeFormat))
+}

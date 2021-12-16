@@ -35,12 +35,12 @@ type Endpoint struct {
 
 func (endpoint *Endpoint) ToEvent() *EndpointEvent {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.LastAvailableAt, util.RecordDateTimeFormat)),
-		LastCheckedAt:   util.StringValueOrNil(util.FormatTimeToString(endpoint.LastCheckedAt, util.RecordDateTimeFormat))}
+		LastAvailableAt: util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
+		LastCheckedAt:   util.DateTimeToRecordFormat(endpoint.LastCheckedAt)}
 
 	endpointEvent := &EndpointEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.StringValueOrNil(util.FormatTimeToString(endpoint.PausedAt, util.RecordDateTimeFormat))},
+		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(endpoint.PausedAt)},
 		ID:                      endpoint.ID,
 		CertificateAuthority:    endpoint.CertificateAuthority,
 		Host:                    endpoint.Host,
@@ -52,8 +52,8 @@ func (endpoint *Endpoint) ToEvent() *EndpointEvent {
 		VerifySsl:               endpoint.VerifySsl,
 		Default:                 endpoint.Default,
 		Path:                    endpoint.Path,
-		CreatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.CreatedAt, util.RecordDateTimeFormat)),
-		UpdatedAt:               util.StringValueOrNil(util.FormatTimeToString(endpoint.UpdatedAt, util.RecordDateTimeFormat)),
+		CreatedAt:               util.DateTimeToRecordFormat(endpoint.CreatedAt),
+		UpdatedAt:               util.DateTimeToRecordFormat(endpoint.UpdatedAt),
 		AvailabilityStatusError: util.StringValueOrNil(endpoint.AvailabilityStatusError),
 		Tenant:                  &endpoint.Tenant.ExternalTenant,
 	}
