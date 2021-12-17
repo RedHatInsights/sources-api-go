@@ -29,7 +29,9 @@ func (h httpClientInvalidStatusCodeResponse) Do(req *http.Request) (*http.Respon
 
 // TestNotReachingMarketplace tests that an error is returned when an error occurs within the HTTP Client.
 func TestNotReachingMarketplace(t *testing.T) {
-	_, err := GetToken(&httpClientErrorRequest{}, "a")
+	GetHttpClient = func() HttpClient { return httpClientErrorRequest{} }
+
+	_, err := GetToken("a")
 
 	if err == nil {
 		t.Errorf("want error, got none")
@@ -44,7 +46,9 @@ func TestNotReachingMarketplace(t *testing.T) {
 // TestInvalidStatusCodeReturnsError checks that an error is returned when a non 200 status code is returned on the
 // response from the marketplace.
 func TestInvalidStatusCodeReturnsError(t *testing.T) {
-	_, err := GetToken(&httpClientInvalidStatusCodeResponse{}, "a")
+	GetHttpClient = func() HttpClient { return httpClientInvalidStatusCodeResponse{} }
+
+	_, err := GetToken("a")
 
 	if err == nil {
 		t.Errorf("want error, got none")

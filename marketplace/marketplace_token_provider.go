@@ -9,14 +9,23 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 )
 
-// httpClient abstracts away the client to be used in the GetToken function, and allows mocking it easily for the
+// GetHttpClient variable that holds the function which returns an HttpClient. This allows us to set up in runtime
+// which http client we want for the "GetToken" function, and allows us to mock it easily.
+var GetHttpClient func() HttpClient
+
+// HttpClient abstracts away the client to be used in the GetToken function, and allows mocking it easily for the
 // tests.
-type httpClient interface {
+type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+// GetHttpClientStdlib returns a "http.Client" with a timeout of 10 seconds.
+func GetHttpClientStdlib() HttpClient {
+	return &http.Client{Timeout: 10}
+}
+
 // GetToken sends a request to the marketplace to request a bearer token.
-func GetToken(httpClient httpClient, apiKey string) (*BearerToken, error) {
+func GetToken(apiKey string) (*BearerToken, error) {
 	// Reference docs for the request: https://marketplace.redhat.com/en-us/documentation/api-authentication
 	data := url.Values{}
 	data.Set("apikey", apiKey)
@@ -36,7 +45,8 @@ func GetToken(httpClient httpClient, apiKey string) (*BearerToken, error) {
 	request.Header.Add("Accept", "application/json")
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	response, err := httpClient.Do(request)
+	client := GetHttpClient()
+	response, err := client.Do(request)
 	if err != nil {
 		return nil, fmt.Errorf("could not perform the request to the marketplace: %s", err)
 	}
