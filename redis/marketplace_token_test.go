@@ -21,6 +21,59 @@ func setUpFakeToken() *marketplace.BearerToken {
 	}
 }
 
+// TestGetTokenBadTenant tests that when given a bad or nonexistent tenant, an expected error is returned.
+func TestGetTokenBadTenant(t *testing.T) {
+	mr := miniredis.RunT(t)
+
+	Client = redis.NewClient(
+		&redis.Options{
+			Addr: mr.Addr(),
+		},
+	)
+
+	_, err := GetToken(12345)
+	if err == nil {
+		t.Error("want error, got none")
+	}
+}
+
+// TestGetToken sets up a predefined token on the Redis cache, and tries to fetch it using the "GetToken" function.
+func TestGetToken(t *testing.T) {
+	mr := miniredis.RunT(t)
+
+	Client = redis.NewClient(
+		&redis.Options{
+			Addr: mr.Addr(),
+		},
+	)
+
+	// Set a token on the redis cache, to then try fo fetch it
+	token := setUpFakeToken()
+	marshalledToken, err := json.Marshal(token)
+	if err != nil {
+		t.Errorf("no error expected, got %s", err)
+	}
+
+	// Use a fake tenant id to set the token on Redis
+	tenantId := int64(5)
+
+	err = mr.Set(fmt.Sprintf("marketplace_token_%d", tenantId), string(marshalledToken))
+	if err != nil {
+		t.Errorf("no error expected, got %s", err)
+	}
+
+	// Fetch the cached token
+	cachedToken, err := GetToken(tenantId)
+	if err != nil {
+		t.Errorf("no error expected, got %s", err)
+	}
+
+	// Check that everything matches
+	if (*token.Expiration != *cachedToken.Expiration) || (*token.Token != *cachedToken.Token) {
+		t.Errorf("want equal tokens, got different ones: [%s] != [%s]", token, cachedToken)
+	}
+}
+
 // TestSetTokenUnreachableRedis tests that an error is returned when something goes wrong. In this case, an
 // unreachable Redis server is simulated.
 func TestSetTokenUnreachableRedis(t *testing.T) {
