@@ -1,0 +1,77 @@
+package redis
+
+import (
+	"encoding/json"
+	"fmt"
+	"testing"
+
+	"github.com/RedHatInsights/sources-api-go/marketplace"
+	"github.com/alicebob/miniredis/v2"
+	"github.com/go-redis/redis"
+)
+
+// setUpFakeToken sets up a test token ready to be used.
+func setUpFakeToken() *marketplace.BearerToken {
+	expiration := int64(1609455600) // 2021-01-01T00:00:00
+	testApiToken := "testApiToken"
+
+	return &marketplace.BearerToken{
+		Expiration: &expiration,
+		Token:      &testApiToken,
+	}
+}
+
+// TestSetTokenUnreachableRedis tests that an error is returned when something goes wrong. In this case, an
+// unreachable Redis server is simulated.
+func TestSetTokenUnreachableRedis(t *testing.T) {
+	Client = redis.NewClient(&redis.Options{})
+
+	// Set up a fake token and a fake tenant id
+	fakeToken := setUpFakeToken()
+	tenantId := int64(5)
+
+	// Call the actual function
+	err := SetToken(tenantId, fakeToken)
+	if err == nil {
+		t.Error("want error, got none")
+	}
+}
+
+// TestSetTokenSuccess tests that the token is successfully set on Redis.
+func TestSetTokenSuccess(t *testing.T) {
+	mr := miniredis.RunT(t)
+
+	Client = redis.NewClient(
+		&redis.Options{
+			Addr: mr.Addr(),
+		},
+	)
+
+	// Set up a fake token and a fake tenant id
+	fakeToken := setUpFakeToken()
+	tenantId := int64(5)
+
+	// Call the actual function
+	err := SetToken(tenantId, fakeToken)
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
+	}
+
+	// Fetch the token from Redis
+	got, err := mr.Get(fmt.Sprintf("marketplace_token_%d", tenantId))
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
+	}
+
+	// Marshal the expected result to compare it with what we received from Redis
+	unmarshalledData, err := json.Marshal(fakeToken)
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
+	}
+
+	// Compare that we fetched the expected token.
+	want := string(unmarshalledData)
+	if want != got {
+		t.Errorf("want %s, got %s", want, got)
+	}
+}
