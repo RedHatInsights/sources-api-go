@@ -9,7 +9,7 @@ import (
 // BearerToken represents the bearer token sent by the marketplace, and includes the Unix timestamp of the time when
 // it expires.
 type BearerToken struct {
-	Expiration *int    `json:"expiration"`
+	Expiration *int64  `json:"expiration"`
 	Token      *string `json:"access_token"`
 }
 
