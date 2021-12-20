@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/labstack/echo/v4"
 )
 
@@ -25,7 +25,7 @@ func TestPSKMatches(t *testing.T) {
 
 func TestGoodPSK(t *testing.T) {
 	PSKS = []string{"1234"}
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		"POST",
 		"/",
 		nil,
@@ -44,7 +44,7 @@ func TestGoodPSK(t *testing.T) {
 
 func TestBadPSK(t *testing.T) {
 	PSKS = []string{"abcdef"}
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		"POST",
 		"/",
 		nil,
@@ -63,7 +63,7 @@ func TestBadPSK(t *testing.T) {
 
 func TestNoPSK(t *testing.T) {
 	PSKS = []string{"abcdef"}
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		"POST",
 		"/",
 		nil,

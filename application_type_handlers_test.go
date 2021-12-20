@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/application_types",
 		nil,
@@ -69,7 +69,7 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 }
 
 func TestApplicationTypeList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types",
 		nil,
@@ -122,7 +122,7 @@ func TestApplicationTypeList(t *testing.T) {
 }
 
 func TestApplicationTypeGet(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/1",
 		nil,
@@ -153,7 +153,7 @@ func TestApplicationTypeGet(t *testing.T) {
 }
 
 func TestApplicationTypeGetNotFound(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/123",
 		nil,

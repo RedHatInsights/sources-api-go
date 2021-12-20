@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/source_types/1/sources",
 		nil,
@@ -68,7 +68,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 }
 
 func TestApplicationSourceSubcollectionList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/source_types/1/sources",
 		nil,
@@ -125,7 +125,7 @@ func TestApplicationSourceSubcollectionList(t *testing.T) {
 }
 
 func TestSourceList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources",
 		nil,
@@ -178,7 +178,7 @@ func TestSourceList(t *testing.T) {
 }
 
 func TestSourceGet(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1",
 		nil,
@@ -210,7 +210,7 @@ func TestSourceGet(t *testing.T) {
 }
 
 func TestSourceGetNotFound(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/9872034520975",
 		nil,
@@ -244,7 +244,7 @@ func TestSourceCreateBadRequest(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/sources",
 		bytes.NewReader(body),
@@ -290,7 +290,7 @@ func TestSourceCreate(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/sources",
 		bytes.NewReader(body),

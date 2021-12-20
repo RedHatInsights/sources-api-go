@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -24,12 +26,12 @@ var (
 func TestMain(t *testing.M) {
 	l.InitLogger(conf)
 
-	flags := testutils.ParseFlags()
+	flags := parser.ParseFlags()
 
 	if flags.CreateDb {
-		testutils.CreateTestDB()
+		database.CreateTestDB()
 	} else if flags.Integration {
-		testutils.ConnectAndMigrateDB("public")
+		database.ConnectAndMigrateDB("public")
 
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
@@ -38,14 +40,14 @@ func TestMain(t *testing.M) {
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
 		getMetaDataDao = getMetaDataDaoWithTenant
 
-		testutils.CreateFixtures()
+		database.CreateFixtures()
 	} else {
-		mockSourceDao = &dao.MockSourceDao{Sources: testutils.TestSourceData}
-		mockApplicationDao = &dao.MockApplicationDao{Applications: testutils.TestApplicationData}
-		mockEndpointDao = &dao.MockEndpointDao{Endpoints: testutils.TestEndpointData}
-		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: testutils.TestSourceTypeData}
-		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: testutils.TestApplicationTypeData}
-		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: testutils.TestMetaDataData}
+		mockSourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData}
+		mockApplicationDao = &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}
+		mockEndpointDao = &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
+		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: fixtures.TestSourceTypeData}
+		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: fixtures.TestApplicationTypeData}
+		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: fixtures.TestMetaDataData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }
@@ -60,7 +62,7 @@ func TestMain(t *testing.M) {
 	code := t.Run()
 
 	if flags.Integration {
-		testutils.DropSchema("public")
+		database.DropSchema("public")
 	}
 
 	os.Exit(code)

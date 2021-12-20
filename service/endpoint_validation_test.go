@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
 )
 
@@ -15,7 +15,7 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 	port := 443
 	verifySsl := true
 	certificateAuthority := "letsEncrypt"
-	sourceId := strconv.FormatInt(testutils.TestSourceData[0].ID, 10)
+	sourceId := strconv.FormatInt(fixtures.TestSourceData[0].ID, 10)
 
 	return model.EndpointCreateRequest{
 		Default:              false,
@@ -130,7 +130,7 @@ func TestNonUniqueRole(t *testing.T) {
 	}
 
 	role := "myRole"
-	newEndpoint := testutils.TestEndpointData[0]
+	newEndpoint := fixtures.TestEndpointData[0]
 	newEndpoint.ID = 0 // set it as zero to avoid hitting
 	newEndpoint.Role = &role
 
