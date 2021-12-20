@@ -1,13 +1,13 @@
 package middleware
 
 import (
-	"flag"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/labstack/echo/v4"
 )
@@ -16,9 +16,7 @@ var e *echo.Echo
 var conf = config.Get()
 
 func TestMain(t *testing.M) {
-	flag.Bool("createdb", false, "create the test database")
-	flag.Bool("integration", false, "run unit or integration tests")
-	flag.Parse()
+	_ = parser.ParseFlags()
 
 	l.InitLogger(conf)
 	e = echo.New()
