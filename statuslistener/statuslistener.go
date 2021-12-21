@@ -60,8 +60,7 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 		return
 	}
 
-	et := avs.eventType(message)
-	if et != eventAvailabilityStatus {
+	if message.GetHeader("event_type") != eventAvailabilityStatus {
 		return
 	}
 
@@ -83,16 +82,6 @@ func (avs *AvailabilityStatusListener) headersFrom(message kafka.Message) []kafk
 	}
 
 	return headers
-}
-
-func (avs *AvailabilityStatusListener) eventType(message kafka.Message) string {
-	for _, header := range message.Headers {
-		if header.Key == "event_type" {
-			return string(header.Value)
-		}
-	}
-
-	return ""
 }
 
 func (avs *AvailabilityStatusListener) processEvent(statusMessage StatusMessage, headers []kafka.Header) {
