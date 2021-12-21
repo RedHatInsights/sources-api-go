@@ -3,7 +3,6 @@ package marketplace
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -26,7 +25,7 @@ func DecodeMarketplaceTokenFromResponse(response *http.Response) (*BearerToken, 
 
 	err = response.Body.Close()
 	if err != nil {
-		log.Fatalf("could not close the marketplace JWT token response's body: %s", err)
+		return nil, fmt.Errorf("could not close the marketplace JWT token response's body: %s", err)
 	}
 
 	if token.Expiration == nil || token.Token == nil {
