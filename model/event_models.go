@@ -40,14 +40,12 @@ type AuthenticationEvent struct {
 	Name                    string                 `json:"name"`
 	AuthType                string                 `json:"authtype"`
 	Username                string                 `json:"username"`
-	Password                string                 `json:"password"`
 	Extra                   map[string]interface{} `json:"extra"`
 	Version                 string                 `json:"version"`
 	AvailabilityStatus      string                 `json:"availability_status"`
 	AvailabilityStatusError string                 `json:"availability_status_error"`
-
-	ResourceType string `json:"resource_type"`
-	ResourceID   string `json:"resource_id"`
+	ResourceType            string                 `json:"resource_type"`
+	ResourceID              string                 `json:"resource_id"`
 }
 
 type ApplicationAuthenticationEvent struct {
