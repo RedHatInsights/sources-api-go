@@ -56,7 +56,7 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 	var statusMessage StatusMessage
 	err := message.ParseTo(&statusMessage)
 	if err != nil {
-		logging.Log.Errorf("Error in parsing status message %s", err.Error())
+		logging.Log.Errorf("Error in parsing status message %v", err)
 		return
 	}
 
