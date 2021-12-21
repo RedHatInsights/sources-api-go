@@ -24,7 +24,7 @@ func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	return &resource, nil
 }
 
-func BulkMessageFrom(source *m.Source) (map[string]interface{}, error) {
+func BulkMessageFromSource(source *m.Source) (map[string]interface{}, error) {
 	result := DB.
 		Preload("Tenant").
 		Preload("Applications.Tenant").

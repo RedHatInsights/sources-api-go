@@ -116,7 +116,7 @@ func (a *EndpointDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error)
 		return nil, resource.Error
 	}
 
-	return BulkMessageFrom(&endpoint.Source)
+	return BulkMessageFromSource(&endpoint.Source)
 }
 
 func (a *EndpointDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
