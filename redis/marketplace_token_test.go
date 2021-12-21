@@ -23,7 +23,12 @@ func setUpFakeToken() *marketplace.BearerToken {
 
 // TestGetTokenBadTenant tests that when given a bad or nonexistent tenant, an expected error is returned.
 func TestGetTokenBadTenant(t *testing.T) {
-	mr := miniredis.RunT(t)
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("cannot run the Miniredis mock server: %s", err)
+	}
+
+	defer mr.Close()
 
 	Client = redis.NewClient(
 		&redis.Options{
@@ -31,7 +36,7 @@ func TestGetTokenBadTenant(t *testing.T) {
 		},
 	)
 
-	_, err := GetToken(12345)
+	_, err = GetToken(12345)
 	if err == nil {
 		t.Error("want error, got none")
 	}
@@ -39,7 +44,12 @@ func TestGetTokenBadTenant(t *testing.T) {
 
 // TestGetToken sets up a predefined token on the Redis cache, and tries to fetch it using the "GetToken" function.
 func TestGetToken(t *testing.T) {
-	mr := miniredis.RunT(t)
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("cannot run the Miniredis mock server: %s", err)
+	}
+
+	defer mr.Close()
 
 	Client = redis.NewClient(
 		&redis.Options{
@@ -92,7 +102,12 @@ func TestSetTokenUnreachableRedis(t *testing.T) {
 
 // TestSetTokenSuccess tests that the token is successfully set on Redis.
 func TestSetTokenSuccess(t *testing.T) {
-	mr := miniredis.RunT(t)
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("cannot run the Miniredis mock server: %s", err)
+	}
+
+	defer mr.Close()
 
 	Client = redis.NewClient(
 		&redis.Options{
@@ -105,7 +120,7 @@ func TestSetTokenSuccess(t *testing.T) {
 	tenantId := int64(5)
 
 	// Call the actual function
-	err := SetToken(tenantId, fakeToken)
+	err = SetToken(tenantId, fakeToken)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
