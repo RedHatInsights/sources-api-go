@@ -6,7 +6,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
-func GetFrom(resourceType string) (*m.EventModelDao, error) {
+func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	var resource m.EventModelDao
 	switch resourceType {
 	case "Source":
