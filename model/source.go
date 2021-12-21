@@ -43,10 +43,6 @@ type Source struct {
 	Endpoints        []Endpoint
 }
 
-func (src *Source) AsJSON() []byte {
-	return []byte{}
-}
-
 func (src *Source) ToEvent() *SourceEvent {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
 		LastAvailableAt: util.DateTimeToRecordFormat(src.LastAvailableAt),
