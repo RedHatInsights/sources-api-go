@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	SourcesStatusTopic      = "platform.sources.status"
-	GroupID                 = "sources-api-status-worker"
-	EventAvailabilityStatus = "availability_status"
+	sourcesStatusTopic      = "platform.sources.status"
+	groupID                 = "sources-api-status-worker"
+	eventAvailabilityStatus = "availability_status"
 )
 
 var config = c.Get()
@@ -40,7 +40,7 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
 		panic("logging is not initialized")
 	}
 
-	consumerConfig := kafka.ConsumerConfig{Topic: config.KafkaTopic(SourcesStatusTopic), GroupID: GroupID}
+	consumerConfig := kafka.ConsumerConfig{Topic: config.KafkaTopic(sourcesStatusTopic), GroupID: groupID}
 	kafkaConfig := kafka.Config{KafkaBrokers: config.KafkaBrokers, ConsumerConfig: consumerConfig}
 
 	kf := &kafka.Manager{Config: kafkaConfig}
@@ -61,7 +61,7 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 	}
 
 	et := avs.eventType(message)
-	if et != EventAvailabilityStatus {
+	if et != eventAvailabilityStatus {
 		return
 	}
 
