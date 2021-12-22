@@ -10,9 +10,22 @@ import (
 
 var redisKeySuffix = "marketplace_token_%d"
 
-// GetToken fetches the token from the Redis cache.
-func GetToken(tenantId int64) (*marketplace.BearerToken, error) {
-	redisKey := fmt.Sprintf(redisKeySuffix, tenantId)
+type TokenCacher interface {
+	// FetchToken fetches a marketplace token from the cache.
+	FetchToken() (*marketplace.BearerToken, error)
+	// CacheToken sets a marketplace token on the cache.
+	CacheToken(token *marketplace.BearerToken) error
+}
+
+// MarketplaceTokenCacher is an struct which implements the "TokenCacher" interface. This helps in abstracting away the
+// dependencies and making testing easier.
+type MarketplaceTokenCacher struct {
+	TenantID int64
+}
+
+// FetchToken fetches the token from the Redis cache.
+func (mtc *MarketplaceTokenCacher) FetchToken() (*marketplace.BearerToken, error) {
+	redisKey := fmt.Sprintf(redisKeySuffix, mtc.TenantID)
 
 	cachedToken, err := Client.Get(redisKey).Result()
 	if err != nil {
@@ -27,9 +40,9 @@ func GetToken(tenantId int64) (*marketplace.BearerToken, error) {
 	return token, err
 }
 
-// SetToken sets the token on the Redis cache.
-func SetToken(tenantId int64, token *marketplace.BearerToken) error {
-	redisKey := fmt.Sprintf(redisKeySuffix, tenantId)
+// CacheToken sets the token on the Redis cache.
+func (mtc *MarketplaceTokenCacher) CacheToken(token *marketplace.BearerToken) error {
+	redisKey := fmt.Sprintf(redisKeySuffix, mtc.TenantID)
 
 	tokenExpiration := time.Unix(*token.Expiration, 0)
 	redisExpiration := time.Until(tokenExpiration)

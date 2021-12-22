@@ -10,6 +10,8 @@ import (
 	"github.com/go-redis/redis"
 )
 
+var tokenCacher = &MarketplaceTokenCacher{TenantID: 5}
+
 // setUpFakeToken sets up a test token ready to be used.
 func setUpFakeToken() *marketplace.BearerToken {
 	expiration := int64(1609455600) // 2021-01-01T00:00:00
@@ -36,7 +38,8 @@ func TestGetTokenBadTenant(t *testing.T) {
 		},
 	)
 
-	_, err = GetToken(12345)
+	tokenCacher.TenantID = 12345
+	_, err = tokenCacher.FetchToken()
 	if err == nil {
 		t.Error("want error, got none")
 	}
@@ -65,15 +68,15 @@ func TestGetToken(t *testing.T) {
 	}
 
 	// Use a fake tenant id to set the token on Redis
-	tenantId := int64(5)
+	tokenCacher.TenantID = 5
 
-	err = mr.Set(fmt.Sprintf("marketplace_token_%d", tenantId), string(marshalledToken))
+	err = mr.Set(fmt.Sprintf("marketplace_token_%d", tokenCacher.TenantID), string(marshalledToken))
 	if err != nil {
 		t.Errorf("no error expected, got %s", err)
 	}
 
 	// Fetch the cached token
-	cachedToken, err := GetToken(tenantId)
+	cachedToken, err := tokenCacher.FetchToken()
 	if err != nil {
 		t.Errorf("no error expected, got %s", err)
 	}
@@ -91,10 +94,10 @@ func TestSetTokenUnreachableRedis(t *testing.T) {
 
 	// Set up a fake token and a fake tenant id
 	fakeToken := setUpFakeToken()
-	tenantId := int64(5)
+	tokenCacher.TenantID = 5
 
 	// Call the actual function
-	err := SetToken(tenantId, fakeToken)
+	err := tokenCacher.CacheToken(fakeToken)
 	if err == nil {
 		t.Error("want error, got none")
 	}
@@ -117,16 +120,16 @@ func TestSetTokenSuccess(t *testing.T) {
 
 	// Set up a fake token and a fake tenant id
 	fakeToken := setUpFakeToken()
-	tenantId := int64(5)
+	tokenCacher.TenantID = 5
 
 	// Call the actual function
-	err = SetToken(tenantId, fakeToken)
+	err = tokenCacher.CacheToken(fakeToken)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
 
 	// Fetch the token from Redis
-	got, err := mr.Get(fmt.Sprintf("marketplace_token_%d", tenantId))
+	got, err := mr.Get(fmt.Sprintf("marketplace_token_%d", tokenCacher.TenantID))
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
