@@ -27,11 +27,15 @@ func (h httpClientInvalidStatusCodeResponse) Do(req *http.Request) (*http.Respon
 	return &response, nil
 }
 
+// Fake variables for the tests
+var fakeApiKey = "fakeApiKey"
+var marketplaceTokenProvider = &MarketplaceTokenProvider{ApiKey: &fakeApiKey}
+
 // TestNotReachingMarketplace tests that an error is returned when an error occurs within the HTTP Client.
 func TestNotReachingMarketplace(t *testing.T) {
 	GetHttpClient = func() HttpClient { return httpClientErrorRequest{} }
 
-	_, err := GetToken("a")
+	_, err := marketplaceTokenProvider.RequestToken()
 
 	if err == nil {
 		t.Errorf("want error, got none")
@@ -48,7 +52,7 @@ func TestNotReachingMarketplace(t *testing.T) {
 func TestInvalidStatusCodeReturnsError(t *testing.T) {
 	GetHttpClient = func() HttpClient { return httpClientInvalidStatusCodeResponse{} }
 
-	_, err := GetToken("a")
+	_, err := marketplaceTokenProvider.RequestToken()
 
 	if err == nil {
 		t.Errorf("want error, got none")
