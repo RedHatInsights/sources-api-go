@@ -55,6 +55,10 @@ func runServer() {
 	getEndpointDao = getEndpointDaoWithTenant
 	getMetaDataDao = getMetaDataDaoWithTenant
 
+	// Set up marketplace's token management functions
+	dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
+	dao.GetMarketplaceTokenProvider = dao.GetMarketplaceTokenProviderWithApiKey
+
 	// setting up the "http.Client" for the marketplace token provider
 	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib
 
