@@ -162,3 +162,8 @@ parameters:
   name: RBAC_PATH
   required: true
   value: /api/rbac/v1/
+- description: Host to user for the marketplace URL.
+  displayName: Marketplace host URL
+  name: MARKETPLACE_HOST
+  required: true
+  value: 'https://sandbox.marketplace.redhat.com'

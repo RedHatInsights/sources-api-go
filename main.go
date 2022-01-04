@@ -4,6 +4,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
+	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -39,6 +40,9 @@ func main() {
 	getSourceTypeDao = getSourceTypeDaoWithoutTenant
 	getEndpointDao = getEndpointDaoWithTenant
 	getMetaDataDao = getMetaDataDaoWithTenant
+
+	// setting up the "http.Client" for the marketplace token provider
+	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib
 
 	e.Logger.Fatal(e.Start(":8000"))
 }
