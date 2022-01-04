@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/:application_type_id/app_meta_data",
 		nil,
@@ -70,7 +70,7 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 }
 
 func TestMetaDataList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/app_meta_data",
 		nil,
@@ -120,7 +120,7 @@ func TestMetaDataList(t *testing.T) {
 }
 
 func TestMetaDataGet(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/app_meta_data/1",
 		nil,
@@ -149,7 +149,7 @@ func TestMetaDataGet(t *testing.T) {
 }
 
 func TestMetaDataGetNotFound(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/app_meta_data/1234",
 		nil,

@@ -1,4 +1,4 @@
-package testutils
+package database
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/gommon/log"
 	"gorm.io/driver/postgres"
@@ -44,16 +45,16 @@ func ConnectToTestDB(dbSchema string) {
 // - Endpoint
 // - MetaData
 func CreateFixtures() {
-	dao.DB.Create(&TestTenantData)
+	dao.DB.Create(&fixtures.TestTenantData)
 
-	dao.DB.Create(&TestSourceTypeData)
-	dao.DB.Create(&TestApplicationTypeData)
+	dao.DB.Create(&fixtures.TestSourceTypeData)
+	dao.DB.Create(&fixtures.TestApplicationTypeData)
 
-	dao.DB.Create(&TestSourceData)
-	dao.DB.Create(&TestApplicationData)
-	dao.DB.Create(&TestEndpointData)
+	dao.DB.Create(&fixtures.TestSourceData)
+	dao.DB.Create(&fixtures.TestApplicationData)
+	dao.DB.Create(&fixtures.TestEndpointData)
 
-	dao.DB.Create(&TestMetaDataData)
+	dao.DB.Create(&fixtures.TestMetaDataData)
 
 	UpdateTablesSequences()
 }

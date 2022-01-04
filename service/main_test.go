@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 )
 
 var (
@@ -17,17 +19,17 @@ var (
 )
 
 func TestMain(t *testing.M) {
-	flags := testutils.ParseFlags()
+	flags := parser.ParseFlags()
 
 	if flags.CreateDb {
-		testutils.CreateTestDB()
+		database.CreateTestDB()
 	} else if flags.Integration {
 		runningIntegration = true
-		testutils.ConnectAndMigrateDB("service")
+		database.ConnectAndMigrateDB("service")
 
-		endpointDao = &dao.EndpointDaoImpl{TenantID: &testutils.TestTenantData[0].Id}
-		sourceDao = &dao.SourceDaoImpl{TenantID: &testutils.TestTenantData[0].Id}
-		testutils.CreateFixtures()
+		endpointDao = &dao.EndpointDaoImpl{TenantID: &fixtures.TestTenantData[0].Id}
+		sourceDao = &dao.SourceDaoImpl{TenantID: &fixtures.TestTenantData[0].Id}
+		database.CreateFixtures()
 	} else {
 		endpointDao = &dao.MockEndpointDao{}
 		sourceDao = &dao.MockSourceDao{}
@@ -36,7 +38,7 @@ func TestMain(t *testing.M) {
 	code := t.Run()
 
 	if flags.Integration {
-		testutils.DropSchema("service")
+		database.DropSchema("service")
 	}
 
 	os.Exit(code)

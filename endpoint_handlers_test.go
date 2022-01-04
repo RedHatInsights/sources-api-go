@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestSourceEndpointSubcollectionList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/endpoints",
 		nil,
@@ -71,7 +72,7 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 }
 
 func TestEndpointList(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/endpoints",
 		nil,
@@ -121,7 +122,7 @@ func TestEndpointList(t *testing.T) {
 }
 
 func TestEndpointGet(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/endpoints/1",
 		nil,
@@ -150,7 +151,7 @@ func TestEndpointGet(t *testing.T) {
 }
 
 func TestEndpointGetNotFound(t *testing.T) {
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/endpoints/970283452983",
 		nil,
@@ -191,7 +192,7 @@ func TestEndpointCreate(t *testing.T) {
 		VerifySsl:            &verifySsl,
 		CertificateAuthority: &certificateAuthority,
 		AvailabilityStatus:   m.Available,
-		SourceIDRaw:          testutils.TestSourceData[0].ID,
+		SourceIDRaw:          fixtures.TestSourceData[0].ID,
 	}
 
 	body, err := json.Marshal(requestBody)
@@ -199,7 +200,7 @@ func TestEndpointCreate(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/endpoints",
 		bytes.NewReader(body),
@@ -230,7 +231,7 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, rec := testutils.CreateTestContext(
+	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/endpoints",
 		bytes.NewReader(body),
