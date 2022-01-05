@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -18,7 +17,7 @@ func TestSourceTypeList(t *testing.T) {
 		map[string]interface{}{
 			"limit":   100,
 			"offset":  0,
-			"filters": []middleware.Filter{},
+			"filters": []util.Filter{},
 		},
 	)
 

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/uuid"
 	"github.com/hashicorp/vault/api"
 )
@@ -26,7 +26,7 @@ type AuthenticationDaoImpl struct {
 	TODO: Maybe parallelize fetching multiple records with goroutines +
 	waitgroup
 */
-func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error) {
+func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err

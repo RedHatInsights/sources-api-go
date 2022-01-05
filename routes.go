@@ -1,33 +1,27 @@
 package main
 
 import (
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/redis"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 var listMiddleware = []echo.MiddlewareFunc{
 	middleware.SortAndFilter, middleware.Pagination,
 }
 
-var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{tenancy}, listMiddleware...)
-
-var permissionMiddleware = []echo.MiddlewareFunc{tenancy, permissionCheck}
+var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{middleware.Tenancy}, listMiddleware...)
+var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.PermissionCheck}
 
 func setupRoutes(e *echo.Echo) {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
 
+	// TODO: pull this out into its own handler.
 	e.GET("/openapi.json", func(c echo.Context) error {
 		out, err := redis.Client.Get("openapi").Result()
 		if err != nil {
@@ -48,7 +42,7 @@ func setupRoutes(e *echo.Echo) {
 
 	// Sources
 	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)
-	v3.GET("/sources/:id", SourceGet, tenancy)
+	v3.GET("/sources/:id", SourceGet, middleware.Tenancy)
 	v3.POST("/sources", SourceCreate, permissionMiddleware...)
 	v3.PATCH("/sources/:id", SourceEdit, permissionMiddleware...)
 	v3.DELETE("/sources/:id", SourceDelete, permissionMiddleware...)
@@ -58,12 +52,12 @@ func setupRoutes(e *echo.Echo) {
 
 	// Applications
 	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
-	v3.GET("/applications/:id", ApplicationGet, tenancy)
+	v3.GET("/applications/:id", ApplicationGet, middleware.Tenancy)
 
 	// Authentications
 	v3.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
 	v3.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
-	v3.GET("/authentications/:uid", AuthenticationGet, tenancy)
+	v3.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
 	v3.PATCH("/authentications/:uid", AuthenticationUpdate, permissionMiddleware...)
 	v3.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
 
@@ -75,11 +69,11 @@ func setupRoutes(e *echo.Echo) {
 	// Endpoints
 	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
 	v3.POST("/endpoints", EndpointCreate, permissionMiddleware...)
-	v3.GET("/endpoints/:id", EndpointGet, tenancy)
+	v3.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
 
 	// ApplicationAuthentications
 	v3.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
-	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet, tenancy)
+	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet, middleware.Tenancy)
 
 	// AppMetaData
 	v3.GET("/app_meta_data", MetaDataList, listMiddleware...)
@@ -90,50 +84,4 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/source_types", SourceTypeList, listMiddleware...)
 	v3.GET("/source_types/:id", SourceTypeGet)
 	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
-}
-
-// TODO: move to middleware package after removing circular dependency
-func tenancy(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		switch {
-		case c.Request().Header.Get("x-rh-sources-account-number") != "":
-			accountNumber := c.Request().Header.Get("x-rh-sources-account-number")
-			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
-			t, err := dao.GetOrCreateTenantID(accountNumber)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
-			}
-			c.Set("tenantID", *t)
-			c.Set("psk", c.Request().Header.Get("x-rh-sources-psk"))
-
-		case c.Request().Header.Get("x-rh-identity") != "":
-			idRaw, err := base64.StdEncoding.DecodeString(c.Request().Header.Get("x-rh-identity"))
-			if err != nil {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc(fmt.Sprintf("Error decoding Identity: %v", err), "401"))
-			}
-
-			var jsonData identity.XRHID
-			err = json.Unmarshal(idRaw, &jsonData)
-			if err != nil {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("x-rh-identity header does not contain valid JSON", "401"))
-			}
-
-			if jsonData.Identity.AccountNumber == "" {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Account number not present in x-rh-identity", "401"))
-			}
-
-			c.Logger().Debugf("Looking up Tenant ID for account number %v", jsonData.Identity.AccountNumber)
-			t, err := dao.GetOrCreateTenantID(jsonData.Identity.AccountNumber)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, util.ErrorDoc(fmt.Sprintf("Failed to get or create tenant for request: %s", err.Error()), "500"))
-			}
-			c.Set("tenantID", *t)
-			c.Set("x-rh-identity", c.Request().Header.Get("x-rh-identity"))
-
-		default:
-			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
-		}
-
-		return next(c)
-	}
 }

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/RedHatInsights/sources-api-go/middleware"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
 )
 
-func applyFilters(query *gorm.DB, filters []middleware.Filter) (*gorm.DB, error) {
+func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 	if query.Statement.Table == "" {
 		err := query.Statement.Parse(query.Statement.Model)
 		if err != nil {

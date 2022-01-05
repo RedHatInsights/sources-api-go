@@ -1,13 +1,13 @@
 package dao
 
 import (
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type SourceDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error
 	Update(src *m.Source) error
@@ -17,8 +17,8 @@ type SourceDao interface {
 }
 
 type ApplicationDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.Application, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Application, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.Application, int64, error)
+	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Application, int64, error)
 	GetById(id *int64) (*m.Application, error)
 	Create(src *m.Application) error
 	Update(src *m.Application) error
@@ -27,7 +27,7 @@ type ApplicationDao interface {
 }
 
 type AuthenticationDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	GetById(id string) (*m.Authentication, error)
 	Create(src *m.Authentication) error
 	Update(src *m.Authentication) error
@@ -36,7 +36,7 @@ type AuthenticationDao interface {
 }
 
 type ApplicationAuthenticationDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error)
 	GetById(id *int64) (*m.ApplicationAuthentication, error)
 	Create(src *m.ApplicationAuthentication) error
 	Update(src *m.ApplicationAuthentication) error
@@ -45,8 +45,8 @@ type ApplicationAuthenticationDao interface {
 }
 
 type ApplicationTypeDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.ApplicationType, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error)
+	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error)
 	GetById(id *int64) (*m.ApplicationType, error)
 	Create(src *m.ApplicationType) error
 	Update(src *m.ApplicationType) error
@@ -54,8 +54,8 @@ type ApplicationTypeDao interface {
 }
 
 type EndpointDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error)
+	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error)
 	GetById(id *int64) (*m.Endpoint, error)
 	Create(src *m.Endpoint) error
 	Update(src *m.Endpoint) error
@@ -71,8 +71,8 @@ type EndpointDao interface {
 }
 
 type MetaDataDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
+	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	GetById(id *int64) (*m.MetaData, error)
 	Create(src *m.MetaData) error
 	Update(src *m.MetaData) error
@@ -80,7 +80,7 @@ type MetaDataDao interface {
 }
 
 type SourceTypeDao interface {
-	List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error)
 	GetById(id *int64) (*m.SourceType, error)
 	Create(src *m.SourceType) error
 	Update(src *m.SourceType) error

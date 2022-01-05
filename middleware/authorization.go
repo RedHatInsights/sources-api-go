@@ -1,4 +1,4 @@
-package main
+package middleware
 
 import (
 	"context"
@@ -8,17 +8,27 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/rbac-client-go"
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
-var PSKS = conf.Psks
+var PSKS = config.Get().Psks
 
-// TODO: move to middleware package after removing circular dependency
-func permissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
+/*
+	Takes the information stored in the context and returns a 401 if we do not
+	have authorization to perform "write" things such as POST/PATCH/DELETE.
+
+	1. Checks for PSK (if present) and if it is there and matches any of the
+	   PSKs we approve, lets it through.
+
+	2. Sends the x-rh-identity header off to rbac to get an ACL list, and
+	   returns whether or not it contains the correct `sources:*:*` permission.
+*/
+func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		switch {
-		case conf.BypassRbac:
+		case config.Get().BypassRbac:
 			c.Logger().Debugf("Skipping authorization check -- disabled in ENV")
 		case c.Get("psk") != nil:
 			psk, ok := c.Get("psk").(string)
@@ -29,6 +39,7 @@ func permissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			if !pskMatches(psk) {
 				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
 			}
+
 		case c.Get("x-rh-identity") != nil:
 			rhid, ok := c.Get("x-rh-identity").(string)
 			if !ok {
@@ -43,6 +54,7 @@ func permissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			if !allowed {
 				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
 			}
+
 		default:
 			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}
@@ -57,11 +69,13 @@ func pskMatches(psk string) bool {
 
 var r = rbac.NewClient(os.Getenv("RBAC_URL"), "sources")
 
-func rbacAllowed(rhid string) (bool, error) {
+// fetches an access list from RBAC based on RBAC_URL and returns whether or not
+// the xrhid has the `sources:*:*` permission
+func rbacAllowed(xrhid string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	acl, err := r.GetAccess(ctx, rhid, "")
+	acl, err := r.GetAccess(ctx, xrhid, "")
 	if err != nil {
 		return false, err
 	}

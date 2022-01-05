@@ -1,4 +1,4 @@
-package main
+package middleware
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var checkPSKOrElse204 = permissionCheck(echo.HandlerFunc(func(c echo.Context) error {
+var checkPSKOrElse204 = PermissionCheck(echo.HandlerFunc(func(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }))
 

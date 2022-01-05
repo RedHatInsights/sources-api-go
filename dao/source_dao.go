@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type SourceDaoImpl struct {
 	TenantID *int64
 }
 
-func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
+func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sources := make([]m.Source, 0, limit)
@@ -40,7 +40,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 	return sources, count, result.Error
 }
 
-func (s *SourceDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.Source, int64, error) {
+func (s *SourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
 	query := DB.Debug().Model(&m.Source{}).
 		Offset(offset).

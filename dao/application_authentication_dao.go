@@ -3,15 +3,15 @@ package dao
 import (
 	"fmt"
 
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type ApplicationAuthenticationDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.ApplicationAuthentication, int64, error) {
+func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error) {
 	applications := make([]m.ApplicationAuthentication, 0, limit)
 	query := DB.Debug().Model(&m.ApplicationAuthentication{}).
 		Offset(offset).
