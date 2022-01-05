@@ -69,9 +69,9 @@ func (esp *EventStreamProducer) RaiseEventForUpdate(resourceID int64, resourceTy
 		return err
 	}
 
-	resourceJSON, errEvent := (*eventModelDao).ToEventJSON(&resourceID)
-	if errEvent != nil {
-		return errEvent
+	resourceJSON, err := (*eventModelDao).ToEventJSON(&resourceID)
+	if err != nil {
+		return err
 	}
 
 	err = esp.RaiseEventIf(allowed, resourceType+".update", resourceJSON, headers)
@@ -79,9 +79,9 @@ func (esp *EventStreamProducer) RaiseEventForUpdate(resourceID int64, resourceTy
 		return err
 	}
 
-	message, errMessage := m.UpdateMessage(eventModelDao, resourceID, resourceType, updateAttributes)
-	if errMessage != nil {
-		return errMessage
+	message, err := m.UpdateMessage(eventModelDao, resourceID, resourceType, updateAttributes)
+	if err != nil {
+		return err
 	}
 
 	err = esp.RaiseEventIf(allowed, "Records.update", message, headers)

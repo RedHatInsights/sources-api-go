@@ -16,9 +16,9 @@ func UpdateMessage(eventObject *EventModelDao, resourceID int64, resourceType st
 	updatedAttributes := map[string]interface{}{}
 	updatedAttributes["updated"] = map[string]interface{}{resourceType: map[string]interface{}{strconv.Itoa(int(resourceID)): attributes}}
 
-	bulkMessage, errorBulkMessage := (*eventObject).BulkMessage(&resourceID)
-	if errorBulkMessage != nil {
-		return nil, fmt.Errorf("error in BulkMessage: %s", errorBulkMessage.Error())
+	bulkMessage, err := (*eventObject).BulkMessage(&resourceID)
+	if err != nil {
+		return nil, fmt.Errorf("error in BulkMessage: %s", err.Error())
 	}
 	for k, m := range bulkMessage {
 		updatedAttributes[k] = m
