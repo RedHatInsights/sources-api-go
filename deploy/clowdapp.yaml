@@ -10,6 +10,22 @@ objects:
   spec:
     envName: ${ENV_NAME}
     deployments:
+    - name: availability-status-listener
+      minReplicas: ${{MIN_REPLICAS}}
+      podSpec:
+        args:
+        - -listener
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: LOG_LEVEL
+          value: ${LOG_LEVEL}
+        resources:
+          limits:
+            cpu: ${CPU_LIMIT}
+            memory: ${MEMORY_LIMIT}
+          requests:
+            cpu: ${CPU_REQUEST}
+            memory: ${MEMORY_REQUEST}
     - name: svc
       minReplicas: ${{MIN_REPLICAS}}
       webServices:
