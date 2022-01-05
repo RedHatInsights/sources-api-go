@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 var PSKS = config.Get().Psks
@@ -41,6 +42,21 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 		case c.Get("x-rh-identity") != nil:
+			// first check the identity (already parsed) to see if it contains
+			// the system key and if it does do some extra checks to authorize
+			// based on some internal rules (operator + satellite)
+			identity, ok := c.Get("identity").(identity.XRHID)
+			if !ok {
+				return fmt.Errorf("error casting identity to struct: %+v", c.Get("identity"))
+			}
+
+			// current sources-api behavior = if there is a system key -> it's authorized.
+			// TODO: make this more specific and do more checks.
+			if identity.Identity.System != nil {
+				break
+			}
+
+			// otherwise, ship the xrhid off to rbac and check access rights.
 			rhid, ok := c.Get("x-rh-identity").(string)
 			if !ok {
 				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get("x-rh-identity"))

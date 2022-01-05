@@ -28,8 +28,13 @@ import (
 */
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		c.Set("psk", c.Request().Header.Get("x-rh-sources-psk"))
-		c.Set("x-rh-identity", c.Request().Header.Get("x-rh-identity"))
+		// set psk + raw xrhid (if present) always - we'll need them later.
+		if c.Request().Header.Get("x-rh-sources-psk") != "" {
+			c.Set("psk", c.Request().Header.Get("x-rh-sources-psk"))
+		}
+		if c.Request().Header.Get("x-rh-identity") != "" {
+			c.Set("x-rh-identity", c.Request().Header.Get("x-rh-identity"))
+		}
 
 		switch {
 		case c.Request().Header.Get("x-rh-sources-account-number") != "":
