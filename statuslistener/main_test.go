@@ -1,30 +1,30 @@
 package statuslistener
 
 import (
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"os"
 	"testing"
-
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 )
 
 // runningIntegration is used to skip integration tests if we're just running unit tests.
 var runningIntegration = false
 
 func TestMain(t *testing.M) {
-	flags := testutils.ParseFlags()
+	flags := parser.ParseFlags()
 
 	if flags.CreateDb {
-		testutils.CreateTestDB()
+		database.CreateTestDB()
 	} else if flags.Integration {
 		runningIntegration = true
-		testutils.ConnectAndMigrateDB("status_listener")
-		testutils.CreateFixtures()
+		database.ConnectAndMigrateDB("status_listener")
+		database.CreateFixtures()
 	}
 
 	code := t.Run()
 
 	if flags.Integration {
-		testutils.DropSchema("status_listener")
+		database.DropSchema("status_listener")
 	}
 
 	os.Exit(code)
