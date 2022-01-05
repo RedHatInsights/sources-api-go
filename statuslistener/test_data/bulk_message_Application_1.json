@@ -1,0 +1,113 @@
+{
+  "application_authentications": [
+  ],
+  "applications": [
+    {
+      "application_type_id": 1,
+      "availability_status": null,
+      "availability_status_error": null,
+      "created_at": "2021-12-06 20:03:14 CET",
+      "extra": {
+        "extra": false
+      },
+      "id": 2,
+      "last_available_at": null,
+      "last_checked_at": null,
+      "paused_at": null,
+      "source_id": 1,
+      "superkey_data": null,
+      "tenant": "12345",
+      "updated_at": "2021-12-06 20:03:14 CET"
+    },
+    {
+      "application_type_id": 1,
+      "availability_status": "available",
+      "availability_status_error": null,
+      "created_at": "2021-12-06 20:03:14 CET",
+      "extra": {
+        "extra": true
+      },
+      "id": 1,
+      "last_available_at": "2021-12-06 21:03:14 CET",
+      "last_checked_at": "2021-12-06 21:03:14 CET",
+      "paused_at": null,
+      "source_id": 1,
+      "superkey_data": null,
+      "tenant": "12345",
+      "updated_at": "2021-12-06 20:03:14 CET"
+    }
+  ],
+  "authentications": [
+  ],
+  "endpoints": [
+    {
+      "availability_status": null,
+      "availability_status_error": null,
+      "certificate_authority": null,
+      "created_at": "2021-12-06 20:03:14 CET",
+      "default": true,
+      "host": "openshift.example.com",
+      "id": 1,
+      "last_available_at": null,
+      "last_checked_at": null,
+      "path": "/",
+      "paused_at": null,
+      "port": 80,
+      "receptor_node": null,
+      "role": null,
+      "scheme": "http",
+      "source_id": 1,
+      "tenant": "12345",
+      "updated_at": "2021-12-06 20:03:14 CET",
+      "verify_ssl": null
+    },
+    {
+      "availability_status": null,
+      "availability_status_error": null,
+      "certificate_authority": null,
+      "created_at": "2021-12-06 20:03:14 CET",
+      "default": false,
+      "host": "tower.example.com",
+      "id": 2,
+      "last_available_at": null,
+      "last_checked_at": null,
+      "path": "/",
+      "paused_at": null,
+      "port": 80,
+      "receptor_node": null,
+      "role": null,
+      "scheme": "https",
+      "source_id": 1,
+      "tenant": "12345",
+      "updated_at": "2021-12-06 20:03:14 CET",
+      "verify_ssl": null
+    }
+  ],
+  "source": {
+    "app_creation_workflow": "manual_configuration",
+    "availability_status": "available",
+    "created_at": "2021-12-06 20:03:14 CET",
+    "id": 1,
+    "imported": null,
+    "last_available_at": "2021-12-06 21:03:14 CET",
+    "last_checked_at": "2021-12-06 21:03:14 CET",
+    "name": "Source1",
+    "paused_at": null,
+    "source_ref": null,
+    "source_type_id": 1,
+    "tenant": "12345",
+    "uid": "5eebe172-7baa-4280-823f-19e597d091e9",
+    "updated_at": "2021-12-06 20:03:14 CET",
+    "version": null
+  },
+  "updated": {
+    "Application": {
+      "1": [
+        "availability_status",
+        "availability_status_error",
+        "last_available_at",
+        "last_checked_at"
+      ]
+    }
+  }
+}

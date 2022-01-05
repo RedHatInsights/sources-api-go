@@ -3,6 +3,8 @@ package model
 import (
 	"strconv"
 	"time"
+
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 // App creation workflow's constants
@@ -39,6 +41,30 @@ type Source struct {
 	ApplicationTypes []*ApplicationType `gorm:"many2many:applications"`
 	Applications     []Application
 	Endpoints        []Endpoint
+}
+
+func (src *Source) ToEvent() *SourceEvent {
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
+		LastAvailableAt: util.DateTimeToRecordFormat(src.LastAvailableAt),
+		LastCheckedAt:   util.DateTimeToRecordFormat(src.LastCheckedAt)}
+
+	sourceEvent := &SourceEvent{
+		AvailabilityStatusEvent: asEvent,
+		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(src.PausedAt)},
+		ID:                      &src.ID,
+		CreatedAt:               util.DateTimeToRecordFormat(src.CreatedAt),
+		UpdatedAt:               util.DateTimeToRecordFormat(src.UpdatedAt),
+		Name:                    &src.Name,
+		UID:                     src.Uid,
+		Version:                 src.Version,
+		Imported:                src.Imported,
+		SourceRef:               src.SourceRef,
+		AppCreationWorkflow:     &src.AppCreationWorkflow,
+		SourceTypeID:            &src.SourceTypeID,
+		Tenant:                  &src.Tenant.ExternalTenant,
+	}
+
+	return sourceEvent
 }
 
 func (src *Source) ToResponse() *SourceResponse {

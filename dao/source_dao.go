@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/middleware"
@@ -97,4 +98,44 @@ func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 
 	// If the name is found, GORM returns one row and no errors.
 	return result.Error == nil
+}
+
+func (s *SourceDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
+	src := m.Source{ID: *id}
+	result := DB.Find(&src)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return BulkMessageFromSource(&src)
+}
+
+func (s *SourceDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
+	result := DB.Model(&m.Source{ID: *id}).Updates(updateAttributes)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("source not found %v", id)
+	}
+
+	return nil
+}
+
+func (s *SourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {
+	src := &m.Source{ID: *id}
+	result := DB.Preload("Tenant").Find(&src)
+
+	return src, result.Error
+}
+
+func (s *SourceDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
+	src, err := s.FindWithTenant(id)
+	if err != nil {
+		return nil, err
+	}
+
+	data, errorJson := json.Marshal(src.ToEvent())
+	if errorJson != nil {
+		return nil, errorJson
+	}
+
+	return data, err
 }

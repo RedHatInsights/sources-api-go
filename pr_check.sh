@@ -40,7 +40,9 @@ export DATABASE_PASSWORD=toor
 export DATABASE_NAME=sources_api_test_go
 
 echo "Running tests...here we go"
+
 go test ./... --integration
+
 OUT_CODE=$?
 
 echo "Killing DB Container..."

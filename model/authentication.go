@@ -29,6 +29,17 @@ type Authentication struct {
 	ApplicationAuthentications []ApplicationAuthentication
 }
 
+func (auth *Authentication) BulkMessage() map[string]interface{} {
+	bulkMessage := map[string]interface{}{}
+	bulkMessage["applications"] = auth.Source.Applications
+	bulkMessage["authentications"] = nil
+	bulkMessage["application_authentications"] = nil
+	bulkMessage["endpoints"] = auth.Source.Endpoints
+	bulkMessage["source"] = auth.Source
+
+	return bulkMessage
+}
+
 func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 	return &AuthenticationResponse{

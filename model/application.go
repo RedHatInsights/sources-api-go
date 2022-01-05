@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/datatypes"
 )
 
@@ -27,6 +28,27 @@ type Application struct {
 
 	ApplicationTypeID int64 `json:"application_type_id"`
 	ApplicationType   ApplicationType
+}
+
+func (app *Application) ToEvent() *ApplicationEvent {
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
+		LastAvailableAt: util.DateTimeToRecordFormat(app.LastAvailableAt),
+		LastCheckedAt:   util.DateTimeToRecordFormat(app.LastCheckedAt)}
+
+	appEvent := &ApplicationEvent{
+		AvailabilityStatusEvent: asEvent,
+		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(app.PausedAt)},
+		Extra:                   app.Extra,
+		ID:                      app.ID,
+		CreatedAt:               util.DateTimeToRecordFormat(app.CreatedAt),
+		UpdatedAt:               util.DateTimeToRecordFormat(app.UpdatedAt),
+		ApplicationTypeID:       app.ApplicationTypeID,
+		AvailabilityStatusError: util.StringValueOrNil(app.AvailabilityStatusError),
+		SourceID:                app.SourceID,
+		Tenant:                  &app.Tenant.ExternalTenant,
+	}
+
+	return appEvent
 }
 
 func (app *Application) ToResponse() *ApplicationResponse {

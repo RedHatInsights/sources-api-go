@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/middleware"
@@ -105,4 +106,38 @@ func (a *EndpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
 	result := DB.Where("source_id = ?", sourceId).First(&endpoint)
 
 	return result.Error == nil
+}
+
+func (a *EndpointDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
+	endpoint := &m.Endpoint{ID: *id}
+	resource := DB.Preload("Source").Find(&endpoint)
+
+	if resource.Error != nil {
+		return nil, resource.Error
+	}
+
+	return BulkMessageFromSource(&endpoint.Source)
+}
+
+func (a *EndpointDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
+	result := DB.Model(&m.Endpoint{ID: *id}).Updates(updateAttributes)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("endpoint not found %v", id)
+	}
+
+	return nil
+}
+
+func (a *EndpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
+	endpoint := &m.Endpoint{ID: *id}
+	result := DB.Preload("Tenant").Find(&endpoint)
+
+	return endpoint, result.Error
+}
+
+func (a *EndpointDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
+	endpoint, err := a.FindWithTenant(id)
+	data, _ := json.Marshal(endpoint.ToEvent())
+
+	return data, err
 }

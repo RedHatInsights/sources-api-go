@@ -3,6 +3,8 @@ package model
 import (
 	"strconv"
 	"time"
+
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type Endpoint struct {
@@ -29,6 +31,34 @@ type Endpoint struct {
 
 	TenantID int64
 	Tenant   Tenant
+}
+
+func (endpoint *Endpoint) ToEvent() *EndpointEvent {
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
+		LastAvailableAt: util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
+		LastCheckedAt:   util.DateTimeToRecordFormat(endpoint.LastCheckedAt)}
+
+	endpointEvent := &EndpointEvent{
+		AvailabilityStatusEvent: asEvent,
+		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(endpoint.PausedAt)},
+		ID:                      endpoint.ID,
+		CertificateAuthority:    endpoint.CertificateAuthority,
+		Host:                    endpoint.Host,
+		Port:                    endpoint.Port,
+		ReceptorNode:            endpoint.ReceptorNode,
+		Role:                    endpoint.Role,
+		Scheme:                  endpoint.Scheme,
+		SourceID:                endpoint.SourceID,
+		VerifySsl:               endpoint.VerifySsl,
+		Default:                 endpoint.Default,
+		Path:                    endpoint.Path,
+		CreatedAt:               util.DateTimeToRecordFormat(endpoint.CreatedAt),
+		UpdatedAt:               util.DateTimeToRecordFormat(endpoint.UpdatedAt),
+		AvailabilityStatusError: util.StringValueOrNil(endpoint.AvailabilityStatusError),
+		Tenant:                  &endpoint.Tenant.ExternalTenant,
+	}
+
+	return endpointEvent
 }
 
 func (endpoint *Endpoint) ToResponse() *EndpointResponse {

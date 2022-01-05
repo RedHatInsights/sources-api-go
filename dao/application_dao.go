@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/middleware"
@@ -78,4 +79,38 @@ func (a *ApplicationDaoImpl) Delete(id *int64) error {
 
 func (a *ApplicationDaoImpl) Tenant() *int64 {
 	return a.TenantID
+}
+
+func (a *ApplicationDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
+	application := &m.Application{ID: *id}
+	resource := DB.Preload("Source").Find(&application)
+
+	if resource.Error != nil {
+		return nil, resource.Error
+	}
+
+	return BulkMessageFromSource(&application.Source)
+}
+
+func (a *ApplicationDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
+	result := DB.Model(&m.Application{ID: *id}).Updates(updateAttributes)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("application not found %v", id)
+	}
+
+	return nil
+}
+
+func (a *ApplicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
+	app := &m.Application{ID: *id}
+	result := DB.Preload("Tenant").Find(&app)
+
+	return app, result.Error
+}
+
+func (a *ApplicationDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
+	app, err := a.FindWithTenant(id)
+	data, _ := json.Marshal(app.ToEvent())
+
+	return data, err
 }
