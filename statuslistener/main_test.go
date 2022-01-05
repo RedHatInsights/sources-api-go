@@ -1,10 +1,11 @@
 package statuslistener
 
 import (
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"os"
 	"testing"
+
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 )
 
 // runningIntegration is used to skip integration tests if we're just running unit tests.
