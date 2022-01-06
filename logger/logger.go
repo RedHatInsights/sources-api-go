@@ -21,8 +21,18 @@ import (
 
 var Log *logrus.Logger
 
+var cloudWatchHook *lc.Hook
+
+func singleCloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
+	if cloudWatchHook == nil {
+		cloudWatchHook = cloudWatchLogrusHook(config)
+	}
+
+	return cloudWatchHook
+}
+
 func AddHooksTo(logger *logrus.Logger, config *appconf.SourcesApiConfig) {
-	hook := cloudWatchLogrusHook(config)
+	hook := singleCloudWatchLogrusHook(config)
 	if hook == nil {
 		Log.Warn("Key or Secret are missing for logging to Cloud Watch.")
 	} else {
