@@ -14,7 +14,11 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-var PSKS = config.Get().Psks
+var (
+	psks            = config.Get().Psks
+	bypassRbac      = config.Get().BypassRbac
+	rbacClient Rbac = &RbacClient{client: rbac.NewClient(os.Getenv("RBAC_URL"), "sources")}
+)
 
 /*
 	Takes the information stored in the context and returns a 401 if we do not
@@ -29,7 +33,7 @@ var PSKS = config.Get().Psks
 func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		switch {
-		case config.Get().BypassRbac:
+		case bypassRbac:
 			c.Logger().Debugf("Skipping authorization check -- disabled in ENV")
 		case c.Get("psk") != nil:
 			psk, ok := c.Get("psk").(string)
@@ -50,10 +54,28 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("error casting identity to struct: %+v", c.Get("identity"))
 			}
 
-			// current sources-api behavior = if there is a system key -> it's authorized.
-			// TODO: make this more specific and do more checks.
+			// checking to see if we're going to change the results since
+			// system-auth is treated completely differently than
+			// org_admin/rbac/psk
 			if identity.Identity.System != nil {
-				break
+				// system-auth only allows GET and POST requests.
+				if c.Request().Method != http.MethodGet && c.Request().Method != http.MethodPost {
+					return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: system authentication only allows GET/POST", "401"))
+				}
+
+				// basically we're checking whether cn or cluster_id is set in
+				// the system section of the header, if it is then this request
+				// can go through (but only if it's a POST)
+				//
+				// we're returning early because this is easier than a goto.
+				switch {
+				case identity.Identity.System["cluster_id"] != nil:
+					return next(c)
+				case identity.Identity.System["cn"] != nil:
+					return next(c)
+				default:
+					return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
+				}
 			}
 
 			// otherwise, ship the xrhid off to rbac and check access rights.
@@ -62,7 +84,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get("x-rh-identity"))
 			}
 
-			allowed, err := rbacAllowed(rhid)
+			allowed, err := rbacClient.Allowed(rhid)
 			if err != nil {
 				return fmt.Errorf("error hitting rbac: %v", err)
 			}
@@ -80,18 +102,24 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func pskMatches(psk string) bool {
-	return util.SliceContainsString(PSKS, psk)
+	return util.SliceContainsString(psks, psk)
 }
 
-var r = rbac.NewClient(os.Getenv("RBAC_URL"), "sources")
+type Rbac interface {
+	Allowed(string) (bool, error)
+}
+
+type RbacClient struct {
+	client rbac.Client
+}
 
 // fetches an access list from RBAC based on RBAC_URL and returns whether or not
 // the xrhid has the `sources:*:*` permission
-func rbacAllowed(xrhid string) (bool, error) {
+func (r *RbacClient) Allowed(xrhid string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	acl, err := r.GetAccess(ctx, xrhid, "")
+	acl, err := r.client.GetAccess(ctx, xrhid, "")
 	if err != nil {
 		return false, err
 	}
