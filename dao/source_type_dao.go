@@ -1,14 +1,14 @@
 package dao
 
 import (
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type SourceTypeDaoImpl struct {
 }
 
-func (a *SourceTypeDaoImpl) List(limit, offset int, filters []middleware.Filter) ([]m.SourceType, int64, error) {
+func (a *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sourceTypes := make([]m.SourceType, 0, limit)

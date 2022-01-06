@@ -3,16 +3,16 @@ package main
 import (
 	"fmt"
 
-	"github.com/RedHatInsights/sources-api-go/middleware"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
-func getFilters(c echo.Context) ([]middleware.Filter, error) {
-	var filters []middleware.Filter
+func getFilters(c echo.Context) ([]util.Filter, error) {
+	var filters []util.Filter
 	var ok bool
 
 	filterVal := c.Get("filters")
-	if filters, ok = filterVal.([]middleware.Filter); !ok {
+	if filters, ok = filterVal.([]util.Filter); !ok {
 		return nil, fmt.Errorf("failed to pull filters from request")
 	}
 

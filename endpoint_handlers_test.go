@@ -8,7 +8,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -21,7 +20,7 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 		map[string]interface{}{
 			"limit":    100,
 			"offset":   0,
-			"filters":  []middleware.Filter{},
+			"filters":  []util.Filter{},
 			"tenantID": int64(1),
 		},
 	)
@@ -79,7 +78,7 @@ func TestEndpointList(t *testing.T) {
 		map[string]interface{}{
 			"limit":    100,
 			"offset":   0,
-			"filters":  []middleware.Filter{},
+			"filters":  []util.Filter{},
 			"tenantID": int64(1),
 		},
 	)

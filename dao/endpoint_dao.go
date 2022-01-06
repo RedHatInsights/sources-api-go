@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type EndpointDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error) {
+func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
 
 	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
@@ -34,7 +34,7 @@ func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	return endpoints, count, result.Error
 }
 
-func (a *EndpointDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.Endpoint, int64, error) {
+func (a *EndpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
 	query := DB.Debug().Model(&m.Endpoint{}).
 		Offset(offset).

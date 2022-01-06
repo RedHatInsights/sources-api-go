@@ -3,15 +3,15 @@ package dao
 import (
 	"fmt"
 
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type MetaDataDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {
+func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metadatas := make([]m.MetaData, 0, limit)
 	collection, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
@@ -33,7 +33,7 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	return metadatas, count, result.Error
 }
 
-func (a *MetaDataDaoImpl) List(limit int, offset int, filters []middleware.Filter) ([]m.MetaData, int64, error) {
+func (a *MetaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
 	query := DB.Debug().Model(&m.MetaData{})
 
