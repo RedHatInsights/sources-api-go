@@ -17,6 +17,7 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 				util.ErrorDoc(fmt.Sprintf("Internal Server Error: %v", err.Error()), "500"),
 			)
 		}
-		return err
+
+		return nil
 	}
 }

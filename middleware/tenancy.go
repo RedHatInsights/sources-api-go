@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -28,48 +26,37 @@ import (
 */
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// set psk + raw xrhid (if present) always - we'll need them later.
-		if c.Request().Header.Get("x-rh-sources-psk") != "" {
-			c.Set("psk", c.Request().Header.Get("x-rh-sources-psk"))
-		}
-		if c.Request().Header.Get("x-rh-identity") != "" {
-			c.Set("x-rh-identity", c.Request().Header.Get("x-rh-identity"))
-		}
-
 		switch {
-		case c.Request().Header.Get("x-rh-sources-account-number") != "":
-			accountNumber := c.Request().Header.Get("x-rh-sources-account-number")
+		case c.Get("psk-account") != nil:
+			accountNumber, ok := c.Get("psk-account").(string)
+			if !ok {
+				return fmt.Errorf("failed to cast account-number to string")
+			}
+
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
 			t, err := dao.GetOrCreateTenantID(accountNumber)
 			if err != nil {
-				return c.JSON(http.StatusInternalServerError, util.ErrorDoc("Failed to get or create tenant for request", "500"))
+				return fmt.Errorf("failed to get or create tenant for request")
 			}
+
 			c.Set("tenantID", *t)
 
-		case c.Request().Header.Get("x-rh-identity") != "":
-			idRaw, err := base64.StdEncoding.DecodeString(c.Request().Header.Get("x-rh-identity"))
+		case c.Get("identity") != nil:
+			identity, ok := c.Get("identity").(identity.XRHID)
+			if !ok {
+				return fmt.Errorf("failed to cast account-number to string")
+			}
+
+			if identity.Identity.AccountNumber == "" {
+				return fmt.Errorf("account number not present in x-rh-identity")
+			}
+
+			c.Logger().Debugf("Looking up Tenant ID for account number %v", identity.Identity.AccountNumber)
+			t, err := dao.GetOrCreateTenantID(identity.Identity.AccountNumber)
 			if err != nil {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc(fmt.Sprintf("Error decoding Identity: %v", err), "401"))
+				return fmt.Errorf("failed to get or create tenant for request: %v", err)
 			}
 
-			var jsonData identity.XRHID
-			err = json.Unmarshal(idRaw, &jsonData)
-			if err != nil {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("x-rh-identity header does not contain valid JSON", "401"))
-			}
-
-			// store the parsed header for later usage.
-			c.Set("identity", jsonData)
-
-			if jsonData.Identity.AccountNumber == "" {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Account number not present in x-rh-identity", "401"))
-			}
-
-			c.Logger().Debugf("Looking up Tenant ID for account number %v", jsonData.Identity.AccountNumber)
-			t, err := dao.GetOrCreateTenantID(jsonData.Identity.AccountNumber)
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, util.ErrorDoc(fmt.Sprintf("Failed to get or create tenant for request: %s", err.Error()), "500"))
-			}
 			c.Set("tenantID", *t)
 
 		default:
