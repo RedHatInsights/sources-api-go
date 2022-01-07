@@ -12,7 +12,7 @@ type ApplicationAuthenticationDaoImpl struct {
 }
 
 func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error) {
-	applications := make([]m.ApplicationAuthentication, 0, limit)
+	appAuths := make([]m.ApplicationAuthentication, 0, limit)
 	query := DB.Debug().Model(&m.ApplicationAuthentication{}).
 		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)

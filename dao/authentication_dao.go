@@ -54,7 +54,7 @@ func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 	return out, count, nil
 }
 
-func (a *AuthenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []middleware.Filter) ([]m.Authentication, int64, error) {
+func (a *AuthenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
@@ -76,7 +76,7 @@ func (a *AuthenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []midd
 	return out, int64(len(out)), nil
 }
 
-func (a *AuthenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []middleware.Filter) ([]m.Authentication, int64, error) {
+func (a *AuthenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	app := m.Application{ID: applicationID}
 	result := DB.
 		Where("tenant_id = ?", *a.TenantID).
@@ -95,7 +95,7 @@ func (a *AuthenticationDaoImpl) ListForApplication(applicationID int64, _, _ int
 	return auths, int64(len(auths)), nil
 }
 
-func (a *AuthenticationDaoImpl) ListForApplicationAuthentication(appauthID int64, _, _ int, _ []middleware.Filter) ([]m.Authentication, int64, error) {
+func (a *AuthenticationDaoImpl) ListForApplicationAuthentication(appauthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	appauth := m.ApplicationAuthentication{ID: appauthID}
 	result := DB.
 		Where("tenant_id = ?", *a.TenantID).
@@ -113,7 +113,7 @@ func (a *AuthenticationDaoImpl) ListForApplicationAuthentication(appauthID int64
 	return auths, int64(len(auths)), nil
 }
 
-func (a *AuthenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []middleware.Filter) ([]m.Authentication, int64, error) {
+func (a *AuthenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
