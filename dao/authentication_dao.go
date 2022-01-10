@@ -42,7 +42,7 @@ func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 	out := make([]m.Authentication, 0, len(keys))
 	for _, val := range keys[offset:end] {
-		secret, err := a.getKey(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, val))
+		secret, err := a.getKey(val)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -52,6 +52,101 @@ func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 	count := int64(len(out))
 
 	return out, count, nil
+}
+
+func (a *AuthenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	keys, err := a.listKeys()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	out := make([]m.Authentication, 0)
+
+	for _, key := range keys {
+		auth, err := a.getKey(key)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		if auth.SourceID == sourceID {
+			out = append(out, *auth)
+		}
+	}
+
+	return out, int64(len(out)), nil
+}
+
+func (a *AuthenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	app := m.Application{ID: applicationID}
+	result := DB.
+		Where("tenant_id = ?", *a.TenantID).
+		Preload("ApplicationAuthentications").
+		First(&app)
+
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+
+	auths, err := a.getAuthsForAppAuth(app.ApplicationAuthentications)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return auths, int64(len(auths)), nil
+}
+
+func (a *AuthenticationDaoImpl) ListForApplicationAuthentication(appauthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	appauth := m.ApplicationAuthentication{ID: appauthID}
+	result := DB.
+		Where("tenant_id = ?", *a.TenantID).
+		First(&appauth)
+
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+
+	auths, err := a.getAuthsForAppAuth([]m.ApplicationAuthentication{appauth})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return auths, int64(len(auths)), nil
+}
+
+func (a *AuthenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	keys, err := a.listKeys()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	auths := make([]m.Authentication, 0)
+
+	for _, key := range keys {
+		if strings.HasPrefix(key, fmt.Sprintf("Endpoint_%v", endpointID)) {
+			auth, err := a.getKey(key)
+			if err != nil {
+				return nil, 0, err
+			}
+
+			auths = append(auths, *auth)
+		}
+	}
+
+	return auths, int64(len(auths)), nil
+}
+
+func (a *AuthenticationDaoImpl) getAuthsForAppAuth(appAuths []m.ApplicationAuthentication) ([]m.Authentication, error) {
+	out := make([]m.Authentication, len(appAuths))
+	for i, appAuth := range appAuths {
+		auth, err := a.getKey(appAuth.VaultPath)
+		if err != nil {
+			return nil, err
+		}
+
+		out[i] = *auth
+	}
+
+	return out, nil
 }
 
 /*
@@ -78,10 +173,35 @@ func (a *AuthenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 		return nil, fmt.Errorf("authentication not found")
 	}
 
-	return a.getKey(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, fullKey))
+	return a.getKey(fullKey)
 }
 
 func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
+	query := DB.Select("source_id").Where("tenant_id = ?", *a.TenantID)
+
+	switch auth.ResourceType {
+	case "Application":
+		app := m.Application{ID: auth.ResourceID}
+		result := query.Model(&app).First(&app)
+		if result.Error != nil {
+			return fmt.Errorf("resource not found with type [%v], id [%v]", auth.ResourceType, auth.ResourceID)
+		}
+
+		auth.SourceID = app.SourceID
+	case "Endpoint":
+		endpoint := m.Endpoint{ID: auth.ResourceID}
+		result := query.Model(&endpoint).First(&endpoint)
+		if result.Error != nil {
+			return fmt.Errorf("resource not found with type [%v], id [%v]", auth.ResourceType, auth.ResourceID)
+		}
+
+		auth.SourceID = endpoint.SourceID
+	case "Source":
+		auth.SourceID = auth.ResourceID
+	default:
+		return fmt.Errorf("bad resource type, supported types are [Application, Endpoint, Source]")
+	}
+
 	auth.ID = uuid.New().String()
 	path := fmt.Sprintf("secret/data/%d/%s_%v_%s", *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 
@@ -173,11 +293,7 @@ func (a *AuthenticationDaoImpl) listKeys() ([]string, error) {
 	Fetch a key from Vault (full path, type and id included)
 */
 func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
-	paths := strings.Split(path, "_")
-	// the uid is the last part of the path, e.g. Source_2_435-bnsd-4362
-	uid := paths[len(paths)-1]
-
-	secret, err := Vault.Read(path)
+	secret, err := Vault.Read(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, path))
 	if err != nil || secret == nil {
 		return nil, fmt.Errorf("authentication not found")
 	}
@@ -189,6 +305,9 @@ func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 		return nil, fmt.Errorf("failed to deserialize secret from vault")
 	}
 
+	paths := strings.Split(path, "_")
+	// the uid is the last part of the path, e.g. Source_2_435-bnsd-4362
+	uid := paths[len(paths)-1]
 	auth.ID = uid
 	return auth, nil
 }
@@ -270,6 +389,13 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 			return nil
 		}
 		auth.ResourceID = id
+	}
+	if data["source_id"] != nil {
+		id, err := strconv.ParseInt(data["source_id"].(string), 10, 64)
+		if err != nil {
+			return nil
+		}
+		auth.SourceID = id
 	}
 
 	return auth

@@ -89,10 +89,10 @@ func AuthenticationCreate(c echo.Context) error {
 	}
 	err = authDao.Create(auth)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
-	return c.JSON(http.StatusOK, auth.ToResponse())
+	return c.JSON(http.StatusCreated, auth.ToResponse())
 }
 
 func AuthenticationUpdate(c echo.Context) error {

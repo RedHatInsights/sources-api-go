@@ -28,6 +28,8 @@ type Application struct {
 
 	ApplicationTypeID int64 `json:"application_type_id"`
 	ApplicationType   ApplicationType
+
+	ApplicationAuthentications []ApplicationAuthentication
 }
 
 func (app *Application) ToEvent() *ApplicationEvent {

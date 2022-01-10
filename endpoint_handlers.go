@@ -163,3 +163,37 @@ func EndpointCreate(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, endpoint.ToResponse())
 }
+
+func EndpointListAuthentications(c echo.Context) error {
+	authDB, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	id, err := strconv.ParseInt(c.Param("endpoint_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	auths, count, err := authDB.ListForEndpoint(id, limit, offset, filters)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+	}
+
+	out := make([]interface{}, len(auths))
+	for i := 0; i < len(auths); i++ {
+		out[i] = auths[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}
