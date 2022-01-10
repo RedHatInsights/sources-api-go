@@ -31,7 +31,7 @@ func (mtc *MarketplaceTokenCacher) FetchToken() (*marketplace.BearerToken, error
 
 	cachedToken, err := Client.Get(redisKey).Result()
 	if err != nil {
-		return nil, fmt.Errorf("could not fetch the token from Redis: %s", err)
+		return nil, fmt.Errorf("token not present in Redis: %s", err)
 	}
 
 	token := &marketplace.BearerToken{}
