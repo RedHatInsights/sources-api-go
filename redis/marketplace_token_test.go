@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 )
 
 var tokenCacher = &MarketplaceTokenCacher{TenantID: 5}
@@ -51,6 +53,9 @@ func TestGetToken(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot run the Miniredis mock server: %s", err)
 	}
+
+	// We need a logger as the cache and uncache functions log what's being done.
+	logger.Log = logrus.New()
 
 	defer mr.Close()
 
@@ -111,6 +116,9 @@ func TestSetTokenSuccess(t *testing.T) {
 	}
 
 	defer mr.Close()
+
+	// We need a logger as the cache and uncache functions log what's being done.
+	logger.Log = logrus.New()
 
 	Client = redis.NewClient(
 		&redis.Options{

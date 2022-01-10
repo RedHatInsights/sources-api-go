@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
+	"github.com/sirupsen/logrus"
 )
 
 var redisKeySuffix = "marketplace_token_%d"
@@ -37,6 +39,8 @@ func (mtc *MarketplaceTokenCacher) FetchToken() (*marketplace.BearerToken, error
 		return nil, fmt.Errorf("could not unmarshal the cached token: %s", err)
 	}
 
+	logger.Log.Log(logrus.InfoLevel, fmt.Sprintf("fetched marketplace token from Redis for tenant %d", mtc.TenantID))
+
 	return token, err
 }
 
@@ -58,6 +62,8 @@ func (mtc *MarketplaceTokenCacher) CacheToken(token *marketplace.BearerToken) er
 			"could not set marketplace token on redis: %s", token,
 		)
 	}
+
+	logger.Log.Log(logrus.InfoLevel, fmt.Sprintf("marketplace token cached for tenant %d", mtc.TenantID))
 
 	return nil
 }
