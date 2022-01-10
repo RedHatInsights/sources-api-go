@@ -58,5 +58,11 @@ func runServer() {
 	// setting up the "http.Client" for the marketplace token provider
 	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib
 
+	// Set up the TypeCache
+	err := dao.PopulateStaticTypeCache()
+	if err != nil {
+		e.Logger.Fatal(err)
+	}
+
 	e.Logger.Fatal(e.Start(":8000"))
 }
