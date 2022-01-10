@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 )
@@ -21,7 +22,7 @@ type HttpClient interface {
 
 // GetHttpClientStdlib returns a "http.Client" with a timeout of 10 seconds.
 func GetHttpClientStdlib() HttpClient {
-	return &http.Client{Timeout: 10}
+	return &http.Client{Timeout: 10 * time.Second}
 }
 
 type TokenProvider interface {
