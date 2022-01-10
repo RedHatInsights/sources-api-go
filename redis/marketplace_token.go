@@ -58,9 +58,7 @@ func (mtc *MarketplaceTokenCacher) CacheToken(token *marketplace.BearerToken) er
 	).Err()
 
 	if err != nil {
-		return fmt.Errorf(
-			"could not set marketplace token on redis: %s", token,
-		)
+		return fmt.Errorf("could not set marketplace token on redis: %s", token)
 	}
 
 	logger.Log.Log(logrus.InfoLevel, fmt.Sprintf("marketplace token cached for tenant %d", mtc.TenantID))
