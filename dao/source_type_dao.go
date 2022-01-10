@@ -8,7 +8,7 @@ import (
 type SourceTypeDaoImpl struct {
 }
 
-func (a *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
+func (st *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sourceTypes := make([]m.SourceType, 0, limit)
@@ -29,21 +29,21 @@ func (a *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.
 	return sourceTypes, count, result.Error
 }
 
-func (a *SourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
+func (st *SourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
 	sourceType := &m.SourceType{Id: *id}
 	result := DB.Debug().First(sourceType)
 
 	return sourceType, result.Error
 }
 
-func (a *SourceTypeDaoImpl) Create(_ *m.SourceType) error {
+func (st *SourceTypeDaoImpl) Create(_ *m.SourceType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (a *SourceTypeDaoImpl) Update(_ *m.SourceType) error {
+func (st *SourceTypeDaoImpl) Update(_ *m.SourceType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (a *SourceTypeDaoImpl) Delete(_ *int64) error {
+func (st *SourceTypeDaoImpl) Delete(_ *int64) error {
 	panic("not needed (yet) due to seeding.")
 }
