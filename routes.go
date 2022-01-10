@@ -38,7 +38,7 @@ func setupRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, out)
 	})
 
-	v3 := e.Group("/api/sources/v3.1", middleware.HandleErrors)
+	v3 := e.Group("/api/sources/v3.1", middleware.HandleErrors, middleware.ParseHeaders)
 
 	// Sources
 	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)

@@ -3,26 +3,14 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/config"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
-	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/labstack/echo/v4"
 )
 
 var e *echo.Echo
 var conf = config.Get()
-
-func TestMain(t *testing.M) {
-	_ = parser.ParseFlags()
-
-	l.InitLogger(conf)
-	e = echo.New()
-	code := t.Run()
-	os.Exit(code)
-}
 
 func TestParseFilterWithOperation(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[name][eq]=test", nil)
