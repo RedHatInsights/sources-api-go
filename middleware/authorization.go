@@ -60,7 +60,8 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			if identity.Identity.System != nil {
 				// system-auth only allows GET and POST requests.
 				if c.Request().Method != http.MethodGet && c.Request().Method != http.MethodPost {
-					return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: system authentication only allows GET/POST", "401"))
+					c.Response().Header().Set("Allow", "GET, POST")
+					return c.JSON(http.StatusMethodNotAllowed, util.ErrorDoc("Method not allowed", "405"))
 				}
 
 				// basically we're checking whether cn or cluster_id is set in
