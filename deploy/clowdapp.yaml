@@ -21,11 +21,11 @@ objects:
           value: ${LOG_LEVEL}
         resources:
           limits:
-            cpu: ${CPU_LIMIT}
-            memory: ${MEMORY_LIMIT}
+            cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
+            memory: ${AVAILABILITY_LISTENER_MEMORY_LIMIT}
           requests:
-            cpu: ${CPU_REQUEST}
-            memory: ${MEMORY_REQUEST}
+            cpu: ${AVAILABILITY_LISTENER_CPU_REQUEST}
+            memory: ${AVAILABILITY_LISTENER_MEMORY_REQUEST}
     - name: svc
       minReplicas: ${{MIN_REPLICAS}}
       webServices:
@@ -122,6 +122,10 @@ parameters:
   value: 500m
 - name: CPU_REQUEST
   value: 100m
+- name: AVAILABILITY_LISTENER_CPU_LIMIT
+  value: 200m
+- name: AVAILABILITY_LISTENER_CPU_REQUEST
+  value: 50m
 - description: Clowder ENV
   name: ENV_NAME
   required: true
@@ -148,6 +152,10 @@ parameters:
   value: 1Gi
 - name: MEMORY_REQUEST
   value: 100Mi
+- name: AVAILABILITY_LISTENER_MEMORY_LIMIT
+  value: 128Mi
+- name: AVAILABILITY_LISTENER_MEMORY_REQUEST
+  value: 32Mi
 - description: Prometheus Metrics Port
   displayName: Metrics Port
   name: METRICS_PORT
