@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
@@ -16,7 +17,7 @@ var tokenCacher = &MarketplaceTokenCacher{TenantID: 5}
 
 // setUpFakeToken sets up a test token ready to be used.
 func setUpFakeToken() *marketplace.BearerToken {
-	expiration := int64(1609455600) // 2021-01-01T00:00:00
+	expiration := time.Now().Add(24 * time.Hour).Unix()
 	testApiToken := "testApiToken"
 
 	return &marketplace.BearerToken{
@@ -152,5 +153,43 @@ func TestSetTokenSuccess(t *testing.T) {
 	want := string(unmarshalledData)
 	if want != got {
 		t.Errorf("want %s, got %s", want, got)
+	}
+}
+
+// TestSetTokenExpired tests that an error is returned when an expired token is trying to be cached.
+func TestSetTokenExpired(t *testing.T) {
+	mr, err := miniredis.Run()
+	if err != nil {
+		t.Errorf("cannot run the Miniredis mock server: %s", err)
+	}
+
+	defer mr.Close()
+
+	// We need a logger as the cache and uncache functions log what's being done.
+	logger.Log = logrus.New()
+
+	Client = redis.NewClient(
+		&redis.Options{
+			Addr: mr.Addr(),
+		},
+	)
+
+	// Set up a fake expired token and a fake tenant id
+	fakeToken := setUpFakeToken()
+
+	expiredDate := int64(1609455600) // 2021-01-01T00:00:00
+	fakeToken.Expiration = &expiredDate
+
+	tokenCacher.TenantID = 5
+
+	// Call the actual function
+	err = tokenCacher.CacheToken(fakeToken)
+	if err == nil {
+		t.Errorf("want error, got none")
+	}
+
+	want := "refusing to cache an expired token"
+	if want != err.Error() {
+		t.Errorf("want %s, got %s", want, err)
 	}
 }

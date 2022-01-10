@@ -51,6 +51,10 @@ func (mtc *MarketplaceTokenCacher) CacheToken(token *marketplace.BearerToken) er
 	tokenExpiration := time.Unix(*token.Expiration, 0)
 	redisExpiration := time.Until(tokenExpiration)
 
+	if redisExpiration <= 0 {
+		return fmt.Errorf("refusing to cache an expired token")
+	}
+
 	err := Client.Set(
 		redisKey,
 		token,
