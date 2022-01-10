@@ -99,7 +99,7 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("LogHandler", os.Getenv("LOG_HANDLER"))
 	options.SetDefault("LogLevelForMiddlewareLogs", "DEBUG")
 	options.SetDefault("LogLevelForSqlLogs", "DEBUG")
-	options.SetDefault("MarketplaceHost", "MARKETPLACE_HOST")
+	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
 
