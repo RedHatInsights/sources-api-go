@@ -3,7 +3,6 @@ package statuslistener
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -41,7 +40,7 @@ type MockEventStreamSender struct {
 
 func LoadJSONContentFrom(resourceType string, resourceID string, prefix string) []byte {
 	fileName := "./test_data/" + prefix + resourceType + "_" + resourceID + ".json"
-	fileContent, err := ioutil.ReadFile(fileName)
+	fileContent, err := os.ReadFile(fileName)
 
 	if err != nil {
 		panic(fmt.Errorf("unable to read file %s because of %s", fileName, err.Error()))

@@ -2,7 +2,7 @@ package marketplace
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -16,7 +16,7 @@ func TestBearerTokenUnmarshalling(t *testing.T) {
 
 	jsonText := fmt.Sprintf(`{"access_token": "%s", "expiration": %d}`, accessTokenValue, expirationTimestamp)
 
-	readCloser := ioutil.NopCloser(strings.NewReader(jsonText))
+	readCloser := io.NopCloser(strings.NewReader(jsonText))
 	fakeMarketplaceResponse := http.Response{Body: readCloser}
 
 	token, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
@@ -37,7 +37,7 @@ func TestBearerTokenUnmarshalling(t *testing.T) {
 func TestInvalidJsonPassed(t *testing.T) {
 	jsonText := `{"access_token":"abcde", "expiration"}`
 
-	readCloser := ioutil.NopCloser(strings.NewReader(jsonText))
+	readCloser := io.NopCloser(strings.NewReader(jsonText))
 	fakeMarketplaceResponse := http.Response{Body: readCloser}
 
 	_, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
@@ -53,7 +53,7 @@ func TestInvalidJsonPassed(t *testing.T) {
 func TestInvalidStructurePassed(t *testing.T) {
 	jsonText := `{"hello": "world"}`
 
-	readCloser := ioutil.NopCloser(strings.NewReader(jsonText))
+	readCloser := io.NopCloser(strings.NewReader(jsonText))
 	fakeMarketplaceResponse := http.Response{Body: readCloser}
 
 	_, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)

@@ -19,6 +19,13 @@ IQE_FILTER_EXPRESSION=""
 # source $CICD_ROOT/deploy_ephemeral_env.sh
 # source $CICD_ROOT/smoke_test.sh
 
+# test building in the container
+make container
+if [[ $? != 0 ]]; then
+    exit 1
+fi
+
+
 DB_CONTAINER="sources-api-db-$(uuidgen)"
 echo "Spinning up container: ${DB_CONTAINER}"
 
@@ -33,14 +40,16 @@ docker run -d \
 PORT=$(docker inspect $DB_CONTAINER | grep HostPort | sort | uniq | grep -o [0-9]*)
 echo "DB Listening on Port: ${PORT}"
 
-export DATABASE_HOST=localhost 
-export DATABASE_PORT=$PORT 
-export DATABASE_USER=root 
-export DATABASE_PASSWORD=toor 
+export DATABASE_HOST=localhost
+export DATABASE_PORT=$PORT
+export DATABASE_USER=root
+export DATABASE_PASSWORD=toor
 export DATABASE_NAME=sources_api_test_go
 
 echo "Running tests...here we go"
 
+export GOROOT="/opt/go/1.16.10"
+export PATH="${GOROOT}/bin:${PATH}"
 go test ./... --integration
 
 OUT_CODE=$?
