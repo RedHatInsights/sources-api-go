@@ -18,6 +18,13 @@ services:
     ports:
       - '5432:5432'
 
+  marketplace-fake:
+    container_name: 'sources_dc_marketplace_fake'
+    build:
+      context: marketplace-server/
+    ports:
+      - '3000:3000'
+
   vault:
     cap_add:
       - IPC_LOCK

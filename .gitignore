@@ -1,4 +1,5 @@
 .idea/
 .vscode/
 .scannerwork/
+node_modules/
 sources-api-go
