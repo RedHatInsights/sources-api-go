@@ -174,8 +174,8 @@ func TestSystemPatch(t *testing.T) {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 401 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 401)
+	if rec.Code != 405 {
+		t.Errorf("%v was returned instead of %v", rec.Code, 405)
 	}
 }
 
@@ -199,8 +199,8 @@ func TestSystemDelete(t *testing.T) {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 401 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 401)
+	if rec.Code != 405 {
+		t.Errorf("%v was returned instead of %v", rec.Code, 405)
 	}
 }
 
