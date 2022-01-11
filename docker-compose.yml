@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+
+  cache:
+    container_name: 'sources_dc_cache'
+    image: redis
+    ports:
+      - '6379:6379'
+
+  database:
+    container_name: 'sources_dc_database'
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    image: postgres:12
+    ports:
+      - '5432:5432'
+
+  vault:
+    cap_add:
+      - IPC_LOCK
+    container_name: 'sources_dc_vault'
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID}
+    image: vault
+    ports:
+      - '8200:8200'
