@@ -33,8 +33,8 @@ Here lies the source code for the Sources API re-write, based on the [original R
 #### Third party services
 
 In order to run the services this application will connect to, a `docker-compose.yml` file is provided. This will
-launch the Redis cache, the database and a Vault server in development mode. The steps to have a working development
-environment are:
+launch the Redis cache, the database, a Red Hat Marketplace fake server and a Vault server in development mode. The
+steps to have a working development environment are:
 
 1. `docker-compose up`
 2. Go to the `sources-api` repository and migrate the database.
@@ -51,6 +51,7 @@ export DATABASE_NAME=sources_api_development
 export DATABASE_PASSWORD=toor
 export DATABASE_PORT=5432
 export DATABASE_USER=root
+export MARKETPLACE_HOST=http://localhost:3000
 export REDIS_CACHE_HOST=localhost
 export REDIS_CACHE_PORT=6379
 export VAULT_ADDR=http://0.0.0.0:8200
