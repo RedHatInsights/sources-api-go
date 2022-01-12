@@ -2,10 +2,14 @@ package dao
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
+	"github.com/golang-migrate/migrate/v4"
+	migratePostgres "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	vault "github.com/hashicorp/vault/api"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"gorm.io/driver/postgres"
@@ -14,6 +18,9 @@ import (
 
 var (
 	DB *gorm.DB
+
+	migrationsDir   = "db/migrations"
+	migrationsTable = "schema_migrations_go"
 
 	vaultClient *vault.Client
 	Vault       VaultClient
@@ -40,6 +47,12 @@ func Init() {
 		panic(err)
 	}
 	rawDB.SetMaxOpenConns(20)
+
+	// Perform database migrations
+	err = migrateDatabase(db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Open up the conn to Vault
 	cfg := vault.DefaultConfig()
@@ -71,6 +84,40 @@ func Init() {
 	if err != nil {
 		logging.Log.Fatalf("Failed to populate static type cache: %v", err)
 	}
+}
+
+// migrateDatabase migrates the database to the latest schema version.
+func migrateDatabase(db *gorm.DB) error {
+	// Extract the connection from Gorm to use it for the migrations
+	connection, err := db.DB()
+	if err != nil {
+		return err
+	}
+
+	// Configure a different migrations table, so it doesn't clash with the already existing one
+	migrationsConfig := &migratePostgres.Config{MigrationsTable: migrationsTable}
+	driver, err := migratePostgres.WithInstance(connection, migrationsConfig)
+	if err != nil {
+		return err
+	}
+
+	// Get the migrations client and specify the migrations directory
+	migrateClient, err := migrate.NewWithDatabaseInstance(
+		"file://"+migrationsDir,
+		config.Get().DatabaseName,
+		driver,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Migrate the schema
+	if err := migrateClient.Up(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func dbString() string {
