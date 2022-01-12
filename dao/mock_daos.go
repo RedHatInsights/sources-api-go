@@ -20,6 +20,8 @@ type MockEndpointDao struct {
 }
 type MockApplicationTypeDao struct {
 	ApplicationTypes []m.ApplicationType
+	Compatible       bool
+	CompatibleError  error
 }
 
 type MockSourceTypeDao struct {
@@ -198,6 +200,10 @@ func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}
 	}
 
 	return appTypes, count, nil
+}
+
+func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64) (bool, error) {
+	return a.Compatible, a.CompatibleError
 }
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {

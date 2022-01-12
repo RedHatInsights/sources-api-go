@@ -8,6 +8,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -25,51 +26,6 @@ func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
 	}
 
 	return &dao.ApplicationDaoImpl{TenantID: &tenantID}, nil
-}
-
-func SourceListApplications(c echo.Context) error {
-	applicationDB, err := getApplicationDao(c)
-	if err != nil {
-		return err
-	}
-
-	filters, err := getFilters(c)
-	if err != nil {
-		return err
-	}
-
-	limit, offset, err := getLimitAndOffset(c)
-	if err != nil {
-		return err
-	}
-
-	var (
-		applications []m.Application
-		count        int64
-	)
-
-	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
-	}
-
-	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
-
-	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
-	}
-
-	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
-
-	out := make([]interface{}, len(applications))
-	for i, a := range applications {
-		out[i] = *a.ToResponse()
-	}
-
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func ApplicationList(c echo.Context) error {
@@ -134,6 +90,87 @@ func ApplicationGet(c echo.Context) error {
 	return c.JSON(http.StatusOK, app.ToResponse())
 }
 
+func ApplicationCreate(c echo.Context) error {
+	applicationDB, err := getApplicationDaoWithTenant(c)
+	if err != nil {
+		return err
+	}
+
+	input := &m.ApplicationCreateRequest{}
+	if err = c.Bind(input); err != nil {
+		return err
+	}
+
+	err = service.ValidateApplicationCreateRequest(input)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(fmt.Sprintf("Validation failed: %s", err.Error()), "400"))
+	}
+
+	application := &m.Application{
+		Extra:             input.Extra,
+		ApplicationTypeID: input.ApplicationTypeID,
+		SourceID:          input.SourceID,
+	}
+
+	err = applicationDB.Create(application)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, application.ToResponse())
+}
+
+func ApplicationEdit(c echo.Context) error {
+	applicationDB, err := getApplicationDaoWithTenant(c)
+	if err != nil {
+		return err
+	}
+
+	input := &m.ApplicationEditRequest{}
+	if err := c.Bind(input); err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	app, err := applicationDB.GetById(&id)
+	if err != nil {
+		return err
+	}
+
+	app.UpdateFromRequest(input)
+	err = applicationDB.Update(app)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, app.ToResponse())
+}
+
+func ApplicationDelete(c echo.Context) error {
+	applicationDB, err := getApplicationDaoWithTenant(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	c.Logger().Infof("Deleting Application Id %v", id)
+
+	err = applicationDB.Delete(&id)
+	if err != nil {
+		return c.NoContent(http.StatusNotFound)
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
 func ApplicationListAuthentications(c echo.Context) error {
 	authDao, err := getAuthenticationDao(c)
 	if err != nil {
@@ -156,4 +193,48 @@ func ApplicationListAuthentications(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), 100, 0))
+}
+
+func SourceListApplications(c echo.Context) error {
+	applicationDB, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		applications []m.Application
+		count        int64
+	)
+
+	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
+
+	out := make([]interface{}, len(applications))
+	for i, a := range applications {
+		out[i] = *a.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }

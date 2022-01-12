@@ -20,3 +20,19 @@ type ApplicationResponse struct {
 	SourceID          string `json:"source_id"`
 	ApplicationTypeID string `json:"application_type_id"`
 }
+
+type ApplicationCreateRequest struct {
+	Extra datatypes.JSON `json:"extra,omitempty"`
+
+	SourceID             int64       `json:"-"`
+	SourceIDRaw          interface{} `json:"source_id"`
+	ApplicationTypeID    int64       `json:"-"`
+	ApplicationTypeIDRaw interface{} `json:"application_type_id"`
+}
+
+type ApplicationEditRequest struct {
+	Extra datatypes.JSON `json:"extra,omitempty"`
+
+	AvailabilityStatus      *string `json:"availability_status"`
+	AvailabilityStatusError *string `json:"availability_status_error"`
+}
