@@ -91,7 +91,7 @@ func ApplicationGet(c echo.Context) error {
 }
 
 func ApplicationCreate(c echo.Context) error {
-	applicationDB, err := getApplicationDaoWithTenant(c)
+	applicationDB, err := getApplicationDao(c)
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func ApplicationCreate(c echo.Context) error {
 }
 
 func ApplicationEdit(c echo.Context) error {
-	applicationDB, err := getApplicationDaoWithTenant(c)
+	applicationDB, err := getApplicationDao(c)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func ApplicationEdit(c echo.Context) error {
 }
 
 func ApplicationDelete(c echo.Context) error {
-	applicationDB, err := getApplicationDaoWithTenant(c)
+	applicationDB, err := getApplicationDao(c)
 	if err != nil {
 		return err
 	}

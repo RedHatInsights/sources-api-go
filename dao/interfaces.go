@@ -57,7 +57,7 @@ type ApplicationTypeDao interface {
 	Create(src *m.ApplicationType) error
 	Update(src *m.ApplicationType) error
 	Delete(id *int64) error
-	ApplicationTypeCompatibleWithSource(typeId, sourceId int64) (bool, error)
+	ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error
 }
 
 type EndpointDao interface {

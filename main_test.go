@@ -63,7 +63,6 @@ func TestMain(t *testing.M) {
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) { return mockApplicationTypeDao, nil }
 
 		getMetaDataDao = func(c echo.Context) (dao.MetaDataDao, error) { return mockMetaDataDao, nil }
-
 	}
 
 	code := t.Run()

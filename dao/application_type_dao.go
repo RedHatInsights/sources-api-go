@@ -77,27 +77,19 @@ func (a *ApplicationTypeDaoImpl) Delete(_ *int64) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (at *ApplicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, sourceId int64) (bool, error) {
+func (at *ApplicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error {
 	source := m.Source{ID: sourceId}
 	result := DB.Preload("SourceType").Find(&source)
 	if result.Error != nil {
-		return false, fmt.Errorf("source not found")
+		return fmt.Errorf("source not found")
 	}
 
 	// searching for the application type that has the source type's name in its
 	// supported source types column.
-	result = DB.Find(
+	result = DB.First(
 		&m.ApplicationType{Id: typeId},
 		datatypes.JSONQuery("supported_source_types").HasKey(source.SourceType.Name),
 	)
 
-	if result.Error != nil {
-		return false, fmt.Errorf("failed to fetch application type %v", typeId)
-	}
-
-	if result.RowsAffected == 0 {
-		return false, nil
-	}
-
-	return true, nil
+	return result.Error
 }

@@ -8,9 +8,9 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-// by default we'll be using an empty instanct of the apptype dao - replacing it
+// by default we'll be using an empty instance of the apptype dao - replacing it
 // in tests.
-var appTypeDao dao.ApplicationTypeDao = &dao.ApplicationTypeDaoImpl{}
+var AppTypeDao dao.ApplicationTypeDao = &dao.ApplicationTypeDaoImpl{}
 
 /*
 	Go through and validate the application create request.
@@ -20,8 +20,12 @@ var appTypeDao dao.ApplicationTypeDao = &dao.ApplicationTypeDaoImpl{}
 */
 func ValidateApplicationCreateRequest(appReq *m.ApplicationCreateRequest) error {
 	// need both source id + application type id
-	if appReq.SourceIDRaw == nil || appReq.ApplicationTypeIDRaw == nil {
-		return fmt.Errorf("missing required parameters of source_id or application_type_id")
+	if appReq.SourceIDRaw == nil {
+		return fmt.Errorf("missing required parameter source_id")
+	}
+
+	if appReq.ApplicationTypeIDRaw == nil {
+		return fmt.Errorf("missing required parameter application_type_id")
 	}
 
 	// parse both the ids
@@ -39,12 +43,8 @@ func ValidateApplicationCreateRequest(appReq *m.ApplicationCreateRequest) error 
 
 	// check that the application type supports the source type we're attaching
 	// it to.
-	compatible, err := appTypeDao.ApplicationTypeCompatibleWithSource(appReq.ApplicationTypeID, appReq.SourceID)
+	err = AppTypeDao.ApplicationTypeCompatibleWithSource(appReq.ApplicationTypeID, appReq.SourceID)
 	if err != nil {
-		return fmt.Errorf("failed to check compatibility between application and source type")
-	}
-
-	if !compatible {
 		return fmt.Errorf("source type is not compatible with this application type")
 	}
 

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"strings"
 	"testing"
 
@@ -10,7 +9,7 @@ import (
 )
 
 func TestValidApplicationRequest(t *testing.T) {
-	appTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		Extra:                []byte(`{"a good":"thing"`),
@@ -37,7 +36,7 @@ func TestValidApplicationRequest(t *testing.T) {
 }
 
 func TestInvalidApplicationTypeForSource(t *testing.T) {
-	appTypeDao = &dao.MockApplicationTypeDao{Compatible: false}
+	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: false}
 
 	req := m.ApplicationCreateRequest{
 		Extra:                []byte(`{"a good":"thing"`),
@@ -55,27 +54,8 @@ func TestInvalidApplicationTypeForSource(t *testing.T) {
 	}
 }
 
-func TestErrorCheckingApplicationType(t *testing.T) {
-	appTypeDao = &dao.MockApplicationTypeDao{Compatible: false, CompatibleError: errors.New("boom!")}
-
-	req := m.ApplicationCreateRequest{
-		Extra:                []byte(`{"a good":"thing"`),
-		SourceIDRaw:          "1",
-		ApplicationTypeIDRaw: "1",
-	}
-
-	err := ValidateApplicationCreateRequest(&req)
-	if err == nil {
-		t.Errorf("Got no error when there should not have been one")
-	}
-
-	if !strings.Contains(err.Error(), "failed to check") {
-		t.Errorf("malformed error message: %v", err)
-	}
-}
-
 func TestMissingApplicationTypeId(t *testing.T) {
-	appTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		Extra:       []byte(`{"a good":"thing"`),
@@ -89,7 +69,7 @@ func TestMissingApplicationTypeId(t *testing.T) {
 }
 
 func TestMissingSourceId(t *testing.T) {
-	appTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		Extra:                []byte(`{"a good":"thing"`),

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -21,7 +22,6 @@ type MockEndpointDao struct {
 type MockApplicationTypeDao struct {
 	ApplicationTypes []m.ApplicationType
 	Compatible       bool
-	CompatibleError  error
 }
 
 type MockSourceTypeDao struct {
@@ -202,8 +202,12 @@ func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}
 	return appTypes, count, nil
 }
 
-func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64) (bool, error) {
-	return a.Compatible, a.CompatibleError
+func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64) error {
+	if a.Compatible {
+		return nil
+	}
+
+	return errors.New("Not compatible!")
 }
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
@@ -270,15 +274,15 @@ func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
 }
 
 func (a *MockApplicationDao) Create(src *m.Application) error {
-	panic("not implemented") // TODO: Implement
+	return nil
 }
 
 func (a *MockApplicationDao) Update(src *m.Application) error {
-	panic("not implemented") // TODO: Implement
+	return nil
 }
 
 func (a *MockApplicationDao) Delete(id *int64) error {
-	panic("not implemented") // TODO: Implement
+	return nil
 }
 
 func (a *MockApplicationDao) Tenant() *int64 {

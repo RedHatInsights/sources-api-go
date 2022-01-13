@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
+	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -201,4 +206,187 @@ func TestApplicationGetNotFound(t *testing.T) {
 	}
 
 	testutils.NotFoundTest(t, rec)
+}
+
+func TestApplicationCreateGood(t *testing.T) {
+	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+
+	req := m.ApplicationCreateRequest{
+		SourceIDRaw:          "2",
+		ApplicationTypeIDRaw: "1",
+		Extra:                nil,
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 201 {
+		t.Errorf("Wrong return code, expected %v got %v", 201, rec.Code)
+	}
+
+	app := m.ApplicationResponse{}
+	raw, _ := io.ReadAll(rec.Body)
+	err = json.Unmarshal(raw, &app)
+	if err != nil {
+		t.Errorf("Failed to unmarshal application from response: %v", err)
+	}
+
+	if app.SourceID != "2" {
+		t.Errorf("Wrong source ID, wanted %v got %v", "2", app.SourceID)
+	}
+
+	id, _ := strconv.ParseInt(app.ID, 10, 64)
+	dao, _ := getApplicationDao(c)
+	_ = dao.Delete(&id)
+}
+
+func TestApplicationCreateMissingSourceId(t *testing.T) {
+	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+
+	req := m.ApplicationCreateRequest{
+		ApplicationTypeIDRaw: "1",
+		Extra:                nil,
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 400 {
+		t.Errorf("Wrong return code, expected %v got %v", 400, rec.Code)
+	}
+}
+
+func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
+	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+
+	req := m.ApplicationCreateRequest{
+		SourceIDRaw: "1",
+		Extra:       nil,
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 400 {
+		t.Errorf("Wrong return code, expected %v got %v", 400, rec.Code)
+	}
+}
+
+func TestApplicationCreateIncompatible(t *testing.T) {
+	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: false}
+
+	req := m.ApplicationCreateRequest{
+		SourceIDRaw:          "2",
+		ApplicationTypeIDRaw: "1",
+		Extra:                nil,
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 400 {
+		t.Errorf("Wrong return code, expected %v got %v", 400, rec.Code)
+	}
+}
+func TestApplicationEdit(t *testing.T) {
+	req := m.ApplicationEditRequest{
+		Extra:                   []byte(`{"thing": true}`),
+		AvailabilityStatus:      request.PointerToString("available"),
+		AvailabilityStatusError: request.PointerToString(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/applications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Errorf("Wrong return code, expected %v got %v", 200, rec.Code)
+	}
+
+	app := m.ApplicationResponse{}
+	raw, _ := io.ReadAll(rec.Body)
+	err = json.Unmarshal(raw, &app)
+	if err != nil {
+		t.Errorf("Failed to unmarshal application from response: %v", err)
+	}
+
+	if app.AvailabilityStatus.AvailabilityStatus != "available" {
+		t.Errorf("Wrong availability status, wanted %v got %v", "available", app.AvailabilityStatus.AvailabilityStatus)
+	}
 }
