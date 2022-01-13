@@ -7,8 +7,10 @@ require (
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/aws/aws-sdk-go v1.42.22
 	github.com/gertd/go-pluralize v0.1.7
+	github.com/go-gormigrate/gormigrate/v2 v2.0.0
 	github.com/go-redis/redis v6.15.9+incompatible
-	github.com/google/uuid v1.1.2
+	github.com/golang-migrate/migrate/v4 v4.15.1
+	github.com/google/uuid v1.3.0
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jackc/pgx/v4 v4.15.0

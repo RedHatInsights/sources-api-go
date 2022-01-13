@@ -41,6 +41,8 @@ type SourcesApiConfig struct {
 	Psks                      []string
 	BypassRbac                bool
 	StatusListener            bool
+	MigrationsSetup           bool
+	MigrationsReset           bool
 }
 
 // Get - returns the config parsed from runtime vars
