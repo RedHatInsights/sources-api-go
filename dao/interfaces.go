@@ -14,6 +14,7 @@ type SourceDao interface {
 	Delete(id *int64) error
 	Tenant() *int64
 	NameExistsInCurrentTenant(name string) bool
+	GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error)
 }
 
 type ApplicationDao interface {

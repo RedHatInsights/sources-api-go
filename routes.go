@@ -46,6 +46,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.POST("/sources", SourceCreate, permissionMiddleware...)
 	v3.PATCH("/sources/:id", SourceEdit, permissionMiddleware...)
 	v3.DELETE("/sources/:id", SourceDelete, permissionMiddleware...)
+	v3.POST("/sources/:source_id/check_availability", CheckSourceAvailability, middleware.Tenancy)
 	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)

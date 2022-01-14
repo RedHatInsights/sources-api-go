@@ -68,6 +68,19 @@ func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	return src, result.Error
 }
 
+// Function that searches for a source and preloads any specified relations
+func (s *SourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
+	src := &m.Source{ID: *id}
+	q := DB.Where("tenant_id = ?", s.TenantID)
+
+	for _, preload := range preloads {
+		q = q.Preload(preload)
+	}
+
+	result := q.Find(&src)
+	return src, result.Error
+}
+
 func (s *SourceDaoImpl) Create(src *m.Source) error {
 	src.TenantID = *s.TenantID // the TenantID gets injected in the middleware
 	result := DB.Create(src)

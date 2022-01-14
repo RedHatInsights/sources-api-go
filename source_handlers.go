@@ -276,5 +276,32 @@ func SourceListAuthentications(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), 100, 0))
+}
 
+func CheckSourceAvailability(c echo.Context) error {
+	sourceDao, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	src, err := sourceDao.GetByIdWithPreload(&sourceID,
+		"SourceType",
+		"Applications",
+		"Applications.ApplicationType",
+		"Endpoints",
+		"Tenant",
+	)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+	}
+
+	// do it async!
+	go func() { service.RequestAvailabilityCheck(src) }()
+
+	return c.JSON(http.StatusAccepted, map[string]interface{}{})
 }
