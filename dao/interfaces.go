@@ -86,6 +86,8 @@ type ApplicationTypeDao interface {
 	Delete(id *int64) error
 	ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error
 	GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error)
+	ApplicationTypeCompatibleWithSourceType(appTypeId, sourceTypeId int64) error
+	GetByName(name string) (*m.ApplicationType, error)
 }
 
 type EndpointDao interface {
@@ -122,6 +124,7 @@ type SourceTypeDao interface {
 	Create(src *m.SourceType) error
 	Update(src *m.SourceType) error
 	Delete(id *int64) error
+	GetByName(name string) (*m.SourceType, error)
 }
 
 type VaultClient interface {

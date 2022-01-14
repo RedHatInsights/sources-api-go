@@ -55,7 +55,14 @@ func (st *sourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
 	return sourceType, nil
 }
 
-func (st *sourceTypeDaoImpl) Create(_ *m.SourceType) error {
+func (st *sourceTypeDaoImpl) GetByName(name string) (*m.SourceType, error) {
+	sourceType := &m.SourceType{}
+	result := DB.Where("name LIKE ?", "%"+name+"%").First(sourceType)
+
+	return sourceType, result.Error
+}
+
+func (a *sourceTypeDaoImpl) Create(_ *m.SourceType) error {
 	panic("not needed (yet) due to seeding.")
 }
 

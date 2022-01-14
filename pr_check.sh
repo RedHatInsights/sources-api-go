@@ -50,7 +50,7 @@ echo "Running tests...here we go"
 
 export GOROOT="/opt/go/1.16.10"
 export PATH="${GOROOT}/bin:${PATH}"
-go test ./... --integration
+make alltest
 
 OUT_CODE=$?
 

@@ -279,6 +279,17 @@ func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64)
 func (at *MockApplicationTypeDao) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
 	panic("not needed")
 }
+func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSourceType(_, _ int64) error {
+	if a.Compatible {
+		return nil
+	}
+
+	return errors.New("Not compatible!")
+}
+
+func (a *MockApplicationTypeDao) GetByName(_ string) (*m.ApplicationType, error) {
+	return nil, nil
+}
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
 	count := int64(len(a.SourceTypes))
@@ -293,6 +304,10 @@ func (a *MockSourceTypeDao) GetById(id *int64) (*m.SourceType, error) {
 	}
 
 	return nil, util.NewErrNotFound("source type")
+}
+
+func (a *MockSourceTypeDao) GetByName(_ string) (*m.SourceType, error) {
+	return nil, nil
 }
 
 func (a *MockSourceTypeDao) Create(src *m.SourceType) error {
