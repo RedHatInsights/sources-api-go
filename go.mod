@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/RedHatInsights/rbac-client-go v1.0.0
+	github.com/alicebob/miniredis/v2 v2.17.0 // indirect
 	github.com/aws/aws-sdk-go v1.40.46
 	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-redis/redis v6.15.9+incompatible

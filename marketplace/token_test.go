@@ -12,7 +12,7 @@ import (
 // the unmarshalling process succeeds.
 func TestBearerTokenUnmarshalling(t *testing.T) {
 	accessTokenValue := "test"
-	expirationTimestamp := 1609455600 // 2021-01-01T00:00:00
+	expirationTimestamp := int64(1609455600) // 2021-01-01T00:00:00
 
 	jsonText := fmt.Sprintf(`{"access_token": "%s", "expiration": %d}`, accessTokenValue, expirationTimestamp)
 
