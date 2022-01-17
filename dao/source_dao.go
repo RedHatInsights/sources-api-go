@@ -77,7 +77,7 @@ func (s *SourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.So
 		q = q.Preload(preload)
 	}
 
-	result := q.Find(&src)
+	result := q.First(&src)
 	return src, result.Error
 }
 

@@ -278,7 +278,7 @@ func SourceListAuthentications(c echo.Context) error {
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), 100, 0))
 }
 
-func CheckSourceAvailability(c echo.Context) error {
+func SourceCheckAvailability(c echo.Context) error {
 	sourceDao, err := getSourceDao(c)
 	if err != nil {
 		return err

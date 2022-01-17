@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -15,20 +16,31 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-// storing the satellite topic here since it doesn't change after initial
-// startup.
-var satelliteTopic = config.Get().KafkaTopic("platform.topological-inventory.operations-satellite")
+type availabilityCheckRequester struct{}
+
+type availabilityChecker interface {
+	ApplicationAvailabilityCheck(source *m.Source)
+	EndpointAvailabilityCheck(source *m.Source)
+}
+
+var (
+	// storing the satellite topic here since it doesn't change after initial
+	// startup.
+	satelliteTopic = config.Get().KafkaTopic("platform.topological-inventory.operations-satellite")
+	// default availability checker instance
+	ac availabilityChecker = &availabilityCheckRequester{}
+)
 
 // requests both types of availability checks for a source
 func RequestAvailabilityCheck(source *m.Source) {
 	l.Log.Infof("Requesting Availability Check for Source [%v]", source.ID)
 
 	if len(source.Applications) != 0 {
-		applicationAvailabilityCheck(source)
+		ac.ApplicationAvailabilityCheck(source)
 	}
 
 	if len(source.Endpoints) != 0 {
-		endpointAvailabilityCheck(source)
+		ac.EndpointAvailabilityCheck(source)
 	}
 
 	l.Log.Infof("Finished Publishing Availability Messages for Source %v", source.ID)
@@ -36,7 +48,7 @@ func RequestAvailabilityCheck(source *m.Source) {
 
 // sends off an availability check http request for each of the source's
 // applications
-func applicationAvailabilityCheck(source *m.Source) {
+func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source) {
 	for _, app := range source.Applications {
 		l.Log.Infof("Requesting Availability Check for Application %v", app.ID)
 
@@ -51,8 +63,6 @@ func applicationAvailabilityCheck(source *m.Source) {
 }
 
 func requestAvailabilityCheck(source *m.Source, app *m.Application, uri *url.URL) {
-	httpClient := http.Client{Timeout: 10 * time.Second}
-
 	body := map[string]string{"source_id": strconv.FormatInt(app.SourceID, 10)}
 	raw, err := json.Marshal(body)
 	if err != nil {
@@ -60,7 +70,11 @@ func requestAvailabilityCheck(source *m.Source, app *m.Application, uri *url.URL
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodPost, uri.String(), bytes.NewBuffer(raw))
+	// spin up a 10 second context to limit the time spent waiting on a response
+	ctx, done := context.WithTimeout(context.Background(), 10*time.Second)
+	defer done()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uri.String(), bytes.NewBuffer(raw))
 	if err != nil {
 		l.Log.Warnf("Failed to make request for application [%v], uri [%v]", app.ID, uri.String())
 		return
@@ -70,7 +84,7 @@ func requestAvailabilityCheck(source *m.Source, app *m.Application, uri *url.URL
 	req.Header.Add("x-rh-identity", util.XRhIdentityWithAccountNumber(source.Tenant.ExternalTenant))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	resp, err := httpClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		l.Log.Warnf("Error requesting availability status for application [%v], error: %v", app.ID, err)
 		return
@@ -96,7 +110,7 @@ type satelliteAvailabilityMessage struct {
 // sends off an availability check kafka message for each of the source's
 // endpoints but only if the source is of type satellite - we do not support any
 // other operations currently (legacy behavior)
-func endpointAvailabilityCheck(source *m.Source) {
+func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source) {
 	if source.SourceType.Name != "satellite" {
 		l.Log.Infof("Skipping Endpoint availability check for non-satellite source type")
 		return

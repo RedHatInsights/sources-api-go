@@ -52,7 +52,13 @@ func (at *ApplicationType) AvailabilityCheckURL() *url.URL {
 	env_prefix := strings.ToUpper(parts[len(parts)-1])
 	env_prefix = strings.ReplaceAll(env_prefix, "-", "_")
 
-	url, err := url.Parse(os.Getenv(env_prefix + "_AVAILABILITY_CHECK_URL"))
+	// if the url isn't set don't even try to parse it just return.
+	uri, ok := os.LookupEnv(env_prefix + "_AVAILABILITY_CHECK_URL")
+	if !ok {
+		return nil
+	}
+
+	url, err := url.Parse(uri)
 	if err != nil {
 		return nil
 	}
