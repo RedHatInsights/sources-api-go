@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -95,4 +96,26 @@ func TestSourceTypeGet(t *testing.T) {
 	if *outSrc.Name != "amazon" {
 		t.Error("ghosts infected the return")
 	}
+}
+
+func TestSourceTypeGetNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/3098539345",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("3098539345")
+
+	notFoundSourceTypeGet := ErrorHandlingContext(SourceTypeGet)
+	err := notFoundSourceTypeGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }

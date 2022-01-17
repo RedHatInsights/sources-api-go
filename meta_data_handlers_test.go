@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -66,6 +67,31 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestApplicationTypeMetaDataSubcollectionListNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/3908503985/app_meta_data",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues("3908503985")
+
+	notFoundApplicationTypeListMetaData := ErrorHandlingContext(ApplicationTypeListMetaData)
+	err := notFoundApplicationTypeListMetaData(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestMetaDataList(t *testing.T) {
@@ -150,7 +176,7 @@ func TestMetaDataGet(t *testing.T) {
 func TestMetaDataGetNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
-		"/api/sources/v3.1/app_meta_data/1234",
+		"/api/sources/v3.1/app_meta_data/13984739874",
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
@@ -158,14 +184,13 @@ func TestMetaDataGetNotFound(t *testing.T) {
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1234")
+	c.SetParamValues("13984739874")
 
-	err := MetaDataGet(c)
+	notFoundMetaDataGet := ErrorHandlingContext(MetaDataGet)
+	err := notFoundMetaDataGet(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 404 {
-		t.Error("Did not return 404")
-	}
+	testutils.NotFoundTest(t, rec)
 }

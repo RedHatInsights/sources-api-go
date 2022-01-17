@@ -2,7 +2,6 @@ package dao
 
 import (
 	"fmt"
-	"github.com/RedHatInsights/sources-api-go/util"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -16,7 +15,7 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	metadatas := make([]m.MetaData, 0, limit)
 	collection, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
-		return nil, 0, util.NewErrNotFound("application")
+		return nil, 0, util.NewErrNotFound("application type")
 	}
 
 	query := collection.HasMany(&m.MetaData{}, DB.Debug())
@@ -54,7 +53,7 @@ func (a *MetaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
 	metaData := &m.MetaData{ID: *id}
 	result := DB.First(&metaData)
 	if result.Error != nil {
-		return nil, util.NewErrNotFound("application")
+		return nil, util.NewErrNotFound("metadata")
 	}
 
 	return metaData, nil

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -68,6 +69,31 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestSourceEndpointSubcollectionListNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/983749387/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("983749387")
+
+	notFoundSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+	err := notFoundSourceListEndpoint(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestEndpointList(t *testing.T) {
@@ -162,14 +188,13 @@ func TestEndpointGetNotFound(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("970283452983")
 
-	err := EndpointGet(c)
+	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+	err := notFoundEndpointGet(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 404 {
-		t.Error("Did not return 404")
-	}
+	testutils.NotFoundTest(t, rec)
 }
 
 // Tests that the endpoint is properly creating "endpoints" and returning a 201 code.

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -66,10 +67,35 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
-func TestApplicationSourceSubcollectionList(t *testing.T) {
+func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
-		"/api/sources/v3.1/source_types/1/sources",
+		"/api/sources/v3.1/source_types/80398409384/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_type_id")
+	c.SetParamValues("80398409384")
+
+	notFoundSourceTypeListSource := ErrorHandlingContext(SourceTypeListSource)
+	err := notFoundSourceTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
+
+func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1/sources",
 		nil,
 		map[string]interface{}{
 			"limit":    100,
@@ -121,6 +147,31 @@ func TestApplicationSourceSubcollectionList(t *testing.T) {
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/398748974/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues("398748974")
+
+	notFoundApplicationTypeListSource := ErrorHandlingContext(ApplicationTypeListSource)
+	err := notFoundApplicationTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestSourceList(t *testing.T) {
@@ -231,7 +282,8 @@ func TestSourceGet(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
-		})
+		},
+	)
 
 	c.SetParamNames("id")
 	c.SetParamValues("1")
@@ -269,14 +321,13 @@ func TestSourceGetNotFound(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("9872034520975")
 
-	err := SourceGet(c)
+	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+	err := notFoundSourceGet(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 404 {
-		t.Error("Did not return 404")
-	}
+	testutils.NotFoundTest(t, rec)
 }
 
 // TestSourceCreateBadRequest tests that the handler responds with an 400 when an invalid JSON is received

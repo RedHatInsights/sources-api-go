@@ -140,3 +140,24 @@ func NewRelationObject(objectModel interface{}, currentTenantID int64, query *go
 
 	return object, err
 }
+
+func (relationObject *RelationObject) StringBaseObject() string {
+	switch relationObject.baseObject.(type) {
+	case Application:
+		return "application"
+	case ApplicationType:
+		return "application type"
+	case ApplicationAuthentication:
+		return "application authentication"
+	case Source:
+		return "source"
+	case SourceType:
+		return "source type"
+	case MetaData:
+		return "metadata"
+	case Endpoint:
+		return "endpoint"
+	default:
+		return ""
+	}
+}

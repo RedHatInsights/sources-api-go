@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -66,6 +67,31 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/134793847/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("134793847")
+
+	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+	err := notFoundSourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestApplicationList(t *testing.T) {
@@ -168,12 +194,11 @@ func TestApplicationGetNotFound(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("9843762095")
 
-	err := ApplicationGet(c)
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+	err := notFoundApplicationGet(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 404 {
-		t.Error("Did not return 404")
-	}
+	testutils.NotFoundTest(t, rec)
 }

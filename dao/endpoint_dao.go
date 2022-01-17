@@ -3,7 +3,6 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/RedHatInsights/sources-api-go/util"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -17,7 +16,7 @@ func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	endpoints := make([]m.Endpoint, 0, limit)
 	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, util.NewErrNotFound("endpoint")
+		return nil, 0, util.NewErrNotFound("source")
 	}
 
 	query := sourceType.HasMany(&m.Endpoint{}, DB.Debug())

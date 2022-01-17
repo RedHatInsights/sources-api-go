@@ -2,8 +2,9 @@ package util
 
 import (
 	"fmt"
-	l "github.com/RedHatInsights/sources-api-go/logger"
 	"reflect"
+
+	l "github.com/RedHatInsights/sources-api-go/logger"
 )
 
 var ErrNotFoundEmpty = NewErrNotFound("")

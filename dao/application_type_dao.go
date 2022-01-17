@@ -16,7 +16,7 @@ func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 
 	applicationType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, util.NewErrNotFound("application type")
+		return nil, 0, util.NewErrNotFound("source")
 	}
 
 	query := applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
