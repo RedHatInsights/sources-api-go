@@ -176,6 +176,54 @@ func TestSourceList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestSourceListSatellite(t *testing.T) {
+	if !flags.Integration {
+		t.Skip("Only runs during integration tests")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+			// this gets set during the parse middleware
+			"cert-auth": true,
+		})
+
+	err := SourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	if len(out.Data) != 0 {
+		t.Error("Objects were not filtered out of request")
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
 func TestSourceGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,

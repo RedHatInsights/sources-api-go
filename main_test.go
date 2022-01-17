@@ -21,12 +21,14 @@ var (
 	mockSourceTypeDao      dao.SourceTypeDao
 	mockApplicationDao     dao.ApplicationDao
 	mockMetaDataDao        dao.MetaDataDao
+
+	flags parser.Flags
 )
 
 func TestMain(t *testing.M) {
 	l.InitLogger(conf)
 
-	flags := parser.ParseFlags()
+	flags = parser.ParseFlags()
 
 	if flags.CreateDb {
 		database.CreateTestDB()
@@ -41,6 +43,10 @@ func TestMain(t *testing.M) {
 		getMetaDataDao = getMetaDataDaoWithTenant
 
 		database.CreateFixtures()
+		err := dao.PopulateStaticTypeCache()
+		if err != nil {
+			panic("failed to populate static type cache")
+		}
 	} else {
 		mockSourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData}
 		mockApplicationDao = &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}
