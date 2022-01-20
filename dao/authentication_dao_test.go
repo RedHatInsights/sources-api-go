@@ -3,11 +3,11 @@ package dao
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/redis"
@@ -18,9 +18,7 @@ import (
 
 func TestMain(t *testing.M) {
 	// we need this to parse arguments otherwise there are not recognized which lead to error
-	flag.Bool("createdb", false, "create the test database")
-	flag.Bool("integration", false, "run unit or integration tests")
-	flag.Parse()
+	_ = parser.ParseFlags()
 
 	os.Exit(t.Run())
 }
