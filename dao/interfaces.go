@@ -3,6 +3,7 @@ package dao
 import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/hashicorp/vault/api"
 )
 
 type SourceDao interface {
@@ -89,4 +90,11 @@ type SourceTypeDao interface {
 	Create(src *m.SourceType) error
 	Update(src *m.SourceType) error
 	Delete(id *int64) error
+}
+
+type LogicalClient interface {
+	Read(path string) (*api.Secret, error)
+	List(path string) (*api.Secret, error)
+	Write(path string, data map[string]interface{}) (*api.Secret, error)
+	Delete(path string) (*api.Secret, error)
 }

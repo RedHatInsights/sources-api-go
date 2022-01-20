@@ -210,7 +210,7 @@ func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
 		return err
 	}
 
-	out, err := Vault.Write(path, data)
+	out, err := (*Vault).Write(path, data)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
 		return err
 	}
 
-	out, err := Vault.Write(path, data)
+	out, err := (*Vault).Write(path, data)
 	if err != nil {
 		return err
 	}
@@ -245,7 +245,7 @@ func (a *AuthenticationDaoImpl) Delete(uid string) error {
 	for _, key := range keys {
 		if strings.HasSuffix(key, uid) {
 			path := fmt.Sprintf("secret/metadata/%d/%s", *a.TenantID, key)
-			_, err := Vault.Delete(path)
+			_, err := (*Vault).Delete(path)
 
 			return err
 		}
@@ -266,7 +266,7 @@ func (a *AuthenticationDaoImpl) Tenant() *int64 {
 func (a *AuthenticationDaoImpl) listKeys() ([]string, error) {
 	// List all the keys
 	path := fmt.Sprintf("secret/metadata/%d/", *a.TenantID)
-	list, err := Vault.List(path)
+	list, err := (*Vault).List(path)
 	if err != nil || list == nil {
 		return nil, err
 	}
@@ -293,7 +293,7 @@ func (a *AuthenticationDaoImpl) listKeys() ([]string, error) {
 	Fetch a key from Vault (full path, type and id included)
 */
 func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
-	secret, err := Vault.Read(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, path))
+	secret, err := (*Vault).Read(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, path))
 	if err != nil || secret == nil {
 		return nil, fmt.Errorf("authentication not found")
 	}

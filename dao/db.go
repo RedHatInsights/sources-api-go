@@ -16,10 +16,14 @@ var (
 	DB *gorm.DB
 
 	vaultClient *vault.Client
-	Vault       *vault.Logical
+	Vault       *LogicalClient
 
 	conf = config.Get()
 )
+
+func SetVault(vault LogicalClient) {
+	Vault = &vault
+}
 
 func Init() {
 	l := &logging.CustomGORMLogger{
@@ -55,7 +59,8 @@ func Init() {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to Create Vault Client: %v", err))
 	}
-	Vault = vaultClient.Logical()
+
+	SetVault(vaultClient.Logical())
 }
 
 func dbString() string {
