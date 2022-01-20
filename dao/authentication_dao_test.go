@@ -151,6 +151,10 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 		}
 	}
 
+	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
+	// logger.
+	logging.Log = logrus.New()
+
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 

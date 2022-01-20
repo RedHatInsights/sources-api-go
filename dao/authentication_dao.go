@@ -14,6 +14,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/uuid"
 	"github.com/hashicorp/vault/api"
+	"github.com/sirupsen/logrus"
 )
 
 type AuthenticationDaoImpl struct {
@@ -475,6 +476,8 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 
 		auth.Extra["marketplace"] = string(serializedToken)
+
+		logging.Log.Log(logrus.InfoLevel, "marketplace token included in authentication")
 	}
 
 	return auth
