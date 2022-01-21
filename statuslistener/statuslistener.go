@@ -101,6 +101,20 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
+	accountNumber, err := util.AccountNumberFrom(headers)
+	if err != nil {
+		logging.Log.Error(err)
+		return
+	}
+
+	tenant, err := dao.TenantBy(accountNumber)
+	if err != nil {
+		logging.Log.Error(err)
+		return
+	}
+
+	resource.TenantID = tenant.Id
+	resource.AccountNumber = tenant.ExternalTenant
 	err = (*modelEventDao).FetchAndUpdateBy(resource, updateAttributes)
 	if err != nil {
 		logging.Log.Errorf("Update error in status availability: %s", err)
