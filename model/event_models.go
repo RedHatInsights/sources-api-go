@@ -58,10 +58,12 @@ type ApplicationAuthenticationEvent struct {
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`
 
-	ApplicationID    int64 `json:"application_id"`
-	AuthenticationID int64 `json:"authentication_id"`
+	ApplicationID     int64  `json:"application_id"`
+	AuthenticationID  int64  `json:"authentication_id"`
+	AuthenticationUID string `json:"authentication_uid"`
 
-	Tenant *string `json:"tenant"`
+	Tenant    *string `json:"tenant"`
+	VaultPath string  `json:"vault_path"`
 }
 
 type EndpointEvent struct {

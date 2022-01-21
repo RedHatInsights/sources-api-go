@@ -29,13 +29,15 @@ type ApplicationAuthentication struct {
 
 func (aa *ApplicationAuthentication) ToEvent() *ApplicationAuthenticationEvent {
 	aaEvent := &ApplicationAuthenticationEvent{
-		ID:               aa.ID,
-		PauseEvent:       PauseEvent{PausedAt: util.DateTimeToRecordFormat(aa.PausedAt)},
-		CreatedAt:        util.DateTimeToRecordFormat(aa.CreatedAt),
-		UpdatedAt:        util.DateTimeToRecordFormat(aa.UpdatedAt),
-		ApplicationID:    aa.ApplicationID,
-		AuthenticationID: aa.AuthenticationID,
-		Tenant:           &aa.Tenant.ExternalTenant,
+		ID:                aa.ID,
+		PauseEvent:        PauseEvent{PausedAt: util.DateTimeToRecordFormat(aa.PausedAt)},
+		CreatedAt:         util.DateTimeToRecordFormat(aa.CreatedAt),
+		UpdatedAt:         util.DateTimeToRecordFormat(aa.UpdatedAt),
+		ApplicationID:     aa.ApplicationID,
+		AuthenticationID:  aa.AuthenticationID,
+		AuthenticationUID: aa.AuthenticationUID,
+		Tenant:            &aa.Tenant.ExternalTenant,
+		VaultPath:         aa.VaultPath,
 	}
 
 	return aaEvent
