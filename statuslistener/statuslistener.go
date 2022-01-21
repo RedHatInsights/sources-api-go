@@ -86,11 +86,8 @@ func (avs *AvailabilityStatusListener) headersFrom(message kafka.Message) []kafk
 }
 
 func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMessage, headers []kafka.Header) {
-	resourceID, err := util.InterfaceToInt64(statusMessage.ResourceID)
-	if err != nil {
-		logging.Log.Errorf("Error parsing resource_id: %s", err.Error())
-		return
-	}
+	resource := util.Resource{}
+	resource.Parse(statusMessage)
 
 	if !util.SliceContainsString(m.AvailabilityStatuses, statusMessage.Status) {
 		logging.Log.Errorf("Invalid Status: %s", statusMessage.Status)
@@ -104,7 +101,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
-	err = (*modelEventDao).FetchAndUpdateBy(&resourceID, updateAttributes)
+	err = (*modelEventDao).FetchAndUpdateBy(resource, updateAttributes)
 	if err != nil {
 		logging.Log.Errorf("Update error in status availability: %s", err)
 		return
@@ -118,7 +115,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}
 	sort.Strings(updateAttributeKeys)
 
-	err = avs.EventStreamProducer.RaiseEventForUpdate(resourceID, statusMessage.ResourceType, updateAttributeKeys, headers)
+	err = avs.EventStreamProducer.RaiseEventForUpdate(resource, updateAttributeKeys, headers)
 	if err != nil {
 		logging.Log.Errorf("Error in raising event for update: %s, resource: %s(%s)", err.Error(), statusMessage.ResourceType, statusMessage.ResourceID)
 	}
