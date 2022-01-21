@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"fmt"
+
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 

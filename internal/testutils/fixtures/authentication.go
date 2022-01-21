@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"encoding/json"
+
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
