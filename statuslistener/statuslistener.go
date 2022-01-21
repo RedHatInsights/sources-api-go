@@ -7,6 +7,7 @@ import (
 	c "github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
+	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -53,7 +54,7 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
 }
 
 func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Message) {
-	var statusMessage StatusMessage
+	var statusMessage types.StatusMessage
 	err := message.ParseTo(&statusMessage)
 	if err != nil {
 		logging.Log.Errorf("Error in parsing status message %v", err)
@@ -84,7 +85,7 @@ func (avs *AvailabilityStatusListener) headersFrom(message kafka.Message) []kafk
 	return headers
 }
 
-func (avs *AvailabilityStatusListener) processEvent(statusMessage StatusMessage, headers []kafka.Header) {
+func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMessage, headers []kafka.Header) {
 	resourceID, err := util.InterfaceToInt64(statusMessage.ResourceID)
 	if err != nil {
 		logging.Log.Errorf("Error parsing resource_id: %s", err.Error())
@@ -123,7 +124,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage StatusMessage,
 	}
 }
 
-func (avs *AvailabilityStatusListener) attributesForUpdate(statusMessage StatusMessage) map[string]interface{} {
+func (avs *AvailabilityStatusListener) attributesForUpdate(statusMessage types.StatusMessage) map[string]interface{} {
 	updateAttributes := make(map[string]interface{})
 
 	updateAttributes["last_checked_at"] = time.Now().Format("2006-01-02T15:04:05.999Z")

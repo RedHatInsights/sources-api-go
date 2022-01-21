@@ -1,4 +1,4 @@
-package statuslistener
+package types
 
 type StatusMessage struct {
 	ResourceType string `json:"resource_type"`

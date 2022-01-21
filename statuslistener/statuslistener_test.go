@@ -10,6 +10,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
+	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -33,7 +34,7 @@ func (m MockFormatter) Format(_ *logrus.Entry) ([]byte, error) {
 type MockEventStreamSender struct {
 	events.EventStreamSender
 	TestSuite *testing.T
-	StatusMessage
+	types.StatusMessage
 
 	RaiseEventCalled bool
 }
@@ -295,7 +296,7 @@ type ExpectedData struct {
 }
 
 type TestData struct {
-	StatusMessage
+	types.StatusMessage
 	m.AvailabilityStatus
 	ExpectedData
 
@@ -320,19 +321,20 @@ func TestConsumeStatusMessage(t *testing.T) {
 	logging.Log = &log
 
 	header := kafkaGo.Header{Key: "event_type", Value: []byte("availability_status")}
-	header2 := kafkaGo.Header{Key: "x-rh-identity", Value: []byte("Test identity")}
+	// {"identity":{"account_number":"12345","user": {"is_org_admin":true}}, "internal": {"org_id": "000001"}}
+	header2 := kafkaGo.Header{Key: "x-rh-identity", Value: []byte("eyJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjEyMzQ1IiwidXNlciI6IHsiaXNfb3JnX2FkbWluIjp0cnVlfX0sICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fQo=")}
 	header3 := kafkaGo.Header{Key: "x-rh-sources-account-number", Value: []byte("12345")}
 	headers := []kafkaGo.Header{header, header2, header3}
-	statusMessage := StatusMessage{ResourceType: "Source", ResourceID: "1", Status: m.Available}
+	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", Status: m.Available}
 	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: headers, RaiseEventCalled: true}
 
-	statusMessageApplication := StatusMessage{ResourceType: "Application", ResourceID: "1", Status: m.Available}
+	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", Status: m.Available}
 	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: headers, RaiseEventCalled: true}
 
-	statusMessageEndpoint := StatusMessage{ResourceType: "Endpoint", ResourceID: "1", Status: m.Available}
+	statusMessageEndpoint := types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", Status: m.Available}
 	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: true}
 
-	statusMessageEndpoint = StatusMessage{ResourceType: "Endpoint", ResourceID: "99", Status: m.Available}
+	statusMessageEndpoint = types.StatusMessage{ResourceType: "Endpoint", ResourceID: "99", Status: m.Available}
 	endpointTestDataNotFound := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: false}
 
 	testData = make([]TestData, 4)
