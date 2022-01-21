@@ -18,6 +18,9 @@ run: build
 inlinerun:
 	go run `ls *.go | grep -v test`
 
+listener:
+	go run `ls *.go | grep -v test` -listener
+
 container:
 	docker build . -t sources-api-go
 
@@ -44,4 +47,4 @@ vault:
 		-e 'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200' \
 		-p 8200:8200 vault
 
-.PHONY: setup tidy build clean run container remotedebug debug test lint gci vault
+.PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener

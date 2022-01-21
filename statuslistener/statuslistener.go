@@ -2,6 +2,7 @@ package statuslistener
 
 import (
 	"sort"
+	"strings"
 	"time"
 
 	c "github.com/RedHatInsights/sources-api-go/config"
@@ -9,7 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
-	logging "github.com/RedHatInsights/sources-api-go/logger"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -37,19 +38,22 @@ func NewEventStreamProducer() *events.EventStreamProducer {
 }
 
 func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
-	if logging.Log == nil {
+	if l.Log == nil {
 		panic("logging is not initialized")
 	}
 
-	consumerConfig := kafka.ConsumerConfig{Topic: config.KafkaTopic(sourcesStatusTopic), GroupID: groupID}
-	kafkaConfig := kafka.Config{KafkaBrokers: config.KafkaBrokers, ConsumerConfig: consumerConfig}
+	kafkaConfig := kafka.Config{
+		KafkaBrokers: config.KafkaBrokers,
+		ConsumerConfig: kafka.ConsumerConfig{
+			Topic:   config.KafkaTopic(sourcesStatusTopic),
+			GroupID: groupID},
+	}
 
 	kf := &kafka.Manager{Config: kafkaConfig}
-
 	err := kf.Consume(avs.ConsumeStatusMessage)
 
 	if err != nil {
-		logging.Log.Errorf("Consumer kafka message error: %s", err.Error())
+		l.Log.Errorf("Consumer kafka message error: %s", err.Error())
 	}
 }
 
@@ -57,15 +61,16 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 	var statusMessage types.StatusMessage
 	err := message.ParseTo(&statusMessage)
 	if err != nil {
-		logging.Log.Errorf("Error in parsing status message %v", err)
+		l.Log.Errorf("Error in parsing status message %v", err)
 		return
 	}
 
 	if message.GetHeader("event_type") != eventAvailabilityStatus {
+		l.Log.Warnf("Skipping invalid event_type %q", message.GetHeader("event_type"))
 		return
 	}
 
-	logging.Log.Infof("Kafka message %s, %s received with payload: %s", message.Headers, message.Key, message.Value)
+	l.Log.Infof("Kafka message %s, %s received with payload: %s", message.Headers, message.Key, message.Value)
 
 	headers := avs.headersFrom(message)
 
@@ -88,50 +93,50 @@ func (avs *AvailabilityStatusListener) headersFrom(message kafka.Message) []kafk
 func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMessage, headers []kafka.Header) {
 	resourceID, err := util.InterfaceToInt64(statusMessage.ResourceID)
 	if err != nil {
-		logging.Log.Errorf("Error parsing resource_id: %s", err.Error())
+		l.Log.Errorf("Error parsing resource_id: %s", err.Error())
 		return
 	}
 
 	if !util.SliceContainsString(m.AvailabilityStatuses, statusMessage.Status) {
-		logging.Log.Errorf("Invalid Status: %s", statusMessage.Status)
+		l.Log.Errorf("Invalid Status: %s", statusMessage.Status)
 		return
 	}
 
 	updateAttributes := avs.attributesForUpdate(statusMessage)
 	modelEventDao, err := dao.GetFromResourceType(statusMessage.ResourceType)
 	if err != nil {
-		logging.Log.Error(err)
+		l.Log.Error(err)
 		return
 	}
 
 	err = (*modelEventDao).FetchAndUpdateBy(&resourceID, updateAttributes)
 	if err != nil {
-		logging.Log.Errorf("Update error in status availability: %s", err)
+		l.Log.Errorf("Update error in status availability: %s", err)
 		return
 	}
 
-	updateAttributeKeys := make([]string, len(updateAttributes))
-	i := 0
+	updateAttributeKeys := make([]string, 0)
 	for k := range updateAttributes {
-		updateAttributeKeys[i] = k
-		i++
+		updateAttributeKeys = append(updateAttributeKeys, k)
+
 	}
 	sort.Strings(updateAttributeKeys)
 
-	err = avs.EventStreamProducer.RaiseEventForUpdate(resourceID, statusMessage.ResourceType, updateAttributeKeys, headers)
+	err = avs.EventStreamProducer.RaiseEventForUpdate(resourceID, util.Capitalize(statusMessage.ResourceType), updateAttributeKeys, headers)
 	if err != nil {
-		logging.Log.Errorf("Error in raising event for update: %s, resource: %s(%s)", err.Error(), statusMessage.ResourceType, statusMessage.ResourceID)
+		l.Log.Errorf("Error in raising event for update: %s, resource: %s(%s)", err.Error(), statusMessage.ResourceType, statusMessage.ResourceID)
 	}
 }
 
 func (avs *AvailabilityStatusListener) attributesForUpdate(statusMessage types.StatusMessage) map[string]interface{} {
 	updateAttributes := make(map[string]interface{})
 
+	// TODO: const this? are we using it elsewhere?
 	updateAttributes["last_checked_at"] = time.Now().Format("2006-01-02T15:04:05.999Z")
 	updateAttributes["availability_status"] = statusMessage.Status
 
-	statusErrorModels := []string{"Application", "Authentication", "Endpoint"}
-	if util.SliceContainsString(statusErrorModels, statusMessage.ResourceType) {
+	statusErrorModels := []string{"application", "authentication", "endpoint"}
+	if util.SliceContainsString(statusErrorModels, strings.ToLower(statusMessage.ResourceType)) {
 		updateAttributes["availability_status_error"] = statusMessage.Error
 	}
 
