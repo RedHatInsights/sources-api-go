@@ -457,6 +457,30 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		return nil
 	}
 
+	if data["availability_status"] != nil {
+		if auth.AvailabilityStatus.AvailabilityStatus, ok = data["availability_status"].(string); !ok {
+			return nil
+		}
+	}
+
+	if lastAvailableAtValue, ok := data["last_available_at"]; ok {
+		lastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAtValue.(string))
+		if err != nil {
+			return nil
+		}
+
+		auth.AvailabilityStatus.LastAvailableAt = lastAvailableAt
+	}
+
+	if lastCheckedAtValue, ok := data["last_available_at"]; ok {
+		lastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAtValue.(string))
+		if err != nil {
+			return nil
+		}
+
+		auth.AvailabilityStatus.LastCheckedAt = lastCheckedAt
+	}
+
 	return auth
 }
 

@@ -61,7 +61,7 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 		auth.Extra = *update.Extra
 	}
 	if update.AvailabilityStatus != nil {
-		auth.AvailabilityStatus = *update.AvailabilityStatus
+		auth.AvailabilityStatus.AvailabilityStatus = *update.AvailabilityStatus
 	}
 	if update.AvailabilityStatusError != nil {
 		auth.AvailabilityStatusError = *update.AvailabilityStatusError

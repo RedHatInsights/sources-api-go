@@ -6,6 +6,8 @@ import (
 )
 
 type Authentication struct {
+	AvailabilityStatus
+
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 
@@ -15,7 +17,6 @@ type Authentication struct {
 	Password                string                 `json:"password"`
 	Extra                   map[string]interface{} `json:"extra,omitempty"`
 	Version                 string                 `json:"version"`
-	AvailabilityStatus      string                 `json:"availability_status,omitempty"`
 	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
 
 	SourceID int64 `json:"source_id"`
@@ -53,7 +54,7 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 		// TODO: remove this?
 		Password:                auth.Password,
 		Extra:                   auth.Extra,
-		AvailabilityStatus:      auth.AvailabilityStatus,
+		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              resourceID,
@@ -73,8 +74,10 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 		"username":                  auth.Username,
 		"password":                  auth.Password,
 		"extra":                     auth.Extra,
-		"availability_status":       auth.AvailabilityStatus,
+		"availability_status":       auth.AvailabilityStatus.AvailabilityStatus,
 		"availability_status_error": auth.AvailabilityStatusError,
+		"last_checked_at":           auth.AvailabilityStatus.LastCheckedAt,
+		"last_available_at":         auth.AvailabilityStatus.LastAvailableAt,
 		"resource_type":             auth.ResourceType,
 		"resource_id":               strconv.FormatInt(auth.ResourceID, 10),
 		"source_id":                 strconv.FormatInt(auth.SourceID, 10),
