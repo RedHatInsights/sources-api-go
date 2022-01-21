@@ -84,21 +84,21 @@ func (a *ApplicationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
-func (a *ApplicationDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
-	application := &m.Application{ID: *id}
-	resource := DB.Preload("Source").Find(&application)
+func (a *ApplicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+	application := &m.Application{ID: resource.ResourceID}
+	result := DB.Preload("Source").Find(&application)
 
-	if resource.Error != nil {
-		return nil, resource.Error
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return BulkMessageFromSource(&application.Source)
 }
 
-func (a *ApplicationDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
-	result := DB.Model(&m.Application{ID: *id}).Updates(updateAttributes)
+func (a *ApplicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+	result := DB.Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("application not found %v", id)
+		return fmt.Errorf("application not found %v", resource)
 	}
 
 	return nil
@@ -111,8 +111,8 @@ func (a *ApplicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
 	return app, result.Error
 }
 
-func (a *ApplicationDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
-	app, err := a.FindWithTenant(id)
+func (a *ApplicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
+	app, err := a.FindWithTenant(&resource.ResourceID)
 	data, _ := json.Marshal(app.ToEvent())
 
 	return data, err

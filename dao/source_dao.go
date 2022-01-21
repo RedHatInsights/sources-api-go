@@ -116,8 +116,8 @@ func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 	return result.Error == nil
 }
 
-func (s *SourceDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
-	src := m.Source{ID: *id}
+func (s *SourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+	src := m.Source{ID: resource.ResourceID}
 	result := DB.Find(&src)
 	if result.Error != nil {
 		return nil, result.Error
@@ -126,10 +126,10 @@ func (s *SourceDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
 	return BulkMessageFromSource(&src)
 }
 
-func (s *SourceDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
-	result := DB.Model(&m.Source{ID: *id}).Updates(updateAttributes)
+func (s *SourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+	result := DB.Model(&m.Source{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("source not found %v", id)
+		return fmt.Errorf("source not found %v", resource)
 	}
 
 	return nil
@@ -142,8 +142,8 @@ func (s *SourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {
 	return src, result.Error
 }
 
-func (s *SourceDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
-	src, err := s.FindWithTenant(id)
+func (s *SourceDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
+	src, err := s.FindWithTenant(&resource.ResourceID)
 	if err != nil {
 		return nil, err
 	}

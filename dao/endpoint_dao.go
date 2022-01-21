@@ -111,21 +111,21 @@ func (a *EndpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
 	return result.Error == nil
 }
 
-func (a *EndpointDaoImpl) BulkMessage(id *int64) (map[string]interface{}, error) {
-	endpoint := &m.Endpoint{ID: *id}
-	resource := DB.Preload("Source").Find(&endpoint)
+func (a *EndpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+	endpoint := &m.Endpoint{ID: resource.ResourceID}
+	result := DB.Preload("Source").Find(&endpoint)
 
-	if resource.Error != nil {
-		return nil, resource.Error
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return BulkMessageFromSource(&endpoint.Source)
 }
 
-func (a *EndpointDaoImpl) FetchAndUpdateBy(id *int64, updateAttributes map[string]interface{}) error {
-	result := DB.Model(&m.Endpoint{ID: *id}).Updates(updateAttributes)
+func (a *EndpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+	result := DB.Model(&m.Endpoint{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("endpoint not found %v", id)
+		return fmt.Errorf("endpoint not found %v", resource)
 	}
 
 	return nil
@@ -138,8 +138,8 @@ func (a *EndpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
 	return endpoint, result.Error
 }
 
-func (a *EndpointDaoImpl) ToEventJSON(id *int64) ([]byte, error) {
-	endpoint, err := a.FindWithTenant(id)
+func (a *EndpointDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
+	endpoint, err := a.FindWithTenant(&resource.ResourceID)
 	data, _ := json.Marshal(endpoint.ToEvent())
 
 	return data, err

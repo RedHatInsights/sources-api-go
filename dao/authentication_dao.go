@@ -447,7 +447,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	return auth
 }
 
-func (a *AuthenticationDaoImpl) BulkMessage(_ *int64) (map[string]interface{}, error) {
+func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	bulkMessage := map[string]interface{}{}
 
 	bulkMessage["source"] = m.Source{}
@@ -459,14 +459,14 @@ func (a *AuthenticationDaoImpl) BulkMessage(_ *int64) (map[string]interface{}, e
 	return bulkMessage, nil
 }
 
-func (a *AuthenticationDaoImpl) FetchAndUpdateBy(_ *int64, _ map[string]interface{}) error {
+func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
 	/*
 		TODO
 	*/
 	return nil
 }
 
-func (a *AuthenticationDaoImpl) ToEventJSON(_ *int64) ([]byte, error) {
+func (a *AuthenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
 	/*
 		TODO: we need to obtain uid
 		app, err := a.GetById(uid)

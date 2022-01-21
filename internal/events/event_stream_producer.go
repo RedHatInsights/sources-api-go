@@ -62,24 +62,24 @@ func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, pay
 	return nil
 }
 
-func (esp *EventStreamProducer) RaiseEventForUpdate(resourceID int64, resourceType string, updateAttributes []string, headers []kafka.Header) error {
-	allowed := esp.RaiseEventAllowed(resourceType, updateAttributes)
-	eventModelDao, err := dao.GetFromResourceType(resourceType)
+func (esp *EventStreamProducer) RaiseEventForUpdate(resource util.Resource, updateAttributes []string, headers []kafka.Header) error {
+	allowed := esp.RaiseEventAllowed(resource.ResourceType, updateAttributes)
+	eventModelDao, err := dao.GetFromResourceType(resource.ResourceType)
 	if err != nil {
 		return err
 	}
 
-	resourceJSON, err := (*eventModelDao).ToEventJSON(&resourceID)
+	resourceJSON, err := (*eventModelDao).ToEventJSON(resource)
 	if err != nil {
 		return err
 	}
 
-	err = esp.RaiseEventIf(allowed, resourceType+".update", resourceJSON, headers)
+	err = esp.RaiseEventIf(allowed, resource.ResourceType+".update", resourceJSON, headers)
 	if err != nil {
 		return err
 	}
 
-	message, err := m.UpdateMessage(eventModelDao, resourceID, resourceType, updateAttributes)
+	message, err := m.UpdateMessage(eventModelDao, resource, updateAttributes)
 	if err != nil {
 		return err
 	}
