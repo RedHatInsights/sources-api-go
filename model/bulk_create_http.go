@@ -74,14 +74,14 @@ func (b BulkCreateOutput) ToResponse() *BulkCreateResponse {
 
 	for i := 0; i < len(b.Sources); i++ {
 		resp.Sources[i] = *b.Sources[i].ToResponse()
-	}
 
-	for i := 0; i < len(b.Applications); i++ {
-		resp.Applications[i] = *b.Applications[i].ToResponse()
-	}
+		for j := 0; j < len(b.Sources[i].Applications); j++ {
+			resp.Applications[j] = *b.Sources[i].Applications[j].ToResponse()
+		}
 
-	for i := 0; i < len(b.Endpoints); i++ {
-		resp.Endpoints[i] = *b.Endpoints[i].ToResponse()
+		for j := 0; j < len(b.Sources[i].Endpoints); j++ {
+			resp.Endpoints[j] = *b.Sources[i].Endpoints[j].ToResponse()
+		}
 	}
 
 	for i := 0; i < len(b.Authentications); i++ {

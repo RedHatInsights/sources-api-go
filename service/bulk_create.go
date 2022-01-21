@@ -2,12 +2,18 @@ package service
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
+
+/////////////////////////////////////////////////////////////////////
+// PARSING
+/////////////////////////////////////////////////////////////////////
 
 /*
 	Oh boy. The big one.
@@ -205,20 +211,38 @@ func parseAuthentications(reqAuthentications []m.BulkCreateAuthentication, curre
 
 	for _, auth := range reqAuthentications {
 		a := m.Authentication{}
+		a.ResourceType = auth.ResourceType
+		a.AuthType = auth.AuthType
+		a.Username = auth.Username
+		a.Password = auth.Password
+		a.Extra = auth.Extra
+		a.Name = auth.Name
+		a.TenantID = *tenantID
 
+		// lookup the polymorphic resource based on the resource type + name
 		switch strings.ToLower(auth.ResourceType) {
 		case "source":
+			l.Log.Infof("Source Authentication does not need linked - continuing")
+
 		case "application":
+			id, err := strconv.ParseInt(auth.ResourceName, 10, 64)
+			if err == nil {
+				// if an id was passed in we're just adding an authentication to
+				// an already-existing resource.
+				a.ResourceID = id
+			}
+
 		case "endpoint":
+			id, err := strconv.ParseInt(auth.ResourceName, 10, 64)
+			if err == nil {
+				// if an id was passed in we're just adding an authentication to
+				// an already-existing resource.
+				a.ResourceID = id
+			}
+
 		default:
 			return nil, fmt.Errorf("failed to link authentication: no resource type present")
 		}
-
-		// copy over fields
-		a.AuthType = auth.AuthType
-		a.TenantID = *tenantID
-
-		//TODO: the rest.
 
 		authentications = append(authentications, a)
 	}
@@ -228,4 +252,24 @@ func parseAuthentications(reqAuthentications []m.BulkCreateAuthentication, curre
 	}
 
 	return authentications, nil
+}
+
+/////////////////////////////////////////////////////////////////////
+// LINKING AUTHENTICATIONS
+/////////////////////////////////////////////////////////////////////
+
+func LinkUpAuthentications(current *m.BulkCreateOutput, tenantID *int64) error {
+	for i, auth := range current.Authentications {
+		switch strings.ToLower(auth.ResourceType) {
+		case "source":
+			current.Authentications[i].ResourceID = current.Sources[i].ID
+		case "application":
+
+		case "endpoint":
+		default:
+			return fmt.Errorf("not sure how we got here - this should have been caught earlier. invalid authentication resource type")
+		}
+	}
+
+	return nil
 }

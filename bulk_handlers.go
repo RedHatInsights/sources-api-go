@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
@@ -21,15 +22,20 @@ func BulkCreate(c echo.Context) error {
 		return fmt.Errorf("failed to pull tenant from request")
 	}
 
-	// TODO: Change this out to use the get functions so they're mocked out for tests.
 	output, err := service.ParseBulkCreateRequest(req, &tenantID)
 	if err != nil {
 		return err
 	}
 
-	// dao.DB.Save(src)
-	fmt.Printf("req: %v\n", req)
-	fmt.Printf("output: %v\n", output)
+	err = dao.GetSourceDao(&tenantID).Create(&output.Sources[0])
+	if err != nil {
+		return err
+	}
+
+	err = service.LinkUpAuthentications(output, &tenantID)
+	if err != nil {
+		return err
+	}
 
 	return c.JSON(http.StatusCreated, output.ToResponse())
 }
