@@ -497,10 +497,18 @@ func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]
 }
 
 func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
-	/*
-		TODO
-	*/
-	return nil
+	a.TenantID = &resource.TenantID
+	authentication, err := a.GetById(resource.ResourceUID)
+	if err != nil {
+		return err
+	}
+
+	err = authentication.UpdateBy(updateAttributes)
+	if err != nil {
+		return err
+	}
+
+	return a.Update(authentication)
 }
 
 func (a *AuthenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {

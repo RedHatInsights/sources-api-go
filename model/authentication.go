@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -85,4 +86,17 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 
 	// Vault requires the hash to be wrapped in a "data" object in order to be accepted.
 	return map[string]interface{}{"data": data}, nil
+}
+func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
+	data, err := json.Marshal(attributes)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, &auth)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
