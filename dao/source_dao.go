@@ -102,12 +102,20 @@ func (s *SourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 
 func (s *SourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	src := m.Source{ID: resource.ResourceID}
-	result := DB.Find(&src)
+	result := DB.Preload("Applications").Find(&src)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	var aa []m.ApplicationAuthentication
+	var applicationIDs []int64
+
+	for _, value := range src.Applications {
+		applicationIDs = append(applicationIDs, value.ID)
+	}
+
+	DB.Preload("Tenant").Where("application_id IN ?", applicationIDs).Find(&aa)
+
 	authentication := &m.Authentication{ResourceID: src.ID,
 		ResourceType:               "Source",
 		ApplicationAuthentications: aa}

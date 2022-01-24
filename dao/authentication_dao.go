@@ -441,6 +441,10 @@ func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]
 		authUIDs = append(authUIDs, auth.ID)
 	}
 
+	var aa []m.ApplicationAuthentication
+
+	DB.Preload("Tenant").Where("authentication_uid IN ?", authUIDs).Find(&aa)
+	authentication.ApplicationAuthentications = aa
 
 	return BulkMessageFromSource(&authentication.Source, authentication)
 }

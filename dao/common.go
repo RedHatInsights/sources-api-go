@@ -60,15 +60,77 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 
 	bulkMessage["applications"] = applications
 
-	bulkMessage["application_authentications"] = []m.ApplicationAuthenticationEvent{}
 	err := AddAuthenticationEvents(bulkMessage, authentication, source.TenantID)
 	if err != nil {
 		return nil, err
 	}
 
+	AddApplicationsAuthenticationEvents(bulkMessage, authentication.ApplicationAuthentications)
 
 	return bulkMessage, nil
 }
+
+func AddApplicationsAuthentications(bulkMessage map[string]interface{}, resourceApplicationsAuthentications []m.ApplicationAuthentication) {
+	var aa []m.ApplicationAuthentication
+
+	if len(resourceApplicationsAuthentications) == 0 {
+		var authUIDs []string
+
+		as, success := bulkMessage["authentications"].([]m.Authentication)
+
+		if success {
+			for _, auth := range as {
+				authUIDs = append(authUIDs, auth.ID)
+			}
+		}
+
+		authenticationEvents, success := bulkMessage["authentications"].([]m.AuthenticationEvent)
+
+		if success {
+			for _, auth := range authenticationEvents {
+				authUIDs = append(authUIDs, auth.ID)
+			}
+		}
+
+		DB.Preload("Tenant").Where("authentication_uid IN ?", authUIDs).Find(&aa)
+	}
+
+	if aa != nil {
+		bulkMessage["application_authentications"] = aa
+	} else {
+		bulkMessage["application_authentications"] = []m.ApplicationAuthentication{}
+	}
+}
+
+func AddApplicationsAuthenticationEvents(bulkMessage map[string]interface{}, resourceApplicationsAuthentications []m.ApplicationAuthentication) {
+	applicationsAuthentications := make([]m.ApplicationAuthenticationEvent, len(resourceApplicationsAuthentications))
+
+	for i, auth := range resourceApplicationsAuthentications {
+		applicationsAuthentications[i] = *auth.ToEvent()
+	}
+
+	if len(resourceApplicationsAuthentications) == 0 {
+		var aa []m.ApplicationAuthentication
+		var authUIDs []string
+
+		authenticationEvents, success := bulkMessage["authentications"].([]m.AuthenticationEvent)
+
+		if success {
+			for _, auth := range authenticationEvents {
+				authUIDs = append(authUIDs, auth.ID)
+			}
+		}
+
+		DB.Preload("Tenant").Where("authentication_uid IN ?", authUIDs).Find(&aa)
+		applicationsAuthentications = make([]m.ApplicationAuthenticationEvent, len(aa))
+		for i, auth := range aa {
+			applicationsAuthentications[i] = *auth.ToEvent()
+		}
+	}
+
+	bulkMessage["application_authentications"] = applicationsAuthentications
+}
+
 func AddAuthenticationEvents(bulkMessage map[string]interface{}, authentication *m.Authentication, tenantID int64) error {
 	err := AddAuthentications(bulkMessage, authentication, tenantID)
 	aa, success := bulkMessage["authentications"].([]m.Authentication)
