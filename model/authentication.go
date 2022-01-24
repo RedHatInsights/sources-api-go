@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"strconv"
 	"time"
 )
@@ -87,6 +88,31 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 	// Vault requires the hash to be wrapped in a "data" object in order to be accepted.
 	return map[string]interface{}{"data": data}, nil
 }
+
+func (auth *Authentication) ToEvent() *AuthenticationEvent {
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(auth.AvailabilityStatus.AvailabilityStatus),
+		LastAvailableAt: util.DateTimeToRecordFormat(auth.LastAvailableAt),
+		LastCheckedAt:   util.DateTimeToRecordFormat(auth.LastCheckedAt)}
+
+	authEvent := &AuthenticationEvent{
+		AvailabilityStatusEvent: asEvent,
+		ID:                      auth.ID,
+		CreatedAt:               auth.CreatedAt,
+		Name:                    auth.Name,
+		AuthType:                auth.AuthType,
+		Version:                 auth.Version,
+		Username:                auth.Username,
+		Extra:                   auth.Extra,
+		AvailabilityStatusError: &auth.AvailabilityStatusError,
+		ResourceType:            auth.ResourceType,
+		ResourceID:              auth.ResourceID,
+		Tenant:                  &auth.Tenant.ExternalTenant,
+		SourceID:                auth.SourceID,
+	}
+
+	return authEvent
+}
+
 func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 	data, err := json.Marshal(attributes)
 	if err != nil {
