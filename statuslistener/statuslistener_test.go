@@ -3,6 +3,7 @@ package statuslistener
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"os"
 	"reflect"
@@ -138,6 +139,16 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		res = res.Find(application)
 		bulkMessage["applications"] = application.Source.Applications
 		bulkMessage["endpoints"] = application.Source.Endpoints
+
+		authentication := &m.Authentication{ResourceID: application.ID,
+			ResourceType:               "Application",
+			ApplicationAuthentications: []m.ApplicationAuthentication{},
+		}
+
+		err := dao.AddAuthentications(bulkMessage, authentication, application.TenantID)
+		if err != nil {
+			panic("error in adding authentications: " + err.Error())
+		}
 		src = application
 	case "Endpoint":
 		endpoint := &m.Endpoint{ID: id}
@@ -147,6 +158,16 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		res = res.Find(endpoint)
 		bulkMessage["applications"] = endpoint.Source.Applications
 		bulkMessage["endpoints"] = endpoint.Source.Endpoints
+
+		authentication := &m.Authentication{ResourceID: endpoint.ID,
+			ResourceType:               "Endpoint",
+			ApplicationAuthentications: []m.ApplicationAuthentication{},
+		}
+		err := dao.AddAuthentications(bulkMessage, authentication, endpoint.TenantID)
+		if err != nil {
+			panic("error in adding authentications: " + err.Error())
+		}
+
 		src = endpoint
 	default:
 		panic("can't find resource type")
@@ -306,6 +327,9 @@ type TestData struct {
 }
 
 func TestConsumeStatusMessage(t *testing.T) {
+	ml := mocks.MockLogical{}
+	dao.SetVault(ml)
+
 	if !runningIntegration {
 		return
 	}

@@ -426,15 +426,23 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 }
 
 func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
-	bulkMessage := map[string]interface{}{}
+	a.TenantID = &resource.TenantID
+	authentication, err := a.GetById(resource.ResourceUID)
+	if err != nil {
+		return nil, err
+	}
 
-	bulkMessage["source"] = m.Source{}
-	bulkMessage["endpoints"] = []m.Endpoint{}
-	bulkMessage["endpoints"] = []m.Application{}
-	bulkMessage["authentications"] = []m.Authentication{}
-	bulkMessage["application_authentications"] = []m.ApplicationAuthenticationEvent{}
+	auth := &AuthenticationDaoImpl{TenantID: &resource.TenantID}
+	auths, _, err := auth.ListForSource(authentication.SourceID, 100, 0, nil)
 
-	return bulkMessage, nil
+	var authUIDs []string
+
+	for _, auth := range auths {
+		authUIDs = append(authUIDs, auth.ID)
+	}
+
+
+	return BulkMessageFromSource(&authentication.Source, authentication)
 }
 
 func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
@@ -453,10 +461,19 @@ func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateA
 }
 
 func (a *AuthenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
-	/*
-		TODO: we need to obtain uid
-		app, err := a.GetById(uid)
-		data, _ := json.Marshal(app.ToEvent())
-	*/
-	return []byte{}, nil
+	a.TenantID = &resource.TenantID
+	auth, err := a.GetById(resource.ResourceUID)
+	if err != nil {
+		return nil, err
+	}
+
+	auth.TenantID = resource.TenantID
+	auth.Tenant = m.Tenant{ExternalTenant: resource.AccountNumber}
+	authEvent := auth.ToEvent()
+	data, err := json.Marshal(authEvent)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
