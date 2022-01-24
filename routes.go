@@ -72,7 +72,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
 	v3.POST("/endpoints", EndpointCreate, permissionMiddleware...)
 	v3.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
-	v3.GET("/endpoints/:endpoint_id", EndpointListAuthentications, tenancyWithListMiddleware...)
+	v3.GET("/endpoints/:endpoint_id/authentications", EndpointListAuthentications, tenancyWithListMiddleware...)
 
 	// ApplicationAuthentications
 	v3.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
