@@ -3,8 +3,9 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"strconv"
+
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type EventModelDao interface {

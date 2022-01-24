@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+
 	"github.com/RedHatInsights/sources-api-go/internal/types"
 )
 

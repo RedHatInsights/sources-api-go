@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )

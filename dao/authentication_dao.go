@@ -434,6 +434,9 @@ func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]
 
 	auth := &AuthenticationDaoImpl{TenantID: &resource.TenantID}
 	auths, _, err := auth.ListForSource(authentication.SourceID, 100, 0, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	var authUIDs []string
 

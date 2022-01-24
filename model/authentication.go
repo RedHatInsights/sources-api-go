@@ -2,9 +2,10 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"strconv"
 	"time"
+
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type Authentication struct {

@@ -3,8 +3,6 @@ package statuslistener
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
-	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"os"
 	"reflect"
 	"testing"
@@ -12,6 +10,8 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
+	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -251,11 +251,6 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 
 	contentMap["endpoints"] = endpoints
 
-	contentJSON, err := json.Marshal(contentMap)
-	if err != nil {
-		panic("marshalling error + " + err.Error())
-	}
-
 	var applicationAuthentications []interface{}
 
 	applicationAuthenticationsBulkMessage, success := bulkMessage["application_authentications"].([]m.ApplicationAuthentication)
@@ -279,7 +274,7 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 		contentMap["application_authentications"] = []m.ApplicationAuthentication{}
 	}
 
-	contentJSON, err = json.Marshal(contentMap)
+	contentJSON, err := json.Marshal(contentMap)
 	if err != nil {
 		panic("marshalling error + " + err.Error())
 	}

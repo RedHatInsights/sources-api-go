@@ -1,13 +1,13 @@
 package statuslistener
 
 import (
-	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"sort"
 	"time"
 
 	c "github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
+	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -87,7 +87,10 @@ func (avs *AvailabilityStatusListener) headersFrom(message kafka.Message) []kafk
 
 func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMessage, headers []kafka.Header) {
 	resource := util.Resource{}
-	resource.Parse(statusMessage)
+	if resource.Parse(statusMessage) != nil {
+		logging.Log.Errorf("Invalid Status: %s", statusMessage.Status)
+		return
+	}
 
 	if !util.SliceContainsString(m.AvailabilityStatuses, statusMessage.Status) {
 		logging.Log.Errorf("Invalid Status: %s", statusMessage.Status)
