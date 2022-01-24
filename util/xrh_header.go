@@ -4,11 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-func ParseXRHIDHeader(inputIdentity string) (XRHIdentity *identity.XRHID, err error) {
+func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
+	var XRHIdentity *identity.XRHID
 	decodedIdentity, err := base64.StdEncoding.DecodeString(inputIdentity)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding Identity: %v", err)
@@ -22,7 +24,7 @@ func ParseXRHIDHeader(inputIdentity string) (XRHIdentity *identity.XRHID, err er
 	return XRHIdentity, nil
 }
 
-func AccountNumberFrom(headers []kafka.Header) (string, error) {
+func AccountNumberFromHeaders(headers []kafka.Header) (string, error) {
 	XRHAccountNumberKey := "x-rh-sources-account-number"
 	XRHIdentityKey := "x-rh-identity"
 

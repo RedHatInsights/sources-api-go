@@ -124,7 +124,8 @@ func (a *EndpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interf
 		return nil, result.Error
 	}
 
-	return BulkMessageFromSource(&endpoint.Source)
+	authentication := &m.Authentication{ResourceID: endpoint.ID, ResourceType: "Endpoint", ApplicationAuthentications: []m.ApplicationAuthentication{}}
+	return BulkMessageFromSource(&endpoint.Source, authentication)
 }
 
 func (a *EndpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
