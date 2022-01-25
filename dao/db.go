@@ -16,7 +16,7 @@ var (
 	DB *gorm.DB
 
 	vaultClient *vault.Client
-	Vault       *vault.Logical
+	Vault       VaultClient
 
 	conf = config.Get()
 )
@@ -55,6 +55,7 @@ func Init() {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to Create Vault Client: %v", err))
 	}
+
 	Vault = vaultClient.Logical()
 }
 
