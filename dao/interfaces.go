@@ -58,6 +58,7 @@ type AuthenticationDao interface {
 	ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	Create(src *m.Authentication) error
+	BulkCreate(src *m.Authentication) error
 	Update(src *m.Authentication) error
 	Delete(id string) (*m.Authentication, error)
 	Tenant() *int64

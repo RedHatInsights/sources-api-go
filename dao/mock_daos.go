@@ -685,3 +685,7 @@ func (m MockAuthenticationDao) FetchAndUpdateBy(resource util.Resource, updateAt
 func (m MockAuthenticationDao) ToEventJSON(resource util.Resource) ([]byte, error) {
 	panic("implement me")
 }
+
+func (m MockAuthenticationDao) BulkCreate(auth *m.Authentication) error {
+	panic("AAA")
+}

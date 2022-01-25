@@ -15,7 +15,8 @@ type ApplicationAuthentication struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	VaultPath string `json:"vault_path"`
+	// TODO: this doesn't exist yet
+	VaultPath string `json:"vault_path" gorm:"-"`
 
 	TenantID int64
 	Tenant   Tenant
@@ -25,7 +26,7 @@ type ApplicationAuthentication struct {
 	// TODO: fix correctly PR#40
 	AuthenticationID int64 `json:"authentication_id"`
 
-	AuthenticationUID string `json:"-"`
+	AuthenticationUID string `json:"-" gorm:"-"`
 }
 
 func (aa *ApplicationAuthentication) ToEvent() interface{} {

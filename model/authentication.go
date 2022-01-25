@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -147,4 +148,8 @@ func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 	}
 
 	return nil
+}
+
+func (auth *Authentication) Path() string {
+	return fmt.Sprintf("secret/data/%d/%s_%v_%s", auth.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 }

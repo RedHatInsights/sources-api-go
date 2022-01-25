@@ -240,8 +240,8 @@ func (a *authenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 	query := DB.Select("source_id").Where("tenant_id = ?", *a.TenantID)
 
-	switch auth.ResourceType {
-	case "Application":
+	switch strings.ToLower(auth.ResourceType) {
+	case "application":
 		app := m.Application{ID: auth.ResourceID}
 		result := query.Model(&app).First(&app)
 		if result.Error != nil {
@@ -249,7 +249,7 @@ func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 		}
 
 		auth.SourceID = app.SourceID
-	case "Endpoint":
+	case "endpoint":
 		endpoint := m.Endpoint{ID: auth.ResourceID}
 		result := query.Model(&endpoint).First(&endpoint)
 		if result.Error != nil {
@@ -257,7 +257,7 @@ func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 		}
 
 		auth.SourceID = endpoint.SourceID
-	case "Source":
+	case "source":
 		auth.SourceID = auth.ResourceID
 	default:
 		return fmt.Errorf("bad resource type, supported types are [Application, Endpoint, Source]")
@@ -279,6 +279,31 @@ func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 	number, ok := out.Data["version"].(json.Number)
 	if !ok {
 		return errors.New("failed to cast vault version number to string")
+	}
+	auth.Version = number.String()
+
+	return nil
+}
+
+// Create method _without_ checking if the resource exists. Basically since this
+// is the bulk-create method the resource doesn't exist yet and we know the
+// source ID is set beforehand.
+func (a *authenticationDaoImpl) BulkCreate(auth *m.Authentication) error {
+	auth.ID = uuid.New().String()
+	path := fmt.Sprintf("secret/data/%d/%s_%v_%s", *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
+
+	data, err := auth.ToVaultMap()
+	if err != nil {
+		return err
+	}
+
+	out, err := Vault.Write(path, data)
+	if err != nil {
+		return err
+	}
+	number, ok := out.Data["version"].(json.Number)
+	if !ok {
+		return fmt.Errorf("failed to get version number from string")
 	}
 	auth.Version = number.String()
 

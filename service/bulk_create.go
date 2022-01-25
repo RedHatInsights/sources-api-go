@@ -11,10 +11,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-/////////////////////////////////////////////////////////////////////
-// PARSING
-/////////////////////////////////////////////////////////////////////
-
 /*
 	Oh boy. The big one.
 
@@ -23,34 +19,88 @@ import (
 
 	1. Sources
 	2. Endpoints/Applications
-	3. Authentications
 
 	It dynamically looks up both the SourceType as well as ApplicationType if
 	given the *_type_name paremeters.
 
-	For the final output the base Source models have the relations built out
-	below them so a single Save() call will persist all the models at once.
+	3. Saving the Authentications
+	4. Saving the ApplicationAuthentications if necessary
 */
-func ParseBulkCreateRequest(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput, error) {
-	var err error
-	var output m.BulkCreateOutput
+func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput, error) {
+	// initiate a transaction that we'll rollback if anything bad happens.
+	tx := dao.DbTransaction{}
+	tx.Start()
 
+	// the output from this request.
+	var output m.BulkCreateOutput
+	var err error
+
+	// parse the sources, then save them in the transaction.
 	output.Sources, err = parseSources(req.Sources, tenantID)
 	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	err = tx.Save(m.Source{}, &output.Sources[0])
+	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
 	output.Applications, err = parseApplications(req.Applications, &output, tenantID)
 	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	err = tx.Save(m.Application{}, &output.Applications)
+	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
 	output.Endpoints, err = parseEndpoints(req.Endpoints, &output, tenantID)
 	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	err = tx.Save(m.Endpoint{}, &output.Endpoints)
+	if err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	output.Authentications, err = parseAuthentications(req.Authentications, &output, tenantID)
+	// link up the authentications to their polymorphic relations.
+	output.Authentications, err = linkUpAuthentications(req, &output, tenantID)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	for i := 0; i < len(output.Authentications); i++ {
+		err = dao.GetAuthenticationDao(tenantID).BulkCreate(&output.Authentications[i])
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		if strings.ToLower(output.Authentications[i].ResourceType) == "application" {
+			output.ApplicationAuthentications = append(output.ApplicationAuthentications, m.ApplicationAuthentication{
+				// TODO: After vault migration.
+				// VaultPath:         output.Authentications[i].Path(),
+				ApplicationID:     output.Authentications[i].ResourceID,
+				AuthenticationUID: output.Authentications[i].ID,
+				TenantID:          *tenantID,
+			})
+		}
+	}
+
+	err = tx.Save(m.ApplicationAuthentication{}, &output.ApplicationAuthentications)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +138,13 @@ func parseSources(reqSources []m.BulkCreateSource, tenantID *int64) ([]m.Source,
 		s.SourceRef = source.SourceRef
 		s.AppCreationWorkflow = source.AppCreationWorkflow
 		s.AvailabilityStatus = m.AvailabilityStatus{AvailabilityStatus: source.AvailabilityStatus}
+		s.SourceTypeID = *source.SourceTypeID
 		s.TenantID = *tenantID
 
 		// populate the child relation slices
 		s.Endpoints = make([]m.Endpoint, 0)
 		s.Applications = make([]m.Application, 0)
-		// s.Authentications = make([]*m.Authentication, 0)
+		s.Authentications = make([]m.Authentication, 0)
 
 		// add it to the list
 		sources[i] = s
@@ -122,6 +173,8 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 			}
 
 			a.ApplicationType = *apptype
+			a.ApplicationTypeID = apptype.Id
+
 		case app.ApplicationTypeName != "":
 			// dynamically look up the application type by name if passed
 			apptype, err := dao.GetApplicationTypeDao(tenantID).GetByName(app.ApplicationTypeName)
@@ -130,12 +183,14 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 			}
 
 			a.ApplicationType = *apptype
+			a.ApplicationTypeID = apptype.Id
+
 		default:
 			return nil, fmt.Errorf("no application type present, need either [application_type_name] or [application_type_id]")
 		}
 
 		// loop through and find the source which this application belongs to.
-		for i, src := range current.Sources {
+		for _, src := range current.Sources {
 			if src.Name != app.SourceName {
 				continue
 			}
@@ -148,15 +203,10 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 
 			// fill out whats left of the application (spoiler: not much)
 			a.Extra = app.Extra
+			a.SourceID = src.ID
 			a.TenantID = *tenantID
 
-			// Add the application to the source's list. It'll get persisted all
-			// at once when we call the final save.
-			//
-			// NOTE: need to use the index here because for...range creates a
-			// copy of the source!
 			applications = append(applications, a)
-			current.Sources[i].Applications = append(current.Sources[i].Applications, a)
 		}
 	}
 
@@ -187,13 +237,13 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 		e.VerifySsl = endpt.VerifySsl
 		e.TenantID = *tenantID
 
-		for i, src := range current.Sources {
+		for _, src := range current.Sources {
 			if src.Name != endpt.SourceName {
 				continue
 			}
 
+			e.SourceID = src.ID
 			endpoints = append(endpoints, e)
-			current.Sources[i].Endpoints = append(current.Sources[i].Endpoints, e)
 		}
 	}
 
@@ -206,11 +256,12 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 	return endpoints, nil
 }
 
-func parseAuthentications(reqAuthentications []m.BulkCreateAuthentication, current *m.BulkCreateOutput, tenantID *int64) ([]m.Authentication, error) {
+func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput, tenantID *int64) ([]m.Authentication, error) {
 	authentications := make([]m.Authentication, 0)
 
-	for _, auth := range reqAuthentications {
+	for _, auth := range req.Authentications {
 		a := m.Authentication{}
+
 		a.ResourceType = auth.ResourceType
 		a.AuthType = auth.AuthType
 		a.Username = auth.Username
@@ -219,57 +270,106 @@ func parseAuthentications(reqAuthentications []m.BulkCreateAuthentication, curre
 		a.Name = auth.Name
 		a.TenantID = *tenantID
 
+		// if an id was passed in we're just adding an authentication to
+		// an already-existing resource.
+		id, err := strconv.ParseInt(auth.ResourceName, 10, 64)
+		if err == nil {
+			var err error
+			switch strings.ToLower(auth.ResourceType) {
+			case "source":
+				_, err = dao.GetSourceDao(tenantID).GetById(&id)
+				if err == nil {
+					l.Log.Debugf("Found existing Source with id %v, adding to list and continuing", id)
+					a.ResourceID = id
+					authentications = append(authentications, a)
+					continue
+				}
+			case "application":
+				_, err = dao.GetApplicationDao(tenantID).GetById(&id)
+				if err == nil {
+					l.Log.Debugf("Found existing Application with id %v, adding to list and continuing", id)
+					a.ResourceID = id
+					authentications = append(authentications, a)
+					continue
+				}
+			case "endpoint":
+				_, err = dao.GetEndpointDao(tenantID).GetById(&id)
+				if err == nil {
+					l.Log.Debugf("Found existing Endpoint with id %v, adding to list and continuing", id)
+					a.ResourceID = id
+					authentications = append(authentications, a)
+					continue
+				}
+			}
+		}
+
 		// lookup the polymorphic resource based on the resource type + name
 		switch strings.ToLower(auth.ResourceType) {
 		case "source":
+			a.ResourceID = current.Sources[0].ID
+			a.SourceID = current.Sources[0].ID
 			l.Log.Infof("Source Authentication does not need linked - continuing")
 
 		case "application":
-			id, err := strconv.ParseInt(auth.ResourceName, 10, 64)
-			if err == nil {
-				// if an id was passed in we're just adding an authentication to
-				// an already-existing resource.
-				a.ResourceID = id
+			id, err := linkupApplication(auth.ResourceName, current.Applications, tenantID)
+			if err != nil {
+				return nil, err
 			}
 
+			a.ResourceID = id
+			a.SourceID = current.Sources[0].ID
+
 		case "endpoint":
-			id, err := strconv.ParseInt(auth.ResourceName, 10, 64)
-			if err == nil {
-				// if an id was passed in we're just adding an authentication to
-				// an already-existing resource.
-				a.ResourceID = id
+			id, err := linkupEndpoint(auth.ResourceName, current.Endpoints)
+			if err != nil {
+				return nil, err
 			}
+
+			a.ResourceID = id
+			a.SourceID = current.Sources[0].ID
 
 		default:
 			return nil, fmt.Errorf("failed to link authentication: no resource type present")
 		}
 
-		authentications = append(authentications, a)
+		// checking to make sure the polymorphic relationship is set.
+		if a.ResourceID != 0 && a.ResourceType != "" {
+			authentications = append(authentications, a)
+		}
 	}
 
-	if len(authentications) != len(reqAuthentications) {
+	if len(authentications) != len(req.Authentications) {
 		return nil, fmt.Errorf("failed to link up all authentications - check to make sure the names match up")
 	}
 
 	return authentications, nil
 }
 
-/////////////////////////////////////////////////////////////////////
-// LINKING AUTHENTICATIONS
-/////////////////////////////////////////////////////////////////////
+// authentications are attached to an application that has the same "resource
+// name" which is passed in the payload.
+func linkupApplication(name string, apps []m.Application, tenantID *int64) (int64, error) {
+	at, err := dao.GetApplicationTypeDao(tenantID).GetByName(name)
+	if err != nil {
+		return 0, err
+	}
 
-func LinkUpAuthentications(current *m.BulkCreateOutput, tenantID *int64) error {
-	for i, auth := range current.Authentications {
-		switch strings.ToLower(auth.ResourceType) {
-		case "source":
-			current.Authentications[i].ResourceID = current.Sources[i].ID
-		case "application":
-
-		case "endpoint":
-		default:
-			return fmt.Errorf("not sure how we got here - this should have been caught earlier. invalid authentication resource type")
+	for _, app := range apps {
+		if at.Id == app.ApplicationTypeID {
+			return app.ID, nil
 		}
 	}
 
-	return nil
+	return 0, fmt.Errorf("failed to find application for authentication type %v", at.Name)
+}
+
+// authentications are attached to an endpoint that has the same hostname passed
+// in the payload.
+func linkupEndpoint(name string, endpoints []m.Endpoint) (int64, error) {
+	for _, endpt := range endpoints {
+		if strings.Contains(strings.ToLower(*endpt.Host), strings.ToLower(name)) {
+			return endpt.ID, nil
+		}
+	}
+
+	return 0, fmt.Errorf("failed to find endpoint for hostname %v", name)
 }

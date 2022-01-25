@@ -58,10 +58,11 @@ type BulkCreateAuthentication struct {
 	Output from the BulkCreate operation - stores the parsed resources that have been validated.
 */
 type BulkCreateOutput struct {
-	Sources         []Source
-	Applications    []Application
-	Endpoints       []Endpoint
-	Authentications []Authentication
+	Sources                    []Source
+	Applications               []Application
+	Endpoints                  []Endpoint
+	Authentications            []Authentication
+	ApplicationAuthentications []ApplicationAuthentication
 }
 
 func (b BulkCreateOutput) ToResponse() *BulkCreateResponse {
