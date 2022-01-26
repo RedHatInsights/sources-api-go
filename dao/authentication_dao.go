@@ -2,6 +2,7 @@ package dao
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -435,49 +436,12 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		auth.SourceID = id
 	}
 
-	// Request the JWT token if the authentication is a "marketplace" authentication
-	if auth.Name == "marketplace" {
-		var token *marketplace.BearerToken
+	// Try to set the marketplace token in the "auth.Extra" field. If the authentication isn't of the "marketplace"
+	// type, this whole thing is skipped.
+	if err := setMarketplaceTokenAuthExtraField(auth); err != nil {
+		logging.Log.Error(err)
 
-		// First try to fetch the token from the cache
-		token, err = marketplaceTokenCacher.FetchToken()
-
-		// If it's not present, request one token to the marketplace, cache it, and assign it to the "extra" field
-		// of auth
-		if err != nil {
-			// The Api key must be present to be able to send the request to the marketplace
-			if auth.Password == "" {
-				return nil
-			}
-			marketplaceTokenProvider = GetMarketplaceTokenProvider(auth.Password)
-
-			token, err = marketplaceTokenProvider.RequestToken()
-			if err != nil {
-				logging.Log.Errorf("could not get token from the marketplace: %s", err)
-				return nil
-			}
-
-			// Cache the token. We really don't mind if we cannot properly cache it: we can request another one and
-			// return the one that we got. But we log the error for traceability and future debugging.
-			err = marketplaceTokenCacher.CacheToken(token)
-			if err != nil {
-				logging.Log.Errorf("could not cache the token in Redis: %s", err)
-			}
-		}
-
-		// Serialize the token as a string
-		serializedToken, err := json.Marshal(token)
-		if err != nil {
-			return nil
-		}
-
-		if auth.Extra == nil {
-			auth.Extra = make(map[string]interface{})
-		}
-
-		auth.Extra["marketplace"] = string(serializedToken)
-
-		logging.Log.Log(logrus.InfoLevel, "marketplace token included in authentication")
+		return nil
 	}
 
 	return auth
@@ -509,4 +473,56 @@ func (a *AuthenticationDaoImpl) ToEventJSON(_ *int64) ([]byte, error) {
 		data, _ := json.Marshal(app.ToEvent())
 	*/
 	return []byte{}, nil
+}
+
+// setMarketplaceTokenAuthExtraField tries to put the marketplace token as a JSON string in the "auth.Extra" field
+// only if the provided authentication is of the type "marketplace".
+func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
+	// If the authentication isn't a "marketplace" auth, then skip getting the token
+	if auth.Name != "marketplace" {
+		return nil
+	}
+
+	var token *marketplace.BearerToken
+
+	// First try to fetch the token from the cache
+	token, err := marketplaceTokenCacher.FetchToken()
+
+	// If it's not present, request one token to the marketplace, cache it, and assign it to the "extra" field
+	// of auth
+	if err != nil {
+		// The Api key must be present to be able to send the request to the marketplace
+		if auth.Password == "" {
+			return errors.New("API key not present for the marketplace authentication")
+		}
+
+		marketplaceTokenProvider = GetMarketplaceTokenProvider(auth.Password)
+
+		token, err = marketplaceTokenProvider.RequestToken()
+		if err != nil {
+			return fmt.Errorf("could not get token from the marketplace: %s", err)
+		}
+
+		// Cache the token. We really don't mind if we cannot properly cache it: we can request another one and
+		// return the one that we got. But we log the error for traceability and future debugging.
+		err = marketplaceTokenCacher.CacheToken(token)
+		if err != nil {
+			logging.Log.Errorf("could not cache the token in Redis: %s", err)
+		}
+	}
+
+	// Serialize the token as a string
+	serializedToken, err := json.Marshal(token)
+	if err != nil {
+		return fmt.Errorf("could not serialize marketplace token as a JSON string: %s", err)
+	}
+
+	if auth.Extra == nil {
+		auth.Extra = make(map[string]interface{})
+	}
+
+	auth.Extra["marketplace"] = string(serializedToken)
+	logging.Log.Log(logrus.InfoLevel, "marketplace token included in authentication")
+
+	return nil
 }
