@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -62,4 +63,36 @@ func TestSourceTypeList(t *testing.T) {
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestSourceTypeGet(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		})
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	err := SourceTypeGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var outSrc m.SourceResponse
+	err = json.Unmarshal(rec.Body.Bytes(), &outSrc)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if *outSrc.Name != "amazon" {
+		t.Error("ghosts infected the return")
+	}
 }
