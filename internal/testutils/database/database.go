@@ -52,6 +52,8 @@ func CreateFixtures() {
 
 	dao.DB.Create(&fixtures.TestSourceData)
 	dao.DB.Create(&fixtures.TestApplicationData)
+	dao.DB.Create(&fixtures.TestApplicationAuthentication)
+
 	dao.DB.Create(&fixtures.TestEndpointData)
 
 	dao.DB.Create(&fixtures.TestMetaDataData)
@@ -91,6 +93,7 @@ func MigrateSchema() {
 
 		&m.SourceType{},
 		&m.ApplicationType{},
+		&m.ApplicationAuthentication{},
 
 		&m.Source{},
 		&m.Application{},
@@ -113,6 +116,7 @@ func UpdateTablesSequences() {
 		"endpoints",
 		"meta_data",
 		"applications",
+		"application_authentications",
 		"application_types",
 		"sources",
 		"source_types",
