@@ -58,11 +58,11 @@ func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Sou
 			continue
 		}
 
-		requestAvailabilityCheck(source, &app, uri)
+		httpAvailabilityRequest(source, &app, uri)
 	}
 }
 
-func requestAvailabilityCheck(source *m.Source, app *m.Application, uri *url.URL) {
+func httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL) {
 	body := map[string]string{"source_id": strconv.FormatInt(app.SourceID, 10)}
 	raw, err := json.Marshal(body)
 	if err != nil {
@@ -145,6 +145,7 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 
 	msg.AddHeaders([]kafka.Header{
 		{Key: "x-rh-identity", Value: []byte(util.XRhIdentityWithAccountNumber(endpoint.Tenant.ExternalTenant))},
+		{Key: "x-rh-sources-account-number", Value: []byte(endpoint.Tenant.ExternalTenant)},
 	})
 
 	err = mgr.Produce(msg)
