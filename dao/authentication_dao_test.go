@@ -10,9 +10,8 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/redis"
-	"github.com/hashicorp/vault/api"
-	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,34 +20,6 @@ func TestMain(t *testing.M) {
 	_ = parser.ParseFlags()
 
 	os.Exit(t.Run())
-}
-
-// setUpVaultSecret sets up a minimal vault secret that can get parsed.
-func setUpVaultSecret() *api.Secret {
-	data := make(map[string]interface{})
-
-	data["data"] = make(map[string]interface{})
-	data["metadata"] = make(map[string]interface{})
-	data["extra"] = make(map[string]interface{})
-
-	metadata, ok := data["metadata"].(map[string]interface{})
-	if !ok { // performed to avoid the "forcetypeassert" linter error
-		log.Fatal("expected map[string]interface{}, got otherwise")
-	}
-	metadata["created_time"] = "2021-01-01T00:00:00.999999999Z"
-	metadata["version"] = json.Number("versionNumber")
-
-	dataTopLevel, ok := data["data"].(map[string]interface{})
-	if !ok { // performed to avoid the "forcetypeassert" linter error
-		log.Fatal("expected map[string]interface{}, got otherwise")
-	}
-
-	dataTopLevel["name"] = "marketplace"
-	dataTopLevel["password"] = "apiKey"
-
-	return &api.Secret{
-		Data: data,
-	}
 }
 
 // setUpBearerToken sets up a fake bearer token to be used in the tests.
@@ -140,6 +111,17 @@ func (marketplaceTokenProviderFailure) RequestToken() (*marketplace.BearerToken,
 // --- [/Mocks & fakes setup] ---
 // ------------------------------
 
+// TestNotMarketplaceAuthNotProcessed tests that in the case of having a non-marketplace authentication, no token is
+// fetched whatsoever.
+func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
+	auth := m.Authentication{Name: "whatever"}
+
+	err := setMarketplaceTokenAuthExtraField(&auth)
+	if err != nil {
+		t.Errorf("want no errors, got %s", err)
+	}
+}
+
 // TestAuthFromVaultMarketplaceCacheHit tests that when there's a cache hit with the marketplace token, it simply gets
 // serialized and properly returned on the "auth.Extra["marketplace]" object.
 func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
@@ -158,11 +140,12 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	vaultSecret := setUpVaultSecret()
+	auth := &m.Authentication{Name: "marketplace"}
+
 	// Call the function under test
-	auth := authFromVault(vaultSecret)
-	if auth == nil {
-		t.Errorf("want authentication, got nil")
+	err := setMarketplaceTokenAuthExtraField(auth)
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
 	}
 
 	serializedToken, err := json.Marshal(setUpBearerToken())
@@ -205,18 +188,12 @@ func TestAuthFromVaultMarketplaceProviderEmptyPassword(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	// We are simulating that the Vault secret doesn't have the ApiKey in the password field, so we empty it out
-	vaultSecret := setUpVaultSecret()
-	dataTopLevel, ok := vaultSecret.Data["data"].(map[string]interface{})
-	if !ok { // performed to avoid the "forcetypeassert" linter error
-		log.Fatal("map[string]interface{} expected, got otherwise")
-	}
-	dataTopLevel["password"] = nil
+	auth := &m.Authentication{Name: "marketplace", Password: ""}
 
 	// Call the function under test
-	auth := authFromVault(vaultSecret)
-	if auth != nil {
-		t.Errorf("want nil auth, got non nil: %v", auth)
+	err := setMarketplaceTokenAuthExtraField(auth)
+	if err == nil {
+		t.Errorf("want err, got nil")
 	}
 }
 
@@ -241,11 +218,16 @@ func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	vaultSecret := setUpVaultSecret()
+	auth := &m.Authentication{Name: "marketplace", Password: "12345"}
+
+	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
+	// logger.
+	logging.Log = logrus.New()
+
 	// Call the function under test
-	auth := authFromVault(vaultSecret)
-	if auth == nil {
-		t.Error("want non-nil auth, got nil auth")
+	err := setMarketplaceTokenAuthExtraField(auth)
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
 	}
 }
 
@@ -274,11 +256,12 @@ func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	vaultSecret := setUpVaultSecret()
+	auth := &m.Authentication{Name: "marketplace", Password: "12345"}
+
 	// Call the function under test
-	auth := authFromVault(vaultSecret)
-	if auth == nil {
-		t.Error("want non-nil auth, got nil auth")
+	err := setMarketplaceTokenAuthExtraField(auth)
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
 	}
 }
 
@@ -299,16 +282,17 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 		}
 	}
 
-	// We need the logging system initialized to not hit a dereference error.
+	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
+	// logger.
 	logging.Log = logrus.New()
 
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	vaultSecret := setUpVaultSecret()
-	// Call the function under test
-	auth := authFromVault(vaultSecret)
-	if auth != nil {
-		t.Errorf("want nil auth, non-nil received: %v", auth)
+	auth := &m.Authentication{Name: "marketplace", Password: "12345"}
+
+	err := setMarketplaceTokenAuthExtraField(auth)
+	if err == nil {
+		t.Error("want error, got nil")
 	}
 }
