@@ -37,3 +37,10 @@ func (a *SourceType) ToResponse() *SourceTypeResponse {
 		IconUrl:     a.IconUrl,
 	}
 }
+
+type SourceTypeSeed struct {
+	ProductName string      `json:"product_name" yaml:"product_name"`
+	Schema      interface{} `json:"schema" yaml:"schema"`
+	Vendor      string      `json:"vendor" yaml:"vendor"`
+	IconURL     string      `json:"icon_url" yaml:"icon_url"`
+}

@@ -65,3 +65,11 @@ func (at *ApplicationType) AvailabilityCheckURL() *url.URL {
 
 	return url
 }
+
+// fields present in the seeding part of
+type ApplicationTypeSeed struct {
+	DisplayName                  string                 `yaml:"display_name"`
+	DependentApplications        interface{}            `yaml:"dependent_applications"`
+	SupportedSourceTypes         interface{}            `yaml:"supported_source_types"`
+	SupportedAuthenticationTypes map[string]interface{} `yaml:"supported_authentication_types"`
+}

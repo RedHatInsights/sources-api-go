@@ -1,0 +1,339 @@
+---
+amazon:
+  product_name: Amazon Web Services
+  schema:
+    authentication:
+    - type: access_key_secret_key
+      is_superkey: true
+      name: AWS Secret key
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: access_key_secret_key
+      - component: text-field
+        name: authentication.username
+        label: Access key
+      - component: text-field
+        name: authentication.password
+        label: Secret key
+        type: password
+    - type: arn
+      name: Cost Management ARN
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: arn
+      - name: application.extra.bucket
+        stepKey: cost-management
+        component: text-field
+        label: S3 bucket name
+        isRequired: true
+        validate:
+        - type: required
+        - type: pattern
+          pattern: "^[A-Za-z0-9]+[A-Za-z0-9_-]*$"
+      - name: authentication.username
+        stepKey: arn
+        component: text-field
+        label: ARN
+        isRequired: true
+        validate:
+        - type: required
+        - type: pattern
+          pattern: "^arnaws:.*"
+        - type: min-length
+          threshold: 10
+    - type: cloud-meter-arn
+      name: Subscription Watch ARN
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: cloud-meter-arn
+      - name: authentication.username
+        component: text-field
+        label: ARN
+        isRequired: true
+        validate:
+        - type: required
+        - type: pattern
+          pattern: "^arnaws:.*"
+        - type: min-length
+          threshold: 10
+    endpoint:
+      hidden: true
+      fields:
+      - component: text-field
+        name: endpoint.role
+        hideField: true
+        initializeOnMount: true
+        initialValue: aws
+  vendor: Amazon
+  icon_url: "/apps/frontend-assets/partners-icons/aws-long.svg"
+ansible-tower:
+  product_name: Red Hat Ansible Automation Platform
+  vendor: Red Hat
+  icon_url: "/apps/frontend-assets/platform-logos/ansible-automation-platform.svg"
+  schema:
+    authentication:
+    - type: username_password
+      name: Username and password
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: username_password
+      - component: text-field
+        name: authentication.username
+        label: User name
+        isRequired: true
+        validate:
+        - type: required
+      - component: text-field
+        name: authentication.password
+        label: Secret key
+        type: password
+        isRequired: true
+        validate:
+        - type: required
+    endpoint:
+      title: Ansible Tower endpoint
+      fields:
+      - component: text-field
+        name: endpoint.role
+        hideField: true
+        initializeOnMount: true
+        initialValue: ansible
+      - component: text-field
+        name: url
+        label: URL
+        validate:
+        - type: url
+      - component: switch
+        name: endpoint.verify_ssl
+        label: Verify SSL
+      - component: text-field
+        name: endpoint.certificate_authority
+        label: Certificate Authority
+        condition:
+          when: endpoint.verify_ssl
+          is: true
+google:
+  product_name: Google Cloud
+  vendor: Google
+  icon_url: "/apps/frontend-assets/partners-icons/google-cloud.svg"
+  schema:
+    authentication:
+    - type: project_id_service_account_json
+      name: Project ID and Service Account JSON
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: project_id_service_account_json
+      - component: text-field
+        name: authentication.username
+        label: Project ID
+      - component: textarea
+        name: authentication.password
+        label: Service Account JSON
+      - component: text-field
+        name: application.extra.dataset
+        stepKey: cost-management
+        label: Dataset name
+        isRequired: true
+        validate:
+        - type: required
+    endpoint:
+      hidden: true
+      fields:
+      - component: text-field
+        name: endpoint.role
+        hideField: true
+        initializeOnMount: true
+        initialValue: google
+azure:
+  product_name: Microsoft Azure
+  vendor: Azure
+  icon_url: "/apps/chrome/assets/images/partners-icons/microsoft-azure.svg"
+  schema:
+    authentication:
+    - type: lighthouse_subscription_id
+      name: Subscription ID
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: lighthouse_subscription_id
+      - component: text-field
+        name: authentication.username
+        label: Subscription ID
+        isRequired: true
+        validate:
+        - type: required
+    - type: tenant_id_client_id_client_secret
+      name: Tenant ID, Client ID, Client Secret
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: tenant_id_client_id_client_secret
+      - component: text-field
+        name: application.extra.resource_group
+        label: Resource group name
+        stepKey: azure-2
+      - component: text-field
+        name: application.extra.storage_account
+        label: Storage account name
+        stepKey: azure-2
+      - component: text-field
+        name: application.extra.subscription_id
+        label: Subscription ID
+        stepKey: service-principle
+      - component: text-field
+        name: authentication.extra.azure.tenant_id
+        label: Tenant ID
+      - component: text-field
+        name: authentication.username
+        label: Client ID
+      - component: text-field
+        name: authentication.password
+        label: Client Secret
+        type: password
+    endpoint:
+      hidden: true
+      fields:
+      - component: text-field
+        name: endpoint.role
+        hideField: true
+        initializeOnMount: true
+        initialValue: azure
+openshift:
+  product_name: Red Hat OpenShift Container Platform
+  schema:
+    authentication:
+    - type: token
+      name: Token
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: token
+      - component: text-field
+        name: source.source_ref
+        label: Cluster ID
+        stepKey: usageCollector
+      - component: text-field
+        name: authentication.password
+        label: Token
+        type: password
+        isRequired: true
+        validate:
+        - type: required
+    endpoint:
+      title: OpenShift endpoint
+      fields:
+      - component: text-field
+        name: endpoint.role
+        hideField: true
+        initializeOnMount: true
+        initialValue: kubernetes
+      - component: text-field
+        name: url
+        label: URL
+        validate:
+        - type: url
+      - component: switch
+        name: endpoint.verify_ssl
+        label: Verify SSL
+      - component: text-field
+        name: endpoint.certificate_authority
+        label: Certificate Authority
+        condition:
+          when: endpoint.verify_ssl
+          is: true
+  vendor: Red Hat
+  icon_url: "/apps/frontend-assets/platform-logos/openshift-container-platform.svg"
+rh-marketplace:
+  product_name: Red Hat Marketplace
+  vendor: Red Hat
+  schema:
+    authentication:
+    - type: token
+      name: API Token
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: token
+      - component: text-field
+        name: authentication.password
+        label: API Token
+        isRequired: true
+        validate:
+        - type: required
+satellite:
+  product_name: Red Hat Satellite
+  vendor: Red Hat
+  schema:
+    authentication:
+    - type: receptor_node
+      name: Receptor node
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: receptor_node
+      - component: text-field
+        name: source.source_ref
+        label: Satellite ID
+        isRequired: true
+        validate:
+        - type: required
+    endpoint:
+      title: Red Hat Satellite endpoint
+      fields:
+      - component: text-field
+        name: endpoint.receptor_node
+        label: Receptor ID
+      - component: text-field
+        name: endpoint.role
+        hideField: true
+        initializeOnMount: true
+        initialValue: satellite
+  icon_url: "/apps/frontend-assets/platform-logos/satellite.svg"
+ibm:
+  product_name: IBM Cloud
+  vendor: IBM
+  icon_url: "/apps/frontend-assets/partners-icons/ibm-cloud.svg"
+  schema:
+    authentication:
+    - type: api_token_account_id
+      name: API Token and Account ID
+      fields:
+      - component: text-field
+        name: authentication.authtype
+        hideField: true
+        initializeOnMount: true
+        initialValue: api_token_account_id
+      - component: text-field
+        name: authentication.username
+        label: Account ID
+      - component: text-field
+        name: application.extra.api_token
+        label: API Token
+        isRequired: true
+        validate:
+        - type: required

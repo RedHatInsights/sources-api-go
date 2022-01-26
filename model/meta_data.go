@@ -40,3 +40,11 @@ func (app *MetaData) ToResponse() *MetaDataResponse {
 		Type:          app.Type,
 	}
 }
+
+type MetaDataSeed struct {
+	Step          int64                  `yaml:"step"`
+	Name          string                 `yaml:"name"`
+	Payload       map[string]interface{} `yaml:"payload"`
+	Substitutions map[string]interface{} `yaml:"substitutions"`
+	Type          string                 `yaml:"type"`
+}
