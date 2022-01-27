@@ -39,8 +39,8 @@ func (a *SourceType) ToResponse() *SourceTypeResponse {
 }
 
 type SourceTypeSeed struct {
-	ProductName string      `yaml:"product_name"`
-	Schema      interface{} `yaml:"schema"`
-	Vendor      string      `yaml:"vendor"`
-	IconURL     string      `yaml:"icon_url"`
+	ProductName string      `json:"product_name"`
+	Schema      interface{} `json:"schema"`
+	Vendor      string      `json:"vendor"`
+	IconURL     string      `json:"icon_url"`
 }

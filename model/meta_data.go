@@ -42,9 +42,9 @@ func (app *MetaData) ToResponse() *MetaDataResponse {
 }
 
 type MetaDataSeed struct {
-	Step          int64       `yaml:"step"`
-	Name          string      `yaml:"name"`
-	Payload       interface{} `yaml:"payload"`
-	Substitutions interface{} `yaml:"substitutions"`
-	Type          string      `yaml:"type"`
+	Step          int64       `json:"step"`
+	Name          string      `json:"name"`
+	Payload       interface{} `json:"payload"`
+	Substitutions interface{} `json:"substitutions"`
+	Type          string      `json:"type"`
 }

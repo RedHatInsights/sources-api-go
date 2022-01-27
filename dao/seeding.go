@@ -118,8 +118,7 @@ func seedSourceTypes() error {
 }
 
 func seedApplicationTypes() error {
-	// TODO: why is my struct not working. no idea.
-	seeds := make(map[string]map[string]interface{})
+	seeds := make(applicationTypeSeed)
 	data, err := os.ReadFile(SEEDS_DIR + "application_types.yml")
 	if err != nil {
 		return err
@@ -159,17 +158,17 @@ func seedApplicationTypes() error {
 			at = &m.ApplicationType{}
 		}
 
-		dependentApplications, err := json.Marshal(values["dependent_applications"])
+		dependentApplications, err := json.Marshal(values.DependentApplications)
 		if err != nil {
 			return err
 		}
 
-		supportedSourceTypes, err := json.Marshal(values["supported_source_types"])
+		supportedSourceTypes, err := json.Marshal(values.SupportedSourceTypes)
 		if err != nil {
 			return err
 		}
 
-		supportedAuthenticationTypes, err := json.Marshal(values["supported_authentication_types"])
+		supportedAuthenticationTypes, err := json.Marshal(values.SupportedAuthenticationTypes)
 		if err != nil {
 			return err
 		}
@@ -177,9 +176,7 @@ func seedApplicationTypes() error {
 		at.DependentApplications = dependentApplications
 		at.SupportedSourceTypes = supportedSourceTypes
 		at.SupportedAuthenticationTypes = supportedAuthenticationTypes
-		if values["display_name"] != nil {
-			at.DisplayName = values["display_name"].(string)
-		}
+		at.DisplayName = values.DisplayName
 		at.Name = name
 
 		// if this is a new record we need to create rather than save.
