@@ -94,6 +94,16 @@ func (src *MockSourceDao) NameExistsInCurrentTenant(name string) bool {
 	return false
 }
 
+func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
+	for _, i := range src.Sources {
+		if i.ID == *id {
+			return &i, nil
+		}
+	}
+
+	return nil, fmt.Errorf("source not found")
+}
+
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	count := int64(len(a.ApplicationTypes))
 	return a.ApplicationTypes, count, nil

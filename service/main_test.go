@@ -4,10 +4,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
+	"github.com/RedHatInsights/sources-api-go/logger"
 )
 
 var (
@@ -19,6 +21,8 @@ var (
 )
 
 func TestMain(t *testing.M) {
+	logger.InitLogger(config.Get())
+
 	flags := parser.ParseFlags()
 
 	if flags.CreateDb {

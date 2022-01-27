@@ -407,3 +407,49 @@ func TestSourceCreate(t *testing.T) {
 		t.Errorf("Did not return 200. Body: %s", rec.Body.String())
 	}
 }
+
+func TestAvailabilityStatusCheck(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	err := SourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 202 {
+		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 202)
+	}
+}
+
+func TestAvailabilityStatusCheckNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/183209745/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("183209745")
+
+	err := SourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 404 {
+		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 404)
+	}
+}
