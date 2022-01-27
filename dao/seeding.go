@@ -17,7 +17,7 @@ type (
 	metadataSeed        map[string]m.MetaDataSeed
 )
 
-func SeedDatabase() error {
+func seedDatabase() error {
 	err := seedSourceTypes()
 	if err != nil {
 		return err
@@ -95,21 +95,20 @@ func seedSourceTypes() error {
 		// if this is a new record we need to create rather than save.
 		if st.Id == 0 {
 			result = DB.Create(&st)
-			if result.Error != nil {
-				return result.Error
-			}
 		} else {
 			result = DB.Save(&st)
-			if result.Error != nil {
-				return result.Error
-			}
+		}
+
+		if result.Error != nil {
+			return result.Error
 		}
 	}
 
 	// if there were any sourcetypes left - they were removed from the seed file
 	// and need deleted
-	if len(sourceTypes) != 0 {
-		result := DB.Model(&m.SourceType{}).Delete(&sourceTypes)
+	for _, sourceType := range sourceTypes {
+		l.Log.Infof("Deleting SourceType %v", sourceType.Name)
+		result := DB.Delete(&sourceType)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -119,7 +118,8 @@ func seedSourceTypes() error {
 }
 
 func seedApplicationTypes() error {
-	seeds := make(applicationTypeSeed)
+	// TODO: why is my struct not working. no idea.
+	seeds := make(map[string]map[string]interface{})
 	data, err := os.ReadFile(SEEDS_DIR + "application_types.yml")
 	if err != nil {
 		return err
@@ -130,25 +130,46 @@ func seedApplicationTypes() error {
 		return err
 	}
 
+	// load all the seeds from the db
+	appTypes := make([]m.ApplicationType, 0)
+	result := DB.Model(&m.ApplicationType{}).Scan(&appTypes)
+	if result.Error != nil {
+		return result.Error
+	}
+
 	for name, values := range seeds {
-		var at m.ApplicationType
+		var at *m.ApplicationType
 
-		result := DB.Where("name = ?", name).First(&at)
-		if result.Error != nil {
-			l.Log.Infof("ApplicationType not found [%v], creating it", name)
+		// find an existing one in the list of application types
+		for i, appType := range appTypes {
+			if appType.Name == name {
+				at = &appType
+
+				// deleting the apptype out of the array since we're handling
+				// it.
+				appTypes[i] = appTypes[len(appTypes)-1]
+				appTypes = appTypes[:len(appTypes)-1]
+				break
+			}
 		}
 
-		dependentApplications, err := json.Marshal(values.DependentApplications)
+		// if the app type was not found - create it
+		if at == nil {
+			l.Log.Debugf("New ApplicationType found %v", name)
+			at = &m.ApplicationType{}
+		}
+
+		dependentApplications, err := json.Marshal(values["dependent_applications"])
 		if err != nil {
 			return err
 		}
 
-		supportedSourceTypes, err := json.Marshal(values.SupportedSourceTypes)
+		supportedSourceTypes, err := json.Marshal(values["supported_source_types"])
 		if err != nil {
 			return err
 		}
 
-		supportedAuthenticationTypes, err := json.Marshal(values.SupportedAuthenticationTypes)
+		supportedAuthenticationTypes, err := json.Marshal(values["supported_authentication_types"])
 		if err != nil {
 			return err
 		}
@@ -156,9 +177,28 @@ func seedApplicationTypes() error {
 		at.DependentApplications = dependentApplications
 		at.SupportedSourceTypes = supportedSourceTypes
 		at.SupportedAuthenticationTypes = supportedAuthenticationTypes
+		if values["display_name"] != nil {
+			at.DisplayName = values["display_name"].(string)
+		}
 		at.Name = name
 
-		result = DB.Save(&at)
+		// if this is a new record we need to create rather than save.
+		if at.Id == 0 {
+			result = DB.Create(&at)
+		} else {
+			result = DB.Save(&at)
+		}
+
+		if result.Error != nil {
+			return result.Error
+		}
+	}
+
+	// if there were any applicationtypes left - they were removed from the seed file
+	// and need deleted
+	for _, appType := range appTypes {
+		l.Log.Infof("Deleting ApplicationType %v", appType.Name)
+		result := DB.Delete(&appType)
 		if result.Error != nil {
 			return result.Error
 		}

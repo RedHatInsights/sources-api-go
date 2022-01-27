@@ -58,7 +58,7 @@ func Init() {
 
 	Vault = vaultClient.Logical()
 
-	err = SeedDatabase()
+	err = seedDatabase()
 	if err != nil {
 		panic(err)
 	}
