@@ -4,23 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/sirupsen/logrus"
 )
-
-func TestMain(t *testing.M) {
-	// we need this to parse arguments otherwise there are not recognized which lead to error
-	_ = parser.ParseFlags()
-
-	os.Exit(t.Run())
-}
 
 // setUpBearerToken sets up a fake bearer token to be used in the tests.
 func setUpBearerToken() *marketplace.BearerToken {
