@@ -14,11 +14,11 @@ type EndpointDaoImpl struct {
 
 func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
-
 	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrNotFound("source")
 	}
+
 	query := sourceType.HasMany(&m.Endpoint{}, DB.Debug())
 	query = query.Where("endpoints.tenant_id = ?", a.TenantID)
 
@@ -55,8 +55,11 @@ func (a *EndpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 func (a *EndpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 	app := &m.Endpoint{ID: *id}
 	result := DB.First(&app)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("endpoint")
+	}
 
-	return app, result.Error
+	return app, nil
 }
 
 func (a *EndpointDaoImpl) Create(app *m.Endpoint) error {

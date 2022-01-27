@@ -16,7 +16,7 @@ func (a *ApplicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 	applications := make([]m.Application, 0, limit)
 	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrNotFound("source")
 	}
 
 	query := sourceType.HasMany(&m.Application{}, DB.Debug())
@@ -54,8 +54,11 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 func (a *ApplicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
 	result := DB.First(&app)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("application")
+	}
 
-	return app, result.Error
+	return app, nil
 }
 
 func (a *ApplicationDaoImpl) Create(app *m.Application) error {

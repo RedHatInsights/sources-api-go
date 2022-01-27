@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -55,8 +56,12 @@ func SourceListApplications(c echo.Context) error {
 	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
 
 	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
+
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
 
 	out := make([]interface{}, len(applications))
@@ -118,8 +123,12 @@ func ApplicationGet(c echo.Context) error {
 	c.Logger().Infof("Getting Application ID %v", id)
 
 	app, err := applicationDB.GetById(&id)
+
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())

@@ -19,7 +19,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 	sourceType, err := m.NewRelationObject(primaryCollection, *s.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrNotFound(sourceType.StringBaseObject())
 	}
 	query := sourceType.HasMany(&m.Source{}, DB.Debug())
 
@@ -64,8 +64,11 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
 	result := DB.First(src)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("source")
+	}
 
-	return src, result.Error
+	return src, nil
 }
 
 func (s *SourceDaoImpl) Create(src *m.Source) error {

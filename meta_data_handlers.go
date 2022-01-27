@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -95,6 +96,9 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 	metaDatas, count, err = applicationDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
@@ -120,8 +124,12 @@ func MetaDataGet(c echo.Context) error {
 	c.Logger().Infof("Getting MetaData ID %v", id)
 
 	app, err := metaDataDB.GetById(&id)
+
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())

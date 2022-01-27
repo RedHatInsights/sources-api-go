@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	l "github.com/RedHatInsights/sources-api-go/logger"
+	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -84,4 +85,8 @@ func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset 
 	if links.Last != expectedLastLink {
 		t.Error("last link is not correct for " + path)
 	}
+}
+
+func ErrorHandlingContext(handler echo.HandlerFunc) func(echo.Context) error {
+	return middleware.HandleErrors(handler)
 }

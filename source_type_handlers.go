@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -62,8 +63,12 @@ func SourceTypeGet(c echo.Context) error {
 	}
 
 	sourceType, err := SourceTypeDB.GetById(&id)
+
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
 	return c.JSON(http.StatusOK, sourceType.ToResponse())

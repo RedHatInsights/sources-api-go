@@ -31,8 +31,6 @@ type MockMetaDataDao struct {
 }
 
 func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	count := int64(1)
-
 	var sources []m.Source
 
 	for index, i := range src.Sources {
@@ -42,11 +40,17 @@ func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit
 				sources = append(sources, src.Sources[index])
 			}
 		case m.ApplicationType:
-			if i.ID == 1 { // Source with ID=1 is relevant for application types/:id/sources test
+			if i.ID == object.Id {
 				sources = append(sources, src.Sources[index])
 			}
+		default:
+			return nil, 0, fmt.Errorf("unexpected primary collection type")
 		}
+	}
 
+	count := int64(len(sources))
+	if count == 0 {
+		return nil, count, util.NewErrNotFound("source")
 	}
 
 	return sources, count, nil
@@ -64,7 +68,7 @@ func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("source not found")
+	return nil, util.NewErrNotFound("source")
 }
 
 func (src *MockSourceDao) Create(s *m.Source) error {
@@ -102,7 +106,7 @@ func (a *MockApplicationTypeDao) GetById(id *int64) (*m.ApplicationType, error) 
 		}
 	}
 
-	return nil, fmt.Errorf("application Type not found")
+	return nil, util.NewErrNotFound("application type")
 }
 
 func (a *MockMetaDataDao) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
@@ -111,8 +115,24 @@ func (a *MockMetaDataDao) List(limit int, offset int, filters []util.Filter) ([]
 }
 
 func (a *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
-	count := int64(len(a.MetaDatas))
-	return a.MetaDatas, count, nil
+	var appMetaDataList []m.MetaData
+
+	for index, i := range a.MetaDatas {
+		switch object := primaryCollection.(type) {
+		case m.ApplicationType:
+			if i.ApplicationTypeID == object.Id {
+				appMetaDataList = append(appMetaDataList, a.MetaDatas[index])
+			}
+		default:
+			return nil, 0, fmt.Errorf("unexpected primary collection type")
+		}
+	}
+	count := int64(len(appMetaDataList))
+	if count == 0 {
+		return nil, count, util.NewErrNotFound("metadata")
+	}
+
+	return appMetaDataList, count, nil
 }
 
 func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
@@ -122,7 +142,7 @@ func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("application Type not found")
+	return nil, util.NewErrNotFound("metadata")
 }
 
 func (a *MockMetaDataDao) Create(src *m.MetaData) error {
@@ -148,10 +168,26 @@ func (a *MockApplicationTypeDao) Update(src *m.ApplicationType) error {
 func (a *MockApplicationTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
-func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
-	count := int64(1) // ApplicationType ID=1
 
-	return []m.ApplicationType{a.ApplicationTypes[0]}, count, nil
+func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
+	var appTypes []m.ApplicationType
+
+	for index, i := range a.ApplicationTypes {
+		switch object := primaryCollection.(type) {
+		case m.Source:
+			if i.Id == object.ID {
+				appTypes = append(appTypes, a.ApplicationTypes[index])
+			}
+		default:
+			return nil, 0, fmt.Errorf("unexpected primary collection type")
+		}
+	}
+	count := int64(len(appTypes))
+	if count == 0 {
+		return nil, count, util.NewErrNotFound("application type")
+	}
+
+	return appTypes, count, nil
 }
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
@@ -166,7 +202,7 @@ func (a *MockSourceTypeDao) GetById(id *int64) (*m.SourceType, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("application Type not found")
+	return nil, util.NewErrNotFound("source type")
 }
 
 func (a *MockSourceTypeDao) Create(src *m.SourceType) error {
@@ -182,8 +218,24 @@ func (a *MockSourceTypeDao) Delete(id *int64) error {
 }
 
 func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Application, int64, error) {
-	count := int64(len(a.Applications))
-	return a.Applications, count, nil
+	var applications []m.Application
+
+	for index, i := range a.Applications {
+		switch object := primaryCollection.(type) {
+		case m.Source:
+			if i.SourceID == object.ID {
+				applications = append(applications, a.Applications[index])
+			}
+		default:
+			return nil, 0, fmt.Errorf("unexpected primary collection type")
+		}
+	}
+	count := int64(len(applications))
+	if count == 0 {
+		return nil, count, util.NewErrNotFound("application")
+	}
+
+	return applications, count, nil
 }
 
 func (a *MockApplicationDao) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
@@ -198,7 +250,7 @@ func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("application not found")
+	return nil, util.NewErrNotFound("application")
 }
 
 func (a *MockApplicationDao) Create(src *m.Application) error {
@@ -219,8 +271,24 @@ func (a *MockApplicationDao) Tenant() *int64 {
 }
 
 func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
-	count := int64(len(a.Endpoints))
-	return a.Endpoints, count, nil
+	var endpoints []m.Endpoint
+
+	for index, i := range a.Endpoints {
+		switch object := primaryCollection.(type) {
+		case m.Source:
+			if i.SourceID == object.ID {
+				endpoints = append(endpoints, a.Endpoints[index])
+			}
+		default:
+			return nil, 0, fmt.Errorf("unexpected primary collection type")
+		}
+	}
+	count := int64(len(endpoints))
+	if count == 0 {
+		return nil, count, util.NewErrNotFound("endpoint")
+	}
+
+	return endpoints, count, nil
 }
 
 func (a *MockEndpointDao) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
@@ -235,7 +303,7 @@ func (a *MockEndpointDao) GetById(id *int64) (*m.Endpoint, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("endpoint not found")
+	return nil, util.NewErrNotFound("endpoint")
 }
 
 func (a *MockEndpointDao) Create(src *m.Endpoint) error {
