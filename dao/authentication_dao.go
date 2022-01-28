@@ -479,7 +479,7 @@ func (a *AuthenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, err
 // only if the provided authentication is of the type "marketplace".
 func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 	// If the authentication isn't a "marketplace" auth, then skip getting the token
-	if auth.Name != "marketplace" {
+	if auth.AuthType != "marketplace-token" {
 		return nil
 	}
 
