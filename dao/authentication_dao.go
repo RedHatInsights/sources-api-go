@@ -252,7 +252,12 @@ func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
 	if err != nil {
 		return err
 	}
-	auth.Version = out.Data["version"].(json.Number).String()
+
+	number, ok := out.Data["version"].(json.Number)
+	if !ok {
+		return nil
+	}
+	auth.Version = number.String()
 
 	return nil
 }
@@ -269,7 +274,11 @@ func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
 	if err != nil {
 		return err
 	}
-	auth.Version = out.Data["version"].(json.Number).String()
+	number, ok := out.Data["version"].(json.Number)
+	if !ok {
+		return nil
+	}
+	auth.Version = number.String()
 
 	return nil
 }
@@ -390,7 +399,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	// than a panic happening at runtime.
 	auth := &m.Authentication{}
 	auth.CreatedAt = createdAt
-	auth.Version = metadata["version"].(json.Number).String()
+	number, ok := metadata["version"].(json.Number)
+	if !ok {
+		return nil
+	}
+	auth.Version = number.String()
 
 	if extra != nil {
 		auth.Extra = extra
