@@ -1,0 +1,7 @@
+issues:
+  exclude-rules:
+    # skip forcing a type assert on test files. can add more skips for test files as necessary
+    # per https://golangci-lint.run/usage/false-positives/
+    - path: '(.+)_test\.go'
+      linters:
+        - forcetypeassert
