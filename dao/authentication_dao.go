@@ -255,7 +255,7 @@ func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
 
 	number, ok := out.Data["version"].(json.Number)
 	if !ok {
-		return nil
+		return errors.New("failed to cast vault version number to string")
 	}
 	auth.Version = number.String()
 
@@ -276,7 +276,7 @@ func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
 	}
 	number, ok := out.Data["version"].(json.Number)
 	if !ok {
-		return nil
+		return errors.New("failed to cast vault version number to string")
 	}
 	auth.Version = number.String()
 
