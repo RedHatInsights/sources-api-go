@@ -71,96 +71,6 @@ func SourceList(c echo.Context) error {
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
-func SourceTypeListSource(c echo.Context) error {
-	sourcesDB, err := getSourceDao(c)
-	if err != nil {
-		return err
-	}
-
-	filters, err := getFilters(c)
-	if err != nil {
-		return err
-	}
-
-	limit, offset, err := getLimitAndOffset(c)
-	if err != nil {
-		return err
-	}
-
-	var (
-		sources []m.Source
-		count   int64
-	)
-
-	id, err := strconv.ParseInt(c.Param("source_type_id"), 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
-	}
-
-	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
-
-	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
-	}
-
-	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
-
-	out := make([]interface{}, len(sources))
-	for i, s := range sources {
-		out[i] = *s.ToResponse()
-	}
-
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
-}
-
-func ApplicationTypeListSource(c echo.Context) error {
-	sourcesDB, err := getSourceDao(c)
-	if err != nil {
-		return err
-	}
-
-	filters, err := getFilters(c)
-	if err != nil {
-		return err
-	}
-
-	limit, offset, err := getLimitAndOffset(c)
-	if err != nil {
-		return err
-	}
-
-	var (
-		sources []m.Source
-		count   int64
-	)
-
-	id, err := strconv.ParseInt(c.Param("application_type_id"), 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
-	}
-
-	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
-
-	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
-	}
-
-	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
-
-	out := make([]interface{}, len(sources))
-	for i, s := range sources {
-		out[i] = *s.ToResponse()
-	}
-
-	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
-}
-
 func SourceGet(c echo.Context) error {
 	sourcesDB, err := getSourceDao(c)
 	if err != nil {
@@ -296,6 +206,96 @@ func SourceListAuthentications(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), 100, 0))
+}
+
+func SourceTypeListSource(c echo.Context) error {
+	sourcesDB, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		sources []m.Source
+		count   int64
+	)
+
+	id, err := strconv.ParseInt(c.Param("source_type_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
+
+	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
+
+	out := make([]interface{}, len(sources))
+	for i, s := range sources {
+		out[i] = *s.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}
+
+func ApplicationTypeListSource(c echo.Context) error {
+	sourcesDB, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		sources []m.Source
+		count   int64
+	)
+
+	id, err := strconv.ParseInt(c.Param("application_type_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
+
+	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
+
+	out := make([]interface{}, len(sources))
+	for i, s := range sources {
+		out[i] = *s.ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
 func SourceCheckAvailability(c echo.Context) error {

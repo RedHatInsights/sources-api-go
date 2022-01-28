@@ -55,6 +55,9 @@ func setupRoutes(e *echo.Echo) {
 	// Applications
 	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
 	v3.GET("/applications/:id", ApplicationGet, middleware.Tenancy)
+	v3.POST("/applications", ApplicationCreate, permissionMiddleware...)
+	v3.PATCH("/applications/:id", ApplicationEdit, permissionMiddleware...)
+	v3.DELETE("/applications/:id", ApplicationDelete, permissionMiddleware...)
 	v3.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
 
 	// Authentications

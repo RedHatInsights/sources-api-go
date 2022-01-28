@@ -70,3 +70,17 @@ func (app *Application) ToResponse() *ApplicationResponse {
 		ApplicationTypeID:       appTypeId,
 	}
 }
+
+func (app *Application) UpdateFromRequest(req *ApplicationEditRequest) {
+	if req.Extra != nil {
+		app.Extra = req.Extra
+	}
+
+	if req.AvailabilityStatus != nil {
+		app.AvailabilityStatus = AvailabilityStatus{AvailabilityStatus: *req.AvailabilityStatus}
+	}
+
+	if req.AvailabilityStatusError != nil {
+		app.AvailabilityStatusError = *req.AvailabilityStatusError
+	}
+}

@@ -62,7 +62,9 @@ func (a *ApplicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 }
 
 func (a *ApplicationDaoImpl) Create(app *m.Application) error {
+	app.TenantID = *a.TenantID
 	result := DB.Create(app)
+
 	return result.Error
 }
 
