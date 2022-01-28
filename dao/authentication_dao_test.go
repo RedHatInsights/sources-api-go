@@ -24,6 +24,11 @@ func setUpBearerToken() *marketplace.BearerToken {
 	}
 }
 
+// setUpValidMarketplaceAuth sets up a valid authentication which is of the "marketplace" type.
+func setUpValidMarketplaceAuth() *m.Authentication {
+	return &m.Authentication{AuthType: "marketplace-token", Password: "apiKey"}
+}
+
 // -----------------------------
 // --- [Mocks & fakes setup] ---
 // -----------------------------
@@ -105,9 +110,10 @@ func (marketplaceTokenProviderFailure) RequestToken() (*marketplace.BearerToken,
 // TestNotMarketplaceAuthNotProcessed tests that in the case of having a non-marketplace authentication, no token is
 // fetched whatsoever.
 func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
-	auth := m.Authentication{Name: "whatever"}
+	auth := setUpValidMarketplaceAuth()
+	auth.AuthType = "whatever"
 
-	err := setMarketplaceTokenAuthExtraField(&auth)
+	err := setMarketplaceTokenAuthExtraField(auth)
 	if err != nil {
 		t.Errorf("want no errors, got %s", err)
 	}
@@ -131,7 +137,7 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	auth := &m.Authentication{Name: "marketplace"}
+	auth := setUpValidMarketplaceAuth()
 
 	// Call the function under test
 	err := setMarketplaceTokenAuthExtraField(auth)
@@ -179,7 +185,8 @@ func TestAuthFromVaultMarketplaceProviderEmptyPassword(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	auth := &m.Authentication{Name: "marketplace", Password: ""}
+	auth := setUpValidMarketplaceAuth()
+	auth.Password = "" // set up the empty password to simulate a missing API key
 
 	// Call the function under test
 	err := setMarketplaceTokenAuthExtraField(auth)
@@ -209,7 +216,7 @@ func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	auth := &m.Authentication{Name: "marketplace", Password: "12345"}
+	auth := setUpValidMarketplaceAuth()
 
 	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
 	// logger.
@@ -247,7 +254,7 @@ func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	auth := &m.Authentication{Name: "marketplace", Password: "12345"}
+	auth := setUpValidMarketplaceAuth()
 
 	// Call the function under test
 	err := setMarketplaceTokenAuthExtraField(auth)
@@ -280,7 +287,7 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 	tenantId := int64(5)
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
-	auth := &m.Authentication{Name: "marketplace", Password: "12345"}
+	auth := setUpValidMarketplaceAuth()
 
 	err := setMarketplaceTokenAuthExtraField(auth)
 	if err == nil {
