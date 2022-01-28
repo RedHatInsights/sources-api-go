@@ -14,6 +14,7 @@ import (
 )
 
 var tokenCacher = &MarketplaceTokenCacher{TenantID: 5}
+var redisAddr = "localhost:45884"
 
 // setUpFakeToken sets up a test token ready to be used.
 func setUpFakeToken() *marketplace.BearerToken {
@@ -28,7 +29,8 @@ func setUpFakeToken() *marketplace.BearerToken {
 
 // TestGetTokenBadTenant tests that when given a bad or nonexistent tenant, an expected error is returned.
 func TestGetTokenBadTenant(t *testing.T) {
-	mr, err := miniredis.Run()
+	mr := miniredis.NewMiniRedis()
+	err := mr.StartAddr(redisAddr)
 	if err != nil {
 		t.Errorf("cannot run the Miniredis mock server: %s", err)
 	}
@@ -50,7 +52,8 @@ func TestGetTokenBadTenant(t *testing.T) {
 
 // TestGetToken sets up a predefined token on the Redis cache, and tries to fetch it using the "GetToken" function.
 func TestGetToken(t *testing.T) {
-	mr, err := miniredis.Run()
+	mr := miniredis.NewMiniRedis()
+	err := mr.StartAddr(redisAddr)
 	if err != nil {
 		t.Errorf("cannot run the Miniredis mock server: %s", err)
 	}
@@ -111,7 +114,8 @@ func TestSetTokenUnreachableRedis(t *testing.T) {
 
 // TestSetTokenSuccess tests that the token is successfully set on Redis.
 func TestSetTokenSuccess(t *testing.T) {
-	mr, err := miniredis.Run()
+	mr := miniredis.NewMiniRedis()
+	err := mr.StartAddr(redisAddr)
 	if err != nil {
 		t.Errorf("cannot run the Miniredis mock server: %s", err)
 	}
@@ -158,7 +162,8 @@ func TestSetTokenSuccess(t *testing.T) {
 
 // TestSetTokenExpired tests that an error is returned when an expired token is trying to be cached.
 func TestSetTokenExpired(t *testing.T) {
-	mr, err := miniredis.Run()
+	mr := miniredis.NewMiniRedis()
+	err := mr.StartAddr(redisAddr)
 	if err != nil {
 		t.Errorf("cannot run the Miniredis mock server: %s", err)
 	}
