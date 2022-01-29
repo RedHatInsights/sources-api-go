@@ -7,16 +7,11 @@ import (
 )
 
 type MetaDataResponse struct {
-	AvailabilityStatus
-	Pause
-
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	Step          int64          `json:"step"`
-	Name          string         `json:"name"`
-	Payload       datatypes.JSON `json:"payload"`
-	Substitutions datatypes.JSON `json:"substitutions"`
-	Type          string         `json:"type"`
+	Name              string         `json:"name"`
+	Payload           datatypes.JSON `json:"payload"`
+	ApplicationTypeId string         `json:"application_type_id"`
 }

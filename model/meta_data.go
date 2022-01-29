@@ -28,15 +28,14 @@ func (app *MetaData) RelationInfo() map[string]RelationSetting {
 
 func (app *MetaData) ToResponse() *MetaDataResponse {
 	id := strconv.FormatInt(app.ID, 10)
+	appTypeId := strconv.FormatInt(app.ApplicationTypeID, 10)
 
 	return &MetaDataResponse{
-		ID:            id,
-		CreatedAt:     app.CreatedAt,
-		UpdatedAt:     app.UpdatedAt,
-		Step:          app.Step,
-		Name:          app.Name,
-		Payload:       app.Payload,
-		Substitutions: app.Substitutions,
-		Type:          app.Type,
+		ID:                id,
+		CreatedAt:         app.CreatedAt,
+		UpdatedAt:         app.UpdatedAt,
+		Name:              app.Name,
+		Payload:           app.Payload,
+		ApplicationTypeId: appTypeId,
 	}
 }

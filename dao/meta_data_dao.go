@@ -1,8 +1,6 @@
 package dao
 
 import (
-	"fmt"
-
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -35,7 +33,7 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 
 func (a *MetaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
-	query := DB.Debug().Model(&m.MetaData{})
+	query := DB.Debug().Model(&m.MetaData{}).Where("type = 'AppMetaData'")
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -57,23 +55,4 @@ func (a *MetaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
 	}
 
 	return metaData, nil
-}
-
-func (a *MetaDataDaoImpl) Create(metaData *m.MetaData) error {
-	result := DB.Create(metaData)
-	return result.Error
-}
-
-func (a *MetaDataDaoImpl) Update(metaData *m.MetaData) error {
-	result := DB.Updates(metaData)
-	return result.Error
-}
-
-func (a *MetaDataDaoImpl) Delete(id *int64) error {
-	metaData := &m.MetaData{ID: *id}
-	if result := DB.Delete(metaData); result.RowsAffected == 0 {
-		return fmt.Errorf("failed to delete application id %v", *id)
-	}
-
-	return nil
 }
