@@ -60,7 +60,7 @@ func Init() {
 
 	err = seedDatabase()
 	if err != nil {
-		panic(err)
+		logging.Log.Fatalf("Failed to seed db: %v", err)
 	}
 }
 

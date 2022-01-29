@@ -65,11 +65,3 @@ func (at *ApplicationType) AvailabilityCheckURL() *url.URL {
 
 	return url
 }
-
-// fields present in the seeding part of
-type ApplicationTypeSeed struct {
-	DisplayName                  string      `json:"display_name"`
-	DependentApplications        interface{} `json:"dependent_applications"`
-	SupportedSourceTypes         interface{} `json:"supported_source_types"`
-	SupportedAuthenticationTypes interface{} `json:"supported_authentication_types"`
-}

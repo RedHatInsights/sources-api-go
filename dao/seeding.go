@@ -9,24 +9,27 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const SEEDS_DIR = "./dao/seeds/"
-
-type (
-	sourceTypeSeed      map[string]m.SourceTypeSeed
-	applicationTypeSeed map[string]m.ApplicationTypeSeed
-	metadataSeed        map[string]m.MetaDataSeed
-)
+const DEFAULT_SEEDS_DIR = "./dao/seeds/"
 
 func seedDatabase() error {
-	err := seedSourceTypes()
+	return seedDatabaseFromDirectory(DEFAULT_SEEDS_DIR)
+}
+
+func seedDatabaseFromDirectory(seedDir string) error {
+	l.Log.Infof("Seeding SourceType Table")
+	err := seedSourceTypes(seedDir)
 	if err != nil {
 		return err
 	}
-	err = seedApplicationTypes()
+
+	l.Log.Infof("Seeding ApplicationType Table")
+	err = seedApplicationTypes(seedDir)
 	if err != nil {
 		return err
 	}
-	err = seedMetaData()
+
+	l.Log.Infof("Seeding MetaData Table")
+	err = seedMetaData(seedDir)
 	if err != nil {
 		return err
 	}
@@ -34,10 +37,10 @@ func seedDatabase() error {
 	return nil
 }
 
-func seedSourceTypes() error {
+func seedSourceTypes(seedDir string) error {
 	// parse the map of seeds
-	seeds := make(sourceTypeSeed)
-	data, err := os.ReadFile(SEEDS_DIR + "source_types.yml")
+	seeds := make(sourceTypeSeedMap)
+	data, err := os.ReadFile(seedDir + "source_types.yml")
 	if err != nil {
 		return err
 	}
@@ -117,9 +120,9 @@ func seedSourceTypes() error {
 	return nil
 }
 
-func seedApplicationTypes() error {
-	seeds := make(applicationTypeSeed)
-	data, err := os.ReadFile(SEEDS_DIR + "application_types.yml")
+func seedApplicationTypes(seedDir string) error {
+	seeds := make(applicationTypeSeedMap)
+	data, err := os.ReadFile(seedDir + "application_types.yml")
 	if err != nil {
 		return err
 	}
@@ -204,9 +207,28 @@ func seedApplicationTypes() error {
 	return nil
 }
 
-func seedMetaData() error {
-	seeds := make(metadataSeed)
-	data, err := os.ReadFile(SEEDS_DIR + "superkey_metadata.yml")
+func seedMetaData(seedDir string) error {
+	// delete all seeds - the id's don't have to remain static.
+	result := DB.Where("1=1").Delete(&m.MetaData{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	err := seedSuperkeyMetadata(seedDir)
+	if err != nil {
+		return err
+	}
+	err = seedAppMetadata(seedDir)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func seedSuperkeyMetadata(seedDir string) error {
+	seeds := make(superkeyMetadataSeedMap)
+	data, err := os.ReadFile(seedDir + "superkey_metadata.yml")
 	if err != nil {
 		return err
 	}
@@ -216,7 +238,91 @@ func seedMetaData() error {
 		return err
 	}
 
-	// TODO: delete entire metadata table and re-seed it every time (id's do not
-	// need to remain static)
+	for name, value := range seeds {
+		// first find the application type we are going to set the metadata on
+		var apptype m.ApplicationType
+		result := DB.Where("name = ?", name).First(&apptype)
+		if result.Error != nil {
+			l.Log.Errorf("Failed to find application type %v", name)
+			return result.Error
+		}
+
+		// create each "step" as a record in the db
+		for _, values := range value.Steps {
+			payload, err := json.Marshal(values.Payload)
+			if err != nil {
+				return err
+			}
+			substitutions, err := json.Marshal(values.Substitutions)
+			if err != nil {
+				return err
+			}
+
+			metadata := m.MetaData{
+				Step:              values.Step,
+				Name:              values.Name,
+				Payload:           payload,
+				Substitutions:     substitutions,
+				ApplicationTypeID: apptype.Id,
+				Type:              "SuperKeyMetaData",
+			}
+
+			result = DB.Create(&metadata)
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+	}
+
+	return nil
+}
+
+func seedAppMetadata(seedDir string) error {
+	seeds := make(appMetadataSeedMap)
+	data, err := os.ReadFile(seedDir + "app_metadata.yml")
+	if err != nil {
+		return err
+	}
+
+	err = yaml.Unmarshal(data, &seeds)
+	if err != nil {
+		return err
+	}
+
+	// defaulting to "ci" if no var is set.
+	env, ok := os.LookupEnv("SOURCES_ENV")
+	if !ok {
+		l.Log.Infof("Defaulting SOURCES_ENV to ci")
+		env = "ci"
+	}
+
+	for name, values := range seeds[env] {
+		var apptype m.ApplicationType
+		result := DB.Where("name = ?", name).First(&apptype)
+		if result.Error != nil {
+			l.Log.Errorf("Failed to find application type %v", name)
+			return result.Error
+		}
+
+		for key, value := range values {
+			payload, err := json.Marshal(value)
+			if err != nil {
+				return err
+			}
+
+			m := m.MetaData{
+				Name:              key,
+				Payload:           payload,
+				ApplicationTypeID: apptype.Id,
+				Type:              "AppMetaData",
+			}
+
+			result := DB.Create(&m)
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+	}
+
 	return nil
 }
