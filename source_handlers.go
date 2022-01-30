@@ -130,6 +130,9 @@ func SourceCreate(c echo.Context) error {
 		return err
 	}
 
+	// set the resource for raising the event later.
+	c.Set("resource", source.ToEvent())
+
 	return c.JSON(http.StatusCreated, source.ToResponse())
 }
 
