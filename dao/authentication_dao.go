@@ -463,22 +463,26 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 	}
 
-	if lastAvailableAtValue, ok := data["last_available_at"]; ok {
-		lastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAtValue.(string))
-		if err != nil {
+	if lastAvailableAt, ok := data["last_available_at"]; ok {
+		if lastAvailableAt, ok = lastAvailableAt.(string); !ok {
 			return nil
 		}
 
-		auth.AvailabilityStatus.LastAvailableAt = lastAvailableAt
+		auth.AvailabilityStatus.LastAvailableAt, err = time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
+		if err != nil {
+			return nil
+		}
 	}
 
-	if lastCheckedAtValue, ok := data["last_available_at"]; ok {
-		lastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAtValue.(string))
-		if err != nil {
+	if lastCheckedAt, ok := data["last_available_at"]; ok {
+		if lastCheckedAt, ok = lastCheckedAt.(string); !ok {
 			return nil
 		}
 
-		auth.AvailabilityStatus.LastCheckedAt = lastCheckedAt
+		auth.AvailabilityStatus.LastCheckedAt, err = time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
+		if err != nil {
+			return nil
+		}
 	}
 
 	return auth
