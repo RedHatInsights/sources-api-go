@@ -74,13 +74,18 @@ func (a *EndpointDaoImpl) Update(app *m.Endpoint) error {
 	return result.Error
 }
 
-func (a *EndpointDaoImpl) Delete(id *int64) error {
-	app := &m.Endpoint{ID: *id}
-	if result := DB.Delete(app); result.RowsAffected == 0 {
-		return fmt.Errorf("failed to delete endpoint id %v", *id)
+func (a *EndpointDaoImpl) Delete(id *int64) (*m.Endpoint, error) {
+	endpt := &m.Endpoint{ID: *id}
+	result := DB.Where("tenant_id = ?", a.TenantID).First(&endpt)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("endpoint")
 	}
 
-	return nil
+	if result := DB.Delete(endpt); result.Error != nil {
+		return nil, fmt.Errorf("failed to delete endpoint id %v", *id)
+	}
+
+	return endpt, nil
 }
 
 func (a *EndpointDaoImpl) Tenant() *int64 {

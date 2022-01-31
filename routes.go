@@ -76,6 +76,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
 	v3.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
 	v3.POST("/endpoints", EndpointCreate, append(permissionMiddleware, middleware.RaiseEndpointCreateEvent)...)
+	v3.DELETE("/endpoints/:id", EndpointDelete, append(permissionMiddleware, middleware.RaiseEndpointDestroyEvent)...)
 	v3.GET("/endpoints/:endpoint_id/authentications", EndpointListAuthentications, tenancyWithListMiddleware...)
 
 	// ApplicationAuthentications

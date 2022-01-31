@@ -334,7 +334,7 @@ func (a *MockEndpointDao) Update(src *m.Endpoint) error {
 	panic("not implemented") // TODO: Implement
 }
 
-func (a *MockEndpointDao) Delete(id *int64) error {
+func (a *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {
 	panic("not implemented") // TODO: Implement
 }
 

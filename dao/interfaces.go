@@ -66,7 +66,7 @@ type EndpointDao interface {
 	GetById(id *int64) (*m.Endpoint, error)
 	Create(src *m.Endpoint) error
 	Update(src *m.Endpoint) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.Endpoint, error)
 	Tenant() *int64
 	// CanEndpointBeSetAsDefaultForSource checks if the endpoint can be set as default, by checking if the given source
 	// id already has another endpoint marked as default.
