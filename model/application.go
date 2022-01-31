@@ -32,7 +32,7 @@ type Application struct {
 	ApplicationAuthentications []ApplicationAuthentication
 }
 
-func (app *Application) ToEvent() *ApplicationEvent {
+func (app *Application) ToEvent() interface{} {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
 		LastAvailableAt: util.DateTimeToRecordFormat(app.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(app.LastCheckedAt)}

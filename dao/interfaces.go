@@ -24,7 +24,7 @@ type ApplicationDao interface {
 	GetById(id *int64) (*m.Application, error)
 	Create(src *m.Application) error
 	Update(src *m.Application) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.Application, error)
 	Tenant() *int64
 }
 

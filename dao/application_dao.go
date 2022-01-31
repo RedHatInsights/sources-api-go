@@ -73,13 +73,18 @@ func (a *ApplicationDaoImpl) Update(app *m.Application) error {
 	return result.Error
 }
 
-func (a *ApplicationDaoImpl) Delete(id *int64) error {
+func (a *ApplicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
-	if result := DB.Delete(app); result.RowsAffected == 0 {
-		return fmt.Errorf("failed to delete application id %v", *id)
+	result := DB.Where("tenant_id = ?", a.TenantID).First(app)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("application")
 	}
 
-	return nil
+	if result := DB.Delete(app); result.Error != nil {
+		return nil, fmt.Errorf("failed to delete application id %v", *id)
+	}
+
+	return app, nil
 }
 
 func (a *ApplicationDaoImpl) Tenant() *int64 {

@@ -281,8 +281,8 @@ func (a *MockApplicationDao) Update(src *m.Application) error {
 	return nil
 }
 
-func (a *MockApplicationDao) Delete(id *int64) error {
-	return nil
+func (a *MockApplicationDao) Delete(id *int64) (*m.Application, error) {
+	return nil, nil
 }
 
 func (a *MockApplicationDao) Tenant() *int64 {

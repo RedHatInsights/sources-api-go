@@ -47,7 +47,12 @@ func BulkMessageFromSource(source *m.Source) (map[string]interface{}, error) {
 
 	applications := make([]m.ApplicationEvent, len(source.Applications))
 	for i, application := range source.Applications {
-		applications[i] = *application.ToEvent()
+		event, ok := application.ToEvent().(*m.ApplicationEvent)
+		if !ok {
+			return nil, fmt.Errorf("failed to create application event from application")
+		}
+
+		applications[i] = *event
 	}
 
 	bulkMessage["applications"] = applications
