@@ -51,8 +51,8 @@ func (aa *ApplicationAuthentication) ToResponse() *ApplicationAuthenticationResp
 	return &ApplicationAuthenticationResponse{
 		ID:                id,
 		AuthenticationUID: aa.AuthenticationUID,
-		CreatedAt:         aa.CreatedAt,
-		UpdatedAt:         aa.UpdatedAt,
+		CreatedAt:         util.DateTimeToRecordFormat(aa.CreatedAt),
+		UpdatedAt:         util.DateTimeToRecordFormat(aa.UpdatedAt),
 		ApplicationID:     appId,
 		AuthenticationID:  authId,
 	}
