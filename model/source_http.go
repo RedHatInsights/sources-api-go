@@ -1,9 +1,5 @@
 package model
 
-import (
-	"time"
-)
-
 // SourceCreateRequest is a struct representing a request coming
 // from the outside to create a struct, this is the way we will be marking
 // fields as write-once. They are accepted on create but not edit.
@@ -33,20 +29,20 @@ type SourceEditRequest struct {
 // SourceResponse represents what we will always return to the users
 // of the API after a request.
 type SourceResponse struct {
-	AvailabilityStatus
-	Pause
+	AvailabilityStatusResponse
+	PauseResponse
 
-	ID                  *string   `json:"id"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
-	Name                *string   `json:"name"`
-	Uid                 *string   `json:"uid,omitempty"`
-	Version             *string   `json:"version,omitempty"`
-	Imported            *string   `json:"imported,omitempty"`
-	SourceRef           *string   `json:"source_ref,omitempty"`
-	AppCreationWorkflow *string   `json:"app_creation_workflow"`
+	ID                  string  `json:"id"`
+	CreatedAt           *string `json:"created_at"`
+	UpdatedAt           *string `json:"updated_at"`
+	Name                *string `json:"name"`
+	Uid                 *string `json:"uid,omitempty"`
+	Version             *string `json:"version,omitempty"`
+	Imported            *string `json:"imported,omitempty"`
+	SourceRef           *string `json:"source_ref,omitempty"`
+	AppCreationWorkflow *string `json:"app_creation_workflow"`
 
-	SourceTypeId *string `json:"source_type_id"`
+	SourceTypeId string `json:"source_type_id"`
 }
 
 // SourceInternalResponse represents the structure we will return

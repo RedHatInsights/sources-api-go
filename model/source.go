@@ -70,20 +70,25 @@ func (src *Source) ToEvent() interface{} {
 func (src *Source) ToResponse() *SourceResponse {
 	id := strconv.FormatInt(src.ID, 10)
 	stid := strconv.FormatInt(src.SourceTypeID, 10)
+	asResponse := AvailabilityStatusResponse{
+		AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
+		LastCheckedAt:      util.DateTimeToRecordFormat(src.LastCheckedAt),
+		LastAvailableAt:    util.DateTimeToRecordFormat(src.LastAvailableAt),
+	}
 
 	return &SourceResponse{
-		AvailabilityStatus:  src.AvailabilityStatus,
-		Pause:               src.Pause,
-		ID:                  &id,
-		CreatedAt:           src.CreatedAt,
-		UpdatedAt:           src.UpdatedAt,
-		Name:                &src.Name,
-		Uid:                 src.Uid,
-		Version:             src.Version,
-		Imported:            src.Imported,
-		SourceRef:           src.SourceRef,
-		AppCreationWorkflow: &src.AppCreationWorkflow,
-		SourceTypeId:        &stid,
+		AvailabilityStatusResponse: asResponse,
+		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRecordFormat(src.PausedAt)},
+		ID:                         id,
+		CreatedAt:                  util.DateTimeToRecordFormat(src.CreatedAt),
+		UpdatedAt:                  util.DateTimeToRecordFormat(src.UpdatedAt),
+		Name:                       &src.Name,
+		Uid:                        src.Uid,
+		Version:                    src.Version,
+		Imported:                   src.Imported,
+		SourceRef:                  src.SourceRef,
+		AppCreationWorkflow:        &src.AppCreationWorkflow,
+		SourceTypeId:               stid,
 	}
 }
 

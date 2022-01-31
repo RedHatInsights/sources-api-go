@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/datatypes"
 )
 
@@ -28,8 +29,8 @@ func (a *SourceType) ToResponse() *SourceTypeResponse {
 	// returning the address of the new struct.
 	return &SourceTypeResponse{
 		Id:          id,
-		CreatedAt:   a.CreatedAt,
-		UpdatedAt:   a.UpdatedAt,
+		CreatedAt:   util.DateTimeToRecordFormat(a.CreatedAt),
+		UpdatedAt:   util.DateTimeToRecordFormat(a.UpdatedAt),
 		Name:        a.Name,
 		ProductName: a.ProductName,
 		Vendor:      a.Vendor,
