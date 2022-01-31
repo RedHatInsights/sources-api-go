@@ -33,7 +33,7 @@ func getMetaDataDaoWithTenant(c echo.Context) (dao.MetaDataDao, error) {
 }
 
 func MetaDataList(c echo.Context) error {
-	applicationDB, err := getMetaDataDao(c)
+	metaDataDB, err := getMetaDataDao(c)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func MetaDataList(c echo.Context) error {
 		count     int64
 	)
 
-	metaDatas, count, err = applicationDB.List(limit, offset, filters)
+	metaDatas, count, err = metaDataDB.List(limit, offset, filters)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
@@ -68,7 +68,7 @@ func MetaDataList(c echo.Context) error {
 }
 
 func ApplicationTypeListMetaData(c echo.Context) error {
-	applicationDB, err := getMetaDataDao(c)
+	metaDataDB, err := getMetaDataDao(c)
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 		count     int64
 	)
 
-	metaDatas, count, err = applicationDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
+	metaDatas, count, err = metaDataDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
 		if errors.Is(err, util.ErrNotFoundEmpty) {

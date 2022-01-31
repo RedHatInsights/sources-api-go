@@ -81,9 +81,6 @@ type MetaDataDao interface {
 	List(limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	GetById(id *int64) (*m.MetaData, error)
-	Create(src *m.MetaData) error
-	Update(src *m.MetaData) error
-	Delete(id *int64) error
 }
 
 type SourceTypeDao interface {
