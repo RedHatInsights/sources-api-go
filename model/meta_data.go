@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/datatypes"
 )
 
@@ -32,8 +33,8 @@ func (app *MetaData) ToResponse() *MetaDataResponse {
 
 	return &MetaDataResponse{
 		ID:                id,
-		CreatedAt:         app.CreatedAt,
-		UpdatedAt:         app.UpdatedAt,
+		CreatedAt:         util.DateTimeToRecordFormat(app.CreatedAt),
+		UpdatedAt:         util.DateTimeToRecordFormat(app.UpdatedAt),
 		Name:              app.Name,
 		Payload:           app.Payload,
 		ApplicationTypeId: appTypeId,
