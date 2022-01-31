@@ -12,7 +12,7 @@ type SourceDao interface {
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error
 	Update(src *m.Source) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.Source, error)
 	Tenant() *int64
 	NameExistsInCurrentTenant(name string) bool
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error)

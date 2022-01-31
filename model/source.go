@@ -43,7 +43,7 @@ type Source struct {
 	Endpoints        []Endpoint
 }
 
-func (src *Source) ToEvent() *SourceEvent {
+func (src *Source) ToEvent() interface{} {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
 		LastAvailableAt: util.DateTimeToRecordFormat(src.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(src.LastCheckedAt)}

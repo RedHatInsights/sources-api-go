@@ -8,6 +8,10 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
+type Event interface {
+	ToEvent() interface{}
+}
+
 type EventModelDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error

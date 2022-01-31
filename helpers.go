@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -34,4 +35,8 @@ func getLimitAndOffset(c echo.Context) (int, int, error) {
 	}
 
 	return limit, offset, nil
+}
+
+func setEventStreamResource(c echo.Context, model m.Event) {
+	c.Set("resource", model.ToEvent())
 }

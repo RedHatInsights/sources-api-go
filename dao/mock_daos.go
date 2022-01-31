@@ -81,7 +81,7 @@ func (src *MockSourceDao) Update(s *m.Source) error {
 	panic("implement me")
 }
 
-func (src *MockSourceDao) Delete(id *int64) error {
+func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
 	panic("implement me")
 }
 

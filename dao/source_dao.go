@@ -95,13 +95,18 @@ func (s *SourceDaoImpl) Update(src *m.Source) error {
 	return result.Error
 }
 
-func (s *SourceDaoImpl) Delete(id *int64) error {
+func (s *SourceDaoImpl) Delete(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	if result := DB.Delete(src); result.RowsAffected == 0 {
-		return fmt.Errorf("failed to delete source id %v", *id)
+	result := DB.Where("tenant_id = ?", s.TenantID).First(src)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("source")
 	}
 
-	return nil
+	if result := DB.Delete(src); result.Error != nil {
+		return nil, fmt.Errorf("failed to delete source id %v", *id)
+	}
+
+	return src, nil
 }
 
 func (s *SourceDaoImpl) Tenant() *int64 {

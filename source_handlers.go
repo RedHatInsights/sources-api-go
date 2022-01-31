@@ -130,9 +130,7 @@ func SourceCreate(c echo.Context) error {
 		return err
 	}
 
-	// set the resource for raising the event later.
-	c.Set("resource", source.ToEvent())
-
+	setEventStreamResource(c, source)
 	return c.JSON(http.StatusCreated, source.ToResponse())
 }
 
@@ -163,6 +161,7 @@ func SourceEdit(c echo.Context) error {
 		return err
 	}
 
+	setEventStreamResource(c, s)
 	return c.JSON(http.StatusOK, s.ToResponse())
 }
 
@@ -179,11 +178,15 @@ func SourceDelete(c echo.Context) (err error) {
 
 	c.Logger().Infof("Deleting Source Id %v", id)
 
-	err = sourcesDB.Delete(&id)
+	src, err := sourcesDB.Delete(&id)
 	if err != nil {
-		return c.NoContent(http.StatusNotFound)
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
+	setEventStreamResource(c, src)
 	return c.NoContent(http.StatusNoContent)
 }
 
