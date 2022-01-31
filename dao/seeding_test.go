@@ -106,7 +106,9 @@ func TestSeedingSuperkeyMetadata(t *testing.T) {
 		seedsDir = DEFAULT_SEEDS_DIR
 	}
 
-	err = seedSuperkeyMetadata(seedsDir)
+	appTypes := loadApplicationTypeSeeds()
+
+	err = seedSuperkeyMetadata(seedsDir, appTypes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +155,9 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 		seedsDir = DEFAULT_SEEDS_DIR
 	}
 
-	err = seedAppMetadata(seedsDir)
+	appTypes := loadApplicationTypeSeeds()
+
+	err = seedAppMetadata(seedsDir, appTypes)
 	if err != nil {
 		t.Fatal(err)
 	}

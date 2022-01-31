@@ -212,11 +212,14 @@ func seedMetaData(seedDir string) error {
 		return result.Error
 	}
 
-	err := seedSuperkeyMetadata(seedDir)
+	// load the application types once so we don't load them in a loop
+	appTypes := loadApplicationTypeSeeds()
+
+	err := seedSuperkeyMetadata(seedDir, appTypes)
 	if err != nil {
 		return err
 	}
-	err = seedAppMetadata(seedDir)
+	err = seedAppMetadata(seedDir, appTypes)
 	if err != nil {
 		return err
 	}
@@ -224,7 +227,7 @@ func seedMetaData(seedDir string) error {
 	return nil
 }
 
-func seedSuperkeyMetadata(seedDir string) error {
+func seedSuperkeyMetadata(seedDir string, appTypes map[string]*m.ApplicationType) error {
 	seeds := make(superkeyMetadataSeedMap)
 	data, err := os.ReadFile(seedDir + "superkey_metadata.yml")
 	if err != nil {
@@ -238,11 +241,9 @@ func seedSuperkeyMetadata(seedDir string) error {
 
 	for name, value := range seeds {
 		// first find the application type we are going to set the metadata on
-		var apptype m.ApplicationType
-		result := DB.Where("name = ?", name).First(&apptype)
-		if result.Error != nil {
-			l.Log.Errorf("Failed to find application type %v", name)
-			return result.Error
+		appType, ok := appTypes[name]
+		if !ok {
+			return fmt.Errorf("failed find application type %v", name)
 		}
 
 		// create each "step" as a record in the db
@@ -261,11 +262,11 @@ func seedSuperkeyMetadata(seedDir string) error {
 				Name:              values.Name,
 				Payload:           payload,
 				Substitutions:     substitutions,
-				ApplicationTypeID: apptype.Id,
+				ApplicationTypeID: appType.Id,
 				Type:              "SuperKeyMetaData",
 			}
 
-			result = DB.Create(&metadata)
+			result := DB.Create(&metadata)
 			if result.Error != nil {
 				return result.Error
 			}
@@ -275,7 +276,7 @@ func seedSuperkeyMetadata(seedDir string) error {
 	return nil
 }
 
-func seedAppMetadata(seedDir string) error {
+func seedAppMetadata(seedDir string, appTypes map[string]*m.ApplicationType) error {
 	seeds := make(appMetadataSeedMap)
 	data, err := os.ReadFile(seedDir + "app_metadata.yml")
 	if err != nil {
@@ -295,11 +296,9 @@ func seedAppMetadata(seedDir string) error {
 	}
 
 	for name, values := range seeds[env] {
-		var apptype m.ApplicationType
-		result := DB.Where("name = ?", name).First(&apptype)
-		if result.Error != nil {
-			l.Log.Errorf("Failed to find application type %v", name)
-			return result.Error
+		appType, ok := appTypes[name]
+		if !ok {
+			return fmt.Errorf("failed find application type %v", name)
 		}
 
 		for key, value := range values {
@@ -311,7 +310,7 @@ func seedAppMetadata(seedDir string) error {
 			m := m.MetaData{
 				Name:              key,
 				Payload:           payload,
-				ApplicationTypeID: apptype.Id,
+				ApplicationTypeID: appType.Id,
 				Type:              "AppMetaData",
 			}
 
