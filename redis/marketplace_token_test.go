@@ -8,7 +8,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
-	"github.com/alicebob/miniredis/v2"
 	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
 )
@@ -28,21 +27,14 @@ func setUpFakeToken() *marketplace.BearerToken {
 
 // TestGetTokenBadTenant tests that when given a bad or nonexistent tenant, an expected error is returned.
 func TestGetTokenBadTenant(t *testing.T) {
-	mr, err := miniredis.Run()
-	if err != nil {
-		t.Errorf("cannot run the Miniredis mock server: %s", err)
-	}
-
-	defer mr.Close()
-
 	Client = redis.NewClient(
 		&redis.Options{
-			Addr: mr.Addr(),
+			Addr: miniredis.Addr(),
 		},
 	)
 
 	tokenCacher.TenantID = 12345
-	_, err = tokenCacher.FetchToken()
+	_, err := tokenCacher.FetchToken()
 	if err == nil {
 		t.Error("want error, got none")
 	}
@@ -50,19 +42,12 @@ func TestGetTokenBadTenant(t *testing.T) {
 
 // TestGetToken sets up a predefined token on the Redis cache, and tries to fetch it using the "GetToken" function.
 func TestGetToken(t *testing.T) {
-	mr, err := miniredis.Run()
-	if err != nil {
-		t.Errorf("cannot run the Miniredis mock server: %s", err)
-	}
-
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
-	defer mr.Close()
-
 	Client = redis.NewClient(
 		&redis.Options{
-			Addr: mr.Addr(),
+			Addr: miniredis.Addr(),
 		},
 	)
 
@@ -76,7 +61,7 @@ func TestGetToken(t *testing.T) {
 	// Use a fake tenant id to set the token on Redis
 	tokenCacher.TenantID = 5
 
-	err = mr.Set(fmt.Sprintf("marketplace_token_%d", tokenCacher.TenantID), string(marshalledToken))
+	err = miniredis.Set(fmt.Sprintf("marketplace_token_%d", tokenCacher.TenantID), string(marshalledToken))
 	if err != nil {
 		t.Errorf("no error expected, got %s", err)
 	}
@@ -111,19 +96,12 @@ func TestSetTokenUnreachableRedis(t *testing.T) {
 
 // TestSetTokenSuccess tests that the token is successfully set on Redis.
 func TestSetTokenSuccess(t *testing.T) {
-	mr, err := miniredis.Run()
-	if err != nil {
-		t.Errorf("cannot run the Miniredis mock server: %s", err)
-	}
-
-	defer mr.Close()
-
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
 	Client = redis.NewClient(
 		&redis.Options{
-			Addr: mr.Addr(),
+			Addr: miniredis.Addr(),
 		},
 	)
 
@@ -132,13 +110,13 @@ func TestSetTokenSuccess(t *testing.T) {
 	tokenCacher.TenantID = 5
 
 	// Call the actual function
-	err = tokenCacher.CacheToken(fakeToken)
+	err := tokenCacher.CacheToken(fakeToken)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
 
 	// Fetch the token from Redis
-	got, err := mr.Get(fmt.Sprintf("marketplace_token_%d", tokenCacher.TenantID))
+	got, err := miniredis.Get(fmt.Sprintf("marketplace_token_%d", tokenCacher.TenantID))
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
@@ -158,19 +136,12 @@ func TestSetTokenSuccess(t *testing.T) {
 
 // TestSetTokenExpired tests that an error is returned when an expired token is trying to be cached.
 func TestSetTokenExpired(t *testing.T) {
-	mr, err := miniredis.Run()
-	if err != nil {
-		t.Errorf("cannot run the Miniredis mock server: %s", err)
-	}
-
-	defer mr.Close()
-
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
 	Client = redis.NewClient(
 		&redis.Options{
-			Addr: mr.Addr(),
+			Addr: miniredis.Addr(),
 		},
 	)
 
@@ -183,7 +154,7 @@ func TestSetTokenExpired(t *testing.T) {
 	tokenCacher.TenantID = 5
 
 	// Call the actual function
-	err = tokenCacher.CacheToken(fakeToken)
+	err := tokenCacher.CacheToken(fakeToken)
 	if err == nil {
 		t.Errorf("want error, got none")
 	}
