@@ -64,23 +64,28 @@ func (endpoint *Endpoint) ToEvent() interface{} {
 func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 	id := strconv.FormatInt(endpoint.ID, 10)
 	sourceId := strconv.FormatInt(endpoint.SourceID, 10)
+	asResponse := AvailabilityStatusResponse{
+		AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
+		LastCheckedAt:      util.DateTimeToRecordFormat(endpoint.LastCheckedAt),
+		LastAvailableAt:    util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
+	}
 
 	return &EndpointResponse{
-		AvailabilityStatus:      endpoint.AvailabilityStatus,
-		ID:                      id,
-		CreatedAt:               endpoint.CreatedAt,
-		UpdatedAt:               endpoint.UpdatedAt,
-		Pause:                   endpoint.Pause,
-		Role:                    endpoint.Role,
-		Port:                    endpoint.Port,
-		Default:                 endpoint.Default,
-		Scheme:                  endpoint.Scheme,
-		Host:                    endpoint.Host,
-		Path:                    endpoint.Path,
-		VerifySsl:               endpoint.VerifySsl,
-		CertificateAuthority:    endpoint.CertificateAuthority,
-		ReceptorNode:            endpoint.ReceptorNode,
-		AvailabilityStatusError: endpoint.AvailabilityStatusError,
-		SourceID:                sourceId,
+		AvailabilityStatusResponse: asResponse,
+		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRecordFormat(endpoint.PausedAt)},
+		ID:                         id,
+		CreatedAt:                  util.DateTimeToRecordFormat(endpoint.CreatedAt),
+		UpdatedAt:                  util.DateTimeToRecordFormat(endpoint.UpdatedAt),
+		Role:                       endpoint.Role,
+		Port:                       endpoint.Port,
+		Default:                    endpoint.Default,
+		Scheme:                     endpoint.Scheme,
+		Host:                       endpoint.Host,
+		Path:                       endpoint.Path,
+		VerifySsl:                  endpoint.VerifySsl,
+		CertificateAuthority:       endpoint.CertificateAuthority,
+		ReceptorNode:               endpoint.ReceptorNode,
+		AvailabilityStatusError:    endpoint.AvailabilityStatusError,
+		SourceID:                   sourceId,
 	}
 }
