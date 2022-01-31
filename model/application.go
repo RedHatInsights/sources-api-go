@@ -57,17 +57,22 @@ func (app *Application) ToResponse() *ApplicationResponse {
 	id := strconv.FormatInt(app.ID, 10)
 	sourceId := strconv.FormatInt(app.SourceID, 10)
 	appTypeId := strconv.FormatInt(app.ApplicationTypeID, 10)
+	asResponse := AvailabilityStatusResponse{
+		AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
+		LastCheckedAt:      util.DateTimeToRecordFormat(app.LastCheckedAt),
+		LastAvailableAt:    util.DateTimeToRecordFormat(app.LastAvailableAt),
+	}
 
 	return &ApplicationResponse{
-		AvailabilityStatus:      app.AvailabilityStatus,
-		ID:                      id,
-		CreatedAt:               app.CreatedAt,
-		UpdatedAt:               app.UpdatedAt,
-		Pause:                   app.Pause,
-		AvailabilityStatusError: app.AvailabilityStatusError,
-		Extra:                   app.Extra,
-		SourceID:                sourceId,
-		ApplicationTypeID:       appTypeId,
+		AvailabilityStatusResponse: asResponse,
+		ID:                         id,
+		CreatedAt:                  util.DateTimeToRecordFormat(app.CreatedAt),
+		UpdatedAt:                  util.DateTimeToRecordFormat(app.UpdatedAt),
+		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRecordFormat(app.PausedAt)},
+		AvailabilityStatusError:    app.AvailabilityStatusError,
+		Extra:                      app.Extra,
+		SourceID:                   sourceId,
+		ApplicationTypeID:          appTypeId,
 	}
 }
 

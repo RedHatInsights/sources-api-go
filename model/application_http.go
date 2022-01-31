@@ -1,18 +1,16 @@
 package model
 
 import (
-	"time"
-
 	"gorm.io/datatypes"
 )
 
 type ApplicationResponse struct {
-	AvailabilityStatus
-	Pause
+	AvailabilityStatusResponse
+	PauseResponse
 
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string  `json:"id"`
+	CreatedAt *string `json:"created_at"`
+	UpdatedAt *string `json:"updated_at"`
 
 	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
