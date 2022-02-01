@@ -1,0 +1,43 @@
+---
+"/insights/platform/catalog":
+  display_name: Automation Services Catalog
+  dependent_applications: []
+  supported_source_types:
+  - ansible-tower
+  supported_authentication_types:
+    ansible-tower:
+    - username_password
+"/insights/platform/cost-management":
+  display_name: Cost Management
+  dependent_applications: []
+  supported_source_types:
+  - amazon
+  - azure
+  - google
+  - openshift
+  supported_authentication_types:
+    amazon:
+    - arn
+    azure:
+    - tenant_id_client_id_client_secret
+    google:
+    - project_id_service_account_json
+    openshift:
+    - token
+"/insights/platform/cloud-meter":
+  display_name: RHEL management
+  dependent_applications: []
+  supported_source_types:
+  - amazon
+  - azure
+  supported_authentication_types:
+    amazon:
+    - cloud-meter-arn
+"/insights/platform/fifi":
+  display_name: Remediations
+  dependent_applications: []
+  supported_source_types:
+  - satellite
+  supported_authentication_types:
+    satellite:
+    - receptor_node

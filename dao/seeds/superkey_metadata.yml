@@ -1,0 +1,138 @@
+---
+"/insights/platform/cost-management":
+  steps:
+  - step: 1
+    name: s3
+    payload:
+      "create_cost_policy"
+    substitutions:
+      S3BUCKET: s3
+  - step: 2
+    name: cost_report
+    payload:
+      {
+        "additional_artifacts": [
+          "REDSHIFT",
+          "QUICKSIGHT"
+        ],
+        "additional_schema_elements": [
+          "RESOURCES"
+        ],
+        "compression": "GZIP",
+        "format": "textORcsv",
+        "time_unit": "HOURLY",
+        "report_name": "koku",
+        "s3_prefix": "cost",
+        "s3_region": "us-east-1",
+        "s3_bucket": "S3BUCKET"
+      }
+    substitutions:
+      S3BUCKET: s3
+  - step: 3
+    name: policy
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+              "s3Get*",
+              "s3List*"
+            ],
+            "Resource": [
+              "arnawss3::S3BUCKET",
+              "arnawss3::S3BUCKET/*"
+            ]
+          },
+          {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+              "s3ListBucket",
+              "curDescribeReportDefinitions"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    substitutions:
+      S3BUCKET: s3
+  - step: 4
+    name: role
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arnawsiam:ACCOUNTroot"
+            },
+            "Action": "stsAssumeRole",
+            "Condition": {}
+          }
+        ]
+      }
+    substitutions:
+      ACCOUNT: get_account
+  - step: 5
+    name: bind_role
+    payload: {}
+    substitutions: {}
+
+"/insights/platform/cloud-meter":
+  steps:
+  - step: 1
+    name: policy
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "CloudigradePolicy",
+            "Effect": "Allow",
+            "Action": [
+              "ec2DescribeImages",
+              "ec2DescribeInstances",
+              "ec2ModifySnapshotAttribute",
+              "ec2DescribeSnapshotAttribute",
+              "ec2DescribeSnapshots",
+              "ec2CopyImage",
+              "ec2CreateTags",
+              "ec2DescribeRegions",
+              "cloudtrailCreateTrail",
+              "cloudtrailUpdateTrail",
+              "cloudtrailPutEventSelectors",
+              "cloudtrailDescribeTrails",
+              "cloudtrailStartLogging",
+              "cloudtrailDeleteTrail"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    substitutions: {}
+  - step: 2
+    name: role
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arnawsiam:ACCOUNTroot"
+            },
+            "Action": "stsAssumeRole",
+            "Condition": {}
+          }
+        ]
+      }
+    substitutions:
+      ACCOUNT: get_account
+  - step: 3
+    name: bind_role
+    payload: {}
+    substitutions: {}

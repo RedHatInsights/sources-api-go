@@ -57,6 +57,11 @@ func Init() {
 	}
 
 	Vault = vaultClient.Logical()
+
+	err = seedDatabase()
+	if err != nil {
+		logging.Log.Fatalf("Failed to seed db: %v", err)
+	}
 }
 
 func dbString() string {
