@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -87,15 +86,22 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 	// Vault requires the hash to be wrapped in a "data" object in order to be accepted.
 	return map[string]interface{}{"data": data}, nil
 }
+
 func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
-	data, err := json.Marshal(attributes)
-	if err != nil {
-		return err
+	if attributes["last_checked_at"] != nil {
+		auth.AvailabilityStatus.LastCheckedAt, _ = time.Parse(time.RFC3339Nano, attributes["last_checked_at"].(string))
 	}
 
-	err = json.Unmarshal(data, &auth)
-	if err != nil {
-		return err
+	if attributes["last_available_at"] != nil {
+		auth.AvailabilityStatus.LastAvailableAt, _ = time.Parse(time.RFC3339Nano, attributes["last_available_at"].(string))
+	}
+
+	if attributes["availability_status_error"] != nil {
+		auth.AvailabilityStatusError, _ = attributes["availability_status_error"].(string)
+	}
+
+	if attributes["availability_status"] != nil {
+		auth.AvailabilityStatus.AvailabilityStatus, _ = attributes["availability_status"].(string)
 	}
 
 	return nil
