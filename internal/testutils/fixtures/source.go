@@ -11,17 +11,19 @@ var (
 
 var TestSourceData = []m.Source{
 	{
-		ID:           1,
-		Name:         "Source1",
-		SourceTypeID: 1,
-		TenantID:     1,
-		Uid:          &uid1,
+		ID:                 1,
+		Name:               "Source1",
+		SourceTypeID:       1,
+		TenantID:           1,
+		AvailabilityStatus: m.AvailabilityStatus{AvailabilityStatus: "available"},
+		Uid:                &uid1,
 	},
 	{
-		ID:           2,
-		Name:         "Source2",
-		SourceTypeID: 1,
-		TenantID:     1,
-		Uid:          &uid2,
+		ID:                 2,
+		Name:               "Source2",
+		SourceTypeID:       1,
+		TenantID:           1,
+		AvailabilityStatus: m.AvailabilityStatus{AvailabilityStatus: "unavailable"},
+		Uid:                &uid2,
 	},
 }

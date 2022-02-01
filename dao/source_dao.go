@@ -61,6 +61,24 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 	return sources, count, result.Error
 }
 
+func (s *SourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+	query := DB.Table("sources").Select("id", "availability_status", "tenant_id")
+
+	query, err := applyFilters(query, filters)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	sources := make([]m.Source, 0, limit)
+	result := query.Offset(offset).Limit(limit).Find(&sources)
+
+	// Getting the total count (filters included) for pagination
+	count := int64(0)
+	query.Count(&count)
+
+	return sources, count, result.Error
+}
+
 func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
 	result := DB.First(src)

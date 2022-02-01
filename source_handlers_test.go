@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -270,6 +271,85 @@ func TestSourceListSatellite(t *testing.T) {
 
 	if len(out.Data) != 0 {
 		t.Error("Objects were not filtered out of request")
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestSourceListInternal(t *testing.T) {
+	if !flags.Integration {
+		t.Skip("Only run during integration tests")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/internal/v2.0/sources",
+		nil,
+		map[string]interface{}{
+			"limit":   100,
+			"offset":  0,
+			"filters": []util.Filter{},
+		})
+
+	err := InternalSourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	if len(out.Data) != len(fixtures.TestSourceData) {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	for i, src := range out.Data {
+		s, ok := src.(map[string]interface{})
+		if !ok {
+			t.Error("model did not deserialize as a source")
+		}
+
+		// Parse the source
+		responseSourceId, err := util.InterfaceToInt64(s["id"])
+		if err != nil {
+			t.Errorf("could not parse id from response: %s", err)
+		}
+
+		responseTenantId, err := util.InterfaceToInt64(s["tenant"])
+		if err != nil {
+			t.Errorf("could not parse tenant from response: %s", err)
+		}
+
+		responseAvailabilityStatus := s["availability_status"].(string)
+
+		// Check that the expected source data and the received data are the same
+		if fixtures.TestSourceData[i].ID != responseSourceId {
+			t.Error("ids don't match")
+		}
+
+		if fixtures.TestSourceData[i].TenantID != responseTenantId {
+			t.Error("tenants don't match")
+		}
+
+		expected := fixtures.TestSourceData[i].AvailabilityStatus.AvailabilityStatus
+		if expected != responseAvailabilityStatus {
+			t.Error("availability statuses don't match")
+		}
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)

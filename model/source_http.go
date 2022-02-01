@@ -49,6 +49,14 @@ type SourceResponse struct {
 	SourceTypeId *string `json:"source_type_id"`
 }
 
+// SourceInternalResponse represents the structure we will return
+// when a source is requested from the internal endpoint.
+type SourceInternalResponse struct {
+	Id                 *string `json:"id"`
+	AvailabilityStatus *string `json:"availability_status"`
+	TenantId           *string `json:"tenant"`
+}
+
 func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
 	if update.Name != nil {
 		src.Name = *update.Name

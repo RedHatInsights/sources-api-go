@@ -15,6 +15,7 @@ var listMiddleware = []echo.MiddlewareFunc{
 
 var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{middleware.Tenancy}, listMiddleware...)
 var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.PermissionCheck}
+var permissionWithListMiddleware = append(listMiddleware, middleware.PermissionCheck)
 
 func setupRoutes(e *echo.Echo) {
 	e.GET("/health", func(c echo.Context) error {
@@ -92,4 +93,11 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/source_types", SourceTypeList, listMiddleware...)
 	v3.GET("/source_types/:id", SourceTypeGet)
 	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
+
+	/**            **\
+	 * Internal API *
+	\**            **/
+	internal := e.Group("/internal/v2.0", middleware.HandleErrors, middleware.ParseHeaders)
+
+	internal.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
 }
