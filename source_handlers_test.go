@@ -213,15 +213,24 @@ func TestSourceList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, src := range out.Data {
-		s, ok := src.(map[string]interface{})
-		if !ok {
-			t.Error("model did not deserialize as a source")
-		}
+	SortByStringValueOnKey("name", out.Data)
 
-		if s["name"] != "Source1" && s["name"] != "Source2" {
-			t.Error("ghosts infected the return")
-		}
+	s1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if s1["name"] != "Source1" {
+		t.Error("ghosts infected the return")
+	}
+
+	s2, ok := out.Data[1].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if s2["name"] != "Source2" {
+		t.Error("ghosts infected the return")
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)

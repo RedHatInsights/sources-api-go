@@ -56,16 +56,24 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, src := range out.Data {
-		s, ok := src.(map[string]interface{})
+	SortByStringValueOnKey("id", out.Data)
 
-		if !ok {
-			t.Error("model did not deserialize as a source")
-		}
+	e1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
 
-		if s["id"] != "1" && s["id"] != "2" {
-			t.Error("ghosts infected the return")
-		}
+	if e1["id"] != "1" {
+		t.Error("ghosts infected the return")
+	}
+
+	e2, ok := out.Data[1].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if e2["id"] != "2" {
+		t.Error("ghosts infected the return")
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -136,11 +144,24 @@ func TestEndpointList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, src := range out.Data {
-		_, ok := src.(map[string]interface{})
-		if !ok {
-			t.Error("model did not deserialize as a endpoint")
-		}
+	SortByStringValueOnKey("id", out.Data)
+
+	e1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if e1["id"] != "1" {
+		t.Error("ghosts infected the return")
+	}
+
+	e2, ok := out.Data[1].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if e2["id"] != "2" {
+		t.Error("ghosts infected the return")
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)

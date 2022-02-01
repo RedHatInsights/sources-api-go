@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -84,6 +85,14 @@ func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset 
 	if links.Last != expectedLastLink {
 		t.Error("last link is not correct for " + path)
 	}
+}
+
+func SortByStringValueOnKey(field string, data []interface{}) {
+	sort.SliceStable(data, func(i, j int) bool {
+		dataI := data[i].(map[string]interface{})
+		dataJ := data[j].(map[string]interface{})
+		return dataI[field].(string) < dataJ[field].(string)
+	})
 }
 
 func ErrorHandlingContext(handler echo.HandlerFunc) func(echo.Context) error {

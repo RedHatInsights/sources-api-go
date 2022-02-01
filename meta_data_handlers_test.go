@@ -54,16 +54,24 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, src := range out.Data {
-		s, ok := src.(map[string]interface{})
+	SortByStringValueOnKey("id", out.Data)
 
-		if !ok {
-			t.Error("model did not deserialize as a source")
-		}
+	m1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
 
-		if s["id"] != "1" && s["id"] != "2" {
-			t.Error("ghosts infected the return")
-		}
+	if m1["id"] != "1" {
+		t.Error("ghosts infected the return")
+	}
+
+	m2, ok := out.Data[1].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if m2["id"] != "2" {
+		t.Error("ghosts infected the return")
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)

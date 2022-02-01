@@ -66,8 +66,8 @@ func SourceListEndpoint(c echo.Context) error {
 	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
 
 	out := make([]interface{}, len(endpoints))
-	for i, a := range endpoints {
-		out[i] = *a.ToResponse()
+	for i := 0; i < len(endpoints); i++ {
+		out[i] = endpoints[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
@@ -102,8 +102,8 @@ func EndpointList(c echo.Context) error {
 	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
 
 	out := make([]interface{}, len(endpoints))
-	for i, a := range endpoints {
-		out[i] = *a.ToResponse()
+	for i := 0; i < len(endpoints); i++ {
+		out[i] = endpoints[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))

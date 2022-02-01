@@ -60,8 +60,8 @@ func MetaDataList(c echo.Context) error {
 	}
 
 	out := make([]interface{}, len(metaDatas))
-	for i, a := range metaDatas {
-		out[i] = *a.ToResponse()
+	for i := 0; i < len(metaDatas); i++ {
+		out[i] = metaDatas[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
@@ -103,8 +103,8 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 	}
 
 	out := make([]interface{}, len(metaDatas))
-	for i, a := range metaDatas {
-		out[i] = *a.ToResponse()
+	for i := 0; i < len(metaDatas); i++ {
+		out[i] = metaDatas[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
