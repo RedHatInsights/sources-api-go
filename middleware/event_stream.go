@@ -60,7 +60,7 @@ func raiseEvent(eventType string) echo.MiddlewareFunc {
 			// in the handler for this to work.
 			resource := c.Get("resource")
 			if resource == nil {
-				l.Log.Warnf("failed to pull event resource from context - skipping raise event")
+				l.Log.Infof("failed to pull event resource from context - skipping raise event")
 				return nil
 			}
 
