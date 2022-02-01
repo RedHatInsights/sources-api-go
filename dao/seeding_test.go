@@ -9,6 +9,15 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+func getSeedFilesystemDir() string {
+	// if we're in the `dao` directory running the tests directly
+	if strings.HasSuffix(os.Getenv("PWD"), "dao") {
+		return "./seeds/"
+	}
+
+	return "./dao/seeds"
+}
+
 func TestSeedingSourceTypes(t *testing.T) {
 	if !flags.Integration {
 		t.Skip("seeding tests only run during integration tests")
@@ -18,15 +27,8 @@ func TestSeedingSourceTypes(t *testing.T) {
 		t.Fatal("DB is nil - cannot continue test.")
 	}
 
-	var err error
-	var seedsDir string
-	if strings.HasSuffix(os.Getenv("PWD"), "dao") {
-		seedsDir = "./seeds/"
-	} else {
-		seedsDir = DEFAULT_SEEDS_DIR
-	}
-
-	err = seedSourceTypes(seedsDir)
+	seedsDir := getSeedFilesystemDir()
+	err := seedSourceTypes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,15 +60,8 @@ func TestSeedingApplicationTypes(t *testing.T) {
 		t.Fatal("DB is nil - cannot continue test.")
 	}
 
-	var err error
-	var seedsDir string
-	if strings.HasSuffix(os.Getenv("PWD"), "dao") {
-		seedsDir = "./seeds/"
-	} else {
-		seedsDir = DEFAULT_SEEDS_DIR
-	}
-
-	err = seedApplicationTypes(seedsDir)
+	seedsDir := getSeedFilesystemDir()
+	err := seedApplicationTypes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,17 +93,10 @@ func TestSeedingSuperkeyMetadata(t *testing.T) {
 		t.Fatal("DB is nil - cannot continue test.")
 	}
 
-	var err error
-	var seedsDir string
-	if strings.HasSuffix(os.Getenv("PWD"), "dao") {
-		seedsDir = "./seeds/"
-	} else {
-		seedsDir = DEFAULT_SEEDS_DIR
-	}
-
+	seedsDir := getSeedFilesystemDir()
 	appTypes := loadApplicationTypeSeeds()
 
-	err = seedSuperkeyMetadata(seedsDir, appTypes)
+	err := seedSuperkeyMetadata(appTypes)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,17 +135,10 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 		t.Fatal("DB is nil - cannot continue test.")
 	}
 
-	var err error
-	var seedsDir string
-	if strings.HasSuffix(os.Getenv("PWD"), "dao") {
-		seedsDir = "./seeds/"
-	} else {
-		seedsDir = DEFAULT_SEEDS_DIR
-	}
-
+	seedsDir := getSeedFilesystemDir()
 	appTypes := loadApplicationTypeSeeds()
 
-	err = seedAppMetadata(seedsDir, appTypes)
+	err := seedAppMetadata(appTypes)
 	if err != nil {
 		t.Fatal(err)
 	}

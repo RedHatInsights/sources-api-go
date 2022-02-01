@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,27 +14,24 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const DEFAULT_SEEDS_DIR = "./dao/seeds/"
+//go:embed seeds/*
+var seedsFS embed.FS
 
 func seedDatabase() error {
-	return seedDatabaseFromDirectory(DEFAULT_SEEDS_DIR)
-}
-
-func seedDatabaseFromDirectory(seedDir string) error {
 	l.Log.Infof("Seeding SourceType Table")
-	err := seedSourceTypes(seedDir)
+	err := seedSourceTypes()
 	if err != nil {
 		return err
 	}
 
 	l.Log.Infof("Seeding ApplicationType Table")
-	err = seedApplicationTypes(seedDir)
+	err = seedApplicationTypes()
 	if err != nil {
 		return err
 	}
 
 	l.Log.Infof("Seeding MetaData Table")
-	err = seedMetaData(seedDir)
+	err = seedMetaData()
 	if err != nil {
 		return err
 	}
@@ -41,10 +39,11 @@ func seedDatabaseFromDirectory(seedDir string) error {
 	return nil
 }
 
-func seedSourceTypes(seedDir string) error {
+func seedSourceTypes() error {
 	// parse the map of seeds
 	seeds := make(sourceTypeSeedMap)
-	data, err := os.ReadFile(seedDir + "source_types.yml")
+	// reading from the embedded fs for the seeds directory
+	data, err := seedsFS.ReadFile("seeds/source_types.yml")
 	if err != nil {
 		return err
 	}
@@ -121,9 +120,10 @@ func seedSourceTypes(seedDir string) error {
 	return nil
 }
 
-func seedApplicationTypes(seedDir string) error {
+func seedApplicationTypes() error {
 	seeds := make(applicationTypeSeedMap)
-	data, err := os.ReadFile(seedDir + "application_types.yml")
+	// reading from the embedded fs for the seeds directory
+	data, err := seedsFS.ReadFile("seeds/application_types.yml")
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func seedApplicationTypes(seedDir string) error {
 	return nil
 }
 
-func seedMetaData(seedDir string) error {
+func seedMetaData() error {
 	// delete all seeds - the id's don't have to remain static.
 	result := DB.Where("1=1").Delete(&m.MetaData{})
 	if result.Error != nil {
@@ -215,11 +215,11 @@ func seedMetaData(seedDir string) error {
 	// load the application types once so we don't load them in a loop
 	appTypes := loadApplicationTypeSeeds()
 
-	err := seedSuperkeyMetadata(seedDir, appTypes)
+	err := seedSuperkeyMetadata(appTypes)
 	if err != nil {
 		return err
 	}
-	err = seedAppMetadata(seedDir, appTypes)
+	err = seedAppMetadata(appTypes)
 	if err != nil {
 		return err
 	}
@@ -227,9 +227,10 @@ func seedMetaData(seedDir string) error {
 	return nil
 }
 
-func seedSuperkeyMetadata(seedDir string, appTypes map[string]*m.ApplicationType) error {
+func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 	seeds := make(superkeyMetadataSeedMap)
-	data, err := os.ReadFile(seedDir + "superkey_metadata.yml")
+	// reading from the embedded fs for the seeds directory
+	data, err := seedsFS.ReadFile("seeds/superkey_metadata.yml")
 	if err != nil {
 		return err
 	}
@@ -276,9 +277,10 @@ func seedSuperkeyMetadata(seedDir string, appTypes map[string]*m.ApplicationType
 	return nil
 }
 
-func seedAppMetadata(seedDir string, appTypes map[string]*m.ApplicationType) error {
+func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 	seeds := make(appMetadataSeedMap)
-	data, err := os.ReadFile(seedDir + "app_metadata.yml")
+	// reading from the embedded fs for the seeds directory
+	data, err := seedsFS.ReadFile("seeds/app_metadata.yml")
 	if err != nil {
 		return err
 	}
