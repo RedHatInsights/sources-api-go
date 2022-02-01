@@ -457,6 +457,34 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		return nil
 	}
 
+	if data["availability_status"] != nil {
+		if auth.AvailabilityStatus.AvailabilityStatus, ok = data["availability_status"].(string); !ok {
+			return nil
+		}
+	}
+
+	if lastAvailableAt, ok := data["last_available_at"]; ok {
+		if lastAvailableAt, ok = lastAvailableAt.(string); !ok {
+			return nil
+		}
+
+		auth.AvailabilityStatus.LastAvailableAt, err = time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
+		if err != nil {
+			return nil
+		}
+	}
+
+	if lastCheckedAt, ok := data["last_available_at"]; ok {
+		if lastCheckedAt, ok = lastCheckedAt.(string); !ok {
+			return nil
+		}
+
+		auth.AvailabilityStatus.LastCheckedAt, err = time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
+		if err != nil {
+			return nil
+		}
+	}
+
 	return auth
 }
 
@@ -473,10 +501,18 @@ func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]
 }
 
 func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
-	/*
-		TODO
-	*/
-	return nil
+	a.TenantID = &resource.TenantID
+	authentication, err := a.GetById(resource.ResourceUID)
+	if err != nil {
+		return err
+	}
+
+	err = authentication.UpdateBy(updateAttributes)
+	if err != nil {
+		return err
+	}
+
+	return a.Update(authentication)
 }
 
 func (a *AuthenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {

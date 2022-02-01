@@ -34,6 +34,8 @@ type ApplicationEvent struct {
 }
 
 type AuthenticationEvent struct {
+	AvailabilityStatusEvent
+
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 
@@ -42,10 +44,11 @@ type AuthenticationEvent struct {
 	Username                string                 `json:"username"`
 	Extra                   map[string]interface{} `json:"extra"`
 	Version                 string                 `json:"version"`
-	AvailabilityStatus      string                 `json:"availability_status"`
-	AvailabilityStatusError string                 `json:"availability_status_error"`
+	AvailabilityStatusError *string                `json:"availability_status_error"`
 	ResourceType            string                 `json:"resource_type"`
-	ResourceID              string                 `json:"resource_id"`
+	ResourceID              int64                  `json:"resource_id"`
+	SourceID                int64                  `json:"source_id"`
+	Tenant                  *string                `json:"tenant"`
 }
 
 type ApplicationAuthenticationEvent struct {
@@ -55,10 +58,12 @@ type ApplicationAuthenticationEvent struct {
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`
 
-	ApplicationID    int64 `json:"application_id"`
-	AuthenticationID int64 `json:"authentication_id"`
+	ApplicationID     int64  `json:"application_id"`
+	AuthenticationID  int64  `json:"authentication_id"`
+	AuthenticationUID string `json:"authentication_uid"`
 
-	Tenant *string `json:"tenant"`
+	Tenant    *string `json:"tenant"`
+	VaultPath string  `json:"vault_path"`
 }
 
 type EndpointEvent struct {
