@@ -37,7 +37,7 @@ type AuthenticationDao interface {
 	ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	Create(src *m.Authentication) error
 	Update(src *m.Authentication) error
-	Delete(id string) error
+	Delete(id string) (*m.Authentication, error)
 	Tenant() *int64
 }
 
