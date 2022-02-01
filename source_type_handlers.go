@@ -44,8 +44,8 @@ func SourceTypeList(c echo.Context) error {
 	// converting the objects to the interface type so the collection response can process it
 	// allocating the length of our collection (so it doesn't have to resize)
 	out := make([]interface{}, len(sourceTypes))
-	for i, s := range sourceTypes {
-		out[i] = *s.ToResponse()
+	for i := 0; i < len(sourceTypes); i++ {
+		out[i] = sourceTypes[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))

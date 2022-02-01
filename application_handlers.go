@@ -58,8 +58,8 @@ func ApplicationList(c echo.Context) error {
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
 
 	out := make([]interface{}, len(applications))
-	for i, a := range applications {
-		out[i] = *a.ToResponse()
+	for i := 0; i < len(applications); i++ {
+		out[i] = applications[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
@@ -232,8 +232,8 @@ func SourceListApplications(c echo.Context) error {
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
 
 	out := make([]interface{}, len(applications))
-	for i, a := range applications {
-		out[i] = *a.ToResponse()
+	for i := 0; i < len(applications); i++ {
+		out[i] = applications[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))

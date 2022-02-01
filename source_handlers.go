@@ -64,8 +64,8 @@ func SourceList(c echo.Context) error {
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
 	out := make([]interface{}, len(sources))
-	for i, s := range sources {
-		out[i] = *s.ToResponse()
+	for i := 0; i < len(sources); i++ {
+		out[i] = sources[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
@@ -246,8 +246,8 @@ func SourceTypeListSource(c echo.Context) error {
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
 	out := make([]interface{}, len(sources))
-	for i, s := range sources {
-		out[i] = *s.ToResponse()
+	for i := 0; i < len(sources); i++ {
+		out[i] = sources[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
@@ -291,8 +291,8 @@ func ApplicationTypeListSource(c echo.Context) error {
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
 	out := make([]interface{}, len(sources))
-	for i, s := range sources {
-		out[i] = *s.ToResponse()
+	for i := 0; i < len(sources); i++ {
+		out[i] = sources[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))

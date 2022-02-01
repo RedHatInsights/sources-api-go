@@ -59,16 +59,24 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, src := range out.Data {
-		s, ok := src.(map[string]interface{})
+	SortByStringValueOnKey("id", out.Data)
 
-		if !ok {
-			t.Error("model did not deserialize as a source")
-		}
+	a1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
 
-		if s["id"] != "1" && s["id"] != "2" {
-			t.Error("ghosts infected the return")
-		}
+	if a1["id"] != "1" {
+		t.Error("ghosts infected the return")
+	}
+
+	a2, ok := out.Data[1].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if a2["id"] != "2" {
+		t.Error("ghosts infected the return")
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -139,15 +147,32 @@ func TestApplicationList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, src := range out.Data {
-		s, ok := src.(map[string]interface{})
-		if !ok {
-			t.Error("model did not deserialize as a application")
-		}
+	SortByStringValueOnKey("id", out.Data)
 
-		if s["extra"] == nil {
-			t.Error("ghosts infected the return")
-		}
+	a1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if a1["id"] != "1" {
+		t.Error("ghosts infected the return")
+	}
+
+	if a1["extra"] == nil {
+		t.Error("ghosts infected the return")
+	}
+
+	a2, ok := out.Data[1].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if a2["id"] != "2" {
+		t.Error("ghosts infected the return")
+	}
+
+	if a2["extra"] == nil {
+		t.Error("ghosts infected the return")
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
