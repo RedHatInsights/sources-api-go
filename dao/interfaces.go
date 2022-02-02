@@ -43,8 +43,9 @@ type ApplicationDao interface {
 	ToEventJSON(resource util.Resource) ([]byte, error)
 	// Pause pauses the application.
 	Pause(id int64) error
-	// Unpause resumes the application.
-	Unpause(id int64) error
+	// Resume resumes the application.
+	Resume(id int64) error
+	GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error)
 }
 
 type AuthenticationDao interface {
@@ -108,6 +109,7 @@ type MetaDataDao interface {
 	List(limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	GetById(id *int64) (*m.MetaData, error)
+	GetSuperKeySteps(applicationTypeId int64) ([]m.MetaData, error)
 }
 
 type SourceTypeDao interface {

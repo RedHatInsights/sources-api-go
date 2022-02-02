@@ -13,7 +13,7 @@ type MetaData struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	Step          int64          `json:"step"`
+	Step          int            `json:"step"`
 	Name          string         `json:"name"`
 	Payload       datatypes.JSON `json:"payload"`
 	Substitutions datatypes.JSON `json:"substitutions"`

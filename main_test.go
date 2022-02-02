@@ -44,7 +44,7 @@ func TestMain(t *testing.M) {
 		getEndpointDao = getEndpointDaoWithTenant
 		getApplicationTypeDao = getApplicationTypeDaoWithTenant
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
-		getMetaDataDao = getMetaDataDaoWithTenant
+		getMetaDataDao = getMetaDataDaoWithoutTenant
 		getRhcConnectionDao = getDefaultRhcConnectionDao
 		getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
 		getAuthenticationDao = getAuthenticationDaoWithTenant

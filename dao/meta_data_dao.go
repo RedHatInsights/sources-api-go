@@ -7,13 +7,11 @@ import (
 
 // GetMetaDataDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
-var GetMetaDataDao func(*int64) MetaDataDao
+var GetMetaDataDao func() MetaDataDao
 
 // getDefaultMetaDataDao gets the default DAO implementation which will have the given tenant ID.
-func getDefaultMetaDataDao(tenantId *int64) MetaDataDao {
-	return &metaDataDaoImpl{
-		TenantID: tenantId,
-	}
+func getDefaultMetaDataDao() MetaDataDao {
+	return &metaDataDaoImpl{}
 }
 
 // init sets the default DAO implementation so that other packages can request it easily.
@@ -21,11 +19,9 @@ func init() {
 	GetMetaDataDao = getDefaultMetaDataDao
 }
 
-type metaDataDaoImpl struct {
-	TenantID *int64
-}
+type metaDataDaoImpl struct{}
 
-func (a *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
+func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metadatas := make([]m.MetaData, 0, limit)
 	collection, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
@@ -50,7 +46,7 @@ func (a *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	return metadatas, count, result.Error
 }
 
-func (a *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
+func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
 	query := DB.Debug().Model(&m.MetaData{}).Where("type = 'AppMetaData'")
 
@@ -69,7 +65,7 @@ func (a *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 	return metaData, count, nil
 }
 
-func (a *metaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
+func (md *metaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
 	metaData := &m.MetaData{ID: *id}
 	result := DB.First(&metaData)
 	if result.Error != nil {
@@ -77,4 +73,16 @@ func (a *metaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
 	}
 
 	return metaData, nil
+}
+
+func (md *metaDataDaoImpl) GetSuperKeySteps(applicationTypeId int64) ([]m.MetaData, error) {
+	steps := make([]m.MetaData, 0)
+
+	result := DB.Model(&m.MetaData{}).
+		Where("type = 'SuperKeyMetaData'").
+		Where("application_type_id = ?", applicationTypeId).
+		Order("step").
+		Scan(&steps)
+
+	return steps, result.Error
 }

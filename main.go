@@ -59,7 +59,7 @@ func runServer() {
 	getApplicationTypeDao = getApplicationTypeDaoWithTenant
 	getSourceTypeDao = getSourceTypeDaoWithoutTenant
 	getEndpointDao = getEndpointDaoWithTenant
-	getMetaDataDao = getMetaDataDaoWithTenant
+	getMetaDataDao = getMetaDataDaoWithoutTenant
 	getRhcConnectionDao = getDefaultRhcConnectionDao
 
 	// Set up marketplace's token management functions

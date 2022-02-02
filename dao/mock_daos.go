@@ -220,6 +220,10 @@ func (a *MockMetaDataDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
 
+func (md *MockMetaDataDao) GetSuperKeySteps(_ int64) ([]m.MetaData, error) {
+	panic("not implemented")
+}
+
 func (a *MockApplicationTypeDao) Create(src *m.ApplicationType) error {
 	panic("not implemented") // TODO: Implement
 }
@@ -315,6 +319,16 @@ func (a *MockApplicationDao) List(limit int, offset int, filters []util.Filter) 
 }
 
 func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
+	for _, app := range a.Applications {
+		if app.ID == *id {
+			return &app, nil
+		}
+	}
+
+	return nil, util.NewErrNotFound("application")
+}
+
+func (a *MockApplicationDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
 	for _, app := range a.Applications {
 		if app.ID == *id {
 			return &app, nil
