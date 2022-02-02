@@ -1,6 +1,8 @@
 package dao
 
 import (
+	"strings"
+
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -29,7 +31,7 @@ func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limi
 	}
 
 	query := collection.HasMany(&m.MetaData{}, DB.Debug())
-	query = query.Where("meta_data.type = 'AppMetaData'")
+	query = query.Where("meta_data.type = ?", m.APP_META_DATA)
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
@@ -48,7 +50,7 @@ func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limi
 
 func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
-	query := DB.Debug().Model(&m.MetaData{}).Where("type = 'AppMetaData'")
+	query := DB.Debug().Model(&m.MetaData{}).Where("type = ?", m.APP_META_DATA)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -79,10 +81,23 @@ func (md *metaDataDaoImpl) GetSuperKeySteps(applicationTypeId int64) ([]m.MetaDa
 	steps := make([]m.MetaData, 0)
 
 	result := DB.Model(&m.MetaData{}).
-		Where("type = 'SuperKeyMetaData'").
+		Where("type = ?", m.SUPERKEY_META_DATA).
 		Where("application_type_id = ?", applicationTypeId).
 		Order("step").
 		Scan(&steps)
 
 	return steps, result.Error
+}
+
+func (md *MetaDataDaoImpl) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
+	var account string
+	result := DB.Model(&m.MetaData{}).
+		Select("payload").
+		Where("type = ?", m.APP_META_DATA).
+		Where("application_type_id = ?", applicationTypeId).
+		Where("name = 'aws_wizard_account_number'").
+		First(&account)
+
+	// it gets stored as `"12345"` but we do not want the quotes - remove them here.
+	return strings.ReplaceAll(account, `"`, ``), result.Error
 }

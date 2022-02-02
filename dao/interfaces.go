@@ -110,6 +110,7 @@ type MetaDataDao interface {
 	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	GetById(id *int64) (*m.MetaData, error)
 	GetSuperKeySteps(applicationTypeId int64) ([]m.MetaData, error)
+	GetSuperKeyAccountNumber(applicationTypeId int64) (string, error)
 }
 
 type SourceTypeDao interface {

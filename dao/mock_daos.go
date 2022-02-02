@@ -236,6 +236,10 @@ func (a *MockApplicationTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
 
+func (md *MockMetaDataDao) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
+	panic("not implemented!")
+}
+
 func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	var appTypes []m.ApplicationType
 
