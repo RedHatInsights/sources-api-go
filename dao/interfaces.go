@@ -83,6 +83,7 @@ type ApplicationTypeDao interface {
 	Update(src *m.ApplicationType) error
 	Delete(id *int64) error
 	ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error
+	GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error)
 }
 
 type EndpointDao interface {

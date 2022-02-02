@@ -224,6 +224,10 @@ func (md *MockMetaDataDao) GetSuperKeySteps(_ int64) ([]m.MetaData, error) {
 	panic("not implemented")
 }
 
+func (md *MockMetaDataDao) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
+	panic("not implemented!")
+}
+
 func (a *MockApplicationTypeDao) Create(src *m.ApplicationType) error {
 	panic("not implemented") // TODO: Implement
 }
@@ -234,10 +238,6 @@ func (a *MockApplicationTypeDao) Update(src *m.ApplicationType) error {
 
 func (a *MockApplicationTypeDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
-}
-
-func (md *MockMetaDataDao) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
-	panic("not implemented!")
 }
 
 func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
@@ -267,6 +267,10 @@ func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64)
 	}
 
 	return errors.New("Not compatible!")
+}
+
+func (at *MockApplicationTypeDao) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
+	panic("not needed")
 }
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {

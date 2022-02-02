@@ -26,6 +26,12 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 	// fetch the provider name from the static cache
 	provider := dao.Static.GetSourceTypeName(application.Source.SourceTypeID)
 
+	// fetch the extra values for this superkey request based on the provider type
+	extra, err := getExtraValues(application, provider)
+	if err != nil {
+		return err
+	}
+
 	req := superkey.CreateRequest{
 		IdentityHeader:  identity,
 		TenantID:        application.Tenant.ExternalTenant,
@@ -34,7 +40,7 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 		ApplicationType: dao.Static.GetApplicationTypeName(application.ApplicationTypeID),
 		SuperKey:        "0", // look up superkey auth
 		Provider:        provider,
-		Extra:           map[string]string{}, // grap account number from metadata
+		Extra:           extra,
 		SuperKeySteps:   steps,
 	}
 
@@ -70,6 +76,34 @@ func getApplicationSuperkeyMetaData(application *m.Application) ([]superkey.Step
 	}
 
 	return steps, nil
+}
+
+func getExtraValues(application *m.Application, provider string) (map[string]string, error) {
+	extra := make(map[string]string)
+
+	switch provider {
+	case "amazon":
+		// fetch the account number for replacing in the iam payloads
+		var mDB dao.MetaDataDao = &dao.MetaDataDaoImpl{}
+		acct, err := mDB.GetSuperKeyAccountNumber(application.ApplicationTypeID)
+		if err != nil {
+			return nil, err
+		}
+		extra["account"] = acct
+
+		// fetch the result_type for the application_type
+		var atDB dao.ApplicationTypeDao = &dao.ApplicationTypeDaoImpl{}
+		authType, err := atDB.GetSuperKeyResultType(application.ApplicationTypeID, provider)
+		if err != nil {
+			return nil, err
+		}
+		extra["result_type"] = authType
+
+	default:
+		return nil, fmt.Errorf("invalid provider for superkey %v", provider)
+	}
+
+	return extra, nil
 }
 
 // loads up the application as well as the associates we need for the superkey

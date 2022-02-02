@@ -115,3 +115,22 @@ func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, so
 
 	return result.Error
 }
+
+func (at *ApplicationTypeDaoImpl) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
+	resultType := ""
+
+	// selecting the authtype's supported authentication types for superkey via
+	// jsonb query
+	//
+	// the short story is that we're pulling the `authType` key out of the
+	// supportedAuthenticationTypes which is an array and then plucking index 0
+	result := DB.Model(&m.ApplicationType{Id: applicationTypeId}).
+		Select("application_types.supported_authentication_types::json -> ? ->> 0", authType).
+		Scan(&resultType)
+
+	if result.Error != nil {
+		return "", result.Error
+	}
+
+	return resultType, result.Error
+}
