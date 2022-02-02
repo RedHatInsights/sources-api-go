@@ -100,5 +100,9 @@ func setupRoutes(e *echo.Echo) {
 	\**            **/
 	internal := e.Group("/internal/v2.0", middleware.HandleErrors, middleware.ParseHeaders)
 
+	// Authentications
+	internal.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
+
+	// Sources
 	internal.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
 }

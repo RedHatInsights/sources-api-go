@@ -8,6 +8,21 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// InternalAuthenticationGet fetches one authentication and returns it with the password exposed. Internal use only.
+func InternalAuthenticationGet(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	auth, err := authDao.GetById(c.Param("uuid"))
+	if err != nil {
+		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+	}
+
+	return c.JSON(http.StatusOK, auth.ToInternalResponse())
+}
+
 // InternalSourceList lists all the sources in a compact format —since the client that will use it,
 // "sources-monitor-go" only requires a small set of fields—.
 func InternalSourceList(c echo.Context) error {

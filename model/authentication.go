@@ -59,6 +59,24 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	}
 }
 
+func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
+	resourceID := strconv.FormatInt(auth.ResourceID, 10)
+	return &AuthenticationInternalResponse{
+		ID:                      auth.ID,
+		CreatedAt:               auth.CreatedAt,
+		Name:                    auth.Name,
+		Version:                 auth.Version,
+		AuthType:                auth.AuthType,
+		Username:                auth.Username,
+		Password:                auth.Password,
+		Extra:                   auth.Extra,
+		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
+		AvailabilityStatusError: auth.AvailabilityStatusError,
+		ResourceType:            auth.ResourceType,
+		ResourceID:              resourceID,
+	}
+}
+
 /*
 	This method translates an Authentication struct to a hash that will be
 	accepted by vault, this format will also be deserialized properly by
