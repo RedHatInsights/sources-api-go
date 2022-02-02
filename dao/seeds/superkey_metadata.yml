@@ -38,20 +38,20 @@
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
-              "s3Get*",
-              "s3List*"
+              "s3:Get*",
+              "s3:List*"
             ],
             "Resource": [
-              "arnawss3::S3BUCKET",
-              "arnawss3::S3BUCKET/*"
+              "arn:aws:s3:::S3BUCKET",
+              "arn:aws:s3:::S3BUCKET/*"
             ]
           },
           {
             "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
-              "s3ListBucket",
-              "curDescribeReportDefinitions"
+              "s3:ListBucket",
+              "cur:DescribeReportDefinitions"
             ],
             "Resource": "*"
           }
@@ -68,9 +68,9 @@
           {
             "Effect": "Allow",
             "Principal": {
-              "AWS": "arnawsiam:ACCOUNTroot"
+              "AWS": "arn:aws:iam::ACCOUNT:root"
             },
-            "Action": "stsAssumeRole",
+            "Action": "sts:AssumeRole",
             "Condition": {}
           }
         ]
@@ -94,20 +94,20 @@
             "Sid": "CloudigradePolicy",
             "Effect": "Allow",
             "Action": [
-              "ec2DescribeImages",
-              "ec2DescribeInstances",
-              "ec2ModifySnapshotAttribute",
-              "ec2DescribeSnapshotAttribute",
-              "ec2DescribeSnapshots",
-              "ec2CopyImage",
-              "ec2CreateTags",
-              "ec2DescribeRegions",
-              "cloudtrailCreateTrail",
-              "cloudtrailUpdateTrail",
-              "cloudtrailPutEventSelectors",
-              "cloudtrailDescribeTrails",
-              "cloudtrailStartLogging",
-              "cloudtrailDeleteTrail"
+              "ec2:DescribeImages",
+              "ec2:DescribeInstances",
+              "ec2:ModifySnapshotAttribute",
+              "ec2:DescribeSnapshotAttribute",
+              "ec2:DescribeSnapshots",
+              "ec2:CopyImage",
+              "ec2:CreateTags",
+              "ec2:DescribeRegions",
+              "cloudtrail:CreateTrail",
+              "cloudtrail:UpdateTrail",
+              "cloudtrail:PutEventSelectors",
+              "cloudtrail:DescribeTrails",
+              "cloudtrail:StartLogging",
+              "cloudtrail:DeleteTrail"
             ],
             "Resource": "*"
           }
@@ -123,9 +123,9 @@
           {
             "Effect": "Allow",
             "Principal": {
-              "AWS": "arnawsiam:ACCOUNTroot"
+              "AWS": "arn:aws:iam::ACCOUNT:root"
             },
-            "Action": "stsAssumeRole",
+            "Action": "sts:AssumeRole",
             "Condition": {}
           }
         ]
