@@ -11,7 +11,6 @@ type AuthenticationResponse struct {
 	Name                    string                 `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`
 	Username                string                 `json:"username"`
-	Password                string                 `json:"password,omitempty"`
 	Extra                   map[string]interface{} `json:"extra,omitempty"`
 	Version                 string                 `json:"version"`
 	AvailabilityStatus      string                 `json:"availability_status,omitempty"`
