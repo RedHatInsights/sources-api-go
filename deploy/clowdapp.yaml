@@ -40,6 +40,8 @@ objects:
           value: ${CLOUD_METER_API_SCHEME}://${CLOUD_METER_API_HOST}:${CLOUD_METER_SOURCES_API_PORT}${CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH}
         - name: COST_MANAGEMENT_AVAILABILITY_CHECK_URL
           value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
+        - name: SOURCES_ENV
+          value: ${SOURCES_ENV}
         - name: SOURCES_PSKS
           valueFrom:
             secretKeyRef:
@@ -194,3 +196,7 @@ parameters:
   name: MARKETPLACE_HOST
   required: true
   value: 'https://sandbox.marketplace.redhat.com'
+- description: Env name for seed
+  name: SOURCES_ENV
+  required: true
+  value: stage
