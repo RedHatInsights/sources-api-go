@@ -337,13 +337,6 @@ func InternalSourceList(c echo.Context) error {
 		return err
 	}
 
-	// When listing sources via cert-auth we want to lock them down to only the
-	// satellite source type.
-	if c.Get("cert-auth") != nil {
-		satelliteId := strconv.Itoa(int(dao.Static.GetSourceTypeId("satellite")))
-		filters = append(filters, util.Filter{Name: "source_type_id", Value: []string{satelliteId}})
-	}
-
 	// The DAO doesn't need a tenant set, since the queries won't be filtered by that tenant
 	sourcesDB := &dao.SourceDaoImpl{}
 	sources, count, err := sourcesDB.ListInternal(limit, offset, filters)
