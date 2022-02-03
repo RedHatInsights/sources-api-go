@@ -2,6 +2,7 @@ package request
 
 import (
 	"io"
+	"net/http"
 	"net/http/httptest"
 
 	"github.com/labstack/echo/v4"
@@ -21,4 +22,10 @@ func CreateTestContext(method string, path string, body io.Reader, context map[s
 	}
 
 	return echoContext, recorder
+}
+
+// EmptyTestContext returns an empty http context - for when we don't need much
+// other than the recorder + context
+func EmptyTestContext() (echo.Context, *httptest.ResponseRecorder) {
+	return CreateTestContext(http.MethodGet, "/", nil, nil)
 }

@@ -277,7 +277,7 @@ func TestApplicationCreateGood(t *testing.T) {
 
 	id, _ := strconv.ParseInt(app.ID, 10, 64)
 	dao, _ := getApplicationDao(c)
-	_ = dao.Delete(&id)
+	_, _ = dao.Delete(&id)
 }
 
 func TestApplicationCreateMissingSourceId(t *testing.T) {

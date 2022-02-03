@@ -117,6 +117,7 @@ func ApplicationCreate(c echo.Context) error {
 		return err
 	}
 
+	setEventStreamResource(c, application)
 	return c.JSON(http.StatusCreated, application.ToResponse())
 }
 
@@ -147,6 +148,7 @@ func ApplicationEdit(c echo.Context) error {
 		return err
 	}
 
+	setEventStreamResource(c, app)
 	return c.JSON(http.StatusOK, app.ToResponse())
 }
 
@@ -163,11 +165,15 @@ func ApplicationDelete(c echo.Context) error {
 
 	c.Logger().Infof("Deleting Application Id %v", id)
 
-	err = applicationDB.Delete(&id)
+	app, err := applicationDB.Delete(&id)
 	if err != nil {
-		return c.NoContent(http.StatusNotFound)
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
+	setEventStreamResource(c, app)
 	return c.NoContent(http.StatusNoContent)
 }
 

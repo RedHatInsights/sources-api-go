@@ -170,7 +170,34 @@ func EndpointCreate(c echo.Context) error {
 		return err
 	}
 
+	setEventStreamResource(c, endpoint)
 	return c.JSON(http.StatusCreated, endpoint.ToResponse())
+}
+
+func EndpointDelete(c echo.Context) error {
+	endpointDao, err := getEndpointDao(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return err
+	}
+
+	c.Logger().Infof("Deleting Endpoint Id %v", id)
+
+	endpt, err := endpointDao.Delete(&id)
+	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	setEventStreamResource(c, endpt)
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 func EndpointListAuthentications(c echo.Context) error {

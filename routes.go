@@ -43,9 +43,9 @@ func setupRoutes(e *echo.Echo) {
 	// Sources
 	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)
 	v3.GET("/sources/:id", SourceGet, middleware.Tenancy)
-	v3.POST("/sources", SourceCreate, permissionMiddleware...)
-	v3.PATCH("/sources/:id", SourceEdit, permissionMiddleware...)
-	v3.DELETE("/sources/:id", SourceDelete, permissionMiddleware...)
+	v3.POST("/sources", SourceCreate, append(permissionMiddleware, middleware.RaiseSourceCreateEvent)...)
+	v3.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.RaiseSourceUpdateEvent)...)
+	v3.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.RaiseSourceDestroyEvent)...)
 	v3.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy)
 	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
@@ -55,17 +55,17 @@ func setupRoutes(e *echo.Echo) {
 	// Applications
 	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
 	v3.GET("/applications/:id", ApplicationGet, middleware.Tenancy)
-	v3.POST("/applications", ApplicationCreate, permissionMiddleware...)
-	v3.PATCH("/applications/:id", ApplicationEdit, permissionMiddleware...)
-	v3.DELETE("/applications/:id", ApplicationDelete, permissionMiddleware...)
+	v3.POST("/applications", ApplicationCreate, append(permissionMiddleware, middleware.RaiseApplicationCreateEvent)...)
+	v3.PATCH("/applications/:id", ApplicationEdit, append(permissionMiddleware, middleware.RaiseApplicationUpdateEvent)...)
+	v3.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.RaiseApplicationDestroyEvent)...)
 	v3.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
 
 	// Authentications
 	v3.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
-	v3.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
 	v3.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
-	v3.PATCH("/authentications/:uid", AuthenticationUpdate, permissionMiddleware...)
-	v3.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
+	v3.POST("/authentications", AuthenticationCreate, append(permissionMiddleware, middleware.RaiseAuthenticationCreateEvent)...)
+	v3.PATCH("/authentications/:uid", AuthenticationUpdate, append(permissionMiddleware, middleware.RaiseAuthenticationUpdateEvent)...)
+	v3.DELETE("/authentications/:uid", AuthenticationDelete, append(permissionMiddleware, middleware.RaiseAuthenticationDestroyEvent)...)
 
 	// ApplicationTypes
 	v3.GET("/application_types", ApplicationTypeList, listMiddleware...)
@@ -74,8 +74,9 @@ func setupRoutes(e *echo.Echo) {
 
 	// Endpoints
 	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
-	v3.POST("/endpoints", EndpointCreate, permissionMiddleware...)
 	v3.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
+	v3.POST("/endpoints", EndpointCreate, append(permissionMiddleware, middleware.RaiseEndpointCreateEvent)...)
+	v3.DELETE("/endpoints/:id", EndpointDelete, append(permissionMiddleware, middleware.RaiseEndpointDestroyEvent)...)
 	v3.GET("/endpoints/:endpoint_id/authentications", EndpointListAuthentications, tenancyWithListMiddleware...)
 
 	// ApplicationAuthentications

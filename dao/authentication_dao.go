@@ -283,22 +283,22 @@ func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
 	return nil
 }
 
-func (a *AuthenticationDaoImpl) Delete(uid string) error {
+func (a *AuthenticationDaoImpl) Delete(uid string) (*m.Authentication, error) {
 	keys, err := a.listKeys()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, key := range keys {
 		if strings.HasSuffix(key, uid) {
 			path := fmt.Sprintf("secret/metadata/%d/%s", *a.TenantID, key)
-			_, err := Vault.Delete(path)
+			sec, err := Vault.Delete(path)
 
-			return err
+			return authFromVault(sec), err
 		}
 	}
 
-	return fmt.Errorf("not found")
+	return nil, fmt.Errorf("not found")
 }
 
 func (a *AuthenticationDaoImpl) Tenant() *int64 {

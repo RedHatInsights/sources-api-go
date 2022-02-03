@@ -33,7 +33,7 @@ type Endpoint struct {
 	Tenant   Tenant
 }
 
-func (endpoint *Endpoint) ToEvent() *EndpointEvent {
+func (endpoint *Endpoint) ToEvent() interface{} {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
 		LastAvailableAt: util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(endpoint.LastCheckedAt)}

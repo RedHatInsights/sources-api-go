@@ -12,7 +12,7 @@ type SourceDao interface {
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error
 	Update(src *m.Source) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.Source, error)
 	Tenant() *int64
 	NameExistsInCurrentTenant(name string) bool
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error)
@@ -24,7 +24,7 @@ type ApplicationDao interface {
 	GetById(id *int64) (*m.Application, error)
 	Create(src *m.Application) error
 	Update(src *m.Application) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.Application, error)
 	Tenant() *int64
 }
 
@@ -37,7 +37,7 @@ type AuthenticationDao interface {
 	ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	Create(src *m.Authentication) error
 	Update(src *m.Authentication) error
-	Delete(id string) error
+	Delete(id string) (*m.Authentication, error)
 	Tenant() *int64
 }
 
@@ -66,7 +66,7 @@ type EndpointDao interface {
 	GetById(id *int64) (*m.Endpoint, error)
 	Create(src *m.Endpoint) error
 	Update(src *m.Endpoint) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.Endpoint, error)
 	Tenant() *int64
 	// CanEndpointBeSetAsDefaultForSource checks if the endpoint can be set as default, by checking if the given source
 	// id already has another endpoint marked as default.

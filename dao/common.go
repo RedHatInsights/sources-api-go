@@ -38,16 +38,16 @@ func BulkMessageFromSource(source *m.Source) (map[string]interface{}, error) {
 	bulkMessage := map[string]interface{}{}
 	bulkMessage["source"] = source.ToEvent()
 
-	endpoints := make([]m.EndpointEvent, len(source.Endpoints))
+	endpoints := make([]interface{}, len(source.Endpoints))
 	for i, endpoint := range source.Endpoints {
-		endpoints[i] = *endpoint.ToEvent()
+		endpoints[i] = endpoint.ToEvent()
 	}
 
 	bulkMessage["endpoints"] = endpoints
 
-	applications := make([]m.ApplicationEvent, len(source.Applications))
+	applications := make([]interface{}, len(source.Applications))
 	for i, application := range source.Applications {
-		applications[i] = *application.ToEvent()
+		applications[i] = application.ToEvent()
 	}
 
 	bulkMessage["applications"] = applications
