@@ -6,9 +6,9 @@ import (
 
 type ApplicationTypeResponse struct {
 	//fields for gorm
-	Id        string  `json:"id"`
-	CreatedAt *string `json:"created_at"`
-	UpdatedAt *string `json:"updated_at"`
+	Id        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 
 	Name                         string         `json:"name"`
 	DisplayName                  string         `json:"display_name"`

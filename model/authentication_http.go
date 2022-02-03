@@ -3,8 +3,8 @@ package model
 import "time"
 
 type AuthenticationResponse struct {
-	ID        string  `json:"id"`
-	CreatedAt *string `json:"created_at"`
+	ID        string `json:"id"`
+	CreatedAt string `json:"created_at"`
 
 	Name                    string                 `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`

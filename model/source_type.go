@@ -29,8 +29,8 @@ func (a *SourceType) ToResponse() *SourceTypeResponse {
 	// returning the address of the new struct.
 	return &SourceTypeResponse{
 		Id:          id,
-		CreatedAt:   util.DateTimeToRecordFormat(a.CreatedAt),
-		UpdatedAt:   util.DateTimeToRecordFormat(a.UpdatedAt),
+		CreatedAt:   util.DateTimeToRFC3339(a.CreatedAt),
+		UpdatedAt:   util.DateTimeToRFC3339(a.UpdatedAt),
 		Name:        a.Name,
 		ProductName: a.ProductName,
 		Vendor:      a.Vendor,

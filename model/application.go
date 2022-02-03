@@ -66,8 +66,8 @@ func (app *Application) ToResponse() *ApplicationResponse {
 	return &ApplicationResponse{
 		AvailabilityStatusResponse: asResponse,
 		ID:                         id,
-		CreatedAt:                  util.DateTimeToRecordFormat(app.CreatedAt),
-		UpdatedAt:                  util.DateTimeToRecordFormat(app.UpdatedAt),
+		CreatedAt:                  util.DateTimeToRFC3339(app.CreatedAt),
+		UpdatedAt:                  util.DateTimeToRFC3339(app.UpdatedAt),
 		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRecordFormat(app.PausedAt)},
 		AvailabilityStatusError:    app.AvailabilityStatusError,
 		Extra:                      app.Extra,

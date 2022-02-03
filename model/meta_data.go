@@ -33,8 +33,8 @@ func (app *MetaData) ToResponse() *MetaDataResponse {
 
 	return &MetaDataResponse{
 		ID:                id,
-		CreatedAt:         util.DateTimeToRecordFormat(app.CreatedAt),
-		UpdatedAt:         util.DateTimeToRecordFormat(app.UpdatedAt),
+		CreatedAt:         util.DateTimeToRFC3339(app.CreatedAt),
+		UpdatedAt:         util.DateTimeToRFC3339(app.UpdatedAt),
 		Name:              app.Name,
 		Payload:           app.Payload,
 		ApplicationTypeId: appTypeId,

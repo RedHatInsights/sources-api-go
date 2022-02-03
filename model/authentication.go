@@ -48,7 +48,7 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 	return &AuthenticationResponse{
 		ID:                      auth.ID,
-		CreatedAt:               util.DateTimeToRecordFormat(auth.CreatedAt),
+		CreatedAt:               util.DateTimeToRFC3339(auth.CreatedAt),
 		Name:                    auth.Name,
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,

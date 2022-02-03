@@ -33,8 +33,8 @@ type SourceResponse struct {
 	PauseResponse
 
 	ID                  string  `json:"id"`
-	CreatedAt           *string `json:"created_at"`
-	UpdatedAt           *string `json:"updated_at"`
+	CreatedAt           string  `json:"created_at"`
+	UpdatedAt           string  `json:"updated_at"`
 	Name                *string `json:"name"`
 	Uid                 *string `json:"uid,omitempty"`
 	Version             *string `json:"version,omitempty"`
