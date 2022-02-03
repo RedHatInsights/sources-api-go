@@ -89,7 +89,7 @@ func (md *metaDataDaoImpl) GetSuperKeySteps(applicationTypeId int64) ([]m.MetaDa
 	return steps, result.Error
 }
 
-func (md *MetaDataDaoImpl) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
+func (md *metaDataDaoImpl) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
 	var account string
 	result := DB.Model(&m.MetaData{}).
 		Select("payload").

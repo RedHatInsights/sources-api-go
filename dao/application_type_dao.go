@@ -116,7 +116,7 @@ func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, so
 	return result.Error
 }
 
-func (at *ApplicationTypeDaoImpl) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
+func (at *applicationTypeDaoImpl) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
 	resultType := ""
 
 	// selecting the authtype's supported authentication types for superkey via
