@@ -32,13 +32,19 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 		return err
 	}
 
+	// fetch the superkey authentication
+	superKey, err := getSuperKeyAuthentication(application)
+	if err != nil {
+		return err
+	}
+
 	req := superkey.CreateRequest{
 		IdentityHeader:  identity,
 		TenantID:        application.Tenant.ExternalTenant,
 		SourceID:        strconv.FormatInt(application.SourceID, 10),
 		ApplicationID:   strconv.FormatInt(application.ID, 10),
 		ApplicationType: dao.Static.GetApplicationTypeName(application.ApplicationTypeID),
-		SuperKey:        "0", // look up superkey auth
+		SuperKey:        superKey.ID,
 		Provider:        provider,
 		Extra:           extra,
 		SuperKeySteps:   steps,
@@ -104,6 +110,28 @@ func getExtraValues(application *m.Application, provider string) (map[string]str
 	}
 
 	return extra, nil
+}
+
+func getSuperKeyAuthentication(application *m.Application) (*m.Authentication, error) {
+	var authDao dao.AuthenticationDao = &dao.AuthenticationDaoImpl{TenantID: &application.TenantID}
+
+	// fetch auths for this source
+	auths, _, err := authDao.ListForSource(application.SourceID, 100, 0, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// loop through, finding the source that is "attached" to the application's
+	// source and has the right authtype for superkey. This will need to be
+	// updated if we ever do superkey for other cloud types/authtypes
+	for i, auth := range auths {
+		// TODO: parameterize this if we need superkey on something OTHER than amazon.
+		if auth.ResourceID == application.SourceID && auth.AuthType == "access_key_secret_key" {
+			return &auths[i], nil
+		}
+	}
+
+	return nil, fmt.Errorf("superkey authentication not found")
 }
 
 // loads up the application as well as the associates we need for the superkey
