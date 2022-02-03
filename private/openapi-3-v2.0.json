@@ -1,0 +1,282 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "description": "Sources Internal",
+    "version": "2.0.0",
+    "title": "Sources Internal",
+    "contact": {
+      "email": "support@redhat.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "tags": [
+    {
+      "description": "Internal endpoints for sources",
+      "name": "sources"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}{basePath}",
+      "description": "Development Server",
+      "variables": {
+        "port": {
+          "default": "3000"
+        },
+        "basePath": {
+          "default": "/internal/v2.0"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/sources": {
+      "get": {
+        "description": "Returns an array of Source objects",
+        "operationId": "listInternalSources",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-identity"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-sources-psk"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sources collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourcesCollection"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "summary": "List Sources",
+        "tags": [
+            "sources"
+        ]
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "QueryFilter": {
+        "description": "Filter for querying collections",
+        "explode": true,
+        "in": "query",
+        "name": "filter",
+        "required": false,
+        "style": "deepObject",
+        "schema": {
+          "type": "object"
+        }
+      },
+      "QueryLimit": {
+        "description": "The numbers of items to return per page",
+        "in": "query",
+        "name": "limit",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "default": 100
+        }
+      },
+      "QueryOffset": {
+        "description": "The number of items to skip before starting to collect the result set.",
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      },
+      "QuerySortBy": {
+        "description": "The list of attributes and order to sort the result set by",
+        "in": "query",
+        "name": "sort_by",
+        "required": false,
+        "schema": {
+          "oneOf": [
+            {
+              "$ref": "#/components/schemas/SortByAttribute"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/SortByAttribute"
+              }
+            }
+          ]
+        }
+      },
+      "x-rh-identity": {
+        "description": "RH-Identity header, base64 encoded",
+        "in": "header",
+        "name": "x-rh-identity",
+        "schema": {
+          "example": "ewogICAgImlkZW50aXR5IjogewogICAgICAgICJhY2NvdW50X251bWJlciI6ICIxMjM0NSIKICAgIH0KfQ==",
+          "format": "byte",
+          "type": "string"
+        }
+      },
+      "x-rh-sources-psk": {
+        "description": "PSK identity header",
+        "in": "header",
+        "name": "x-rh-sources-psk",
+        "schema": {
+          "example": 12345,
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authorization required by either [x-rh-identity] or [x-rh-sources-psk] headers",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Errors"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "CollectionLinks": {
+        "type": "object",
+        "properties": {
+          "first": {
+            "description": "Link to the first page",
+            "example": "/internal/v2.0/whatever",
+            "type": "string"
+          },
+          "last": {
+            "description": "Link to the last page",
+            "example": "/internal/v2.0/whatever?offset=50",
+            "type": "string"
+          },
+          "next": {
+            "description": "Link to the next page",
+            "example": "/internal/v2.0/whatever?offset=10",
+            "type": "string"
+          },
+          "prev": {
+            "description": "Link to the previous page",
+            "example": "/internal/v2.0/whatever",
+            "type": "string"
+          }
+        }
+      },
+      "CollectionMetadata": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "description": "The total number of elements on the list",
+            "example": 10,
+            "type": "integer"
+          },
+          "limit": {
+            "description": "The limit applied to the query",
+            "example": 5,
+            "type": "integer"
+          },
+          "offset": {
+            "description": "The offset applied to the query",
+            "type": "integer"
+          }
+        }
+      },
+      "Errors": {
+        "description": "Error object for error responses",
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "detail": {
+                  "description": "The detail of the error",
+                  "example": "Authentication required by either [x-rh-identity] or [x-rh-sources-psk]",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "The status code of the response",
+                  "example": 401,
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "SortByAttribute": {
+        "description": "Attribute with optional order to sort the result set by",
+        "example": "availability_status:asc",
+        "pattern": "^[a-z\\-_]+(:asc|:desc)?$",
+        "type": "string"
+      },
+      "Source": {
+        "type": "object",
+        "properties": {
+          "availability_status": {
+            "description": "The availability status of the source",
+            "example": "available",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "tenant": {
+            "description": "Tenant's ID",
+            "example": "12345",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SourcesCollection": {
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            }
+          }
+        }
+      }
+    }
+  }
+}
