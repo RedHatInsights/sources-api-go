@@ -62,7 +62,10 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 }
 
 func (s *SourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	query := DB.Model(&m.Source{}).Select("id", "availability_status", "tenant_id")
+	query := DB.Debug().
+		Model(&m.Source{}).
+		Joins("Tenant").
+		Select(`sources.id, sources.availability_status, "Tenant".external_tenant`)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {

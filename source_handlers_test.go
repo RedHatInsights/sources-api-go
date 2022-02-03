@@ -330,11 +330,7 @@ func TestSourceListInternal(t *testing.T) {
 			t.Errorf("could not parse id from response: %s", err)
 		}
 
-		responseTenantId, err := util.InterfaceToInt64(s["tenant"])
-		if err != nil {
-			t.Errorf("could not parse tenant from response: %s", err)
-		}
-
+		responseExternalTenant := s["tenant"].(string)
 		responseAvailabilityStatus := s["availability_status"].(string)
 
 		// Check that the expected source data and the received data are the same
@@ -342,8 +338,8 @@ func TestSourceListInternal(t *testing.T) {
 			t.Errorf("Ids don't match. Want %d, got %d", want, responseSourceId)
 		}
 
-		if want := fixtures.TestSourceData[i].TenantID; want != responseTenantId {
-			t.Errorf("Tenants don't match. Want %d, got %d", want, responseTenantId)
+		if want := fixtures.TestTenantData[0].ExternalTenant; want != responseExternalTenant {
+			t.Errorf("Tenants don't match. Want %#v, got %#v", want, responseExternalTenant)
 		}
 
 		if want := fixtures.TestSourceData[i].AvailabilityStatus.AvailabilityStatus; want != responseAvailabilityStatus {

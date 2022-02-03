@@ -90,12 +90,11 @@ func (src *Source) ToResponse() *SourceResponse {
 // ToInternalResponse returns only the fields that "sources-monitor-go" requires.
 func (src *Source) ToInternalResponse() *SourceInternalResponse {
 	id := strconv.FormatInt(src.ID, 10)
-	tenantId := strconv.FormatInt(src.TenantID, 10)
 
 	source := &SourceInternalResponse{
 		Id:                 &id,
 		AvailabilityStatus: &src.AvailabilityStatus.AvailabilityStatus,
-		TenantId:           &tenantId,
+		ExternalTenant:     &src.Tenant.ExternalTenant,
 	}
 
 	return source

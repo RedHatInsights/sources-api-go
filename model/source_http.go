@@ -54,7 +54,7 @@ type SourceResponse struct {
 type SourceInternalResponse struct {
 	Id                 *string `json:"id"`
 	AvailabilityStatus *string `json:"availability_status"`
-	TenantId           *string `json:"tenant"`
+	ExternalTenant     *string `json:"tenant"`
 }
 
 func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
