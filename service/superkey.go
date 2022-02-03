@@ -1,13 +1,16 @@
 package service
 
 import (
-	"fmt"
 	"strconv"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 )
+
+const SUPERKEY_REQUEST_QUEUE = "platform.sources.superkey-requests"
 
 func SendSuperKeyCreateRequest(identity string, application *m.Application) error {
 	// load up the app + associations from the db+vault
@@ -38,7 +41,6 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 	}
 
 	req := superkey.CreateRequest{
-		// IdentityHeader:  identity, <- header
 		TenantID:        application.Tenant.ExternalTenant,
 		SourceID:        strconv.FormatInt(application.SourceID, 10),
 		ApplicationID:   strconv.FormatInt(application.ID, 10),
@@ -49,12 +51,18 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 		SuperKeySteps:   steps,
 	}
 
-	// produce message to kafka topic
-	fmt.Println(req)
-	return nil
+	m := kafka.Message{}
+	m.AddValueAsJSON(&req)
+	m.AddHeaders([]kafka.Header{
+		{Key: "event_type", Value: []byte("create_application")},
+		{Key: "x-rh-identity", Value: []byte(identity)},
+		{Key: "x-rh-sources-account-number", Value: []byte(application.Tenant.ExternalTenant)},
+	})
+
+	return produceSuperkeyRequest(&m)
 }
 
-func SendSuperKeyDeleteRequest(application *m.Application) error {
+func SendSuperKeyDeleteRequest(identity string, application *m.Application) error {
 	// load up the app + associations from the db+vault
 	application, err := loadApplication(application)
 	if err != nil {
@@ -88,6 +96,22 @@ func SendSuperKeyDeleteRequest(application *m.Application) error {
 		SuperKeySteps:  steps,
 	}
 
-	fmt.Printf("req: %v\n", req)
-	return nil
+	m := kafka.Message{}
+	m.AddValueAsJSON(&req)
+	m.AddHeaders([]kafka.Header{
+		{Key: "event_type", Value: []byte("destroy_application")},
+		{Key: "x-rh-identity", Value: []byte(identity)},
+		{Key: "x-rh-sources-account-number", Value: []byte(application.Tenant.ExternalTenant)},
+	})
+
+	return produceSuperkeyRequest(&m)
+}
+
+func produceSuperkeyRequest(m *kafka.Message) error {
+	mgr := kafka.Manager{
+		Config: kafka.Config{
+			KafkaBrokers:   config.Get().KafkaBrokers,
+			ProducerConfig: kafka.ProducerConfig{Topic: SUPERKEY_REQUEST_QUEUE}}}
+
+	return mgr.Produce(m)
 }
