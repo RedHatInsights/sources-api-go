@@ -303,7 +303,7 @@ func TestSourceListInternal(t *testing.T) {
 	var out util.Collection
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
-		t.Error("Failed unmarshaling output")
+		t.Error("Failed unmarshalling output")
 	}
 
 	if out.Meta.Limit != 100 {
