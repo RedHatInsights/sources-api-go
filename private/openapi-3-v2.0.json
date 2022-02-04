@@ -235,6 +235,13 @@
           }
         }
       },
+      "Id": {
+        "description": "Id of the resource",
+        "example": "12345",
+        "pattern": "^\\d+$",
+        "type": "string",
+        "readOnly": true
+      },
       "SortByAttribute": {
         "description": "Attribute with optional order to sort the result set by",
         "example": "availability_status:asc",
