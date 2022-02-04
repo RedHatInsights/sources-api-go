@@ -14,6 +14,10 @@
   },
   "tags": [
     {
+      "description": "Internal endpoints for authentications",
+      "name": "authentications"
+    },
+    {
       "description": "Internal endpoints for sources",
       "name": "sources"
     }
@@ -33,6 +37,45 @@
     }
   ],
   "paths": {
+    "/authentications/{uuid}": {
+      "get": {
+        "description": "Returns an authentication with the password exposed",
+        "operationId": "getInternalAuthentication",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Uuid"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-identity"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-sources-psk"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authentication object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Authentication"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "summary": "Get authentication by its UUID",
+        "tags": [
+          "authentications"
+        ]
+      }
+    },
     "/sources": {
       "get": {
         "description": "Returns an array of Source objects",
@@ -134,6 +177,17 @@
           ]
         }
       },
+      "Uuid": {
+        "description": "UUID of the resource",
+        "in": "path",
+        "name": "uuid",
+        "required": true,
+        "schema": {
+          "description": "Universally Unique IDentifier of the resource",
+          "example": "f4cc4acc-8428-11ec-a8a3-0242ac120002",
+          "type": "string"
+        }
+      },
       "x-rh-identity": {
         "description": "RH-Identity header, base64 encoded",
         "in": "header",
@@ -155,6 +209,16 @@
       }
     },
     "responses": {
+      "NotFound": {
+        "description": "Resource was not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Errors"
+            }
+          }
+        }
+      },
       "Unauthorized": {
         "description": "Authorization required by either [x-rh-identity] or [x-rh-sources-psk] headers",
         "content": {
@@ -167,6 +231,56 @@
       }
     },
     "schemas": {
+      "Authentication": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "UUID of the authentication",
+            "example": "f4cc4acc-8428-11ec-a8a3-0242ac120002",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the authentication",
+            "example": "Authentication for AWS source",
+            "type": "string"
+          },
+          "authtype": {
+            "description": "Type of the authentication",
+            "example": "token-string",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username of the authentication",
+            "example": "my-user",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password of the authentication",
+            "example": "MyP4$$w0rD",
+            "type": "string"
+          },
+          "resource_id": {
+            "description": "Id of the resource the authentication belongs to",
+            "example": 10,
+            "type": "string"
+          },
+          "resource_type": {
+            "description": "Type of resource the authentication belongs to",
+            "example": "Source",
+            "type": "string"
+          },
+          "version": {
+            "description": "Version of the authentication",
+            "example": 5,
+            "type": "string"
+          },
+          "created_at": {
+            "description": "Timestamp of the creation of the authentication with the RFC3339Nano format",
+            "example": "2021-01-01T00:00:00.000Z",
+            "type": "string"
+          }
+        }
+      },
       "CollectionLinks": {
         "type": "object",
         "properties": {
