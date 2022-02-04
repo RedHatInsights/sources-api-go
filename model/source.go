@@ -104,3 +104,7 @@ func (src *Source) ToInternalResponse() *SourceInternalResponse {
 
 	return source
 }
+
+func (src *Source) IsSuperkey() bool {
+	return src.AppCreationWorkflow == AccountAuth
+}

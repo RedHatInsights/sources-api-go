@@ -52,7 +52,10 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 	}
 
 	m := kafka.Message{}
-	m.AddValueAsJSON(&req)
+	err = m.AddValueAsJSON(&req)
+	if err != nil {
+		return err
+	}
 	m.AddHeaders([]kafka.Header{
 		{Key: "event_type", Value: []byte("create_application")},
 		{Key: "x-rh-identity", Value: []byte(identity)},
@@ -97,7 +100,10 @@ func SendSuperKeyDeleteRequest(identity string, application *m.Application) erro
 	}
 
 	m := kafka.Message{}
-	m.AddValueAsJSON(&req)
+	err = m.AddValueAsJSON(&req)
+	if err != nil {
+		return err
+	}
 	m.AddHeaders([]kafka.Header{
 		{Key: "event_type", Value: []byte("destroy_application")},
 		{Key: "x-rh-identity", Value: []byte(identity)},

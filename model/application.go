@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"strconv"
 	"time"
 
@@ -18,7 +19,8 @@ type Application struct {
 
 	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
-	SuperkeyData            datatypes.JSON
+	SuperkeyData            datatypes.JSON `json:"-"`
+	GotSuperkeyUpdate       bool           `json:"-"`
 
 	TenantID int64
 	Tenant   Tenant
@@ -78,7 +80,20 @@ func (app *Application) ToResponse() *ApplicationResponse {
 
 func (app *Application) UpdateFromRequest(req *ApplicationEditRequest) {
 	if req.Extra != nil {
-		app.Extra = req.Extra
+		// handle superkey update
+		if req.Extra["_superkey"] != nil {
+			// mark that we got an update (e.g. time to raise the create event)
+			app.GotSuperkeyUpdate = true
+
+			sk, _ := json.Marshal(req.Extra["_superkey"])
+			app.SuperkeyData = sk
+
+			// remove it from the hash
+			delete(req.Extra, "_superkey")
+		}
+
+		b, _ := json.Marshal(req.Extra)
+		app.Extra = b
 	}
 
 	if req.AvailabilityStatus != nil {
