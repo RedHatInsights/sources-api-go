@@ -73,11 +73,10 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 		return nil, err
 	}
 
-	authentications := make([]m.AuthenticationEvent, len(authenticationsByResource))
-
-	for i, authenticationByResource := range authenticationsByResource {
-		authenticationByResource.Tenant = source.Tenant
-		authentications[i] = *authenticationByResource.ToEvent()
+	authentications := make([]interface{}, len(authenticationsByResource))
+	for i := 0; i < len(authenticationsByResource); i++ {
+		authenticationsByResource[i].Tenant = source.Tenant
+		authentications[i] = authenticationsByResource[i].ToEvent()
 	}
 
 	bulkMessage["authentications"] = authentications
