@@ -7,7 +7,10 @@ import (
 )
 
 type SourceDao interface {
+	// List lists all the sources from a given tenant, which should be specified in the request.
 	List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	// ListInternal lists all the existing sources.
+	ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error

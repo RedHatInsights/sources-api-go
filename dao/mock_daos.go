@@ -63,6 +63,11 @@ func (src *MockSourceDao) List(limit, offset int, filters []util.Filter) ([]m.So
 	return src.Sources, count, nil
 }
 
+func (src *MockSourceDao) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+	count := int64(len(src.Sources))
+	return src.Sources, count, nil
+}
+
 func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 	for _, i := range src.Sources {
 		if i.ID == *id {
