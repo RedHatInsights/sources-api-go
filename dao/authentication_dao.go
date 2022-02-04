@@ -211,7 +211,7 @@ func (a *AuthenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 	// The token cacher is initialized here because "getKey" has a call to "authFromvault", and it's the only
 	// way of getting the tenant id without passing it around.
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(a.TenantID)
-	return a.getKey(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, fullKey))
+	return a.getKey(fullKey)
 }
 
 func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
