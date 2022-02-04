@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	defaultLimit  = 100
-	defaultOffset = 0
+	DEFAULT_LIMIT  = 100
+	DEFAULT_OFFSET = 0
 )
 
 func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
