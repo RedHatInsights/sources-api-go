@@ -237,9 +237,7 @@ func TestSourceList(t *testing.T) {
 }
 
 func TestSourceListSatellite(t *testing.T) {
-	if !flags.Integration {
-		t.Skip("Only runs during integration tests")
-	}
+	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
