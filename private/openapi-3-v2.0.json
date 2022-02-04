@@ -222,12 +222,12 @@
               "properties": {
                 "detail": {
                   "description": "The detail of the error",
-                  "example": "Authentication required by either [x-rh-identity] or [x-rh-sources-psk]",
+                  "example": "Something went wrong",
                   "type": "string"
                 },
                 "status": {
                   "description": "The status code of the response",
-                  "example": 401,
+                  "example": "499",
                   "type": "string"
                 }
               }
