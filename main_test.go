@@ -23,14 +23,12 @@ var (
 	mockSourceTypeDao      dao.SourceTypeDao
 	mockApplicationDao     dao.ApplicationDao
 	mockMetaDataDao        dao.MetaDataDao
-
-	flags parser.Flags
 )
 
 func TestMain(t *testing.M) {
 	l.InitLogger(conf)
 
-	flags = parser.ParseFlags()
+	flags := parser.ParseFlags()
 
 	if flags.CreateDb {
 		database.CreateTestDB()

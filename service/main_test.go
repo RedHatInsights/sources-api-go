@@ -13,9 +13,6 @@ import (
 )
 
 var (
-	// runningIntegration is used to skip integration tests if we're just running unit tests.
-	runningIntegration = false
-
 	endpointDao dao.EndpointDao
 	sourceDao   dao.SourceDao
 )
@@ -28,7 +25,6 @@ func TestMain(t *testing.M) {
 	if flags.CreateDb {
 		database.CreateTestDB()
 	} else if flags.Integration {
-		runningIntegration = true
 		database.ConnectAndMigrateDB("service")
 
 		endpointDao = &dao.EndpointDaoImpl{TenantID: &fixtures.TestTenantData[0].Id}

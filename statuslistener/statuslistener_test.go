@@ -10,6 +10,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
@@ -306,9 +307,7 @@ type TestData struct {
 }
 
 func TestConsumeStatusMessage(t *testing.T) {
-	if !runningIntegration {
-		return
-	}
+	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	log := logrus.Logger{
 		Out:          os.Stdout,
