@@ -110,13 +110,13 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
-	accountNumber, err := util.AccountNumberFrom(headers)
+	accountNumber, err := util.AccountNumberFromHeaders(headers)
 	if err != nil {
 		l.Log.Error(err)
 		return
 	}
 
-	tenant, err := dao.TenantBy(accountNumber)
+	tenant, err := dao.TenantByAccountNumber(accountNumber)
 	if err != nil {
 		l.Log.Error(err)
 		return

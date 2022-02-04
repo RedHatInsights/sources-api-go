@@ -20,7 +20,7 @@ func GetOrCreateTenantID(accountNumber string) (*int64, error) {
 	return &tenant.Id, result.Error
 }
 
-func TenantBy(accountNumber string) (*m.Tenant, error) {
+func TenantByAccountNumber(accountNumber string) (*m.Tenant, error) {
 	tenant := m.Tenant{ExternalTenant: accountNumber}
 
 	result := DB.
