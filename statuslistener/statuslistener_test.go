@@ -149,7 +149,7 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		authDao := &dao.AuthenticationDaoImpl{TenantID: &application.TenantID}
 		authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 		if err != nil {
-			return err, nil
+			panic("error to fetch authentications: " + err.Error())
 		}
 
 		bulkMessage["authentications"] = authenticationsByResource
@@ -343,7 +343,7 @@ type TestData struct {
 
 func TestConsumeStatusMessage(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	
+
 	dao.Vault = &mocks.MockVault{}
 
 	log := logrus.Logger{
