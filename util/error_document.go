@@ -8,6 +8,7 @@ import (
 )
 
 var ErrNotFoundEmpty = NewErrNotFound("")
+var ErrBadRequestEmpty = NewErrBadRequest("")
 
 type Error struct {
 	Detail string `json:"detail"`
@@ -42,4 +43,20 @@ func (e ErrNotFound) Is(err error) bool {
 
 func NewErrNotFound(t string) error {
 	return ErrNotFound{Type: t}
+}
+
+type ErrBadRequest struct {
+	Message string
+}
+
+func (e ErrBadRequest) Error() string {
+	return fmt.Sprintf("bad request: %s", e.Message)
+}
+
+func (e ErrBadRequest) Is(err error) bool {
+	return reflect.TypeOf(err) == reflect.TypeOf(e)
+}
+
+func NewErrBadRequest(t string) error {
+	return ErrBadRequest{Message: t}
 }

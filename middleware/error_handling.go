@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -16,10 +15,14 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 			var statusCode int
 			var message interface{}
 
-			if errors.Is(err, util.ErrNotFoundEmpty) {
+			switch err.(type) {
+			case util.ErrNotFound:
 				statusCode = http.StatusNotFound
 				message = util.ErrorDoc(err.Error(), "404")
-			} else {
+			case util.ErrBadRequest:
+				statusCode = http.StatusBadRequest
+				message = util.ErrorDoc(err.Error(), "400")
+			default:
 				statusCode = http.StatusInternalServerError
 				message = util.ErrorDoc(fmt.Sprintf("Internal Server Error: %v", err.Error()), "500")
 			}
