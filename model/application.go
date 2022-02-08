@@ -68,7 +68,7 @@ func (app *Application) ToResponse() *ApplicationResponse {
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(app.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(app.UpdatedAt),
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRecordFormat(app.PausedAt)},
+		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(app.PausedAt)},
 		AvailabilityStatusError:    app.AvailabilityStatusError,
 		Extra:                      app.Extra,
 		SourceID:                   sourceId,

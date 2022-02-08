@@ -13,7 +13,7 @@ type AvailabilityStatus struct {
 }
 
 type PauseResponse struct {
-	PausedAt *string `json:"paused_at,omitempty"`
+	PausedAt string `json:"paused_at,omitempty"`
 }
 
 type AvailabilityStatusResponse struct {

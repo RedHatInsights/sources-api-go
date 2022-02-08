@@ -72,7 +72,7 @@ func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 
 	return &EndpointResponse{
 		AvailabilityStatusResponse: asResponse,
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRecordFormat(endpoint.PausedAt)},
+		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(endpoint.PausedAt)},
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(endpoint.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(endpoint.UpdatedAt),

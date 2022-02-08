@@ -78,7 +78,7 @@ func (src *Source) ToResponse() *SourceResponse {
 
 	return &SourceResponse{
 		AvailabilityStatusResponse: asResponse,
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRecordFormat(src.PausedAt)},
+		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(src.PausedAt)},
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(src.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(src.UpdatedAt),
