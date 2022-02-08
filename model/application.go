@@ -59,8 +59,8 @@ func (app *Application) ToResponse() *ApplicationResponse {
 	appTypeId := strconv.FormatInt(app.ApplicationTypeID, 10)
 	asResponse := AvailabilityStatusResponse{
 		AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
-		LastCheckedAt:      util.DateTimeToRecordFormat(app.LastCheckedAt),
-		LastAvailableAt:    util.DateTimeToRecordFormat(app.LastAvailableAt),
+		LastCheckedAt:      util.DateTimeToRFC3339(app.LastCheckedAt),
+		LastAvailableAt:    util.DateTimeToRFC3339(app.LastAvailableAt),
 	}
 
 	return &ApplicationResponse{

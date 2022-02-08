@@ -72,8 +72,8 @@ func (src *Source) ToResponse() *SourceResponse {
 	stid := strconv.FormatInt(src.SourceTypeID, 10)
 	asResponse := AvailabilityStatusResponse{
 		AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
-		LastCheckedAt:      util.DateTimeToRecordFormat(src.LastCheckedAt),
-		LastAvailableAt:    util.DateTimeToRecordFormat(src.LastAvailableAt),
+		LastCheckedAt:      util.DateTimeToRFC3339(src.LastCheckedAt),
+		LastAvailableAt:    util.DateTimeToRFC3339(src.LastAvailableAt),
 	}
 
 	return &SourceResponse{

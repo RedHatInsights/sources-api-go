@@ -78,9 +78,5 @@ func DateTimeToRecordFormat(inputTime time.Time) *string {
 }
 
 func DateTimeToRFC3339(inputTime time.Time) string {
-	if inputTime.IsZero() {
-		return ""
-	}
-
-	return inputTime.Format(time.RFC3339)
+	return FormatTimeToString(inputTime, time.RFC3339)
 }

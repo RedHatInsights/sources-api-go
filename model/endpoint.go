@@ -66,8 +66,8 @@ func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 	sourceId := strconv.FormatInt(endpoint.SourceID, 10)
 	asResponse := AvailabilityStatusResponse{
 		AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
-		LastCheckedAt:      util.DateTimeToRecordFormat(endpoint.LastCheckedAt),
-		LastAvailableAt:    util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
+		LastCheckedAt:      util.DateTimeToRFC3339(endpoint.LastCheckedAt),
+		LastAvailableAt:    util.DateTimeToRFC3339(endpoint.LastAvailableAt),
 	}
 
 	return &EndpointResponse{
