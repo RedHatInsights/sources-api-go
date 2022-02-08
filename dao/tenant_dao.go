@@ -19,3 +19,13 @@ func GetOrCreateTenantID(accountNumber string) (*int64, error) {
 
 	return &tenant.Id, result.Error
 }
+
+func TenantByAccountNumber(accountNumber string) (*m.Tenant, error) {
+	tenant := m.Tenant{ExternalTenant: accountNumber}
+
+	result := DB.
+		Where("external_tenant = ?", accountNumber).
+		First(&tenant)
+
+	return &tenant, result.Error
+}

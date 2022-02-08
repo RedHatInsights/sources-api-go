@@ -99,7 +99,11 @@ func (a *ApplicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 		return nil, result.Error
 	}
 
-	return BulkMessageFromSource(&application.Source)
+	authentication := &m.Authentication{ResourceID: application.ID,
+		ResourceType:               "Application",
+		ApplicationAuthentications: []m.ApplicationAuthentication{}}
+
+	return BulkMessageFromSource(&application.Source, authentication)
 }
 
 func (a *ApplicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {

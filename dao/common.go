@@ -6,6 +6,11 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
+const (
+	DEFAULT_LIMIT  = 100
+	DEFAULT_OFFSET = 0
+)
+
 func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	var resource m.EventModelDao
 	switch resourceType {
@@ -24,7 +29,15 @@ func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	return &resource, nil
 }
 
-func BulkMessageFromSource(source *m.Source) (map[string]interface{}, error) {
+/*
+	Method generates bulk message for Source record.
+	authentication - specify resource (ResourceID and ResourceType) of
+                     which authentications are fetched to BulkMessage
+                   - specify application_authentications in BulkMessage otherwise
+                     application_authentications are obtained from authentications UIDs
+					 in BulkMessage
+*/
+func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (map[string]interface{}, error) {
 	result := DB.
 		Preload("Tenant").
 		Preload("Applications.Tenant").
@@ -52,8 +65,21 @@ func BulkMessageFromSource(source *m.Source) (map[string]interface{}, error) {
 
 	bulkMessage["applications"] = applications
 
-	bulkMessage["authentications"] = []m.Authentication{}
 	bulkMessage["application_authentications"] = []m.ApplicationAuthenticationEvent{}
+
+	authDao := &AuthenticationDaoImpl{TenantID: &source.TenantID}
+	authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
+	if err != nil {
+		return nil, err
+	}
+
+	authentications := make([]interface{}, len(authenticationsByResource))
+	for i := 0; i < len(authenticationsByResource); i++ {
+		authenticationsByResource[i].Tenant = source.Tenant
+		authentications[i] = authenticationsByResource[i].ToEvent()
+	}
+
+	bulkMessage["authentications"] = authentications
 
 	return bulkMessage, nil
 }

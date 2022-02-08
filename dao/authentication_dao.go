@@ -489,15 +489,13 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 }
 
 func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
-	bulkMessage := map[string]interface{}{}
+	a.TenantID = &resource.TenantID
+	authentication, err := a.GetById(resource.ResourceUID)
+	if err != nil {
+		return nil, err
+	}
 
-	bulkMessage["source"] = m.Source{}
-	bulkMessage["endpoints"] = []m.Endpoint{}
-	bulkMessage["endpoints"] = []m.Application{}
-	bulkMessage["authentications"] = []m.Authentication{}
-	bulkMessage["application_authentications"] = []m.ApplicationAuthenticationEvent{}
-
-	return bulkMessage, nil
+	return BulkMessageFromSource(&authentication.Source, authentication)
 }
 
 func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
@@ -516,12 +514,21 @@ func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateA
 }
 
 func (a *AuthenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
-	/*
-		TODO: we need to obtain uid
-		app, err := a.GetById(uid)
-		data, _ := json.Marshal(app.ToEvent())
-	*/
-	return []byte{}, nil
+	a.TenantID = &resource.TenantID
+	auth, err := a.GetById(resource.ResourceUID)
+	if err != nil {
+		return nil, err
+	}
+
+	auth.TenantID = resource.TenantID
+	auth.Tenant = m.Tenant{ExternalTenant: resource.AccountNumber}
+	authEvent := auth.ToEvent()
+	data, err := json.Marshal(authEvent)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 // setMarketplaceTokenAuthExtraField tries to put the marketplace token as a JSON string in the "auth.Extra" field
@@ -574,4 +581,26 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 	logging.Log.Log(logrus.InfoLevel, "marketplace token included in authentication")
 
 	return nil
+}
+
+func (a *AuthenticationDaoImpl) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
+	var err error
+	var resourceAuthentications []m.Authentication
+
+	switch authentication.ResourceType {
+	case "Source":
+		resourceAuthentications, _, err = a.ListForSource(authentication.ResourceID, DEFAULT_LIMIT, DEFAULT_OFFSET, nil)
+	case "Endpoint":
+		resourceAuthentications, _, err = a.ListForEndpoint(authentication.ResourceID, DEFAULT_LIMIT, DEFAULT_OFFSET, nil)
+	case "Application":
+		resourceAuthentications, _, err = a.ListForApplication(authentication.ResourceID, DEFAULT_LIMIT, DEFAULT_OFFSET, nil)
+	default:
+		return nil, fmt.Errorf("unable to fetch authentications for %s", authentication.ResourceType)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resourceAuthentications, nil
 }
