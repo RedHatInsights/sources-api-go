@@ -10,32 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// middleware functions for each event type - adding this to the middleware
-// stack will raise an event based on the `resource` field set in the context
-// during the handler
-
-var (
-	RaiseSourceCreateEvent  = raiseEvent("Source.create")
-	RaiseSourceUpdateEvent  = raiseEvent("Source.update")
-	RaiseSourceDestroyEvent = raiseEvent("Source.destroy")
-
-	RaiseApplicationCreateEvent  = raiseEvent("Application.create")
-	RaiseApplicationUpdateEvent  = raiseEvent("Application.update")
-	RaiseApplicationDestroyEvent = raiseEvent("Application.destroy")
-
-	RaiseEndpointCreateEvent  = raiseEvent("Endpoint.create")
-	RaiseEndpointUpdateEvent  = raiseEvent("Endpoint.update")
-	RaiseEndpointDestroyEvent = raiseEvent("Endpoint.destroy")
-
-	RaiseAuthenticationCreateEvent  = raiseEvent("Authentication.create")
-	RaiseAuthenticationUpdateEvent  = raiseEvent("Authentication.update")
-	RaiseAuthenticationDestroyEvent = raiseEvent("Authentication.destroy")
-
-	RaiseApplicationAuthenticationCreateEvent  = raiseEvent("ApplicationAuthentication.create")
-	RaiseApplicationAuthenticationUpdateEvent  = raiseEvent("ApplicationAuthentication.update")
-	RaiseApplicationAuthenticationDestroyEvent = raiseEvent("ApplicationAuthentication.destroy")
-)
-
 // producer instance used to send messages - default just an empty instance of
 // the struct.
 var producer = events.EventStreamProducer{Sender: &events.EventStreamSender{}}
@@ -47,49 +21,64 @@ var producer = events.EventStreamProducer{Sender: &events.EventStreamSender{}}
 	It bails out if there isn't a `resource` field on the context which should
 	be a model.ToEvent() call in the handler.
 */
-func raiseEvent(eventType string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// first call the handler function (or the next middlware)
-			err := next(c)
-			if err != nil {
-				return err
-			}
+func RaiseEvent(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// first call the handler function (or the next middlware)
+		err := next(c)
+		if err != nil {
+			return err
+		}
 
-			// pull the "event" resource from the context, which needs to be set
-			// in the handler for this to work.
-			resource := c.Get("resource")
-			if resource == nil {
-				l.Log.Infof("failed to pull event resource from context - skipping raise event")
-				return nil
-			}
-
-			// specifically skip raising an event if this is set - usually when
-			// a create action happened but we do not want to re-raise the
-			// event.
-			if c.Get("skip_raise") != nil {
-				l.Log.Infof("skipping raise event per skip_raise set on context")
-				return nil
-			}
-
-			l.Log.Infof("Raising Event %v", eventType)
-
-			msg, err := json.Marshal(resource)
-			if err != nil {
-				return err
-			}
-
-			// TODO: make this async? Run this in a goroutine that way the
-			// request isn't effectively blocked by kafka .
-			headers := append(getRequestHeaders(c), kafka.Header{Key: "event_type", Value: []byte(eventType)})
-			err = producer.RaiseEvent(eventType, msg, headers)
-			if err != nil {
-				l.Log.Warnf("failed to raise event to kafka: %v", err)
-				return nil
-			}
-
+		// specifically skip raising an event if this is set - usually when
+		// a create action happened but we do not want to re-raise the
+		// event.
+		if c.Get("skip_raise") != nil {
+			l.Log.Infof("skipping raise event per skip_raise set on context")
 			return nil
 		}
+
+		// pull the "event" resource from the context, which needs to be set
+		// in the handler for this to work.
+		resource := c.Get("resource")
+		if resource == nil {
+			l.Log.Infof("failed to pull event resource from context - skipping raise event")
+			return nil
+		}
+
+		eventType, ok := c.Get("event_type").(string)
+		if !ok {
+			l.Log.Warnf("Failed to cast event_type to string - exiting")
+			return nil
+		}
+
+		if c.Get("event_override") != nil {
+			event, ok := c.Get("event_override").(string)
+			if !ok {
+				l.Log.Warnf("Failed to cast event_override from request - ditching post to kafka")
+				return nil
+			}
+
+			l.Log.Infof("Using overridden event_type %v instead of %v", c.Get("event_override"), eventType)
+			eventType = event
+		}
+
+		l.Log.Infof("Raising Event %v", eventType)
+
+		msg, err := json.Marshal(resource)
+		if err != nil {
+			return err
+		}
+
+		// TODO: make this async? Run this in a goroutine that way the
+		// request isn't effectively blocked by kafka .
+		headers := append(getRequestHeaders(c), kafka.Header{Key: "event_type", Value: []byte(eventType)})
+		err = producer.RaiseEvent(eventType, msg, headers)
+		if err != nil {
+			l.Log.Warnf("failed to raise event to kafka: %v", err)
+			return nil
+		}
+
+		return nil
 	}
 }
 

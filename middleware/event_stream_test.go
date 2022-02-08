@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var raiseMiddleware = raiseEvent("Thingy.create")
+var raiseMiddleware = RaiseEvent
 
 type mockSender struct {
 	hit     int
@@ -32,6 +32,7 @@ func TestRaiseEvent(t *testing.T) {
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
+		c.Set("event_type", "Thing.create")
 		c.Set("resource", map[string]interface{}{"raised": true})
 		return c.NoContent(http.StatusNoContent)
 	})
@@ -59,6 +60,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	})
 
 	f := raiseMiddleware(func(c echo.Context) error {
+		c.Set("event_type", "Thing.create")
 		c.Set("resource", map[string]interface{}{"raised": true})
 		return c.NoContent(http.StatusNoContent)
 	})
@@ -94,6 +96,7 @@ func TestRaiseEventBody(t *testing.T) {
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
+		c.Set("event_type", "Thing.create")
 		c.Set("resource", map[string]interface{}{"raised": true})
 		return c.NoContent(http.StatusNoContent)
 	})

@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"reflect"
+	"strings"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -38,5 +41,26 @@ func getLimitAndOffset(c echo.Context) (int, int, error) {
 }
 
 func setEventStreamResource(c echo.Context, model m.Event) {
+	// get the model type we're raising the event for
+	// 1. Strip the pointer symbol
+	// 2. Strip the package prefix ("model.")
+	t := reflect.TypeOf(model)
+	m := strings.TrimPrefix(t.String(), "*")
+	m = strings.TrimPrefix(m, "model.")
+
+	// get the event type that just happened based on the http request
+	event := ""
+	switch c.Request().Method {
+	case http.MethodPost:
+		event = ".create"
+	case http.MethodPatch:
+		event = ".update"
+	case http.MethodDelete:
+		event = ".destroy"
+	default:
+		c.Logger().Warnf("Unsupported request type, middleware should probably not be here: %v", c.Request().Method)
+	}
+
+	c.Set("event_type", m+event)
 	c.Set("resource", model.ToEvent())
 }
