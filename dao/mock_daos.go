@@ -121,6 +121,10 @@ func (src *MockSourceDao) NameExistsInCurrentTenant(name string) bool {
 	return false
 }
 
+func (src *MockSourceDao) IsSuperkey(id int64) bool {
+	return false
+}
+
 func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
 	for _, i := range src.Sources {
 		if i.ID == *id {
@@ -386,6 +390,10 @@ func (a *MockApplicationDao) Pause(_ int64) error {
 
 func (a *MockApplicationDao) Unpause(_ int64) error {
 	return nil
+}
+
+func (src *MockApplicationDao) IsSuperkey(id int64) bool {
+	return false
 }
 
 func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {

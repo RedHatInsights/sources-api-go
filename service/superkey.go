@@ -117,7 +117,7 @@ func produceSuperkeyRequest(m *kafka.Message) error {
 	mgr := kafka.Manager{
 		Config: kafka.Config{
 			KafkaBrokers:   config.Get().KafkaBrokers,
-			ProducerConfig: kafka.ProducerConfig{Topic: SUPERKEY_REQUEST_QUEUE}}}
+			ProducerConfig: kafka.ProducerConfig{Topic: config.Get().KafkaTopic(SUPERKEY_REQUEST_QUEUE)}}}
 
 	return mgr.Produce(m)
 }

@@ -127,6 +127,23 @@ func (a *applicationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
+func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
+	var valid bool
+
+	result := DB.Model(&m.Application{}).
+		Select(`"Source".app_creation_workflow = ?`, m.AccountAuth).
+		Where("applications.id = ?", id).
+		Where("applications.tenant_id = ?", a.TenantID).
+		Joins("Source").
+		First(&valid)
+
+	if result.Error != nil {
+		return false
+	}
+
+	return valid
+}
+
 func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	application := &m.Application{ID: resource.ResourceID}
 	result := DB.Preload("Source").Find(&application)

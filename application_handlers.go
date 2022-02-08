@@ -114,7 +114,7 @@ func ApplicationCreate(c echo.Context) error {
 
 	// do not raise if it is a superkey application. The worker will post back
 	// with the resources and then we raise the create event.
-	if application.Source.IsSuperkey() {
+	if applicationDB.IsSuperkey(application.ID) {
 		c.Set("skip_raise", true)
 
 		// do the rest async. Don't want to be tied to kafka.
@@ -166,7 +166,7 @@ func ApplicationEdit(c echo.Context) error {
 
 	// for this model we ONLY raise the update for superkey sources once the
 	// worker posts back.
-	if app.Source.IsSuperkey() {
+	if applicationDB.IsSuperkey(app.ID) {
 		if app.GotSuperkeyUpdate {
 			c.Set("event_override", "Application.create")
 		}

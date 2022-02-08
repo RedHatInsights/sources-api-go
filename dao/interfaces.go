@@ -28,6 +28,7 @@ type SourceDao interface {
 	Pause(id int64) error
 	// Unpause resumes the given source and all its dependant applications.
 	Unpause(id int64) error
+	IsSuperkey(id int64) bool
 }
 
 type ApplicationDao interface {
@@ -43,9 +44,10 @@ type ApplicationDao interface {
 	ToEventJSON(resource util.Resource) ([]byte, error)
 	// Pause pauses the application.
 	Pause(id int64) error
-	// Resume resumes the application.
-	Resume(id int64) error
+	// Unpause resumes the application.
+	Unpause(id int64) error
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error)
+	IsSuperkey(id int64) bool
 }
 
 type AuthenticationDao interface {
