@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
@@ -74,10 +75,14 @@ func CreateFixtures(schema string) {
 	DB.Create(&fixtures.TestTenantData)
 
 	DB.Create(&fixtures.TestSourceTypeData)
+
 	DB.Create(&fixtures.TestSourceData)
 
 	DB.Create(&fixtures.TestRhcConnectionData)
 	DB.Create(&fixtures.TestSourceRhcConnectionData)
+
+	DB.Create(&fixtures.TestApplicationTypeData)
+	DB.Create(&fixtures.TestApplicationData)
 
 	UpdateTablesSequences(schema)
 }
@@ -86,6 +91,12 @@ func CreateFixtures(schema string) {
 // the database in the previous schema.
 func DoneWithFixtures(schema string) {
 	DropSchema(schema)
+
+	DB.Create(&fixtures.TestApplicationTypeData)
+
+	DB.Create(&fixtures.TestSourceData)
+	DB.Create(&fixtures.TestApplicationData)
+
 	ConnectToTestDB("dao")
 }
 
@@ -108,6 +119,7 @@ func MigrateSchema() {
 		&m.Source{},
 		&m.RhcConnection{},
 		&m.SourceRhcConnection{},
+		&m.Application{},
 	)
 
 	if err != nil {
@@ -161,4 +173,24 @@ func UpdateTablesSequences(schema string) {
 			schema,
 		))
 	}
+}
+
+// dateTimesAreSimilar returns true if both of the times are set on the same day. This is because the seconds, minutes
+// or even hours may vary depending on the time of the day that the tests are run —it might even happen too if they
+// run at 23:59:59 as well—, and even though comparing the results to a default value could suffice, this function aims
+// to be a little more accurate about the comparison.
+func dateTimesAreSimilar(one time.Time, other time.Time) bool {
+	if one.Year() != other.Year() {
+		return false
+	}
+
+	if one.Month() != other.Month() {
+		return false
+	}
+
+	if one.Day() != other.Day() {
+		return false
+	}
+
+	return true
 }

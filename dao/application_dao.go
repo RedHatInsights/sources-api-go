@@ -3,6 +3,7 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -149,4 +150,36 @@ func (a *applicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error)
 	data, _ := json.Marshal(app.ToEvent())
 
 	return data, err
+}
+
+func (a *applicationDaoImpl) Pause(id int64) (*m.Application, error) {
+	err := DB.Debug().
+		Model(&m.Application{}).
+		Where("id = ?", id).
+		Where("tenant_id = ?", a.TenantID).
+		Update("paused_at", time.Now()).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// GetById already returns an app and an error.
+	return a.GetById(&id)
+}
+
+func (a *applicationDaoImpl) Resume(id int64) (*m.Application, error) {
+	err := DB.Debug().
+		Model(&m.Application{}).
+		Where("id = ?", id).
+		Where("tenant_id = ?", a.TenantID).
+		Update("paused_at", nil).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// GetById already returns an app and an error.
+	return a.GetById(&id)
 }

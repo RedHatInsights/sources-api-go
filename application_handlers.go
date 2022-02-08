@@ -231,3 +231,61 @@ func SourceListApplications(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
+
+// ApplicationPause pauses a given application by setting its "paused_at" column to "now()".
+func ApplicationPause(c echo.Context) error {
+	applicationId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	applicationDao, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	application, err := applicationDao.Pause(applicationId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	// Get the Kafka headers we will need to be forwarding.
+	kafkaHeaders := service.ForwadableHeaders(c)
+
+	// Raise the resume event for the source.
+	err = service.RaiseEvent("Application.Pause", application, kafkaHeaders)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusNoContent, nil)
+}
+
+// ApplicationResume resumes a given application by setting its "paused_at" column to "NULL".
+func ApplicationResume(c echo.Context) error {
+	applicationId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	applicationDao, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	application, err := applicationDao.Resume(applicationId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	// Get the Kafka headers we will need to be forwarding.
+	kafkaHeaders := service.ForwadableHeaders(c)
+
+	// Raise the resume event for the source.
+	err = service.RaiseEvent("Application.Unpause", application, kafkaHeaders)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusNoContent, nil)
+}

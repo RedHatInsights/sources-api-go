@@ -369,3 +369,78 @@ func SourcesRhcConnectionList(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
+
+// SourcePause pauses a source and all its dependant applications, by setting the former's and the latter's "paused_at"
+// columns to "now()".
+func SourcePause(c echo.Context) error {
+	sourceId, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	sourceDao, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	source, err := sourceDao.Pause(sourceId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	// Get the Kafka headers we will need to be forwarding.
+	kafkaHeaders := service.ForwadableHeaders(c)
+
+	// Raise the pause event for the source.
+	err = service.RaiseEvent("Source.Pause", source, kafkaHeaders)
+	if err != nil {
+		return err
+	}
+
+	// Raise the pause event for its applications
+	for _, app := range source.Applications {
+		err := service.RaiseEvent("Application.Pause", &app, kafkaHeaders)
+		if err != nil {
+			return err
+		}
+	}
+
+	return c.JSON(http.StatusNoContent, nil)
+}
+
+// SourceResume "unpauses" a source and all its dependant applications, by setting the former's and the latter's
+// "paused_at" columns to "null".
+func SourceResume(c echo.Context) error {
+	sourceId, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	sourceDao, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	source, err := sourceDao.Resume(sourceId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+	// Get the Kafka headers we will need to be forwarding.
+	kafkaHeaders := service.ForwadableHeaders(c)
+
+	// Raise the resume event for the source.
+	err = service.RaiseEvent("Source.Unpause", source, kafkaHeaders)
+	if err != nil {
+		return err
+	}
+
+	// Raise the resume event for its applications
+	for _, app := range source.Applications {
+		err := service.RaiseEvent("Application.Unpause", &app, kafkaHeaders)
+		if err != nil {
+			return err
+		}
+	}
+
+	return c.JSON(http.StatusNoContent, nil)
+}

@@ -826,7 +826,6 @@ func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
 	c.SetParamValues(sourceId)
 
 	err := SourcesRhcConnectionList(c)
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -865,6 +864,59 @@ func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
 		if !ok {
 			t.Error("model did not deserialize as a source")
 		}
+	}
+}
 
+// TestPauseSourceAndItsApplications tests that the "pause source" endpoint sets all the applications and the source
+// itself as paused, by modifying their "paused_at" column.
+func TestPauseSourceAndItsApplications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	err := SourcePause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+}
+
+// TestResumeSourceAndItsApplications tests that the "unpause source" endpoint sets all the applications and the source
+// itself as resumed, by setting their "paused_at" column as "NULL".
+func TestResumeSourceAndItsApplications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	err := SourceResume(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
 	}
 }

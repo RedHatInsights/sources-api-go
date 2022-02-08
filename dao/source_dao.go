@@ -3,9 +3,11 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 )
 
 // GetSourceDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -235,5 +237,66 @@ func (s *sourceDaoImpl) ListForRhcConnection(rhcConnectionId *int64, limit, offs
 	err = query.Find(&sources).Error
 
 	return sources, count, err
+}
 
+func (s *sourceDaoImpl) Pause(id int64) (*m.Source, error) {
+	err := DB.Debug().Transaction(func(tx *gorm.DB) error {
+		err := tx.Debug().
+			Model(&m.Source{}).
+			Where("id = ?", id).
+			Where("tenant_id = ?", s.TenantID).
+			Update("paused_at", time.Now()).
+			Error
+
+		if err != nil {
+			return err
+		}
+
+		err = tx.Debug().
+			Model(&m.Application{}).
+			Where("source_id = ?", id).
+			Where("tenant_id = ?", s.TenantID).
+			Update("paused_at", time.Now()).
+			Error
+
+		return err
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// GetByIdWithPreload already returns a source and an error.
+	return s.GetByIdWithPreload(&id, "Applications")
+}
+
+func (s *sourceDaoImpl) Resume(id int64) (*m.Source, error) {
+	err := DB.Debug().Transaction(func(tx *gorm.DB) error {
+		err := tx.Debug().
+			Model(&m.Source{}).
+			Where("id = ?", id).
+			Where("tenant_id = ?", s.TenantID).
+			Update("paused_at", nil).
+			Error
+
+		if err != nil {
+			return err
+		}
+
+		err = tx.Debug().
+			Model(&m.Application{}).
+			Where("source_id = ?", id).
+			Where("tenant_id = ?", s.TenantID).
+			Update("paused_at", nil).
+			Error
+
+		return err
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// GetByIdWithPreload already returns a source and an error.
+	return s.GetByIdWithPreload(&id, "Applications")
 }
