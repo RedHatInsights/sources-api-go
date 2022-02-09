@@ -415,3 +415,34 @@ func TestApplicationEdit(t *testing.T) {
 		t.Errorf("Wrong availability status, wanted %v got %v", "available", app.AvailabilityStatus.AvailabilityStatus)
 	}
 }
+
+func TestApplicationEditNotFound(t *testing.T) {
+	req := m.ApplicationEditRequest{
+		Extra:                   []byte(`{"thing": true}`),
+		AvailabilityStatus:      request.PointerToString("available"),
+		AvailabilityStatusError: request.PointerToString(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/applications/9764567834",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("9764567834")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+	err := notFoundApplicationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
