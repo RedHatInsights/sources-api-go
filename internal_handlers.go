@@ -20,7 +20,12 @@ func InternalAuthenticationGet(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
 	}
 
-	return c.JSON(http.StatusOK, auth.ToInternalResponse())
+	exposeEncryptedAttribute := c.QueryParam("expose_encrypted_attribute[]")
+	if exposeEncryptedAttribute == "password" {
+		return c.JSON(http.StatusOK, auth.ToInternalResponse())
+	}
+
+	return c.JSON(http.StatusOK, auth.ToResponse())
 }
 
 // InternalSourceList lists all the sources in a compact format —since the client that will use it,
