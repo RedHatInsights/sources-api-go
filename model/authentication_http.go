@@ -11,6 +11,22 @@ type AuthenticationResponse struct {
 	Name                    string                 `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`
 	Username                string                 `json:"username"`
+	Extra                   map[string]interface{} `json:"extra,omitempty"`
+	Version                 string                 `json:"version"`
+	AvailabilityStatus      string                 `json:"availability_status,omitempty"`
+	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
+
+	ResourceType string `json:"resource_type"`
+	ResourceID   string `json:"resource_id"`
+}
+
+type AuthenticationInternalResponse struct {
+	ID        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+
+	Name                    string                 `json:"name,omitempty"`
+	AuthType                string                 `json:"authtype"`
+	Username                string                 `json:"username"`
 	Password                string                 `json:"password,omitempty"`
 	Extra                   map[string]interface{} `json:"extra,omitempty"`
 	Version                 string                 `json:"version"`

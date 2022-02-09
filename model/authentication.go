@@ -47,13 +47,29 @@ func (auth *Authentication) BulkMessage() map[string]interface{} {
 func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 	return &AuthenticationResponse{
-		ID:        auth.ID,
-		CreatedAt: auth.CreatedAt,
-		Name:      auth.Name,
-		Version:   auth.Version,
-		AuthType:  auth.AuthType,
-		Username:  auth.Username,
-		// TODO: remove this?
+		ID:                      auth.ID,
+		CreatedAt:               auth.CreatedAt,
+		Name:                    auth.Name,
+		Version:                 auth.Version,
+		AuthType:                auth.AuthType,
+		Username:                auth.Username,
+		Extra:                   auth.Extra,
+		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
+		AvailabilityStatusError: auth.AvailabilityStatusError,
+		ResourceType:            auth.ResourceType,
+		ResourceID:              resourceID,
+	}
+}
+
+func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
+	resourceID := strconv.FormatInt(auth.ResourceID, 10)
+	return &AuthenticationInternalResponse{
+		ID:                      auth.ID,
+		CreatedAt:               auth.CreatedAt,
+		Name:                    auth.Name,
+		Version:                 auth.Version,
+		AuthType:                auth.AuthType,
+		Username:                auth.Username,
 		Password:                auth.Password,
 		Extra:                   auth.Extra,
 		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
