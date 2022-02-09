@@ -446,3 +446,25 @@ func TestApplicationEditNotFound(t *testing.T) {
 
 	testutils.NotFoundTest(t, rec)
 }
+
+func TestApplicationDeleteNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/applications/9843762095",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("9843762095")
+
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationDelete)
+	err := notFoundApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}

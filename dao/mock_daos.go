@@ -287,7 +287,12 @@ func (a *MockApplicationDao) Update(src *m.Application) error {
 }
 
 func (a *MockApplicationDao) Delete(id *int64) (*m.Application, error) {
-	return nil, nil
+	for _, app := range a.Applications {
+		if app.ID == *id {
+			return nil, nil
+		}
+	}
+	return nil, util.NewErrNotFound("application")
 }
 
 func (a *MockApplicationDao) Tenant() *int64 {
