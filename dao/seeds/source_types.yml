@@ -331,9 +331,19 @@ ibm:
       - component: text-field
         name: authentication.username
         label: Account ID
+        isRequired: true
+        validate:
+        - type: required
       - component: text-field
-        name: application.extra.api_token
+        name: authentication.password
         label: API Token
+        type: password
+        isRequired: true
+        validate:
+        - type: required
+      - component: text-field
+        name: application.extra.enterprise_id
+        label: Enterprise ID
         isRequired: true
         validate:
         - type: required
