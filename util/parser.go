@@ -76,3 +76,7 @@ func FormatTimeToString(inputTime time.Time, format string) string {
 func DateTimeToRecordFormat(inputTime time.Time) *string {
 	return StringValueOrNil(FormatTimeToString(inputTime, RecordDateTimeFormat))
 }
+
+func DateTimeToRFC3339(inputTime time.Time) string {
+	return FormatTimeToString(inputTime, time.RFC3339)
+}

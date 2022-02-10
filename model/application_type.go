@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/datatypes"
 )
 
@@ -33,8 +34,8 @@ func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {
 	// returning the address of the new struct.
 	return &ApplicationTypeResponse{
 		Id:                           id,
-		CreatedAt:                    a.CreatedAt,
-		UpdatedAt:                    a.UpdatedAt,
+		CreatedAt:                    util.DateTimeToRFC3339(a.CreatedAt),
+		UpdatedAt:                    util.DateTimeToRFC3339(a.UpdatedAt),
 		Name:                         a.Name,
 		DisplayName:                  a.DisplayName,
 		DependentApplications:        a.DependentApplications,
@@ -43,7 +44,7 @@ func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {
 	}
 }
 
-// returns the application's availability check URL, e.g. where to send the
+// AvailabilityCheckURL returns the application's availability check URL, e.g. where to send the
 // request for the client to re-check the application's availability status.
 func (at *ApplicationType) AvailabilityCheckURL() *url.URL {
 	// Transforms the path-style name to a prefix set in the ENV
