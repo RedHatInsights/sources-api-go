@@ -30,6 +30,7 @@
   supported_source_types:
   - amazon
   - azure
+  - google
   supported_authentication_types:
     amazon:
     - cloud-meter-arn
