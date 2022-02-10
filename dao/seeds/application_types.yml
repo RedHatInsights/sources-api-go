@@ -15,6 +15,7 @@
   - azure
   - google
   - openshift
+  - ibm
   supported_authentication_types:
     amazon:
     - arn
@@ -24,6 +25,8 @@
     - project_id_service_account_json
     openshift:
     - token
+    ibm:
+    - api_token_account_id
 "/insights/platform/cloud-meter":
   display_name: RHEL management
   dependent_applications: []
