@@ -100,3 +100,11 @@ type VaultClient interface {
 	Write(path string, data map[string]interface{}) (*api.Secret, error)
 	Delete(path string) (*api.Secret, error)
 }
+
+type RhcConnectionDao interface {
+	List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error)
+	GetById(id *int64) (*m.RhcConnection, error)
+	Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error)
+	Update(rhcConnection *m.RhcConnection) error
+	Delete(id *int64) error
+}

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"gorm.io/driver/postgres"
@@ -59,6 +60,31 @@ func ConnectToTestDB(dbSchema string) {
 	DB = db
 }
 
+// CreateFixtures creates a new schema, migrates the schema and adds the required fixtures for the tests.
+func CreateFixtures(schema string) {
+	ConnectToTestDB(schema)
+	DB.Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS "%s"`, schema))
+
+	MigrateSchema()
+
+	DB.Create(&fixtures.TestTenantData)
+
+	DB.Create(&fixtures.TestSourceTypeData)
+	DB.Create(&fixtures.TestSourceData)
+
+	DB.Create(&fixtures.TestRhcConnectionData)
+	DB.Create(&fixtures.TestSourceRhcConnectionData)
+
+	UpdateTablesSequences(schema)
+}
+
+// DoneWithFixtures drops the schema and returns the "DB" object back to the "dao" schema, in case any other tests need
+// the database in the previous schema.
+func DoneWithFixtures(schema string) {
+	DropSchema(schema)
+	ConnectToTestDB("dao")
+}
+
 // DropSchema drops the database schema entirely.
 func DropSchema(dbSchema string) {
 	result := DB.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", dbSchema))
@@ -74,6 +100,10 @@ func MigrateSchema() {
 		&m.SourceType{},
 		&m.ApplicationType{},
 		&m.MetaData{},
+
+		&m.Source{},
+		&m.RhcConnection{},
+		&m.SourceRhcConnection{},
 	)
 
 	if err != nil {
@@ -104,5 +134,27 @@ func ConnectAndMigrateDB(packageName string) {
 
 	if out := DB.Exec(`SET search_path TO "$user", ` + packageName); out.Error != nil {
 		log.Fatalf("error in setting schema" + out.Error.Error())
+	}
+}
+
+// UpdateTablesSequences loops over all the tables from the database to update the tables' sequences to the latest id.
+// When inserting data with an ID, for example `INSERT INTO mytable(id, desc) VALUES (1, "My description")`, the
+// sequence doesn't get updated because an explicit ID was given. Therefore, if in the subsequent calls the ID is
+// omitted, this could lead to "unique constraint violation" errors because of a duplicate id.
+func UpdateTablesSequences(schema string) {
+	tables := []string{
+		"application_types",
+		"sources",
+		"source_types",
+		"rhc_connections",
+		"tenants",
+	}
+
+	for _, table := range tables {
+		DB.Exec(fmt.Sprintf(
+			`SELECT setval('%[2]s."%[1]s_id_seq"', (SELECT MAX(id) FROM "%[2]s"."%[1]s") + 1)`,
+			table,
+			schema,
+		))
 	}
 }
