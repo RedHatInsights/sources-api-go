@@ -289,7 +289,7 @@ func (a *MockApplicationDao) Update(src *m.Application) error {
 func (a *MockApplicationDao) Delete(id *int64) (*m.Application, error) {
 	for _, app := range a.Applications {
 		if app.ID == *id {
-			return nil, nil
+			return &app, nil
 		}
 	}
 	return nil, util.NewErrNotFound("application")
