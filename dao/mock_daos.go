@@ -9,7 +9,8 @@ import (
 )
 
 type MockSourceDao struct {
-	Sources []m.Source
+	Sources               []m.Source
+	RelatedRhcConnections []m.RhcConnection
 }
 
 type MockApplicationDao struct {
@@ -34,6 +35,7 @@ type MockMetaDataDao struct {
 
 type MockRhcConnectionDao struct {
 	RhcConnections []m.RhcConnection
+	RelatedSources []m.Source
 }
 
 func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
@@ -118,6 +120,12 @@ func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.
 	}
 
 	return nil, fmt.Errorf("source not found")
+}
+
+func (m *MockSourceDao) GetRelatedRhcConnectionsToId(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
+	count := int64(len(m.RelatedRhcConnections))
+
+	return m.RelatedRhcConnections, count, nil
 }
 
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
@@ -427,4 +435,10 @@ func (m *MockRhcConnectionDao) Delete(id *int64) error {
 	}
 
 	return util.NewErrNotFound("rhcConnection")
+}
+
+func (m *MockRhcConnectionDao) GetRelatedSourcesToId(id *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+	count := int64(len(m.RelatedSources))
+
+	return m.RelatedSources, count, nil
 }

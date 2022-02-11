@@ -46,6 +46,10 @@ func ConnectToTestDB(dbSchema string) {
 		TablePrefix: dbSchema + ".",
 	}})
 
+	// Set the database's search path to the schema, so that no prefix needs to be added by default to the tables in
+	// the queries.
+	db.Exec(fmt.Sprintf(`SET search_path TO %s`, dbSchema))
+
 	if err != nil {
 		log.Fatalf("db must not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
 	}

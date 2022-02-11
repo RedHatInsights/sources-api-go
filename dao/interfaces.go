@@ -19,6 +19,8 @@ type SourceDao interface {
 	Tenant() *int64
 	NameExistsInCurrentTenant(name string) bool
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error)
+	// GetRelatedRhcConnectionsToId gets all the related connections to the given source id.
+	GetRelatedRhcConnectionsToId(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error)
 }
 
 type ApplicationDao interface {
@@ -107,4 +109,6 @@ type RhcConnectionDao interface {
 	Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error)
 	Update(rhcConnection *m.RhcConnection) error
 	Delete(id *int64) error
+	// GetRelatedSourcesToId gets all the sources that are related to a given rhcConnection id.
+	GetRelatedSourcesToId(rhcConnectionId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 }
