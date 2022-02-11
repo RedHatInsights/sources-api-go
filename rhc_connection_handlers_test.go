@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -331,5 +332,65 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 
 	if rec.Code != http.StatusNotFound {
 		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusNotFound, rec.Code, rec.Body.String())
+	}
+}
+
+func TestRhcConnectionGetRelatedSourcesTest(t *testing.T) {
+	rhcConnectionId := "2"
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections/"+rhcConnectionId+"/sources",
+		nil,
+		map[string]interface{}{
+			"limit":   100,
+			"offset":  0,
+			"filters": []util.Filter{},
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(rhcConnectionId)
+
+	err := RhcConnectionSourcesList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshalling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	if parser.RunningIntegrationTests {
+		if 1 != len(out.Data) {
+			t.Error("not enough objects passed back from DB")
+		}
+	} else {
+		if len(fixtures.TestSourceData) != len(out.Data) {
+			t.Error("not enough objects passed back from DB")
+		}
+	}
+
+	for _, source := range out.Data {
+		_, ok := source.(map[string]interface{})
+
+		if !ok {
+			t.Error("model did not deserialize as a source")
+		}
+
 	}
 }

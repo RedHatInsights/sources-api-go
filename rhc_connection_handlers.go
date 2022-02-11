@@ -145,3 +145,46 @@ func RhcConnectionDelete(c echo.Context) error {
 
 	return c.NoContent(http.StatusNoContent)
 }
+
+// RhcConnectionSourcesList returns all the sources related to a given connection.
+func RhcConnectionSourcesList(c echo.Context) error {
+	paramId := c.Param("id")
+
+	rhcConnectionId, err := strconv.ParseInt(paramId, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid id provided ", "400"))
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	// Check if the given rhcConnection exists.
+	rhcConnectionDao := getRhcConnectionDao()
+	_, err = rhcConnectionDao.GetById(&rhcConnectionId)
+	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	// Get the list of sources for the given rhcConnection
+	sources, count, err := rhcConnectionDao.GetRelatedSourcesToId(&rhcConnectionId, limit, offset, filters)
+	if err != nil {
+		return err
+	}
+
+	out := make([]interface{}, len(sources))
+	for i := 0; i < len(sources); i++ {
+		out[i] = sources[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}
