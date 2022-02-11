@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -50,9 +49,8 @@ func ApplicationList(c echo.Context) error {
 	)
 
 	applications, count, err = applicationDB.List(limit, offset, filters)
-
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
@@ -73,7 +71,7 @@ func ApplicationGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err.Error())
 	}
 
 	c.Logger().Infof("Getting Application ID %v", id)
@@ -81,10 +79,7 @@ func ApplicationGet(c echo.Context) error {
 	app, err := applicationDB.GetById(&id)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())
@@ -103,7 +98,7 @@ func ApplicationCreate(c echo.Context) error {
 
 	err = service.ValidateApplicationCreateRequest(input)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(fmt.Sprintf("Validation failed: %s", err.Error()), "400"))
+		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %s", err.Error()))
 	}
 
 	application := &m.Application{
@@ -134,7 +129,7 @@ func ApplicationEdit(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err.Error())
 	}
 
 	app, err := applicationDB.GetById(&id)
@@ -160,17 +155,14 @@ func ApplicationDelete(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err.Error())
 	}
 
 	c.Logger().Infof("Deleting Application Id %v", id)
 
 	app, err := applicationDB.Delete(&id)
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	setEventStreamResource(c, app)
@@ -185,12 +177,12 @@ func ApplicationListAuthentications(c echo.Context) error {
 
 	appID, err := strconv.ParseInt(c.Param("application_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err.Error())
 	}
 
 	auths, count, err := authDao.ListForApplication(appID, 100, 0, nil)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	out := make([]interface{}, count)
@@ -224,15 +216,12 @@ func SourceListApplications(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err.Error())
 	}
 
 	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())

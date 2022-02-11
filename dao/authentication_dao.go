@@ -119,12 +119,12 @@ func (a *AuthenticationDaoImpl) ListForApplication(applicationID int64, _, _ int
 		First(&app)
 
 	if result.Error != nil {
-		return nil, 0, result.Error
+		return nil, 0, util.NewErrNotFound("application")
 	}
 
 	auths, err := a.getAuthsForAppAuth(app.ApplicationAuthentications)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err.Error())
 	}
 
 	return auths, int64(len(auths)), nil

@@ -23,14 +23,17 @@ func (a *ApplicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err.Error())
 	}
 
 	count := int64(0)
 	query.Model(&m.Application{}).Count(&count)
 
 	result := query.Limit(limit).Offset(offset).Find(&applications)
-	return applications, count, result.Error
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error.Error())
+	}
+	return applications, count, nil
 }
 
 func (a *ApplicationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
@@ -41,14 +44,17 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err.Error())
 	}
 
 	count := int64(0)
 	query.Count(&count)
 
 	result := query.Limit(limit).Find(&applications)
-	return applications, count, result.Error
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error.Error())
+	}
+	return applications, count, nil
 }
 
 func (a *ApplicationDaoImpl) GetById(id *int64) (*m.Application, error) {
@@ -81,7 +87,7 @@ func (a *ApplicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 	}
 
 	if result := DB.Delete(app); result.Error != nil {
-		return nil, fmt.Errorf("failed to delete application id %v", *id)
+		return nil, util.NewErrBadRequest(fmt.Sprintf("failed to delete application id %v", *id))
 	}
 
 	return app, nil
