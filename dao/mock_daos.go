@@ -87,7 +87,12 @@ func (src *MockSourceDao) Update(s *m.Source) error {
 }
 
 func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
-	panic("implement me")
+	for _, i := range src.Sources {
+		if i.ID == *id {
+			return &i, nil
+		}
+	}
+	return nil, util.NewErrNotFound("source")
 }
 
 func (src *MockSourceDao) Tenant() *int64 {
