@@ -83,7 +83,7 @@ func (src *MockSourceDao) Create(s *m.Source) error {
 }
 
 func (src *MockSourceDao) Update(s *m.Source) error {
-	panic("implement me")
+	return nil
 }
 
 func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
