@@ -2383,7 +2383,8 @@
                     "ansible-tower",
                     "openshift",
                     "satellite",
-                    "google"
+                    "google",
+                    "ibm"
                   ]
                 },
                 "source_ref": {
