@@ -20,6 +20,10 @@ type RhcConnection struct {
 	Sources []Source `gorm:"many2many:source_rhc_connections"`
 }
 
+func (r *RhcConnection) UpdateFromRequest(input *RhcConnectionUpdateRequest) {
+	r.Extra = input.Extra
+}
+
 func (r *RhcConnection) ToEvent() interface{} {
 	asEvent := AvailabilityStatusEvent{
 		AvailabilityStatus: util.StringValueOrNil(r.AvailabilityStatus.AvailabilityStatus),
@@ -39,7 +43,7 @@ func (r *RhcConnection) ToEvent() interface{} {
 	return rhcConnectionEvent
 }
 
-func (r *RhcConnection) ToListResponse() *RhcConnectionResponse {
+func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
 	return &RhcConnectionResponse{
 		Uuid:                    &r.RhcId,
 		Extra:                   r.Extra,
@@ -48,7 +52,8 @@ func (r *RhcConnection) ToListResponse() *RhcConnectionResponse {
 	}
 }
 
-func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
+// ToResponseCreation is supposed to return the source ID the client passed on the response.
+func (r *RhcConnection) ToResponseCreation() *RhcConnectionResponse {
 	sourceId := strconv.FormatInt(r.Sources[0].ID, 10)
 
 	return &RhcConnectionResponse{

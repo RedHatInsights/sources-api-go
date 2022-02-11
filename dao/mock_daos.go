@@ -32,6 +32,10 @@ type MockMetaDataDao struct {
 	MetaDatas []m.MetaData
 }
 
+type MockRhcConnectionDao struct {
+	RhcConnections []m.RhcConnection
+}
+
 func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	var sources []m.Source
 
@@ -368,4 +372,59 @@ func (m *MockEndpointDao) IsRoleUniqueForSource(role string, sourceId int64) boo
 
 func (m *MockEndpointDao) SourceHasEndpoints(sourceId int64) bool {
 	return true
+}
+
+func (m *MockRhcConnectionDao) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
+	count := int64(len(m.RhcConnections))
+	return m.RhcConnections, count, nil
+}
+
+func (mr *MockRhcConnectionDao) GetById(id *int64) (*m.RhcConnection, error) {
+	// The ".ToResponse" method of the RhcConnection expects to have at least one related source.
+	source := []m.Source{
+		{
+			ID: 1,
+		},
+	}
+
+	for _, rhcConnection := range mr.RhcConnections {
+		if rhcConnection.ID == *id {
+			rhcConnection.Sources = source
+			return &rhcConnection, nil
+		}
+	}
+
+	return nil, util.NewErrNotFound("rhcConnection")
+}
+
+func (mr *MockRhcConnectionDao) Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error) {
+	// The ".ToResponse" method of the RhcConnection expects to have at least one related source.
+	source := []m.Source{
+		{
+			ID: 1,
+		},
+	}
+
+	rhcConnection.Sources = source
+	return rhcConnection, nil
+}
+
+func (m *MockRhcConnectionDao) Update(rhcConnection *m.RhcConnection) error {
+	for _, rhcTmp := range m.RhcConnections {
+		if rhcTmp.ID == rhcConnection.ID {
+			return nil
+		}
+	}
+
+	return util.NewErrNotFound("rhcConnection")
+}
+
+func (m *MockRhcConnectionDao) Delete(id *int64) error {
+	for _, rhcTmp := range m.RhcConnections {
+		if rhcTmp.ID == *id {
+			return nil
+		}
+	}
+
+	return util.NewErrNotFound("rhcConnection")
 }
