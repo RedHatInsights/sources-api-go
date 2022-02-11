@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -411,8 +413,23 @@ func TestSourceCreate(t *testing.T) {
 	}
 
 	if rec.Code != http.StatusCreated {
-		t.Errorf("Did not return 200. Body: %s", rec.Body.String())
+		t.Errorf("Did not return 201. Body: %s", rec.Body.String())
 	}
+
+	src := m.SourceResponse{}
+	raw, _ := io.ReadAll(rec.Body)
+	err = json.Unmarshal(raw, &src)
+	if err != nil {
+		t.Errorf("Failed to unmarshal application from response: %v", err)
+	}
+
+	if src.SourceTypeId != "1" {
+		t.Errorf("Wrong source ID, wanted %v got %v", "1", src.SourceTypeId)
+	}
+
+	id, _ := strconv.ParseInt(src.ID, 10, 64)
+	dao, _ := getSourceDao(c)
+	_, _ = dao.Delete(&id)
 }
 
 func TestAvailabilityStatusCheck(t *testing.T) {
