@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -57,10 +56,10 @@ func SourceList(c echo.Context) error {
 	}
 
 	sources, count, err = sourcesDB.List(limit, offset, filters)
-
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
+
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
 
 	out := make([]interface{}, len(sources))
@@ -79,7 +78,7 @@ func SourceGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Getting Source Id %v", id)
@@ -87,10 +86,7 @@ func SourceGet(c echo.Context) error {
 	s, err := sourcesDB.GetById(&id)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	return c.JSON(http.StatusOK, s.ToResponse())
@@ -109,7 +105,7 @@ func SourceCreate(c echo.Context) error {
 
 	err = service.ValidateSourceCreationRequest(sourcesDB, input)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(fmt.Sprintf("Validation failed: %s", err.Error()), "400"))
+		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %s", err.Error()))
 	}
 
 	source := &m.Source{
@@ -147,7 +143,7 @@ func SourceEdit(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
 	s, err := sourcesDB.GetById(&id)
@@ -173,17 +169,14 @@ func SourceDelete(c echo.Context) (err error) {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Deleting Source Id %v", id)
 
 	src, err := sourcesDB.Delete(&id)
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	setEventStreamResource(c, src)
@@ -198,7 +191,7 @@ func SourceListAuthentications(c echo.Context) error {
 
 	sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	auths, count, err := authDao.ListForSource(sourceID, 100, 0, nil)
@@ -237,16 +230,13 @@ func SourceTypeListSource(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_type_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
@@ -282,16 +272,13 @@ func ApplicationTypeListSource(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("application_type_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	c.Logger().Infof("tenant: %v", *sourcesDB.Tenant())
@@ -312,7 +299,7 @@ func SourceCheckAvailability(c echo.Context) error {
 
 	sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	src, err := sourceDao.GetByIdWithPreload(&sourceID,
