@@ -93,6 +93,31 @@ func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
 	testutils.NotFoundTest(t, rec)
 }
 
+func TestSourceApplicationTypeSubcollectionListBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/xxx/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+	err := badRequestSourceListApplicationTypes(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestApplicationTypeList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -146,6 +171,31 @@ func TestApplicationTypeList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+		},
+	)
+
+	badRequestApplicationTypeList := ErrorHandlingContext(ApplicationTypeList)
+	err := badRequestApplicationTypeList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestApplicationTypeGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -195,4 +245,24 @@ func TestApplicationTypeGetNotFound(t *testing.T) {
 	}
 
 	testutils.NotFoundTest(t, rec)
+}
+
+func TestApplicationTypeGetBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/xxx",
+		nil,
+		map[string]interface{}{},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestApplicationTypeGet := ErrorHandlingContext(ApplicationTypeGet)
+	err := badRequestApplicationTypeGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }

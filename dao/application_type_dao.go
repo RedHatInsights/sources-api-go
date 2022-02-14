@@ -30,8 +30,11 @@ func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&applicationTypes)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error.Error())
+	}
 
-	return applicationTypes, count, result.Error
+	return applicationTypes, count, nil
 }
 
 func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
@@ -42,7 +45,7 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) 
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err.Error())
 	}
 
 	// getting the total count (filters included) for pagination
@@ -51,8 +54,11 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) 
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&appTypes)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error.Error())
+	}
 
-	return appTypes, count, result.Error
+	return appTypes, count, nil
 }
 
 func (a *ApplicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
