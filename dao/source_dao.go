@@ -108,7 +108,10 @@ func (s *SourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.So
 	}
 
 	result := q.First(&src)
-	return src, result.Error
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("source")
+	}
+	return src, nil
 }
 
 func (s *SourceDaoImpl) Create(src *m.Source) error {

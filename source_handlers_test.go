@@ -774,14 +774,13 @@ func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues("183209745")
 
-	err := SourceCheckAvailability(c)
+	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	err := notFoundSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 404 {
-		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 404)
-	}
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestAvailabilityStatusCheckBadRequest(t *testing.T) {

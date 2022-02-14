@@ -113,7 +113,7 @@ func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.
 		}
 	}
 
-	return nil, fmt.Errorf("source not found")
+	return nil, util.NewErrNotFound("source")
 }
 
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
