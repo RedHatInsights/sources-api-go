@@ -340,7 +340,7 @@ func SourcesRhcConnectionList(c echo.Context) error {
 	}
 
 	// Check if the given source exists.
-	sourceDao, _ := getSourceDao(c)
+	sourceDao, err := getSourceDao(c)
 	if err != nil {
 		return err
 	}
