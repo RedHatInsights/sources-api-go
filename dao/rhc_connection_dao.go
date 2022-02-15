@@ -138,24 +138,14 @@ func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 		return nil, util.NewErrNotFound("source")
 	}
 
-	// Check if there's an already existing connection. If there is, we assume that the user wants to link the existing
-	// connection to a different source.
-	var connectionId int64
-	err = DB.Debug().
-		Model(&m.RhcConnection{}).
-		Select(`id`).
-		Where(`rhc_id = ?`, rhcConnection.RhcId).
-		Scan(&connectionId).
-		Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	rhcConnection.ID = connectionId
-
 	err = DB.Transaction(func(tx *gorm.DB) error {
 		var err error
+
+		err = tx.Debug().
+			Where(`rhc_id = ?`, rhcConnection.RhcId).
+			Omit(clause.Associations).
+			FirstOrCreate(&rhcConnection).
+			Error
 
 		// Is it a new connection or is it just an association?
 		if rhcConnection.ID == 0 {
@@ -173,6 +163,7 @@ func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 		association := m.SourceRhcConnection{
 			SourceId:        rhcConnection.Sources[0].ID,
 			RhcConnectionId: rhcConnection.ID,
+			TenantId:        s.TenantID,
 		}
 
 		err = tx.Debug().

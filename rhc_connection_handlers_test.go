@@ -149,7 +149,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 	requestBody := model.RhcConnectionCreateRequest{
 		Extra:              nil,
 		AvailabilityStatus: "available",
-		SourceId:           strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10),
+		SourceId:           strconv.FormatInt(fixtures.TestSourceData[1].ID, 10),
 		RhcId:              "12345",
 	}
 

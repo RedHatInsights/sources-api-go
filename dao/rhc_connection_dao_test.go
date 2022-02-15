@@ -22,7 +22,7 @@ var rhcConnectionDao = RhcConnectionDaoImpl{
 // setUpValidRhcConnection returns a valid RhcConnection object.
 func setUpValidRhcConnection() *model.RhcConnection {
 	return &model.RhcConnection{
-		RhcId: "12345",
+		RhcId: "rhcIdUuid",
 		Extra: []byte(`{"hello": "world"}`),
 		AvailabilityStatus: model.AvailabilityStatus{
 			AvailabilityStatus: "available",
