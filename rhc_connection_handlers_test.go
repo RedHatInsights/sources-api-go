@@ -242,8 +242,8 @@ func TestRhcConnectionUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusNoContent {
-		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusNoContent, rec.Code, rec.Body.String())
+	if rec.Code != http.StatusOK {
+		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusOK, rec.Code, rec.Body.String())
 	}
 }
 

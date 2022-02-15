@@ -151,7 +151,7 @@ func RhcConnectionUpdate(c echo.Context) error {
 		return err
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	return c.JSON(http.StatusOK, dbRhcConnection.ToResponse())
 }
 
 func RhcConnectionDelete(c echo.Context) error {
