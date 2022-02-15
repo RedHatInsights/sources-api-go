@@ -20,9 +20,10 @@ func TestRhcConnectionList(t *testing.T) {
 		"/api/sources/v3.1/rhc_connections",
 		nil,
 		map[string]interface{}{
-			"limit":   100,
-			"offset":  0,
-			"filters": []util.Filter{},
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
 		},
 	)
 
@@ -72,7 +73,9 @@ func TestRhcConnectionGetById(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/rhc_connections/"+id,
 		nil,
-		map[string]interface{}{},
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
 	)
 
 	c.SetParamNames("id")
@@ -123,7 +126,9 @@ func TestRhcConnectionGetByIdNotFound(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/rhc_connections/"+nonExistingId,
 		nil,
-		map[string]interface{}{},
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
 	)
 
 	c.SetParamNames("id")
@@ -157,7 +162,9 @@ func TestRhcConnectionCreate(t *testing.T) {
 		http.MethodPost,
 		"/api/sources/v3.1/rhc_connections",
 		bytes.NewReader(body),
-		map[string]interface{}{},
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -214,13 +221,15 @@ func TestRhcConnectionUpdate(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	id := strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10)
+	id := strconv.FormatInt(fixtures.TestRhcConnectionData[2].ID, 10)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPatch,
 		"/api/sources/v3.1/rhc_connections/"+id,
 		bytes.NewReader(body),
-		map[string]interface{}{},
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -245,7 +254,9 @@ func TestRhcConnectionUpdateNotFound(t *testing.T) {
 		http.MethodPatch,
 		"/api/sources/v3.1/rhc_connections/"+invalidId,
 		nil,
-		map[string]interface{}{},
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -264,13 +275,15 @@ func TestRhcConnectionUpdateNotFound(t *testing.T) {
 }
 
 func TestRhcConnectionDelete(t *testing.T) {
-	id := strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10)
+	id := strconv.FormatInt(fixtures.TestRhcConnectionData[2].ID, 10)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
 		"/api/sources/v3.1/rhc_connections/"+id,
 		nil,
-		map[string]interface{}{},
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -289,7 +302,7 @@ func TestRhcConnectionDelete(t *testing.T) {
 }
 
 func TestRhcConnectionDeleteMissingParam(t *testing.T) {
-	id := strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10)
+	id := strconv.FormatInt(fixtures.TestRhcConnectionData[2].ID, 10)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
@@ -317,7 +330,9 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/rhc_connections/"+nonExistingId,
 		nil,
-		map[string]interface{}{},
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -343,9 +358,10 @@ func TestRhcConnectionGetRelatedSourcesTest(t *testing.T) {
 		"/api/sources/v3.1/rhc_connections/"+rhcConnectionId+"/sources",
 		nil,
 		map[string]interface{}{
-			"limit":   100,
-			"offset":  0,
-			"filters": []util.Filter{},
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
 		},
 	)
 

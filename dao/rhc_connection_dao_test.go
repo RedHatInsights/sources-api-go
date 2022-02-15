@@ -15,7 +15,9 @@ import (
 
 const RHC_CONNECTION_SCHEMA = "rhc_connection"
 
-var rhcConnectionDao = RhcConnectionDaoImpl{}
+var rhcConnectionDao = RhcConnectionDaoImpl{
+	TenantID: fixtures.TestTenantData[0].Id,
+}
 
 // setUpValidRhcConnection returns a valid RhcConnection object.
 func setUpValidRhcConnection() *model.RhcConnection {

@@ -196,6 +196,7 @@ func (s *SourceDaoImpl) GetRelatedRhcConnectionsToId(sourceId *int64, limit, off
 		Model(&m.RhcConnection{}).
 		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "rhc_connections"."id" = "sr"."rhc_connection_id"`).
 		Where(`"sr"."source_id" = ?`, sourceId).
+		Where(`"sr"."tenant_id" = ?`, s.TenantID).
 		Limit(limit).
 		Offset(offset)
 

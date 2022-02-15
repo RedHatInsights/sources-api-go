@@ -63,7 +63,7 @@ func TestMain(t *testing.M) {
 		getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) { return mockEndpointDao, nil }
 		getSourceTypeDao = func(c echo.Context) (dao.SourceTypeDao, error) { return mockSourceTypeDao, nil }
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) { return mockApplicationTypeDao, nil }
-		getRhcConnectionDao = func() dao.RhcConnectionDao { return mockRhcConnectionDao }
+		getRhcConnectionDao = func(c echo.Context) (dao.RhcConnectionDao, error) { return mockRhcConnectionDao, nil }
 
 		getMetaDataDao = func(c echo.Context) (dao.MetaDataDao, error) { return mockMetaDataDao, nil }
 	}

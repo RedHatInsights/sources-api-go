@@ -11,7 +11,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type RhcConnectionDaoImpl struct{}
+type RhcConnectionDaoImpl struct {
+	TenantID int64
+}
 
 func (s *RhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
 	query := DB.
@@ -19,6 +21,7 @@ func (s *RhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 		Model(&m.RhcConnection{}).
 		Select(`"rhc_connections".*, STRING_AGG(CAST ("jt"."source_id" AS TEXT), ',') AS "source_ids"`).
 		Joins(`INNER JOIN "source_rhc_connections" AS "jt" ON "rhc_connections"."id" = "jt"."rhc_connection_id"`).
+		Where(`"jt"."tenant_id" = ?`, s.TenantID).
 		Group(`"rhc_connections"."id"`).
 		Limit(limit).
 		Offset(offset)
@@ -75,6 +78,7 @@ func (s *RhcConnectionDaoImpl) GetById(id *int64) (*m.RhcConnection, error) {
 		Select(`"rhc_connections".*, STRING_AGG(CAST ("jt"."source_id" AS TEXT), ',') AS "source_ids"`).
 		Joins(`INNER JOIN "source_rhc_connections" AS "jt" ON "rhc_connections"."id" = "jt"."rhc_connection_id"`).
 		Where(`"rhc_connections"."id" = ?`, id).
+		Where(`"jt"."tenant_id" = ?`, s.TenantID).
 		Group(`"rhc_connections"."id"`)
 
 	// Run the actual query.
@@ -234,6 +238,7 @@ func (s *RhcConnectionDaoImpl) GetRelatedSourcesToId(rhcConnectionId *int64, lim
 		Model(&m.Source{}).
 		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "sources"."id" = "sr"."source_id"`).
 		Where(`"sr"."rhc_connection_id" = ?`, rhcConnectionId).
+		Where(`"sr"."tenant_id" = ?`, s.TenantID).
 		Limit(limit).
 		Offset(offset)
 
