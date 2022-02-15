@@ -1,8 +1,10 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/dao/mappers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
@@ -12,10 +14,12 @@ import (
 type RhcConnectionDaoImpl struct{}
 
 func (s *RhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
-	rhcConnections := make([]m.RhcConnection, 0, limit)
 	query := DB.
 		Debug().
 		Model(&m.RhcConnection{}).
+		Select(`"rhc_connections".*, STRING_AGG(CAST ("jt"."source_id" AS TEXT), ',') AS "source_ids"`).
+		Joins(`INNER JOIN "source_rhc_connections" AS "jt" ON "rhc_connections"."id" = "jt"."rhc_connection_id"`).
+		Group(`"rhc_connections"."id"`).
 		Limit(limit).
 		Offset(offset)
 
@@ -24,32 +28,90 @@ func (s *RhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 		return nil, 0, err
 	}
 
+	// Run the actual query.
+	result, err := query.Rows()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// We call next as otherwise "ScanRows" complains, but since we're going to map the results to an array of
+	// map[string]interface{}, "ScanRows" will already scan every row into that array, thus freeing us from calling
+	// result.Next() again.
+	result.Next()
+
+	// Loop through the rows to map both the connection and its related sources.
+	var rows []map[string]interface{}
+	err = DB.ScanRows(result, &rows)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	rhcConnections := make([]m.RhcConnection, 0)
+	for _, row := range rows {
+		rhcConnection, err := mappers.MapRowToRhcConnection(row)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		rhcConnections = append(rhcConnections, *rhcConnection)
+	}
+
+	err = result.Close()
+	if err != nil {
+		return nil, 0, err
+	}
+
 	// Getting the total count (filters included) for pagination.
 	count := int64(0)
 	query.Count(&count)
 
-	// Run the actual query.
-	result := query.Find(&rhcConnections)
-
-	return rhcConnections, count, result.Error
+	return rhcConnections, count, nil
 }
 
 func (s *RhcConnectionDaoImpl) GetById(id *int64) (*m.RhcConnection, error) {
-	rhcConnection := m.RhcConnection{
-		ID: *id,
-	}
-
-	err := DB.
+	query := DB.
 		Debug().
 		Model(&m.RhcConnection{}).
-		First(&rhcConnection).
-		Error
+		Select(`"rhc_connections".*, STRING_AGG(CAST ("jt"."source_id" AS TEXT), ',') AS "source_ids"`).
+		Joins(`INNER JOIN "source_rhc_connections" AS "jt" ON "rhc_connections"."id" = "jt"."rhc_connection_id"`).
+		Where(`"rhc_connections"."id" = ?`, id).
+		Group(`"rhc_connections"."id"`)
 
+	// Run the actual query.
+	result, err := query.Rows()
 	if err != nil {
+		return nil, err
+	}
+
+	// We call next as otherwise "ScanRows" complains, but since we're going to map the results to an array of
+	// map[string]interface{}, "ScanRows" will already scan every row into that array, thus freeing us from calling
+	// result.Next() again.
+	if !result.Next() {
 		return nil, util.NewErrNotFound("rhcConnection")
 	}
 
-	return &rhcConnection, nil
+	// Loop through the rows to map both the connection and its related sources.
+	var rows []map[string]interface{}
+	err = DB.ScanRows(result, &rows)
+	if err != nil {
+		return nil, err
+	}
+
+	err = result.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rows) != 1 {
+		return nil, errors.New("unexpected number of results")
+	}
+
+	rhcConnection, err := mappers.MapRowToRhcConnection(rows[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return rhcConnection, nil
 }
 
 func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error) {

@@ -44,23 +44,18 @@ func (r *RhcConnection) ToEvent() interface{} {
 }
 
 func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
-	return &RhcConnectionResponse{
-		Uuid:                    &r.RhcId,
-		Extra:                   r.Extra,
-		AvailabilityStatus:      r.AvailabilityStatus,
-		AvailabilityStatusError: r.AvailabilityStatusError,
+	var sourceIds []string
+	if len(r.Sources) > 0 {
+		for _, src := range r.Sources {
+			sourceIds = append(sourceIds, strconv.FormatInt(src.ID, 10))
+		}
 	}
-}
-
-// ToResponseCreation is supposed to return the source ID the client passed on the response.
-func (r *RhcConnection) ToResponseCreation() *RhcConnectionResponse {
-	sourceId := strconv.FormatInt(r.Sources[0].ID, 10)
 
 	return &RhcConnectionResponse{
 		Uuid:                    &r.RhcId,
 		Extra:                   r.Extra,
 		AvailabilityStatus:      r.AvailabilityStatus,
 		AvailabilityStatusError: r.AvailabilityStatusError,
-		SourceId:                sourceId,
+		SourceIds:               sourceIds,
 	}
 }
