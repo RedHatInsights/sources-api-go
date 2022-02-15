@@ -232,22 +232,6 @@ func TestRhcConnectionDelete(t *testing.T) {
 		t.Errorf(`want "rhcConnection" deleted, data found`)
 	}
 
-	var rhcConnectionJoinTableExists bool
-	err = DB.Debug().
-		Model(&model.SourceRhcConnection{}).
-		Select(`1`).
-		Where(`rhc_connection_id = ?`, fixtures.TestRhcConnectionData[0].ID).
-		Find(&rhcConnectionJoinTableExists).
-		Error
-
-	if err != nil {
-		t.Errorf(`want nil error, got "%s"`, err)
-	}
-
-	if rhcConnectionJoinTableExists {
-		t.Errorf(`want "rhcConnection" deleted from join table, data found`)
-	}
-
 	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
 }
 

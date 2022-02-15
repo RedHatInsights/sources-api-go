@@ -208,25 +208,11 @@ func (s *RhcConnectionDaoImpl) Delete(id *int64) error {
 		return util.NewErrNotFound("rhcConnection")
 	}
 
-	err = DB.Debug().Transaction(func(tx *gorm.DB) error {
-		err := tx.
-			Debug().
-			Where(`id = ?`, *id).
-			Delete(&m.RhcConnection{}).
-			Error
-
-		if err != nil {
-			return err
-		}
-
-		err = tx.
-			Debug().
-			Where(`rhc_connection_id = ?`, *id).
-			Delete(&m.SourceRhcConnection{}).
-			Error
-
-		return err
-	})
+	// The foreign key in the join table takes care of deleting the associated row.
+	err = DB.Debug().
+		Where(`id = ?`, *id).
+		Delete(&m.RhcConnection{}).
+		Error
 
 	return err
 }
