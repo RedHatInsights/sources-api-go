@@ -1,7 +1,11 @@
 package model
 
 type SourceRhcConnection struct {
-	SourceId        int64 `gorm:"primaryKey"`
+	SourceId int64 `gorm:"primaryKey"`
+
 	RhcConnectionId int64 `gorm:"primaryKey"`
-	TenantId        int64
+	RhcConnection   RhcConnection
+
+	TenantId int64
+	Tenant   Tenant
 }
