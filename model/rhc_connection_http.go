@@ -18,6 +18,7 @@ type RhcConnectionUpdateRequest struct {
 }
 
 type RhcConnectionResponse struct {
+	Id    *string        `json:"id"`
 	Uuid  *string        `json:"rhc_id"`
 	Extra datatypes.JSON `json:"extra,omitempty"`
 	AvailabilityStatus

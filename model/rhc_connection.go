@@ -44,6 +44,8 @@ func (r *RhcConnection) ToEvent() interface{} {
 }
 
 func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
+	id := strconv.FormatInt(r.ID, 10)
+
 	var sourceIds []string
 	if len(r.Sources) > 0 {
 		for _, src := range r.Sources {
@@ -52,6 +54,7 @@ func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
 	}
 
 	return &RhcConnectionResponse{
+		Id:                      &id,
 		Uuid:                    &r.RhcId,
 		Extra:                   r.Extra,
 		AvailabilityStatus:      r.AvailabilityStatus,
