@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/jobs"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,6 +20,11 @@ import (
 */
 func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		tenantId, ok := c.Get("tenantId").(*int64)
+		if !ok {
+			return fmt.Errorf("failed to pull tenant from request")
+		}
+
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
 			return err
@@ -26,7 +33,18 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 		s := dao.GetSourceDao(&id)
 
 		if s.IsSuperkey(id) {
-			// TODO: queue up superkey delete job for source
+			xrhid, ok := c.Get("x-rh-identity").(string)
+			if !ok {
+				return fmt.Errorf("failed to pull x-rh-identity from request")
+			}
+
+			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
+				Tenant:   *tenantId,
+				Identity: xrhid,
+				Model:    "source",
+				Id:       id,
+			})
+
 			return c.NoContent(http.StatusAccepted)
 		}
 
@@ -36,6 +54,11 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 
 func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		tenantId, ok := c.Get("tenantId").(*int64)
+		if !ok {
+			return fmt.Errorf("failed to pull tenant from request")
+		}
+
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
 			return err
@@ -44,7 +67,18 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 		a := dao.GetApplicationDao(&id)
 
 		if a.IsSuperkey(id) {
-			// TODO: queue up superkey delete job for application
+			xrhid, ok := c.Get("x-rh-identity").(string)
+			if !ok {
+				return fmt.Errorf("failed to pull x-rh-identity from request")
+			}
+
+			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
+				Tenant:   *tenantId,
+				Identity: xrhid,
+				Model:    "application",
+				Id:       id,
+			})
+
 			return c.NoContent(http.StatusAccepted)
 		}
 

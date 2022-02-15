@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/jobs"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/redis"
@@ -20,6 +21,7 @@ func main() {
 
 	dao.Init()
 	redis.Init()
+	jobs.Init()
 
 	if config.Get().StatusListener {
 		statuslistener.Run()
