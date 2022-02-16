@@ -147,14 +147,6 @@ func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 			FirstOrCreate(&rhcConnection).
 			Error
 
-		// Is it a new connection or is it just an association?
-		if rhcConnection.ID == 0 {
-			err = tx.Debug().
-				Omit(clause.Associations).
-				Create(&rhcConnection).
-				Error
-		}
-
 		if err != nil {
 			return err
 		}
