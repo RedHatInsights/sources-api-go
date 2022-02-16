@@ -58,7 +58,7 @@ func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
 
 	return &RhcConnectionResponse{
 		Id:                      &id,
-		Uuid:                    &r.RhcId,
+		RhcId:                   &r.RhcId,
 		Extra:                   r.Extra,
 		AvailabilityStatus:      r.AvailabilityStatus,
 		AvailabilityStatusError: r.AvailabilityStatusError,

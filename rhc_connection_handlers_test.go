@@ -96,7 +96,7 @@ func TestRhcConnectionGetById(t *testing.T) {
 		t.Error("Failed unmarshalling output")
 	}
 
-	if *outRhcConnectionResponse.Uuid != fixtures.TestRhcConnectionData[0].RhcId {
+	if *outRhcConnectionResponse.RhcId != fixtures.TestRhcConnectionData[0].RhcId {
 		t.Error("ghosts infected the return")
 	}
 }
