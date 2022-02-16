@@ -107,6 +107,7 @@ type SourceEvent struct {
 }
 
 type RhcConnectionEvent struct {
+	ID    *string        `json:"id"`
 	RhcId *string        `json:"rhc_id"`
 	Extra datatypes.JSON `json:"extra"`
 	AvailabilityStatusEvent

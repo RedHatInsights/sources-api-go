@@ -25,6 +25,8 @@ func (r *RhcConnection) UpdateFromRequest(input *RhcConnectionUpdateRequest) {
 }
 
 func (r *RhcConnection) ToEvent() interface{} {
+	id := strconv.FormatInt(r.ID, 10)
+
 	asEvent := AvailabilityStatusEvent{
 		AvailabilityStatus: util.StringValueOrNil(r.AvailabilityStatus.AvailabilityStatus),
 		LastAvailableAt:    util.DateTimeToRecordFormat(r.LastAvailableAt),
@@ -32,6 +34,7 @@ func (r *RhcConnection) ToEvent() interface{} {
 	}
 
 	rhcConnectionEvent := &RhcConnectionEvent{
+		ID:                      &id,
 		RhcId:                   &r.RhcId,
 		Extra:                   r.Extra,
 		AvailabilityStatusEvent: asEvent,
