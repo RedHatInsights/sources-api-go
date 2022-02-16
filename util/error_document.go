@@ -57,6 +57,13 @@ func (e ErrBadRequest) Is(err error) bool {
 	return reflect.TypeOf(err) == reflect.TypeOf(e)
 }
 
-func NewErrBadRequest(t string) error {
-	return ErrBadRequest{Message: t}
+func NewErrBadRequest(t interface{}) error {
+	switch t := t.(type) {
+	case string:
+		return ErrBadRequest{Message: t}
+	case error:
+		return ErrBadRequest{Message: t.Error()}
+	default:
+		panic("bad interface type for bad request: " + reflect.ValueOf(t).String())
+	}
 }
