@@ -151,15 +151,15 @@ func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 			return err
 		}
 
-		// Try to insert an association. If it exists the database will complain.
-		association := m.SourceRhcConnection{
+		// Try to insert an sourceRhcConnection. If it exists the database will complain.
+		sourceRhcConnection := m.SourceRhcConnection{
 			SourceId:        rhcConnection.Sources[0].ID,
 			RhcConnectionId: rhcConnection.ID,
 			TenantId:        s.TenantID,
 		}
 
 		err = tx.Debug().
-			Create(&association).
+			Create(&sourceRhcConnection).
 			Error
 
 		if err != nil {
