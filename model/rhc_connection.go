@@ -9,8 +9,8 @@ import (
 )
 
 type RhcConnection struct {
-	ID    int64 `gorm:"primaryKey" json:"id"`
-	RhcId string
+	ID    int64          `gorm:"primaryKey" json:"id"`
+	RhcId string         `json:"rhc_id"`
 	Extra datatypes.JSON `json:"extra,omitempty"`
 	AvailabilityStatus
 	AvailabilityStatusError string    `json:"availability_status_error,omitempty"`
