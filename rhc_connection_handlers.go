@@ -98,11 +98,8 @@ func RhcConnectionCreate(c echo.Context) error {
 	}
 
 	rhcConnection := &model.RhcConnection{
-		RhcId: input.RhcId,
-		Extra: input.Extra,
-		AvailabilityStatus: model.AvailabilityStatus{
-			AvailabilityStatus: input.AvailabilityStatus,
-		},
+		RhcId:   input.RhcId,
+		Extra:   input.Extra,
 		Sources: []model.Source{{ID: sourceId}},
 	}
 

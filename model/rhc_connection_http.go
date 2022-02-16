@@ -6,10 +6,9 @@ import (
 
 // RhcConnectionCreateRequest represents a request coming from the outside to create a Red Hat Connector connection.
 type RhcConnectionCreateRequest struct {
-	RhcId              string         `json:"rhc_id"`
-	Extra              datatypes.JSON `json:"extra"`
-	AvailabilityStatus string         `json:"availability_status"`
-	SourceId           string         `json:"source_id"`
+	RhcId    string         `json:"rhc_id"`
+	Extra    datatypes.JSON `json:"extra"`
+	SourceId string         `json:"source_id"`
 }
 
 // RhcConnectionUpdateRequest represents a request coming from the outside to update a Red Hat Connector connection.

@@ -147,10 +147,9 @@ func TestRhcConnectionGetByIdNotFound(t *testing.T) {
 
 func TestRhcConnectionCreate(t *testing.T) {
 	requestBody := model.RhcConnectionCreateRequest{
-		Extra:              nil,
-		AvailabilityStatus: "available",
-		SourceId:           strconv.FormatInt(fixtures.TestSourceData[1].ID, 10),
-		RhcId:              "12345",
+		Extra:    nil,
+		SourceId: strconv.FormatInt(fixtures.TestSourceData[1].ID, 10),
+		RhcId:    "12345",
 	}
 
 	body, err := json.Marshal(requestBody)
@@ -181,10 +180,9 @@ func TestRhcConnectionCreate(t *testing.T) {
 
 func TestRhcConnectionCreateInvalidInput(t *testing.T) {
 	requestBody := model.RhcConnectionCreateRequest{
-		Extra:              nil,
-		AvailabilityStatus: "available",
-		SourceId:           strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10),
-		RhcId:              "", // this should make the validation fail.
+		Extra:    nil,
+		SourceId: strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10),
+		RhcId:    "", // this should make the validation fail.
 	}
 
 	body, err := json.Marshal(requestBody)
