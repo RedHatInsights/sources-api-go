@@ -6,6 +6,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/model"
 )
 
+// TestRhcConnectionCreateEmptyRhcId tests that an error is returned when an empty RhcId is received from the request.
 func TestRhcConnectionCreateEmptyRhcId(t *testing.T) {
 	rhcConnectionCreateRequest := model.RhcConnectionCreateRequest{
 		RhcId: "",
