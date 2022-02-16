@@ -55,7 +55,7 @@ func SourceListApplicationTypes(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return util.NewErrBadRequest(err.Error())
+		return util.NewErrBadRequest(err)
 	}
 
 	apptypes, count, err = applicationTypeDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
@@ -119,7 +119,7 @@ func ApplicationTypeGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return util.NewErrBadRequest(err.Error())
+		return util.NewErrBadRequest(err)
 	}
 
 	appType, err := applicationTypeDB.GetById(&id)
