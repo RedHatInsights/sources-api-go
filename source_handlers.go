@@ -353,8 +353,13 @@ func SourcesRhcConnectionList(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
+	rhcConnectionDao, err := getRhcConnectionDao(c)
+	if err != nil {
+		return err
+	}
+
 	// Get the list of sources for the given rhcConnection
-	rhcConnections, count, err := sourceDao.GetRelatedRhcConnectionsToId(&sourceId, limit, offset, filters)
+	rhcConnections, count, err := rhcConnectionDao.ListForSource(&sourceId, limit, offset, filters)
 	if err != nil {
 		return err
 	}

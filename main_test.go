@@ -50,13 +50,13 @@ func TestMain(t *testing.M) {
 			panic("failed to populate static type cache")
 		}
 	} else {
-		mockSourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData, RelatedRhcConnections: fixtures.TestRhcConnectionData}
+		mockSourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData}
 		mockApplicationDao = &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}
 		mockEndpointDao = &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
 		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: fixtures.TestSourceTypeData}
 		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: fixtures.TestApplicationTypeData}
 		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: fixtures.TestMetaDataData}
-		mockRhcConnectionDao = &dao.MockRhcConnectionDao{RhcConnections: fixtures.TestRhcConnectionData, RelatedSources: fixtures.TestSourceData}
+		mockRhcConnectionDao = &dao.MockRhcConnectionDao{RhcConnections: fixtures.TestRhcConnectionData, RelatedRhcConnections: fixtures.TestRhcConnectionData, RelatedSources: fixtures.TestSourceData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }

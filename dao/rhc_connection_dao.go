@@ -226,3 +226,30 @@ func (s *RhcConnectionDaoImpl) GetRelatedSourcesToId(rhcConnectionId *int64, lim
 	return sources, count, err
 
 }
+
+func (s *RhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
+	rhcConnections := make([]m.RhcConnection, 0)
+
+	query := DB.Debug().
+		Model(&m.RhcConnection{}).
+		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "rhc_connections"."id" = "sr"."rhc_connection_id"`).
+		Where(`"sr"."source_id" = ?`, sourceId).
+		Where(`"sr"."tenant_id" = ?`, s.TenantID).
+		Limit(limit).
+		Offset(offset)
+
+	query, err := applyFilters(query, filters)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Getting the total count (filters included) for pagination.
+	count := int64(0)
+	query.Count(&count)
+
+	// Run the actual query.
+	err = query.Find(&rhcConnections).Error
+
+	return rhcConnections, count, err
+
+}
