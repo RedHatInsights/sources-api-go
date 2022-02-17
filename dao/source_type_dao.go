@@ -16,7 +16,7 @@ func (st *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	// getting the total count (filters included) for pagination
@@ -25,8 +25,11 @@ func (st *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&sourceTypes)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
 
-	return sourceTypes, count, result.Error
+	return sourceTypes, count, nil
 }
 
 func (st *SourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {

@@ -66,6 +66,31 @@ func TestSourceTypeList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestSourceTypeListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+		},
+	)
+
+	badRequestSourceTypeList := ErrorHandlingContext(SourceTypeList)
+	err := badRequestSourceTypeList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestSourceTypeGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -118,4 +143,26 @@ func TestSourceTypeGetNotFound(t *testing.T) {
 	}
 
 	testutils.NotFoundTest(t, rec)
+}
+
+func TestSourceTypeGetBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	notFoundSourceTypeGet := ErrorHandlingContext(SourceTypeGet)
+	err := notFoundSourceTypeGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }
