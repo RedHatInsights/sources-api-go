@@ -180,8 +180,8 @@ func (s *RhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
 	return err
 }
 
-func (s *RhcConnectionDaoImpl) Delete(id *int64) error {
-	rhcConnection := &m.RhcConnection{ID: *id}
+func (s *RhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
+	var rhcConnection m.RhcConnection
 
 	err := DB.Debug().
 		Where("id = ?", id).
@@ -189,7 +189,7 @@ func (s *RhcConnectionDaoImpl) Delete(id *int64) error {
 		Error
 
 	if err != nil {
-		return util.NewErrNotFound("rhcConnection")
+		return nil, util.NewErrNotFound("rhcConnection")
 	}
 
 	// The foreign key in the join table takes care of deleting the associated row.
@@ -198,7 +198,7 @@ func (s *RhcConnectionDaoImpl) Delete(id *int64) error {
 		Delete(&m.RhcConnection{}).
 		Error
 
-	return err
+	return &rhcConnection, err
 }
 
 func (s *RhcConnectionDaoImpl) GetRelatedSourcesToId(rhcConnectionId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {

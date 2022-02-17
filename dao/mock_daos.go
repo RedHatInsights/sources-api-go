@@ -421,14 +421,14 @@ func (m *MockRhcConnectionDao) Update(rhcConnection *m.RhcConnection) error {
 	return util.NewErrNotFound("rhcConnection")
 }
 
-func (m *MockRhcConnectionDao) Delete(id *int64) error {
+func (m *MockRhcConnectionDao) Delete(id *int64) (*m.RhcConnection, error) {
 	for _, rhcTmp := range m.RhcConnections {
 		if rhcTmp.ID == *id {
-			return nil
+			return &rhcTmp, nil
 		}
 	}
 
-	return util.NewErrNotFound("rhcConnection")
+	return nil, util.NewErrNotFound("rhcConnection")
 }
 
 func (m *MockRhcConnectionDao) GetRelatedSourcesToId(id *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {

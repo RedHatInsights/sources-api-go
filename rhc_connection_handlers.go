@@ -164,7 +164,7 @@ func RhcConnectionDelete(c echo.Context) error {
 		return err
 	}
 
-	err = rhcConnectionDao.Delete(&rhcConnectionId)
+	_, err = rhcConnectionDao.Delete(&rhcConnectionId)
 	if err != nil {
 		return err
 	}

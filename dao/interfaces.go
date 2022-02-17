@@ -106,7 +106,7 @@ type RhcConnectionDao interface {
 	GetById(id *int64) (*m.RhcConnection, error)
 	Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error)
 	Update(rhcConnection *m.RhcConnection) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.RhcConnection, error)
 	// GetRelatedSourcesToId gets all the sources that are related to a given rhcConnection id.
 	GetRelatedSourcesToId(rhcConnectionId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	// ListForSource gets all the related connections to the given source id.

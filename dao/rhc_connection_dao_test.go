@@ -235,7 +235,7 @@ func TestRhcConnectionDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures(RHC_CONNECTION_SCHEMA)
 
-	err := rhcConnectionDao.Delete(&fixtures.TestRhcConnectionData[0].ID)
+	_, err := rhcConnectionDao.Delete(&fixtures.TestRhcConnectionData[0].ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -267,7 +267,7 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 
 	nonExistentId := int64(12345)
 
-	err := rhcConnectionDao.Delete(&nonExistentId)
+	_, err := rhcConnectionDao.Delete(&nonExistentId)
 
 	if err == nil {
 		t.Errorf(`want error, got nil`)
