@@ -126,6 +126,7 @@ func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 		Model(&m.Source{}).
 		Select(`1`).
 		Where(`id = ?`, rhcConnection.Sources[0].ID).
+		Where(`tenant_id = ?`, s.TenantID).
 		Scan(&sourceExists).
 		Error
 

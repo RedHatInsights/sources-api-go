@@ -90,6 +90,30 @@ func TestRhcConnectionCreate(t *testing.T) {
 	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
 }
 
+// TestRhcConnectionCreateExistingSourceDifferentTenant tests that when querying for a source from a tenant that is not
+// related to that source, the DAO throws a "not found" error. This is because people from other tenants shouldn't be
+// able to link connections to sources from other tenants.
+func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures(RHC_CONNECTION_SCHEMA)
+
+	rhcConnection := setUpValidRhcConnection()
+
+	// Set up a different tenant, which should make the "find source by source ID and Tenant ID" return a not found
+	// error
+	rhcConnectionDao.TenantID = 12345
+	_, got := rhcConnectionDao.Create(rhcConnection)
+
+	want := "source not found"
+	if want != got.Error() {
+		t.Errorf(`want "%s", got "%s"`, want, got)
+	}
+
+	// Set the tenant back to its original value
+	rhcConnectionDao.TenantID = fixtures.TestTenantData[0].Id
+	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+}
+
 // TestRhcConnectionCreateExisting tests that when an already existing "RhcConnection" is given to the "Create"
 // function, along with a valid and unique source ID on the "source_rhc_connections" table, the function doesn't return
 // an error.
