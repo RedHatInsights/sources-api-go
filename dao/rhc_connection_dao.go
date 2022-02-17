@@ -201,33 +201,6 @@ func (s *RhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
 	return &rhcConnection, err
 }
 
-func (s *RhcConnectionDaoImpl) GetRelatedSourcesToId(rhcConnectionId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	sources := make([]m.Source, 0)
-
-	query := DB.Debug().
-		Model(&m.Source{}).
-		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "sources"."id" = "sr"."source_id"`).
-		Where(`"sr"."rhc_connection_id" = ?`, rhcConnectionId).
-		Where(`"sr"."tenant_id" = ?`, s.TenantID).
-		Limit(limit).
-		Offset(offset)
-
-	query, err := applyFilters(query, filters)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Getting the total count (filters included) for pagination.
-	count := int64(0)
-	query.Count(&count)
-
-	// Run the actual query.
-	err = query.Find(&sources).Error
-
-	return sources, count, err
-
-}
-
 func (s *RhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
 	rhcConnections := make([]m.RhcConnection, 0)
 
