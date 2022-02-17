@@ -27,7 +27,7 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	// getting the total count (filters included) for pagination
@@ -36,8 +36,11 @@ func (s *SourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Offset(offset).Find(&sources)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
 
-	return sources, count, result.Error
+	return sources, count, nil
 }
 
 func (s *SourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
@@ -48,7 +51,7 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	// getting the total count (filters included) for pagination
@@ -57,8 +60,11 @@ func (s *SourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 
 	// limiting + running the actual query.
 	result := query.Limit(limit).Find(&sources)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
 
-	return sources, count, result.Error
+	return sources, count, nil
 }
 
 func (s *SourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {

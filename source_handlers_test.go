@@ -94,6 +94,60 @@ func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
 	testutils.NotFoundTest(t, rec)
 }
 
+func TestSourceTypeSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/xxx/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_type_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceTypeListSource := ErrorHandlingContext(SourceTypeListSource)
+	err := badRequestSourceTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_type_id")
+	c.SetParamValues("1")
+
+	badRequestSourceTypeListSource := ErrorHandlingContext(SourceTypeListSource)
+	err := badRequestSourceTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -174,6 +228,60 @@ func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	}
 
 	testutils.NotFoundTest(t, rec)
+}
+
+func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/xxx/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues("xxx")
+
+	badRequestApplicationTypeListSource := ErrorHandlingContext(ApplicationTypeListSource)
+	err := badRequestApplicationTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues("1")
+
+	badRequestApplicationTypeListSource := ErrorHandlingContext(ApplicationTypeListSource)
+	err := badRequestApplicationTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }
 
 func TestSourceList(t *testing.T) {
@@ -284,6 +392,30 @@ func TestSourceListSatellite(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestSourceListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		})
+	badRequestSourceList := ErrorHandlingContext(SourceList)
+	err := badRequestSourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestSourceGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -339,6 +471,28 @@ func TestSourceGetNotFound(t *testing.T) {
 	testutils.NotFoundTest(t, rec)
 }
 
+func TestSourceGetBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceGet := ErrorHandlingContext(SourceGet)
+	err := badRequestSourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 // TestSourceCreateBadRequest tests that the handler responds with an 400 when an invalid JSON is received
 func TestSourceCreateBadRequest(t *testing.T) {
 	emptyName := ""
@@ -361,14 +515,13 @@ func TestSourceCreateBadRequest(t *testing.T) {
 	)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err = SourceCreate(c)
+	badRequestSourceCreate := ErrorHandlingContext(SourceCreate)
+	err = badRequestSourceCreate(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("Did not return 400. Body: %s", rec.Body.String())
-	}
+	testutils.BadRequestTest(t, rec)
 }
 
 // TestSourceCreate tests that a 201 is received when a proper JSON message is received
@@ -432,6 +585,59 @@ func TestSourceCreate(t *testing.T) {
 	_, _ = dao.Delete(&id)
 }
 
+func TestSourceEditBadRequest(t *testing.T) {
+	newSourceName := "New source name"
+	req := m.SourceEditRequest{
+		Name:               request.PointerToString(newSourceName),
+		AvailabilityStatus: request.PointerToString("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/xxx",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
+	err := badRequestSourceEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourceDeleteBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceDelete := ErrorHandlingContext(SourceDelete)
+	err := badRequestSourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestAvailabilityStatusCheck(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -476,4 +682,26 @@ func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 	if rec.Code != 404 {
 		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 404)
 	}
+}
+
+func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/xxx/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	err := badRequestSourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }
