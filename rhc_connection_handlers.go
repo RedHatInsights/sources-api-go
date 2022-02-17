@@ -92,15 +92,10 @@ func RhcConnectionCreate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
-	sourceId, err := strconv.ParseInt(input.SourceId, 10, 64)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid source id", "400"))
-	}
-
 	rhcConnection := &model.RhcConnection{
 		RhcId:   input.RhcId,
 		Extra:   input.Extra,
-		Sources: []model.Source{{ID: sourceId}},
+		Sources: []model.Source{{ID: input.SourceId}},
 	}
 
 	rhcConnectionDao, err := getRhcConnectionDao(c)

@@ -148,7 +148,7 @@ func TestRhcConnectionGetByIdNotFound(t *testing.T) {
 func TestRhcConnectionCreate(t *testing.T) {
 	requestBody := model.RhcConnectionCreateRequest{
 		Extra:    nil,
-		SourceId: strconv.FormatInt(fixtures.TestSourceData[1].ID, 10),
+		SourceId: fixtures.TestSourceData[1].ID,
 		RhcId:    "12345",
 	}
 
@@ -181,7 +181,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 func TestRhcConnectionCreateInvalidInput(t *testing.T) {
 	requestBody := model.RhcConnectionCreateRequest{
 		Extra:    nil,
-		SourceId: strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10),
+		SourceId: fixtures.TestRhcConnectionData[0].ID,
 		RhcId:    "", // this should make the validation fail.
 	}
 
