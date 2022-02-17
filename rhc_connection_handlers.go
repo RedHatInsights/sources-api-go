@@ -108,6 +108,8 @@ func RhcConnectionCreate(c echo.Context) error {
 		return err
 	}
 
+	setEventStreamResource(c, connection)
+
 	return c.JSON(http.StatusCreated, connection.ToResponse())
 }
 
@@ -143,6 +145,8 @@ func RhcConnectionUpdate(c echo.Context) error {
 		return err
 	}
 
+	setEventStreamResource(c, dbRhcConnection)
+
 	return c.JSON(http.StatusOK, dbRhcConnection.ToResponse())
 }
 
@@ -159,10 +163,12 @@ func RhcConnectionDelete(c echo.Context) error {
 		return err
 	}
 
-	_, err = rhcConnectionDao.Delete(&rhcConnectionId)
+	rhcConnection, err := rhcConnectionDao.Delete(&rhcConnectionId)
 	if err != nil {
 		return err
 	}
+
+	setEventStreamResource(c, rhcConnection)
 
 	return c.NoContent(http.StatusNoContent)
 }
