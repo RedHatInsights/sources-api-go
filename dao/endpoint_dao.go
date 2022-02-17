@@ -24,14 +24,18 @@ func (a *EndpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	count := int64(0)
 	query.Model(&m.Endpoint{}).Count(&count)
 
 	result := query.Limit(limit).Offset(offset).Find(&endpoints)
-	return endpoints, count, result.Error
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
+
+	return endpoints, count, nil
 }
 
 func (a *EndpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
@@ -42,14 +46,18 @@ func (a *EndpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	count := int64(0)
 	query.Count(&count)
 
 	result := query.Limit(limit).Find(&endpoints)
-	return endpoints, count, result.Error
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
+
+	return endpoints, count, nil
 }
 
 func (a *EndpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
