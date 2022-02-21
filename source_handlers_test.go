@@ -585,6 +585,84 @@ func TestSourceCreate(t *testing.T) {
 	_, _ = dao.Delete(&id)
 }
 
+func TestSourceEdit(t *testing.T) {
+	newSourceName := "New source name"
+	req := m.SourceEditRequest{
+		Name:               request.PointerToString(newSourceName),
+		AvailabilityStatus: request.PointerToString("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := SourceEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusOK, rec.Code)
+	}
+
+	src := m.SourceResponse{}
+	raw, _ := io.ReadAll(rec.Body)
+	err = json.Unmarshal(raw, &src)
+	if err != nil {
+		t.Errorf("Failed to unmarshal application from response: %v", err)
+	}
+
+	if *src.Name != newSourceName {
+		t.Errorf("Unexpected source name: expected '%s', got '%s'", newSourceName, *src.Name)
+	}
+
+	if *src.AvailabilityStatusResponse.AvailabilityStatus != "available" {
+		t.Errorf("Wrong availability status, wanted %v got %v", "available", *src.AvailabilityStatusResponse.AvailabilityStatus)
+	}
+}
+
+func TestSourceEditNotFound(t *testing.T) {
+	newSourceName := "New source name"
+	req := m.SourceEditRequest{
+		Name:               request.PointerToString(newSourceName),
+		AvailabilityStatus: request.PointerToString("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/8937498374",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("8937498374")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSourceEdit := ErrorHandlingContext(SourceEdit)
+	err := notFoundSourceEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
+
 func TestSourceEditBadRequest(t *testing.T) {
 	newSourceName := "New source name"
 	req := m.SourceEditRequest{
@@ -614,6 +692,28 @@ func TestSourceEditBadRequest(t *testing.T) {
 	}
 
 	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourceDeleteNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/9038049384",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("9038049384")
+
+	notFoundSourceDelete := ErrorHandlingContext(SourceDelete)
+	err := notFoundSourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestSourceDeleteBadRequest(t *testing.T) {
@@ -674,14 +774,13 @@ func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues("183209745")
 
-	err := SourceCheckAvailability(c)
+	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	err := notFoundSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 404 {
-		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 404)
-	}
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestAvailabilityStatusCheckBadRequest(t *testing.T) {

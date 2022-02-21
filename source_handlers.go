@@ -310,7 +310,7 @@ func SourceCheckAvailability(c echo.Context) error {
 		"Tenant",
 	)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	// do it async!

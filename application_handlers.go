@@ -71,7 +71,7 @@ func ApplicationGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return util.NewErrBadRequest(err.Error())
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Getting Application ID %v", id)
@@ -129,7 +129,7 @@ func ApplicationEdit(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return util.NewErrBadRequest(err.Error())
+		return util.NewErrBadRequest(err)
 	}
 
 	app, err := applicationDB.GetById(&id)
@@ -155,7 +155,7 @@ func ApplicationDelete(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return util.NewErrBadRequest(err.Error())
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Deleting Application Id %v", id)
@@ -177,7 +177,7 @@ func ApplicationListAuthentications(c echo.Context) error {
 
 	appID, err := strconv.ParseInt(c.Param("application_id"), 10, 64)
 	if err != nil {
-		return util.NewErrBadRequest(err.Error())
+		return util.NewErrBadRequest(err)
 	}
 
 	auths, count, err := authDao.ListForApplication(appID, 100, 0, nil)
@@ -216,7 +216,7 @@ func SourceListApplications(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return util.NewErrBadRequest(err.Error())
+		return util.NewErrBadRequest(err)
 	}
 
 	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)

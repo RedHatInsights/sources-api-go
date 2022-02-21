@@ -83,7 +83,7 @@ func (src *MockSourceDao) Create(s *m.Source) error {
 }
 
 func (src *MockSourceDao) Update(s *m.Source) error {
-	panic("implement me")
+	return nil
 }
 
 func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
@@ -113,7 +113,7 @@ func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.
 		}
 	}
 
-	return nil, fmt.Errorf("source not found")
+	return nil, util.NewErrNotFound("source")
 }
 
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
