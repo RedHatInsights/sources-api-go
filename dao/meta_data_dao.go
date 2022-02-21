@@ -21,13 +21,16 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	count := int64(0)
 	query.Model(&m.MetaData{}).Count(&count)
 
 	result := query.Limit(limit).Offset(offset).Find(&metadatas)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
 	return metadatas, count, result.Error
 }
 
@@ -37,14 +40,17 @@ func (a *MetaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	count := int64(0)
 	query.Count(&count)
 
 	result := query.Limit(limit).Find(&metaData)
-	return metaData, count, result.Error
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
+	return metaData, count, nil
 }
 
 func (a *MetaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {

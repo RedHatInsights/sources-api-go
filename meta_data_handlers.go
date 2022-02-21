@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -56,7 +55,7 @@ func MetaDataList(c echo.Context) error {
 	metaDatas, count, err = metaDataDB.List(limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	out := make([]interface{}, len(metaDatas))
@@ -85,7 +84,7 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("application_type_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	var (
@@ -96,10 +95,7 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 	metaDatas, count, err = metaDataDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	out := make([]interface{}, len(metaDatas))
@@ -118,7 +114,7 @@ func MetaDataGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Getting MetaData ID %v", id)
@@ -126,10 +122,7 @@ func MetaDataGet(c echo.Context) error {
 	app, err := metaDataDB.GetById(&id)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())

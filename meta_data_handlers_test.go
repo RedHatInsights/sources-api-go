@@ -102,6 +102,60 @@ func TestApplicationTypeMetaDataSubcollectionListNotFound(t *testing.T) {
 	testutils.NotFoundTest(t, rec)
 }
 
+func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/xxx/app_meta_data",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues("xxx")
+
+	badRequestApplicationTypeListMetaData := ErrorHandlingContext(ApplicationTypeListMetaData)
+	err := badRequestApplicationTypeListMetaData(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1/app_meta_data",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues("1")
+
+	badRequestApplicationTypeListMetaData := ErrorHandlingContext(ApplicationTypeListMetaData)
+	err := badRequestApplicationTypeListMetaData(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestMetaDataList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -150,6 +204,32 @@ func TestMetaDataList(t *testing.T) {
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/app_meta_data",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	badRequestMetaDataList := ErrorHandlingContext(MetaDataList)
+	err := badRequestMetaDataList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }
 
 func TestMetaDataGet(t *testing.T) {
@@ -201,4 +281,26 @@ func TestMetaDataGetNotFound(t *testing.T) {
 	}
 
 	testutils.NotFoundTest(t, rec)
+}
+
+func TestMetaDataGetBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/app_meta_data/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestMetaDataGet := ErrorHandlingContext(MetaDataGet)
+	err := badRequestMetaDataGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }
