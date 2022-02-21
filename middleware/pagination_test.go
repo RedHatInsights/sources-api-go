@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -66,19 +67,42 @@ func TestParsePaginationDefaults(t *testing.T) {
 	}
 }
 
-func TestParsePaginationFailure(t *testing.T) {
+func TestParsePaginationBadRequestInvalidLimit(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?limit=zzzz", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	err := parsePaginationIntoContext(c)
+	badRequestParsePaginationIntoContext := HandleErrors(parsePaginationIntoContext)
+	err := badRequestParsePaginationIntoContext(c)
 	if err != nil {
 		t.Error("something went very wrong - error parsing pagination.")
 	}
 
-	if rec.Code != 400 {
-		t.Error("failed parse did not return error")
+	testutils.BadRequestTest(t, rec)
+
+	var resp util.ErrorDocument
+	err = json.Unmarshal(rec.Body.Bytes(), &resp)
+	if err != nil {
+		t.Error("Error unmarshaling response, malformed error document")
 	}
+
+	if !strings.Contains(resp.Errors[0].Detail, "error parsing") {
+		t.Error("Error document not formed correctly")
+	}
+}
+
+func TestParsePaginationBadRequestInvalidOffset(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?offset=zzzz", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	badRequestParsePaginationIntoContext := HandleErrors(parsePaginationIntoContext)
+	err := badRequestParsePaginationIntoContext(c)
+	if err != nil {
+		t.Error("something went very wrong - error parsing pagination.")
+	}
+
+	testutils.BadRequestTest(t, rec)
 
 	var resp util.ErrorDocument
 	err = json.Unmarshal(rec.Body.Bytes(), &resp)
