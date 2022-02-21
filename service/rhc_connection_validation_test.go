@@ -26,11 +26,12 @@ func TestRhcConnectionCreateEmptyRhcId(t *testing.T) {
 // TestCreateRequestInvalidSourceIdFormat tests if an error is returned when an invalid format or string is provided for
 // the source id.
 func TestCreateRequestInvalidSourceIdFormat(t *testing.T) {
-	ecr := setUpEndpointCreateRequest()
+	rhcConnectionCreateRequest := model.RhcConnectionCreateRequest{
+		RhcId:       "valid",
+		SourceIdRaw: "hello world",
+	}
 
-	ecr.SourceIDRaw = "hello world"
-
-	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
+	err := ValidateRhcConnectionRequest(&rhcConnectionCreateRequest)
 	if err == nil {
 		t.Error("want error, got none")
 	}
@@ -43,11 +44,12 @@ func TestCreateRequestInvalidSourceIdFormat(t *testing.T) {
 
 // TestCreateRequestInvalidSourceId tests if an error is returned when providing a source id lower than one.
 func TestCreateRequestInvalidSourceId(t *testing.T) {
-	ecr := setUpEndpointCreateRequest()
+	rhcConnectionCreateRequest := model.RhcConnectionCreateRequest{
+		RhcId:       "valid",
+		SourceIdRaw: "-5",
+	}
 
-	ecr.SourceIDRaw = "0"
-
-	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
+	err := ValidateRhcConnectionRequest(&rhcConnectionCreateRequest)
 	if err == nil {
 		t.Error("want error, got none")
 	}

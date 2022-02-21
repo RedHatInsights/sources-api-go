@@ -14,7 +14,7 @@ func ValidateRhcConnectionRequest(req *model.RhcConnectionCreateRequest) error {
 		return errors.New("the Red Hat Connector Connection's id is invalid")
 	}
 
-	sourceId, err := util.InterfaceToInt64(req.SourceId)
+	sourceId, err := util.InterfaceToInt64(req.SourceIdRaw)
 	if err != nil {
 		return fmt.Errorf("the provided source ID is not valid")
 	}

@@ -147,9 +147,9 @@ func TestRhcConnectionGetByIdNotFound(t *testing.T) {
 
 func TestRhcConnectionCreate(t *testing.T) {
 	requestBody := model.RhcConnectionCreateRequest{
-		Extra:    nil,
-		SourceId: fixtures.TestSourceData[1].ID,
-		RhcId:    "12345",
+		Extra:       nil,
+		SourceIdRaw: fixtures.TestSourceData[1].ID,
+		RhcId:       "12345",
 	}
 
 	body, err := json.Marshal(requestBody)
