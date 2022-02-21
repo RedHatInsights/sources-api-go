@@ -82,3 +82,28 @@ func TestSourceListInternal(t *testing.T) {
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
+
+func TestSourceListInternalBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/internal/v2.0/sources",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+		},
+	)
+
+	badRequestInternalSourceList := ErrorHandlingContext(InternalSourceList)
+	err := badRequestInternalSourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}

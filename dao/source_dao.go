@@ -75,17 +75,20 @@ func (s *SourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	sources := make([]m.Source, 0, limit)
 	result := query.Offset(offset).Limit(limit).Find(&sources)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
 
 	// Getting the total count (filters included) for pagination
 	count := int64(0)
 	query.Count(&count)
 
-	return sources, count, result.Error
+	return sources, count, nil
 }
 
 func (s *SourceDaoImpl) GetById(id *int64) (*m.Source, error) {

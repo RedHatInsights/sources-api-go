@@ -46,7 +46,7 @@ func InternalSourceList(c echo.Context) error {
 	sources, count, err := sourcesDB.ListInternal(limit, offset, filters)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	out := make([]interface{}, len(sources))
