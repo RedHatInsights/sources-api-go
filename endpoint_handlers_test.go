@@ -104,6 +104,60 @@ func TestSourceEndpointSubcollectionListNotFound(t *testing.T) {
 	testutils.NotFoundTest(t, rec)
 }
 
+func TestSourceEndpointSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/xxx/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+	err := badRequestSourceListEndpoint(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	badRequestSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+	err := badRequestSourceListEndpoint(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestEndpointList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -167,6 +221,32 @@ func TestEndpointList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	badRequestEndpointList := ErrorHandlingContext(EndpointList)
+	err := badRequestEndpointList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestEndpointGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -216,6 +296,28 @@ func TestEndpointGetNotFound(t *testing.T) {
 	}
 
 	testutils.NotFoundTest(t, rec)
+}
+
+func TestEndpointGetBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestEndpointGet := ErrorHandlingContext(EndpointGet)
+	err := badRequestEndpointGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }
 
 // Tests that the endpoint is properly creating "endpoints" and returning a 201 code.
@@ -286,12 +388,33 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 	)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err = EndpointCreate(c)
+	badRequestEndpointCreate := ErrorHandlingContext(EndpointCreate)
+	err = badRequestEndpointCreate(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 400 {
-		t.Errorf("want 400, got %d", rec.Code)
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestEndpointDeleteBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/endpoints/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestEndpointDelete := ErrorHandlingContext(EndpointDelete)
+	err := badRequestEndpointDelete(c)
+	if err != nil {
+		t.Error(err)
 	}
+
+	testutils.BadRequestTest(t, rec)
 }

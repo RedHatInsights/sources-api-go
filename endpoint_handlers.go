@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -51,16 +50,13 @@ func SourceListEndpoint(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	endpoints, count, err = endpointDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
@@ -95,10 +91,10 @@ func EndpointList(c echo.Context) error {
 	)
 
 	endpoints, count, err = endpointDB.List(limit, offset, filters)
-
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
+
 	c.Logger().Infof("tenant: %v", *endpointDB.Tenant())
 
 	out := make([]interface{}, len(endpoints))
@@ -117,7 +113,7 @@ func EndpointGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Getting Endpoint ID %v", id)
@@ -125,10 +121,7 @@ func EndpointGet(c echo.Context) error {
 	app, err := endpointDB.GetById(&id)
 
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())
@@ -148,7 +141,7 @@ func EndpointCreate(c echo.Context) error {
 
 	err = service.ValidateEndpointCreateRequest(endpointDao, input)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(fmt.Sprintf("Validation failed: %s", err.Error()), "400"))
+		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %s", err))
 	}
 
 	endpoint := &m.Endpoint{
@@ -182,17 +175,14 @@ func EndpointDelete(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Deleting Endpoint Id %v", id)
 
 	endpt, err := endpointDao.Delete(&id)
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	setEventStreamResource(c, endpt)
@@ -208,17 +198,17 @@ func EndpointListAuthentications(c echo.Context) error {
 
 	filters, err := getFilters(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	limit, offset, err := getLimitAndOffset(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	id, err := strconv.ParseInt(c.Param("endpoint_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	auths, count, err := authDB.ListForEndpoint(id, limit, offset, filters)
