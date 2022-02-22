@@ -81,7 +81,10 @@ func TestGetToken(t *testing.T) {
 // TestSetTokenUnreachableRedis tests that an error is returned when something goes wrong. In this case, an
 // unreachable Redis server is simulated.
 func TestSetTokenUnreachableRedis(t *testing.T) {
-	Client = redis.NewClient(&redis.Options{})
+	Client = redis.NewClient(&redis.Options{
+		Addr:        "127.0.0.1:2345",
+		DialTimeout: time.Millisecond,
+	})
 
 	// Set up a fake token and a fake tenant id
 	fakeToken := setUpFakeToken()
