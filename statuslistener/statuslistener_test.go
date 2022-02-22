@@ -277,18 +277,16 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 
 	var applicationAuthentications []interface{}
 
-	applicationAuthenticationsBulkMessage, success := bulkMessage["application_authentications"].([]m.ApplicationAuthentication)
-
-	if success {
+	if applicationAuthenticationsBulkMessage, ok := bulkMessage["application_authentications"].([]m.ApplicationAuthentication); ok {
 		for index, applicationAuthentication := range applicationAuthenticationsBulkMessage {
 			dateFields = PopulateDateFieldsFrom(&applicationAuthentication)
-			ap, success := contentMap["application_authentications"].([]interface{})
-			if !success {
+			if ap, ok := contentMap["application_authentications"].([]interface{}); ok {
+				upd := UpdateDateFieldsTo(ap[index].(map[string]interface{}), dateFields)
+				applicationAuthentications = append(applicationAuthentications, upd)
+			} else {
 				panic("type assertion error: + " + err.Error())
 			}
 
-			upd := UpdateDateFieldsTo(ap[index].(map[string]interface{}), dateFields)
-			applicationAuthentications = append(applicationAuthentications, upd)
 		}
 	}
 
