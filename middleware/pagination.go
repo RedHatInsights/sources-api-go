@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -23,7 +22,7 @@ func parsePaginationIntoContext(c echo.Context) error {
 	if c.QueryParam("limit") != "" {
 		val, err := strconv.Atoi(c.QueryParam("limit"))
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing limit", "400"))
+			return util.NewErrBadRequest("error parsing limit")
 		}
 
 		c.Set("limit", val)
@@ -34,7 +33,7 @@ func parsePaginationIntoContext(c echo.Context) error {
 	if c.QueryParam("offset") != "" {
 		val, err := strconv.Atoi(c.QueryParam("offset"))
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, util.ErrorDoc("error parsing offset", "400"))
+			return util.NewErrBadRequest("error parsing offset")
 		}
 
 		c.Set("offset", val)
