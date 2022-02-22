@@ -52,6 +52,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/authentications", SourceListAuthentications, tenancyWithListMiddleware...)
+	v3.GET("/sources/:source_id/rhc_connections", SourcesRhcConnectionList, tenancyWithListMiddleware...)
 
 	// Applications
 	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
@@ -94,6 +95,14 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/source_types", SourceTypeList, listMiddleware...)
 	v3.GET("/source_types/:id", SourceTypeGet)
 	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
+
+	// Red Hat Connector Connections
+	v3.GET("/rhc_connections", RhcConnectionList, tenancyWithListMiddleware...)
+	v3.GET("/rhc_connections/:id", RhcConnectionGetById, permissionMiddleware...)
+	v3.POST("/rhc_connections", RhcConnectionCreate, permissionMiddleware...)
+	v3.PATCH("/rhc_connections/:id", RhcConnectionUpdate, permissionMiddleware...)
+	v3.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
+	v3.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
 
 	/**            **\
 	 * Internal API *

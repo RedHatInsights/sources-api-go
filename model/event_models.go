@@ -105,3 +105,15 @@ type SourceEvent struct {
 	SourceTypeID        *int64  `json:"source_type_id"`
 	Tenant              *string `json:"tenant"`
 }
+
+type RhcConnectionEvent struct {
+	ID    *string        `json:"id"`
+	RhcId *string        `json:"rhc_id"`
+	Extra datatypes.JSON `json:"extra"`
+	AvailabilityStatusEvent
+	AvailabilityStatusError *string  `json:"availability_status_error"`
+	SourceIds               []string `json:"source_ids"`
+
+	CreatedAt *string `json:"created_at"`
+	UpdatedAt *string `json:"updated_at"`
+}

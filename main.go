@@ -54,6 +54,7 @@ func runServer() {
 	getSourceTypeDao = getSourceTypeDaoWithoutTenant
 	getEndpointDao = getEndpointDaoWithTenant
 	getMetaDataDao = getMetaDataDaoWithTenant
+	getRhcConnectionDao = getDefaultRhcConnectionDao
 
 	// Set up marketplace's token management functions
 	dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId

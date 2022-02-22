@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -317,4 +318,56 @@ func SourceCheckAvailability(c echo.Context) error {
 	go func() { service.RequestAvailabilityCheck(src) }()
 
 	return c.JSON(http.StatusAccepted, map[string]interface{}{})
+}
+
+// SourcesRhcConnectionList returns all the connections related to a source.
+func SourcesRhcConnectionList(c echo.Context) error {
+	paramId := c.Param("source_id")
+
+	sourceId, err := strconv.ParseInt(paramId, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid id provided ", "400"))
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	// Check if the given source exists.
+	sourceDao, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	_, err = sourceDao.GetById(&sourceId)
+	if err != nil {
+		if errors.Is(err, util.ErrNotFoundEmpty) {
+			return err
+		}
+		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	rhcConnectionDao, err := getRhcConnectionDao(c)
+	if err != nil {
+		return err
+	}
+
+	// Get the list of sources for the given rhcConnection
+	rhcConnections, count, err := rhcConnectionDao.ListForSource(&sourceId, limit, offset, filters)
+	if err != nil {
+		return err
+	}
+
+	out := make([]interface{}, len(rhcConnections))
+	for i := 0; i < len(rhcConnections); i++ {
+		out[i] = rhcConnections[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }

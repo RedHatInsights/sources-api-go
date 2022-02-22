@@ -23,6 +23,7 @@ var (
 	mockSourceTypeDao      dao.SourceTypeDao
 	mockApplicationDao     dao.ApplicationDao
 	mockMetaDataDao        dao.MetaDataDao
+	mockRhcConnectionDao   dao.RhcConnectionDao
 )
 
 func TestMain(t *testing.M) {
@@ -41,6 +42,7 @@ func TestMain(t *testing.M) {
 		getApplicationTypeDao = getApplicationTypeDaoWithTenant
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
 		getMetaDataDao = getMetaDataDaoWithTenant
+		getRhcConnectionDao = getDefaultRhcConnectionDao
 
 		database.CreateFixtures()
 		err := dao.PopulateStaticTypeCache()
@@ -48,18 +50,20 @@ func TestMain(t *testing.M) {
 			panic("failed to populate static type cache")
 		}
 	} else {
-		mockSourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData}
+		mockSourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData, RelatedSources: fixtures.TestSourceData}
 		mockApplicationDao = &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}
 		mockEndpointDao = &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
 		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: fixtures.TestSourceTypeData}
 		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: fixtures.TestApplicationTypeData}
 		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: fixtures.TestMetaDataData}
+		mockRhcConnectionDao = &dao.MockRhcConnectionDao{RhcConnections: fixtures.TestRhcConnectionData, RelatedRhcConnections: fixtures.TestRhcConnectionData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }
 		getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) { return mockEndpointDao, nil }
 		getSourceTypeDao = func(c echo.Context) (dao.SourceTypeDao, error) { return mockSourceTypeDao, nil }
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) { return mockApplicationTypeDao, nil }
+		getRhcConnectionDao = func(c echo.Context) (dao.RhcConnectionDao, error) { return mockRhcConnectionDao, nil }
 
 		getMetaDataDao = func(c echo.Context) (dao.MetaDataDao, error) { return mockMetaDataDao, nil }
 	}

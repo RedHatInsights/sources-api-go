@@ -19,6 +19,8 @@ type SourceDao interface {
 	Tenant() *int64
 	NameExistsInCurrentTenant(name string) bool
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error)
+	// ListForRhcConnection gets all the sources that are related to a given rhcConnection id.
+	ListForRhcConnection(rhcConnectionId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 }
 
 type ApplicationDao interface {
@@ -99,4 +101,14 @@ type VaultClient interface {
 	List(path string) (*api.Secret, error)
 	Write(path string, data map[string]interface{}) (*api.Secret, error)
 	Delete(path string) (*api.Secret, error)
+}
+
+type RhcConnectionDao interface {
+	List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error)
+	GetById(id *int64) (*m.RhcConnection, error)
+	Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error)
+	Update(rhcConnection *m.RhcConnection) error
+	Delete(id *int64) (*m.RhcConnection, error)
+	// ListForSource gets all the related connections to the given source id.
+	ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error)
 }
