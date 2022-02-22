@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -58,6 +59,9 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			if id.Identity.System != nil && id.Identity.System["cn"] != nil {
 				c.Set("cert-auth", true)
 			}
+		} else {
+			// backup xrhid from account number (in case of psk auth)
+			c.Set("x-rh-identity", util.XRhIdentityWithAccountNumber(c.Request().Header.Get("x-rh-sources-account-number")))
 		}
 
 		return next(c)

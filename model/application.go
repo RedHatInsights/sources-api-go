@@ -20,7 +20,7 @@ type Application struct {
 	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
 	SuperkeyData            datatypes.JSON `json:"-"`
-	GotSuperkeyUpdate       bool           `json:"-"`
+	GotSuperkeyUpdate       bool           `json:"-" gorm:"-"`
 
 	TenantID int64
 	Tenant   Tenant

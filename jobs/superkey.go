@@ -55,6 +55,7 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 	l.Log.Infof("Sending SuperKey Delete request for source %v", sk.Id)
 
 	a := dao.GetApplicationDao(&sk.Tenant)
+
 	apps, _, err := a.SubCollectionList(&m.Source{ID: id}, 100, 0, make([]util.Filter, 0))
 	if err != nil {
 		return fmt.Errorf("failed to list applications for source: %v", err)
@@ -75,6 +76,7 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 
 	// destroy the source after waiting 15 seconds
 	Enqueue(&AsyncDestroyJob{
+		Tenant:      sk.Tenant,
 		WaitSeconds: 15,
 		Model:       "source",
 		Id:          id,
@@ -86,13 +88,14 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 func (sk SuperkeyDestroyJob) sendForApplication(id int64) error {
 	l.Log.Infof("Sending SuperKey Delete request for application %v", sk.Id)
 
-	err := service.SendSuperKeyDeleteRequest(sk.Identity, &m.Application{ID: id})
+	err := service.SendSuperKeyDeleteRequest(sk.Identity, &m.Application{ID: id, TenantID: sk.Tenant})
 	if err != nil {
 		return err
 	}
 
 	// destroy the application after waiting 15 seconds
 	Enqueue(&AsyncDestroyJob{
+		Tenant:      sk.Tenant,
 		WaitSeconds: 15,
 		Model:       "application",
 		Id:          id,

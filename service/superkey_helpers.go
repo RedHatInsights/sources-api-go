@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 	"gorm.io/datatypes"
@@ -17,7 +18,7 @@ func loadApplication(application *m.Application) (*m.Application, error) {
 
 	// re-pulling it from the db to make sure we have the full-version, as well
 	// as preloading any relations necessary.
-	app, err := appDao.GetByIdWithPreload(&application.ID, "Source", "Source.Tenant")
+	app, err := appDao.GetByIdWithPreload(&application.ID, "Source", "Source.Tenant", "Tenant")
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +135,7 @@ func parseSuperKeyData(data datatypes.JSON) (*superKeyData, error) {
 
 	stepsCompleted, ok := superkeyData["steps_completed"].(map[string]map[string]string)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for steps_completed %v", superkeyData["steps_completed"])
+		l.Log.Warnf("invalid type for steps_completed, continuing")
 	}
 
 	return &superKeyData{

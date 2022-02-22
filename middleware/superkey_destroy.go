@@ -20,7 +20,7 @@ import (
 */
 func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tenantId, ok := c.Get("tenantId").(*int64)
+		tenantId, ok := c.Get("tenantID").(int64)
 		if !ok {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
@@ -39,7 +39,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
-				Tenant:   *tenantId,
+				Tenant:   tenantId,
 				Identity: xrhid,
 				Model:    "source",
 				Id:       id,
@@ -54,7 +54,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 
 func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tenantId, ok := c.Get("tenantId").(*int64)
+		tenantId, ok := c.Get("tenantID").(int64)
 		if !ok {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
@@ -73,7 +73,7 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
-				Tenant:   *tenantId,
+				Tenant:   tenantId,
 				Identity: xrhid,
 				Model:    "application",
 				Id:       id,

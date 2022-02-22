@@ -91,7 +91,7 @@ func SendSuperKeyDeleteRequest(identity string, application *m.Application) erro
 	}
 
 	req := superkey.DestroyRequest{
-		TenantID:       strconv.FormatInt(application.TenantID, 10),
+		TenantID:       application.Tenant.ExternalTenant,
 		SuperKey:       superKey.ID,
 		GUID:           skData.GUID,
 		Provider:       skData.Provider,

@@ -15,6 +15,7 @@ func Init() {
 	// the jobs for anything we like as long as it can speak through a channel
 	// (maybe redis groups someday.)
 	ch = make(chan Job)
+	l.Log.Infof("Starting Worker for Delayed Jobs")
 	go RunWorker(ch)
 }
 
