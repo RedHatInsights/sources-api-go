@@ -19,9 +19,9 @@ func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 		applicationIDs = append(applicationIDs, value.ID)
 	}
 
-	result := DB.Preload("Tenant").Where("application_id IN ?", applicationIDs).Find(&applicationAuthentications)
-	if result.Error != nil {
-		return nil, result.Error
+	err := DB.Preload("Tenant").Where("application_id IN ?", applicationIDs).Find(&applicationAuthentications).Error
+	if err != nil {
+		return nil, err
 	}
 
 	return applicationAuthentications, nil
