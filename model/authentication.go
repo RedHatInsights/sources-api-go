@@ -5,12 +5,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type Authentication struct {
 	AvailabilityStatus
 
+	DbID      int64     `gorm:"primaryKey; column:id" json:"-"`
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 
@@ -18,7 +20,7 @@ type Authentication struct {
 	AuthType                string                 `json:"authtype"`
 	Username                string                 `json:"username"`
 	Password                string                 `json:"password"`
-	Extra                   map[string]interface{} `json:"extra,omitempty"`
+	Extra                   map[string]interface{} `gorm:"type:jsonb" json:"extra,omitempty"`
 	Version                 string                 `json:"version"`
 	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
 
@@ -47,8 +49,17 @@ func (auth *Authentication) BulkMessage() map[string]interface{} {
 
 func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
+
+	// Depending on whether the authentication comes from Vault or the DB, we must return one ID or another.
+	var id string
+	if config.Get().VaultOn {
+		id = auth.ID
+	} else {
+		id = strconv.FormatInt(auth.DbID, 10)
+	}
+
 	return &AuthenticationResponse{
-		ID:                      auth.ID,
+		ID:                      id,
 		CreatedAt:               util.DateTimeToRFC3339(auth.CreatedAt),
 		Name:                    auth.Name,
 		Version:                 auth.Version,
@@ -64,8 +75,17 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
+
+	// Depending on whether the authentication comes from Vault or the DB, we must return one ID or another.
+	var id string
+	if config.Get().VaultOn {
+		id = auth.ID
+	} else {
+		id = strconv.FormatInt(auth.DbID, 10)
+	}
+
 	return &AuthenticationInternalResponse{
-		ID:                      auth.ID,
+		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
 		Name:                    auth.Name,
 		Version:                 auth.Version,
@@ -111,9 +131,17 @@ func (auth *Authentication) ToEvent() interface{} {
 		LastAvailableAt: util.DateTimeToRecordFormat(auth.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(auth.LastCheckedAt)}
 
-	authEvent := &AuthenticationEvent{
+	// Depending on whether the authentication comes from Vault or the DB, we must return one ID or another.
+	var id string
+	if config.Get().VaultOn {
+		id = auth.ID
+	} else {
+		id = strconv.FormatInt(auth.DbID, 10)
+	}
+
+	return &AuthenticationEvent{
 		AvailabilityStatusEvent: asEvent,
-		ID:                      auth.ID,
+		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
 		Name:                    auth.Name,
 		AuthType:                auth.AuthType,
@@ -126,8 +154,6 @@ func (auth *Authentication) ToEvent() interface{} {
 		Tenant:                  &auth.Tenant.ExternalTenant,
 		SourceID:                auth.SourceID,
 	}
-
-	return authEvent
 }
 
 func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {

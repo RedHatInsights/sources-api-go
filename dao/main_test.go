@@ -86,6 +86,8 @@ func CreateFixtures(schema string) {
 	DB.Create(&fixtures.TestApplicationData)
 	DB.Create(&fixtures.TestApplicationAuthenticationData)
 
+	DB.Create(&fixtures.TestAuthenticationData)
+
 	UpdateTablesSequences(schema)
 }
 
@@ -117,6 +119,7 @@ func MigrateSchema() {
 		&m.RhcConnection{},
 		&m.SourceRhcConnection{},
 		&m.Application{},
+		&m.Authentication{},
 		&m.ApplicationAuthentication{},
 	)
 
@@ -165,6 +168,7 @@ func UpdateTablesSequences(schema string) {
 		"applications",
 		"endpoints",
 		"rhc_connections",
+		"authentications",
 		"application_authentications",
 	}
 

@@ -24,8 +24,14 @@ var GetAuthenticationDao func(*int64) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultAuthenticationDao(tenantId *int64) AuthenticationDao {
-	return &authenticationDaoImpl{
-		TenantID: tenantId,
+	if conf.VaultOn {
+		return &authenticationDaoImpl{
+			TenantID: tenantId,
+		}
+	} else {
+		return &authenticationDaoDbImpl{
+			TenantID: tenantId,
+		}
 	}
 }
 
