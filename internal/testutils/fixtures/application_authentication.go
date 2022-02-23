@@ -6,7 +6,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
-var TestApplicationAuthentication = []m.ApplicationAuthentication{
+var TestApplicationAuthenticationData = []m.ApplicationAuthentication{
 	{
 		ID:                1,
 		VaultPath:         fmt.Sprintf("Application_%d_%v", TestTenantData[0].Id, TestAuthenticationData[0].ID),

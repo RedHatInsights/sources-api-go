@@ -17,13 +17,14 @@ import (
 )
 
 var (
-	mockSourceDao          dao.SourceDao
-	mockApplicationTypeDao dao.ApplicationTypeDao
-	mockEndpointDao        dao.EndpointDao
-	mockSourceTypeDao      dao.SourceTypeDao
-	mockApplicationDao     dao.ApplicationDao
-	mockMetaDataDao        dao.MetaDataDao
-	mockRhcConnectionDao   dao.RhcConnectionDao
+	mockSourceDao                    dao.SourceDao
+	mockApplicationTypeDao           dao.ApplicationTypeDao
+	mockEndpointDao                  dao.EndpointDao
+	mockSourceTypeDao                dao.SourceTypeDao
+	mockApplicationDao               dao.ApplicationDao
+	mockMetaDataDao                  dao.MetaDataDao
+	mockRhcConnectionDao             dao.RhcConnectionDao
+	mockApplicationAuthenticationDao dao.ApplicationAuthenticationDao
 )
 
 func TestMain(t *testing.M) {
@@ -43,6 +44,7 @@ func TestMain(t *testing.M) {
 		getSourceTypeDao = getSourceTypeDaoWithoutTenant
 		getMetaDataDao = getMetaDataDaoWithTenant
 		getRhcConnectionDao = getDefaultRhcConnectionDao
+		getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
 
 		database.CreateFixtures()
 		err := dao.PopulateStaticTypeCache()
@@ -57,15 +59,19 @@ func TestMain(t *testing.M) {
 		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: fixtures.TestApplicationTypeData}
 		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: fixtures.TestMetaDataData}
 		mockRhcConnectionDao = &dao.MockRhcConnectionDao{RhcConnections: fixtures.TestRhcConnectionData, RelatedRhcConnections: fixtures.TestRhcConnectionData}
+		mockApplicationAuthenticationDao = &dao.MockApplicationAuthenticationDao{ApplicationAuthentications: fixtures.TestApplicationAuthenticationData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }
 		getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) { return mockEndpointDao, nil }
 		getSourceTypeDao = func(c echo.Context) (dao.SourceTypeDao, error) { return mockSourceTypeDao, nil }
 		getApplicationTypeDao = func(c echo.Context) (dao.ApplicationTypeDao, error) { return mockApplicationTypeDao, nil }
-		getRhcConnectionDao = func(c echo.Context) (dao.RhcConnectionDao, error) { return mockRhcConnectionDao, nil }
-
 		getMetaDataDao = func(c echo.Context) (dao.MetaDataDao, error) { return mockMetaDataDao, nil }
+		getRhcConnectionDao = func(c echo.Context) (dao.RhcConnectionDao, error) { return mockRhcConnectionDao, nil }
+		getApplicationAuthenticationDao = func(c echo.Context) (dao.ApplicationAuthenticationDao, error) {
+			return mockApplicationAuthenticationDao, nil
+		}
+
 	}
 
 	code := t.Run()
