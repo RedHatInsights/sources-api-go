@@ -329,24 +329,12 @@ func ResourceJSONFor(resourceType string, resourceID string) []byte {
 	return TransformDateFieldsInJSONForResource(resourceType, resourceID, content)
 }
 
-func JSONBytesEqual(a, b []byte) (bool, error) {
-	var j, j2 interface{}
-	if err := json.Unmarshal(a, &j); err != nil {
-		return false, err
-	}
-	if err := json.Unmarshal(b, &j2); err != nil {
-		return false, err
-	}
-	return reflect.DeepEqual(j2, j), nil
-}
-
 func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
 	streamProducerSender.RaiseEventCalled = true
 	var err error
 
 	for _, data := range testData {
 		if streamProducerSender.ResourceType == data.ResourceType && streamProducerSender.ResourceID == data.ResourceID {
-			var isResult bool
 			var expectedData []byte
 			if eventType == "Records.update" {
 				expectedData = BulkMessageFor(streamProducerSender.ResourceType, streamProducerSender.ResourceID)
@@ -354,8 +342,7 @@ func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, 
 				expectedData = ResourceJSONFor(streamProducerSender.ResourceType, streamProducerSender.ResourceID)
 			}
 
-			isResult, err = JSONBytesEqual(payload, expectedData)
-			if isResult != true {
+			if reflect.DeepEqual(payload, expectedData) {
 				errMsg := "error in raising event of type %s with resource type %s.\n" +
 					"JSON payloads are not same:\n\n" +
 					"Expected: %s \n" +
