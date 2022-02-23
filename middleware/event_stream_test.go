@@ -7,6 +7,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/kafka"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -26,14 +27,26 @@ func (m *mockSender) RaiseEvent(_ string, b []byte, headers []kafka.Header) erro
 	return nil
 }
 
+type fakeEvent struct {
+	raised bool
+}
+
+type fakeEventEvent struct {
+	Raised bool `json:"raised"`
+}
+
+func (f *fakeEvent) ToEvent() interface{} {
+	return fakeEventEvent{Raised: f.raised}
+}
+
 func TestRaiseEvent(t *testing.T) {
 	s := mockSender{}
-	producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
 		c.Set("event_type", "Thing.create")
-		c.Set("resource", map[string]interface{}{"raised": true})
+		c.Set("resource", &fakeEvent{raised: true})
 		return c.NoContent(http.StatusNoContent)
 	})
 
@@ -53,7 +66,7 @@ func TestRaiseEvent(t *testing.T) {
 
 func TestRaiseEventWithHeaders(t *testing.T) {
 	s := mockSender{}
-	producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
 		"psk-account":   "1234",
 		"x-rh-identity": "asdfasdf",
@@ -61,7 +74,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 
 	f := raiseMiddleware(func(c echo.Context) error {
 		c.Set("event_type", "Thing.create")
-		c.Set("resource", map[string]interface{}{"raised": true})
+		c.Set("resource", &fakeEvent{raised: true})
 		return c.NoContent(http.StatusNoContent)
 	})
 
@@ -92,12 +105,12 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 
 func TestRaiseEventBody(t *testing.T) {
 	s := mockSender{}
-	producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
 		c.Set("event_type", "Thing.create")
-		c.Set("resource", map[string]interface{}{"raised": true})
+		c.Set("resource", &fakeEvent{raised: true})
 		return c.NoContent(http.StatusNoContent)
 	})
 
@@ -121,7 +134,7 @@ func TestRaiseEventBody(t *testing.T) {
 
 func TestNoRaiseEvent(t *testing.T) {
 	s := mockSender{}
-	producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
@@ -144,7 +157,7 @@ func TestNoRaiseEvent(t *testing.T) {
 
 func TestSkipOnContext(t *testing.T) {
 	s := mockSender{}
-	producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
