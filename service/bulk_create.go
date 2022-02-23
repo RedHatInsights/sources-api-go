@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -372,4 +373,59 @@ func linkupEndpoint(name string, endpoints []m.Endpoint) (int64, error) {
 	}
 
 	return 0, fmt.Errorf("failed to find endpoint for hostname %v", name)
+}
+
+// send all the messages on the event-stream for what we created. this involves
+// doing some checks for superkey related things etc.
+func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity string) {
+	// do this async, since it could potentially take a while.
+	go func() {
+		for i := range out.Sources {
+			src := out.Sources[i]
+			err := RaiseEvent("Source.create", &src, headers)
+			if err != nil {
+				l.Log.Warnf("Failed to raise event: %v", err)
+			}
+		}
+
+		for i := range out.Endpoints {
+			endpt := out.Endpoints[i]
+			err := RaiseEvent("Endpoint.create", &endpt, headers)
+			if err != nil {
+				l.Log.Warnf("Failed to raise event: %v", err)
+			}
+		}
+
+		for i := range out.Applications {
+			app := out.Applications[i]
+			if out.Sources[0].AppCreationWorkflow == m.AccountAuth {
+				err := SendSuperKeyCreateRequest(identity, &app)
+				if err != nil {
+					l.Log.Warnf("Error sending superkey create request: %v", err)
+				}
+			} else {
+				// only raise create if it was _NOT_ a superkey source
+				err := RaiseEvent("Application.create", &app, headers)
+				if err != nil {
+					l.Log.Warnf("Failed to raise event: %v", err)
+				}
+			}
+		}
+
+		for i := range out.ApplicationAuthentications {
+			appAuth := out.ApplicationAuthentications[i]
+			err := RaiseEvent("ApplicationAuthentication.create", &appAuth, headers)
+			if err != nil {
+				l.Log.Warnf("Failed to raise event: %v", err)
+			}
+		}
+
+		for i := range out.Authentications {
+			auth := out.Authentications[i]
+			err := RaiseEvent("Authentication.create", &auth, headers)
+			if err != nil {
+				l.Log.Warnf("Failed to raise event: %v", err)
+			}
+		}
+	}()
 }

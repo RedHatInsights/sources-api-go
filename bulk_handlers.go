@@ -26,5 +26,11 @@ func BulkCreate(c echo.Context) error {
 		return err
 	}
 
+	xrhid, ok := c.Get("x-rh-identity").(string)
+	if !ok {
+		c.Logger().Warnf("bad xrhid %v", c.Get("x-rh-identity"))
+	}
+	service.SendBulkMessages(output, service.ForwadableHeaders(c), xrhid)
+
 	return c.JSON(http.StatusCreated, output.ToResponse())
 }
