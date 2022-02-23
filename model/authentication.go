@@ -1,12 +1,15 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/datatypes"
 )
 
 type Authentication struct {
@@ -20,7 +23,8 @@ type Authentication struct {
 	AuthType                string                 `json:"authtype"`
 	Username                string                 `json:"username"`
 	Password                string                 `json:"password"`
-	Extra                   map[string]interface{} `gorm:"type:jsonb" json:"extra,omitempty"`
+	Extra                   map[string]interface{} `gorm:"-" json:"extra,omitempty"`
+	ExtraDb                 datatypes.JSON         `gorm:"column:extra"`
 	Version                 string                 `json:"version"`
 	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
 
@@ -50,14 +54,7 @@ func (auth *Authentication) BulkMessage() map[string]interface{} {
 func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 
-	// Depending on whether the authentication comes from Vault or the DB, we must return one ID or another.
-	var id string
-	if config.Get().VaultOn {
-		id = auth.ID
-	} else {
-		id = strconv.FormatInt(auth.DbID, 10)
-	}
-
+	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationResponse{
 		ID:                      id,
 		CreatedAt:               util.DateTimeToRFC3339(auth.CreatedAt),
@@ -65,7 +62,7 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
 		Username:                auth.Username,
-		Extra:                   auth.Extra,
+		Extra:                   extra,
 		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
@@ -76,14 +73,7 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 
-	// Depending on whether the authentication comes from Vault or the DB, we must return one ID or another.
-	var id string
-	if config.Get().VaultOn {
-		id = auth.ID
-	} else {
-		id = strconv.FormatInt(auth.DbID, 10)
-	}
-
+	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationInternalResponse{
 		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
@@ -92,7 +82,7 @@ func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse
 		AuthType:                auth.AuthType,
 		Username:                auth.Username,
 		Password:                auth.Password,
-		Extra:                   auth.Extra,
+		Extra:                   extra,
 		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
@@ -131,14 +121,7 @@ func (auth *Authentication) ToEvent() interface{} {
 		LastAvailableAt: util.DateTimeToRecordFormat(auth.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(auth.LastCheckedAt)}
 
-	// Depending on whether the authentication comes from Vault or the DB, we must return one ID or another.
-	var id string
-	if config.Get().VaultOn {
-		id = auth.ID
-	} else {
-		id = strconv.FormatInt(auth.DbID, 10)
-	}
-
+	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationEvent{
 		AvailabilityStatusEvent: asEvent,
 		ID:                      id,
@@ -147,7 +130,7 @@ func (auth *Authentication) ToEvent() interface{} {
 		AuthType:                auth.AuthType,
 		Version:                 auth.Version,
 		Username:                auth.Username,
-		Extra:                   auth.Extra,
+		Extra:                   extra,
 		AvailabilityStatusError: &auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              auth.ResourceID,
@@ -178,4 +161,23 @@ func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 
 func (auth *Authentication) Path() string {
 	return fmt.Sprintf("secret/data/%d/%s_%v_%s", auth.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
+}
+
+// mapIdExtraFields returns the ID and the Extra fields ready to be assigned to the response model, depending on
+func mapIdExtraFields(auth *Authentication) (string, map[string]interface{}) {
+	var id string
+	var extra map[string]interface{}
+	if config.Get().VaultOn {
+		id = auth.ID
+		extra = auth.Extra
+	} else {
+		id = strconv.FormatInt(auth.DbID, 10)
+
+		err := json.Unmarshal(auth.ExtraDb, &extra)
+		if err != nil {
+			logger.Log.Errorf(`could not unmarshal "extra" field from authentication with ID "%s"`, id)
+		}
+	}
+
+	return id, extra
 }

@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type AuthenticationResponse struct {
 	ID        string `json:"id"`
