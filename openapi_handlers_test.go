@@ -30,7 +30,7 @@ func TestOpenApiReturn(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	err = PublicOpenApiv31(c)
+	err = PublicOpenApi("v3.1")(c)
 	if err != nil {
 		t.Error(err)
 	}

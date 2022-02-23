@@ -10,15 +10,13 @@ import (
 //go:embed public
 var publicDocs embed.FS
 
-func PublicOpenApiv31(c echo.Context) error {
-	bytes, err := readOpenApiJson("public/openapi-3-v3.1.json")
-	if err != nil {
-		return err
+func PublicOpenApi(version string) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		bytes, err := publicDocs.ReadFile("public/openapi-3-" + version + ".json")
+		if err != nil {
+			return err
+		}
+
+		return c.JSONBlob(http.StatusOK, bytes)
 	}
-
-	return c.JSONBlob(http.StatusOK, bytes)
-}
-
-func readOpenApiJson(filename string) ([]byte, error) {
-	return publicDocs.ReadFile(filename)
 }
