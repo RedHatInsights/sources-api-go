@@ -7,9 +7,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// RaiseEventMiddleware calls the "RaiseEvent" function once the previous handler has succeeded. It grabs the resource
-// and the event type from the context.
-func RaiseEventMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+// RaiseEvent calls the "RaiseEvent" function once the previous handler has succeeded. It grabs the resource and the
+// event type from the context.
+func RaiseEvent(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// first call the handler function (or the next middlware)
 		err := next(c)

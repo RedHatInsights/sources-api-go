@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var raiseMiddleware = RaiseEventMiddleware
+var raiseMiddleware = RaiseEvent
 
 type mockSender struct {
 	hit     int

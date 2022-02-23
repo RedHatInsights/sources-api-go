@@ -14,7 +14,7 @@ var listMiddleware = []echo.MiddlewareFunc{
 }
 
 var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{middleware.Tenancy}, listMiddleware...)
-var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.PermissionCheck, middleware.RaiseEventMiddleware}
+var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.PermissionCheck, middleware.RaiseEvent}
 var permissionWithListMiddleware = append(listMiddleware, middleware.PermissionCheck)
 
 func setupRoutes(e *echo.Echo) {
