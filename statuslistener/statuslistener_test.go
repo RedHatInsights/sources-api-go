@@ -103,6 +103,9 @@ func PopulateDateFieldsFrom(resource interface{}) DateFields {
 		dateFields.LastAvailableAt = typedResource.LastAvailableAt
 		dateFields.LastCheckedAt = typedResource.LastCheckedAt
 		dateFields.UpdatedAt = typedResource.UpdatedAt
+	case *m.ApplicationAuthentication:
+		dateFields.CreatedAt = typedResource.CreatedAt
+		dateFields.UpdatedAt = typedResource.UpdatedAt
 	default:
 		panic("unable to find type")
 	}
@@ -130,6 +133,18 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		res = res.Find(source)
 		bulkMessage["applications"] = source.Applications
 		bulkMessage["endpoints"] = source.Endpoints
+
+		appIDs := make([]int64, len(source.Applications))
+		for index, application := range source.Applications {
+			appIDs[index] = application.ID
+		}
+
+		var aa []m.ApplicationAuthentication
+		if len(appIDs) > 0 {
+			dao.DB.Where("application_id IN ?", appIDs).Find(&aa)
+			bulkMessage["application_authentications"] = aa
+		}
+
 		src = source
 	case "Application":
 		application := &m.Application{ID: id}
@@ -157,6 +172,18 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		if err != nil {
 			panic("error in adding authentications: " + err.Error())
 		}
+
+		appIDs := make([]int64, len(application.Source.Applications))
+		for index, app := range application.Source.Applications {
+			appIDs[index] = app.ID
+		}
+
+		var aa []m.ApplicationAuthentication
+		if len(appIDs) > 0 {
+			dao.DB.Where("application_id IN ?", appIDs).Find(&aa)
+			bulkMessage["application_authentications"] = aa
+		}
+
 		src = application
 	case "Endpoint":
 		endpoint := &m.Endpoint{ID: id}
@@ -247,6 +274,27 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 	}
 
 	contentMap["endpoints"] = endpoints
+
+	var applicationAuthentications []interface{}
+
+	if applicationAuthenticationsBulkMessage, ok := bulkMessage["application_authentications"].([]m.ApplicationAuthentication); ok {
+		for index, applicationAuthentication := range applicationAuthenticationsBulkMessage {
+			dateFields = PopulateDateFieldsFrom(&applicationAuthentication)
+			if ap, ok := contentMap["application_authentications"].([]interface{}); ok {
+				upd := UpdateDateFieldsTo(ap[index].(map[string]interface{}), dateFields)
+				applicationAuthentications = append(applicationAuthentications, upd)
+			} else {
+				panic("type assertion error: + " + err.Error())
+			}
+
+		}
+	}
+
+	if applicationAuthentications != nil {
+		contentMap["application_authentications"] = applicationAuthentications
+	} else {
+		contentMap["application_authentications"] = []m.ApplicationAuthentication{}
+	}
 
 	contentJSON, err := json.Marshal(contentMap)
 	if err != nil {

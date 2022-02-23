@@ -11,6 +11,46 @@ type ApplicationAuthenticationDaoImpl struct {
 	TenantID *int64
 }
 
+func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplications(applications []m.Application) ([]m.ApplicationAuthentication, error) {
+	var applicationAuthentications []m.ApplicationAuthentication
+
+	applicationIDs := make([]int64, 0)
+	for _, value := range applications {
+		applicationIDs = append(applicationIDs, value.ID)
+	}
+
+	err := DB.Preload("Tenant").Where("application_id IN ?", applicationIDs).Find(&applicationAuthentications).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return applicationAuthentications, nil
+}
+
+func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentications(authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
+	var applicationAuthentications []m.ApplicationAuthentication
+
+	authenticationUIDs := make([]string, 0)
+	for _, value := range authentications {
+		authenticationUIDs = append(authenticationUIDs, value.ID)
+	}
+
+	result := DB.Preload("Tenant").Where("authentication_uid IN ?", authenticationUIDs).Find(&applicationAuthentications)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return applicationAuthentications, nil
+}
+
+func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByResource(resourceType string, applications []m.Application, authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
+	if resourceType == "Source" {
+		return a.ApplicationAuthenticationsByApplications(applications)
+	}
+
+	return a.ApplicationAuthenticationsByAuthentications(authentications)
+}
+
 func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error) {
 	appAuths := make([]m.ApplicationAuthentication, 0, limit)
 	query := DB.Debug().Model(&m.ApplicationAuthentication{}).

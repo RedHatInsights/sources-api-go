@@ -65,8 +65,6 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 
 	bulkMessage["applications"] = applications
 
-	bulkMessage["application_authentications"] = []m.ApplicationAuthenticationEvent{}
-
 	authDao := &AuthenticationDaoImpl{TenantID: &source.TenantID}
 	authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 	if err != nil {
@@ -79,6 +77,20 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 		authentications[i] = authenticationsByResource[i].ToEvent()
 	}
 
+	applicationAuthenticationDao := &ApplicationAuthenticationDaoImpl{TenantID: &source.TenantID}
+	applicationAuthenticationsFromResource, err := applicationAuthenticationDao.ApplicationAuthenticationsByResource(authentication.ResourceType, source.Applications, authenticationsByResource)
+
+	if err != nil {
+		return nil, err
+	}
+
+	applicationAuthentications := make([]interface{}, len(applicationAuthenticationsFromResource))
+	for i := 0; i < len(applicationAuthenticationsFromResource); i++ {
+		applicationAuthenticationsFromResource[i].Tenant = source.Tenant
+		applicationAuthentications[i] = applicationAuthenticationsFromResource[i].ToEvent()
+	}
+
+	bulkMessage["application_authentications"] = applicationAuthentications
 	bulkMessage["authentications"] = authentications
 
 	return bulkMessage, nil
