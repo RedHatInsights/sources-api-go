@@ -180,7 +180,7 @@ parameters:
   displayName: Rbac Service Port
   name: RBAC_PORT
   required: true
-  value: '8000'
+  value: '8080'
 - description: Scheme to use for the RBAC service URL. Can be either http or https
   displayName: Rbac Service Scheme
   name: RBAC_SCHEME
@@ -190,7 +190,7 @@ parameters:
   displayName: Rbac path
   name: RBAC_PATH
   required: true
-  value: /api/rbac/v1/
+  value: /api/rbac/v1
 - description: Host to user for the marketplace URL.
   displayName: Marketplace host URL
   name: MARKETPLACE_HOST
