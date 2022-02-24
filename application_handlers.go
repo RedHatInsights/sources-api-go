@@ -22,7 +22,7 @@ func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
 		return nil, err
 	}
 
-	return &dao.ApplicationDaoImpl{TenantID: &tenantId}, nil
+	return dao.GetApplicationDao(&tenantId), nil
 }
 
 func ApplicationList(c echo.Context) error {

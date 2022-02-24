@@ -8,11 +8,27 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-type ApplicationDaoImpl struct {
+// GetApplicationDao is a function definition that can be replaced in runtime in case some other DAO
+// provider is needed.
+var GetApplicationDao func(*int64) ApplicationDao
+
+// getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
+func getDefaultApplicationDao(tenantId *int64) ApplicationDao {
+	return &applicationDaoImpl{
+		TenantID: tenantId,
+	}
+}
+
+// init sets the default DAO implementation so that other packages can request it easily.
+func init() {
+	GetApplicationDao = getDefaultApplicationDao
+}
+
+type applicationDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *ApplicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
+func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
 	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
@@ -36,7 +52,7 @@ func (a *ApplicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 	return applications, count, nil
 }
 
-func (a *ApplicationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
+func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
 	query := DB.Debug().Model(&m.Application{}).
 		Offset(offset).
@@ -57,7 +73,7 @@ func (a *ApplicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 	return applications, count, nil
 }
 
-func (a *ApplicationDaoImpl) GetById(id *int64) (*m.Application, error) {
+func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
 	result := DB.First(&app)
 	if result.Error != nil {
@@ -67,19 +83,19 @@ func (a *ApplicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	return app, nil
 }
 
-func (a *ApplicationDaoImpl) Create(app *m.Application) error {
+func (a *applicationDaoImpl) Create(app *m.Application) error {
 	app.TenantID = *a.TenantID
 	result := DB.Create(app)
 
 	return result.Error
 }
 
-func (a *ApplicationDaoImpl) Update(app *m.Application) error {
+func (a *applicationDaoImpl) Update(app *m.Application) error {
 	result := DB.Updates(app)
 	return result.Error
 }
 
-func (a *ApplicationDaoImpl) Delete(id *int64) (*m.Application, error) {
+func (a *applicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
 	result := DB.Where("tenant_id = ?", a.TenantID).First(app)
 	if result.Error != nil {
@@ -93,11 +109,11 @@ func (a *ApplicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 	return app, nil
 }
 
-func (a *ApplicationDaoImpl) Tenant() *int64 {
+func (a *applicationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
-func (a *ApplicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	application := &m.Application{ID: resource.ResourceID}
 	result := DB.Preload("Source").Find(&application)
 
@@ -112,7 +128,7 @@ func (a *ApplicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 	return BulkMessageFromSource(&application.Source, authentication)
 }
 
-func (a *ApplicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
 	result := DB.Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("application not found %v", resource)
@@ -121,14 +137,14 @@ func (a *ApplicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttr
 	return nil
 }
 
-func (a *ApplicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
+func (a *applicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
 	result := DB.Preload("Tenant").Find(&app)
 
 	return app, result.Error
 }
 
-func (a *ApplicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
+func (a *applicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
 	app, err := a.FindWithTenant(&resource.ResourceID)
 	data, _ := json.Marshal(app.ToEvent())
 
