@@ -21,9 +21,9 @@ func getMetaDataDaoWithTenant(c echo.Context) (dao.MetaDataDao, error) {
 	}
 
 	if tenantId == 0 && err == nil {
-		return &dao.MetaDataDaoImpl{}, nil
+		return dao.GetMetaDataDao(nil), nil
 	} else {
-		return &dao.MetaDataDaoImpl{TenantID: &tenantId}, nil
+		return dao.GetMetaDataDao(&tenantId), nil
 	}
 }
 
