@@ -16,15 +16,13 @@ import (
 var getApplicationDao func(c echo.Context) (dao.ApplicationDao, error)
 
 func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
-	var tenantID int64
-	var ok bool
+	tenantId, err := getTenantFromEchoContext(c)
 
-	tenantVal := c.Get("tenantID")
-	if tenantID, ok = tenantVal.(int64); !ok {
-		return nil, fmt.Errorf("failed to pull tenant from request")
+	if err != nil {
+		return nil, err
 	}
 
-	return &dao.ApplicationDaoImpl{TenantID: &tenantID}, nil
+	return &dao.ApplicationDaoImpl{TenantID: &tenantId}, nil
 }
 
 func ApplicationList(c echo.Context) error {

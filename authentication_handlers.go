@@ -13,15 +13,13 @@ import (
 var getAuthenticationDao func(c echo.Context) (dao.AuthenticationDao, error)
 
 func getAuthenticationDaoWithTenant(c echo.Context) (dao.AuthenticationDao, error) {
-	var tenantID int64
-	var ok bool
+	tenantId, err := getTenantFromEchoContext(c)
 
-	tenantVal := c.Get("tenantID")
-	if tenantID, ok = tenantVal.(int64); !ok {
-		return nil, fmt.Errorf("failed to pull tenant from request")
+	if err != nil {
+		return nil, err
 	}
 
-	return &dao.AuthenticationDaoImpl{TenantID: &tenantID}, nil
+	return &dao.AuthenticationDaoImpl{TenantID: &tenantId}, nil
 }
 
 func AuthenticationList(c echo.Context) error {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -16,15 +15,13 @@ import (
 var getRhcConnectionDao func(c echo.Context) (dao.RhcConnectionDao, error)
 
 func getDefaultRhcConnectionDao(c echo.Context) (dao.RhcConnectionDao, error) {
-	var tenantID int64
-	var ok bool
+	tenantId, err := getTenantFromEchoContext(c)
 
-	tenantVal := c.Get("tenantID")
-	if tenantID, ok = tenantVal.(int64); !ok {
-		return nil, fmt.Errorf("failed to pull tenant from request")
+	if err != nil {
+		return nil, err
 	}
 
-	return &dao.RhcConnectionDaoImpl{TenantID: tenantID}, nil
+	return &dao.RhcConnectionDaoImpl{TenantID: tenantId}, nil
 }
 
 func RhcConnectionList(c echo.Context) error {

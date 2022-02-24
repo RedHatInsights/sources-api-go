@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -14,15 +13,13 @@ import (
 var getApplicationAuthenticationDao func(c echo.Context) (dao.ApplicationAuthenticationDao, error)
 
 func getApplicationAuthenticationDaoWithTenant(c echo.Context) (dao.ApplicationAuthenticationDao, error) {
-	var tenantID int64
-	var ok bool
+	tenantId, err := getTenantFromEchoContext(c)
 
-	tenantVal := c.Get("tenantID")
-	if tenantID, ok = tenantVal.(int64); !ok {
-		return nil, fmt.Errorf("failed to pull tenant from request")
+	if err != nil {
+		return nil, err
 	}
 
-	return &dao.ApplicationAuthenticationDaoImpl{TenantID: &tenantID}, nil
+	return &dao.ApplicationAuthenticationDaoImpl{TenantID: &tenantId}, nil
 }
 
 func ApplicationAuthenticationList(c echo.Context) error {

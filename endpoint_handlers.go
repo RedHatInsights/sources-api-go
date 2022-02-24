@@ -16,15 +16,13 @@ import (
 var getEndpointDao func(c echo.Context) (dao.EndpointDao, error)
 
 func getEndpointDaoWithTenant(c echo.Context) (dao.EndpointDao, error) {
-	var tenantID int64
-	var ok bool
+	tenantId, err := getTenantFromEchoContext(c)
 
-	tenantVal := c.Get("tenantID")
-	if tenantID, ok = tenantVal.(int64); !ok {
-		return nil, fmt.Errorf("failed to pull tenant from request")
+	if err != nil {
+		return nil, err
 	}
 
-	return &dao.EndpointDaoImpl{TenantID: &tenantID}, nil
+	return &dao.EndpointDaoImpl{TenantID: &tenantId}, nil
 }
 
 func SourceListEndpoint(c echo.Context) error {
