@@ -22,7 +22,7 @@ func getEndpointDaoWithTenant(c echo.Context) (dao.EndpointDao, error) {
 		return nil, err
 	}
 
-	return &dao.EndpointDaoImpl{TenantID: &tenantId}, nil
+	return dao.GetEndpointDao(&tenantId), nil
 }
 
 func SourceListEndpoint(c echo.Context) error {

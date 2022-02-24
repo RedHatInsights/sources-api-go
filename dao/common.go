@@ -17,7 +17,7 @@ func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	case "Source":
 		resource = &SourceDaoImpl{}
 	case "Endpoint":
-		resource = &EndpointDaoImpl{}
+		resource = &endpointDaoImpl{}
 	case "Application":
 		resource = &applicationDaoImpl{}
 	case "Authentication":
