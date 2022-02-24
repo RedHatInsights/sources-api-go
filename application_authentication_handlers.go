@@ -43,7 +43,7 @@ func ApplicationAuthenticationList(c echo.Context) error {
 
 	applications, count, err := applicationDB.List(limit, offset, filters)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
 
@@ -63,7 +63,7 @@ func ApplicationAuthenticationGet(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	c.Logger().Infof("Getting ApplicationAuthentication ID %v", id)
