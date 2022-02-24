@@ -50,11 +50,8 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
 	}
 
 	kf := &kafka.Manager{Config: kafkaConfig}
-	err := kf.Consume(avs.ConsumeStatusMessage)
 
-	if err != nil {
-		l.Log.Errorf("Consumer kafka message error: %s", err.Error())
-	}
+	kf.Consume(avs.ConsumeStatusMessage)
 }
 
 func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Message) {

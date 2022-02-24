@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -37,20 +39,21 @@ func (manager *Manager) Producer() *kafka.Writer {
 
 	manager.producer = &kafka.Writer{
 		Addr:  kafka.TCP(manager.Config.KafkaBrokers...),
-		Topic: manager.Config.ProducerConfig.Topic,
+		Topic: config.Get().KafkaTopic(manager.Config.ProducerConfig.Topic),
 	}
 
 	return manager.producer
 }
 
-func (manager *Manager) Consume(consumerHandler func(Message)) error {
+func (manager *Manager) Consume(consumerHandler func(Message)) {
 	if manager.Consumer() == nil {
-		return fmt.Errorf("consumer is not initialized")
+		l.Log.Fatalf("consumer is not initialized")
 	}
 
 	for {
 		message, err := manager.Consumer().ReadMessage(context.Background())
 		if err != nil {
+			l.Log.Warnf("Error reading message: %v", err)
 			continue
 		}
 
@@ -66,7 +69,7 @@ func (manager *Manager) Consumer() *kafka.Reader {
 	manager.consumer = kafka.NewReader(kafka.ReaderConfig{
 		Brokers: manager.Config.KafkaBrokers,
 		GroupID: manager.ConsumerConfig.GroupID,
-		Topic:   manager.ConsumerConfig.Topic,
+		Topic:   config.Get().KafkaTopic(manager.ConsumerConfig.Topic),
 	})
 	return manager.consumer
 }
