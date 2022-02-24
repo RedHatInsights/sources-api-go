@@ -114,3 +114,8 @@ type RhcConnectionDao interface {
 	// ListForSource gets all the related connections to the given source id.
 	ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error)
 }
+
+type TenantDao interface {
+	GetOrCreateTenantID(accountNumber string) (*int64, error)
+	TenantByAccountNumber(accountNumber string) (*m.Tenant, error)
+}

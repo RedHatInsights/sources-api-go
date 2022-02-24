@@ -34,7 +34,9 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
-			t, err := dao.GetOrCreateTenantID(accountNumber)
+
+			tenantDao := dao.GetTenantDao()
+			t, err := tenantDao.GetOrCreateTenantID(accountNumber)
 			if err != nil {
 				return fmt.Errorf("failed to get or create tenant for request")
 			}
@@ -52,7 +54,9 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", identity.Identity.AccountNumber)
-			t, err := dao.GetOrCreateTenantID(identity.Identity.AccountNumber)
+
+			tenantDao := dao.GetTenantDao()
+			t, err := tenantDao.GetOrCreateTenantID(identity.Identity.AccountNumber)
 			if err != nil {
 				return fmt.Errorf("failed to get or create tenant for request: %v", err)
 			}
