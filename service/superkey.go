@@ -6,6 +6,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 )
@@ -88,6 +89,10 @@ func SendSuperKeyDeleteRequest(identity string, application *m.Application) erro
 	skData, err := parseSuperKeyData(application.SuperkeyData)
 	if err != nil {
 		return err
+	}
+	if skData == nil {
+		l.Log.Warnf("SuperKey Data was nil - cleaning up incomplete superkey")
+		return nil
 	}
 
 	req := superkey.DestroyRequest{

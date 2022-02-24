@@ -117,6 +117,10 @@ type superKeyData struct {
 }
 
 func parseSuperKeyData(data datatypes.JSON) (*superKeyData, error) {
+	if len(data) == 0 {
+		return nil, nil
+	}
+
 	superkeyData := make(map[string]interface{})
 	err := json.Unmarshal(data, &superkeyData)
 	if err != nil {
