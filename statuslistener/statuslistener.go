@@ -45,12 +45,13 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
 	kafkaConfig := kafka.Config{
 		KafkaBrokers: config.KafkaBrokers,
 		ConsumerConfig: kafka.ConsumerConfig{
-			Topic:   config.KafkaTopic(sourcesStatusTopic),
+			Topic:   sourcesStatusTopic,
 			GroupID: groupID},
 	}
 
 	kf := &kafka.Manager{Config: kafkaConfig}
 
+	l.Log.Infof("Started Availability Status Listener, listening on [%v]", kafkaConfig.ConsumerConfig.Topic)
 	kf.Consume(avs.ConsumeStatusMessage)
 }
 

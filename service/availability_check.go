@@ -26,7 +26,7 @@ type availabilityChecker interface {
 var (
 	// storing the satellite topic here since it doesn't change after initial
 	// startup.
-	satelliteTopic = config.Get().KafkaTopic("platform.topological-inventory.operations-satellite")
+	satelliteTopic = "platform.topological-inventory.operations-satellite"
 	// default availability checker instance
 	ac availabilityChecker = &availabilityCheckRequester{}
 )
