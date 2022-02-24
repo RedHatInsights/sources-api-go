@@ -15,8 +15,9 @@ import (
 
 const RHC_CONNECTION_SCHEMA = "rhc_connection"
 
-var rhcConnectionDao = RhcConnectionDaoImpl{
-	TenantID: fixtures.TestTenantData[0].Id,
+var tenantId = fixtures.TestTenantData[0].Id
+var rhcConnectionDao = rhcConnectionDaoImpl{
+	TenantID: &tenantId,
 }
 
 // setUpValidRhcConnection returns a valid RhcConnection object.
@@ -101,7 +102,8 @@ func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 
 	// Set up a different tenant, which should make the "find source by source ID and Tenant ID" return a not found
 	// error
-	rhcConnectionDao.TenantID = 12345
+	invalidTenantId := int64(12345)
+	rhcConnectionDao.TenantID = &invalidTenantId
 	_, got := rhcConnectionDao.Create(rhcConnection)
 
 	want := "source not found"
@@ -110,7 +112,7 @@ func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 	}
 
 	// Set the tenant back to its original value
-	rhcConnectionDao.TenantID = fixtures.TestTenantData[0].Id
+	rhcConnectionDao.TenantID = &tenantId
 	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
 }
 

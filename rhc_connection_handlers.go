@@ -21,7 +21,7 @@ func getDefaultRhcConnectionDao(c echo.Context) (dao.RhcConnectionDao, error) {
 		return nil, err
 	}
 
-	return &dao.RhcConnectionDaoImpl{TenantID: tenantId}, nil
+	return dao.GetRhcConnectionDao(&tenantId), nil
 }
 
 func RhcConnectionList(c echo.Context) error {
