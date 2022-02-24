@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -63,4 +64,26 @@ func setEventStreamResource(c echo.Context, model m.Event) {
 
 	c.Set("event_type", m+event)
 	c.Set("resource", model.ToEvent())
+}
+
+// getTenantFromEchoContext tries to extract the tenant from the echo context. If the "tenantID" is missing from the
+// context, then a default value and nil are returned as the int64 and error values.
+func getTenantFromEchoContext(c echo.Context) (int64, error) {
+	tenantValue := c.Get("tenantID")
+
+	// If no tenant is found in the context, that shouldn't imply an error.
+	if tenantValue == nil {
+		return 0, nil
+	}
+
+	// If the tenant is present, though, we must check that it is valid.
+	if tenantId, ok := tenantValue.(int64); ok {
+		if tenantId < 1 {
+			return 0, errors.New("incorrect tenant value provided")
+		}
+
+		return tenantId, nil
+	} else {
+		return 0, errors.New("the tenant was provided in an invalid format")
+	}
 }
