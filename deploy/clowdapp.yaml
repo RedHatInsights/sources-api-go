@@ -180,7 +180,7 @@ parameters:
   displayName: Rbac Service Port
   name: RBAC_PORT
   required: true
-  value: '8080'
+  value: '8000'
 - description: Scheme to use for the RBAC service URL. Can be either http or https
   displayName: Rbac Service Scheme
   name: RBAC_SCHEME
