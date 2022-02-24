@@ -98,8 +98,7 @@ func AuthenticationCreate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
-	// TODO: once ToEvent() is added for authentication un-comment this.
-	// setEventStreamResource(c, auth)
+	setEventStreamResource(c, auth)
 	return c.JSON(http.StatusCreated, auth.ToResponse())
 }
 
@@ -126,8 +125,7 @@ func AuthenticationUpdate(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
 
-	// TODO: once ToEvent() is added for authentication un-comment this.
-	// setEventStreamResource(c, auth)
+	setEventStreamResource(c, auth)
 	return c.JSON(http.StatusOK, auth.ToResponse())
 }
 
@@ -137,12 +135,11 @@ func AuthenticationDelete(c echo.Context) error {
 		return err
 	}
 
-	_, err = authDao.Delete(c.Param("uid"))
+	auth, err := authDao.Delete(c.Param("uid"))
 	if err != nil {
 		return err
 	}
 
-	// TODO: once ToEvent() is added for authentication un-comment this.
-	// setEventStreamResource(c, auth)
+	setEventStreamResource(c, auth)
 	return c.NoContent(http.StatusNoContent)
 }
