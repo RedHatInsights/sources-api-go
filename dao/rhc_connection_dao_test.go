@@ -322,3 +322,48 @@ func TestRhcConnectionListForSources(t *testing.T) {
 
 	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
 }
+
+// TestRhcConnectionRowsClosed is a regression test for https://issues.redhat.com/browse/RHCLOUD-18192. It tests that
+// when there are no rows to process from a result set, a proper response is returned instead of a "rows are closed"
+// error.
+func TestRhcConnectionRowsClosed(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures(RHC_CONNECTION_SCHEMA)
+
+	// Find all the connections that we will remove from the DB.
+	dbRhcConnections := make([]model.RhcConnection, 0)
+	err := DB.Debug().
+		Model(&model.RhcConnection{}).
+		Find(&dbRhcConnections).
+		Error
+
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	// Remove each connection so we can simulate a "rows are closed" situation, where the ".Next" function returns a
+	// "false" value.
+	for _, conn := range dbRhcConnections {
+		err = DB.Debug().
+			Delete(conn).
+			Error
+
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+	}
+
+	// The result should be an empty slice of connections, with no error thrown.
+	rhcConnections, _, err := rhcConnectionDao.List(10, 0, nil)
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	want := 0
+	got := len(rhcConnections)
+	if want != got {
+		t.Errorf(`want "%d" connections from the database, got "%d"`, want, got)
+	}
+
+	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+}

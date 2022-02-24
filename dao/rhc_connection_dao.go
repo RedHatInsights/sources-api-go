@@ -40,7 +40,9 @@ func (s *RhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 	// We call next as otherwise "ScanRows" complains, but since we're going to map the results to an array of
 	// map[string]interface{}, "ScanRows" will already scan every row into that array, thus freeing us from calling
 	// result.Next() again.
-	result.Next()
+	if !result.Next() {
+		return []m.RhcConnection{}, 0, nil
+	}
 
 	// Loop through the rows to map both the connection and its related sources.
 	var rows []map[string]interface{}
