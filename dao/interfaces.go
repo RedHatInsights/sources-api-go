@@ -44,6 +44,7 @@ type AuthenticationDao interface {
 	Update(src *m.Authentication) error
 	Delete(id string) (*m.Authentication, error)
 	Tenant() *int64
+	AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error)
 }
 
 type ApplicationAuthenticationDao interface {
