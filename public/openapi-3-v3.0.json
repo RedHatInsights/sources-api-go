@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "description": "Sources",
-    "version": "3.1.0",
+    "version": "3.0.0",
     "title": "Sources",
     "contact": {
       "email": "support@redhat.com"
@@ -14,41 +14,9 @@
   },
   "security": [
     {
-      "UserSecurity": []
-    }
-  ],
-  "tags": [
-    {
-      "description": "Endpoints related to application metadata",
-      "name": "app metadata"
-    },
-    {
-      "description": "Endpoints related to applications",
-      "name": "applications"
-    },
-    {
-      "description": "Endpoints related to application authentications",
-      "name": "application authentications"
-    },
-    {
-      "description": "Endpoints related to application types",
-      "name": "application types"
-    },
-    {
-      "description": "Endpoints related to authentication",
-      "name": "authentications"
-    },
-    {
-      "description": "Endpoints related to endpoints",
-      "name": "endpoints"
-    },
-    {
-      "description": "Endpoints related to sources",
-      "name": "sources"
-    },
-    {
-      "description": "Endpoints related to source types",
-      "name": "source types"
+      "UserSecurity": [
+
+      ]
     }
   ],
   "paths": {
@@ -82,8 +50,7 @@
               }
             }
           }
-        },
-        "tags": ["application authentications"]
+        }
       },
       "post": {
         "summary": "Create a new ApplicationAuthentication",
@@ -111,8 +78,7 @@
               }
             }
           }
-        },
-        "tags": ["application authentications"]
+        }
       }
     },
     "/application_authentications/{id}": {
@@ -146,8 +112,7 @@
               }
             }
           }
-        },
-        "tags": ["application authentications"]
+        }
       },
       "patch": {
         "summary": "Update an existing ApplicationAuthentication",
@@ -186,8 +151,7 @@
               }
             }
           }
-        },
-        "tags": ["application authentications"]
+        }
       },
       "delete": {
         "summary": "Delete an existing ApplicationAuthentication",
@@ -212,8 +176,7 @@
               }
             }
           }
-        },
-        "tags": ["application authentications"]
+        }
       }
     },
     "/application_types": {
@@ -246,8 +209,7 @@
               }
             }
           }
-        },
-        "tags": ["application types"]
+        }
       }
     },
     "/application_types/{id}": {
@@ -281,8 +243,7 @@
               }
             }
           }
-        },
-        "tags": ["application types"]
+        }
       }
     },
     "/application_types/{id}/sources": {
@@ -328,55 +289,7 @@
               }
             }
           }
-        },
-        "tags": ["application types"]
-      }
-    },
-    "/application_types/{id}/app_meta_data": {
-      "get": {
-        "summary": "List AppMetaData for ApplicationType",
-        "operationId": "listApplicationTypeAppMetaData",
-        "description": "Returns an array of AppMetaData objects",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/QueryLimit"
-          },
-          {
-            "$ref": "#/components/parameters/QueryOffset"
-          },
-          {
-            "$ref": "#/components/parameters/QueryFilter"
-          },
-          {
-            "$ref": "#/components/parameters/QuerySortBy"
-          },
-          {
-            "$ref": "#/components/parameters/ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "AppMetaData collection",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppMetaDataCollection"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["application types"]
+        }
       }
     },
     "/applications": {
@@ -409,8 +322,7 @@
               }
             }
           }
-        },
-        "tags": ["applications"]
+        }
       },
       "post": {
         "summary": "Create a new Application",
@@ -438,8 +350,7 @@
               }
             }
           }
-        },
-        "tags": ["applications"]
+        }
       }
     },
     "/applications/{id}": {
@@ -473,13 +384,12 @@
               }
             }
           }
-        },
-        "tags": ["applications"]
+        }
       },
       "patch": {
         "summary": "Update an existing Application",
         "operationId": "updateApplication",
-        "description": "Updates a Application object.\n\nIn case Application object is paused then allowed attributes for update action are: \n\n `availability_status, availability_status_error, last_checked_at, last_available_at`",
+        "description": "Updates a Application object",
         "parameters": [
           {
             "$ref": "#/components/parameters/ID"
@@ -500,16 +410,6 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
-            "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PartialUpdateResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request"
           },
@@ -522,19 +422,8 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Unprocessable Entity due to paused resource or paused related resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorUnpermittedParameters"
-                }
-              }
-            }
           }
-        },
-        "tags": ["applications"]
+        }
       },
       "delete": {
         "summary": "Delete an existing Application",
@@ -559,8 +448,7 @@
               }
             }
           }
-        },
-        "tags": ["applications"]
+        }
       }
     },
     "/applications/{id}/authentications": {
@@ -606,70 +494,7 @@
               }
             }
           }
-        },
-        "tags": ["applications"]
-      }
-    },
-    "/applications/{id}/pause": {
-      "post": {
-        "summary": "Pauses an Application",
-        "operationId": "pauseApplication",
-        "description": "Pauses an Application",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ID"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Application Paused"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["applications"]
-      }
-    },
-    "/applications/{id}/unpause": {
-      "post": {
-        "summary": "Un-Pauses an Application",
-        "operationId": "unpauseApplication",
-        "description": "Un-Pauses an Application",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ID"
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Application Un-Paused"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["applications"]
+        }
       }
     },
     "/authentications": {
@@ -702,8 +527,7 @@
               }
             }
           }
-        },
-        "tags": ["authentications"]
+        }
       },
       "post": {
         "summary": "Create a new Authentication",
@@ -731,8 +555,7 @@
               }
             }
           }
-        },
-        "tags": ["authentications"]
+        }
       }
     },
     "/authentications/{id}": {
@@ -766,13 +589,12 @@
               }
             }
           }
-        },
-        "tags": ["authentications"]
+        }
       },
       "patch": {
         "summary": "Update an existing Authentication",
         "operationId": "updateAuthentication",
-        "description": "Updates a Authentication object.\n\nIn case Authentication object is paused then allowed attributes for update action are: \n\n `availability_status, availability_status_error, last_checked_at, last_available_at`",
+        "description": "Updates a Authentication object",
         "parameters": [
           {
             "$ref": "#/components/parameters/ID"
@@ -793,16 +615,6 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
-            "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PartialUpdateResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request"
           },
@@ -815,19 +627,8 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Unprocessable Entity due to paused resource or paused related resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorUnpermittedParameters"
-                }
-              }
-            }
           }
-        },
-        "tags": ["authentications"]
+        }
       },
       "delete": {
         "summary": "Delete an existing Authentication",
@@ -852,8 +653,7 @@
               }
             }
           }
-        },
-        "tags": ["authentications"]
+        }
       }
     },
     "/endpoints": {
@@ -886,8 +686,7 @@
               }
             }
           }
-        },
-        "tags": ["endpoints"]
+        }
       },
       "post": {
         "summary": "Create a new Endpoint",
@@ -897,7 +696,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EndpointCreate"
+                "$ref": "#/components/schemas/Endpoint"
               }
             }
           },
@@ -915,8 +714,7 @@
               }
             }
           }
-        },
-        "tags": ["endpoints"]
+        }
       }
     },
     "/endpoints/{id}": {
@@ -950,13 +748,12 @@
               }
             }
           }
-        },
-        "tags": ["endpoints"]
+        }
       },
       "patch": {
         "summary": "Update an existing Endpoint",
         "operationId": "updateEndpoint",
-        "description": "Updates a Endpoint object.\n\nIn case Endpoint object is paused then allowed attributes for update action are: \n\n `availability_status, availability_status_error, last_checked_at, last_available_at`",
+        "description": "Updates a Endpoint object",
         "parameters": [
           {
             "$ref": "#/components/parameters/ID"
@@ -977,16 +774,6 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
-            "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PartialUpdateResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request"
           },
@@ -999,19 +786,8 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Unprocessable Entity due to paused resource or paused related resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorUnpermittedParameters"
-                }
-              }
-            }
           }
-        },
-        "tags": ["endpoints"]
+        }
       },
       "delete": {
         "summary": "Delete an existing Endpoint",
@@ -1036,8 +812,7 @@
               }
             }
           }
-        },
-        "tags": ["endpoints"]
+        }
       }
     },
     "/endpoints/{id}/authentications": {
@@ -1083,8 +858,7 @@
               }
             }
           }
-        },
-        "tags": ["endpoints"]
+        }
       }
     },
     "/graphql": {
@@ -1165,8 +939,7 @@
               }
             }
           }
-        },
-        "tags": ["source types"]
+        }
       }
     },
     "/source_types/{id}": {
@@ -1200,8 +973,7 @@
               }
             }
           }
-        },
-        "tags": ["source types"]
+        }
       }
     },
     "/source_types/{id}/sources": {
@@ -1247,8 +1019,7 @@
               }
             }
           }
-        },
-        "tags": ["source types"]
+        }
       }
     },
     "/sources": {
@@ -1281,8 +1052,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       },
       "post": {
         "summary": "Create a new Source",
@@ -1310,8 +1080,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       }
     },
     "/sources/{id}": {
@@ -1345,13 +1114,12 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       },
       "patch": {
         "summary": "Update an existing Source",
         "operationId": "updateSource",
-        "description": "Updates a Source object.\n\nIn case Source object is paused then allowed attributes for update action are: \n\n `availability_status, last_checked_at, last_available_at`",
+        "description": "Updates a Source object",
         "parameters": [
           {
             "$ref": "#/components/parameters/ID"
@@ -1372,16 +1140,6 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
-            "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PartialUpdateResponse"
-                }
-              }
-            }
-          },
           "400": {
             "description": "Bad request"
           },
@@ -1394,19 +1152,8 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Unprocessable Entity due to paused resource or paused related resource",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorUnpermittedParameters"
-                }
-              }
-            }
           }
-        },
-        "tags": ["sources"]
+        }
       },
       "delete": {
         "summary": "Delete an existing Source",
@@ -1418,9 +1165,6 @@
           }
         ],
         "responses": {
-          "202": {
-            "description": "Superkey Source Deletion queued."
-          },
           "204": {
             "description": "Source deleted"
           },
@@ -1434,8 +1178,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       }
     },
     "/sources/{id}/application_types": {
@@ -1481,8 +1224,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       }
     },
     "/sources/{id}/applications": {
@@ -1528,8 +1270,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       }
     },
     "/sources/{id}/authentications": {
@@ -1575,8 +1316,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       }
     },
     "/sources/{id}/check_availability": {
@@ -1603,8 +1343,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
+        }
       }
     },
     "/sources/{id}/endpoints": {
@@ -1650,171 +1389,7 @@
               }
             }
           }
-        },
-        "tags": ["sources"]
-      }
-    },
-    "/sources/{id}/pause": {
-      "post": {
-        "summary": "Pauses a Source",
-        "operationId": "pauseSource",
-        "description": "Pauses a Source",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ID"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Source Paused"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["sources"]
-      }
-    },
-    "/sources/{id}/unpause": {
-      "post": {
-        "summary": "Un-Pauses a Source",
-        "operationId": "unpauseSource",
-        "description": "Un-Pauses a Source",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ID"
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Source Un-Paused"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["sources"]
-      }
-    },
-    "/app_meta_data": {
-      "get": {
-        "summary": "List AppMetaData",
-        "operationId": "listAllAppMetaData",
-        "description": "Returns an array of AppMetaData objects",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/QueryLimit"
-          },
-          {
-            "$ref": "#/components/parameters/QueryOffset"
-          },
-          {
-            "$ref": "#/components/parameters/QueryFilter"
-          },
-          {
-            "$ref": "#/components/parameters/QuerySortBy"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "AppMetaData collection",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppMetaDataCollection"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["app metadata"]
-      }
-    },
-    "/app_meta_data/{id}": {
-      "get": {
-        "summary": "Show an existing AppMetaData",
-        "operationId": "showAppMetaData",
-        "description": "Returns a AppMetaData object",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "AppMetaData info",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppMetaData"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
-          }
-        },
-        "tags": ["app metadata"]
-      }
-    },
-    "/bulk_create": {
-      "post": {
-        "summary": "Bulk-create a Source and specified sub-resources",
-        "operationId": "bulkCreate",
-        "description": "Bulk-create a Source and specified sub-resources",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCreatePayload"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Resources Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BulkCreateResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          }
-        },
-        "tags": ["sources"]
+        }
       }
     }
   },
@@ -1824,7 +1399,7 @@
       "description": "Production Server",
       "variables": {
         "basePath": {
-          "default": "/api/sources/v3.1"
+          "default": "/api/sources/v3.0"
         }
       }
     },
@@ -1836,7 +1411,7 @@
           "default": "3000"
         },
         "basePath": {
-          "default": "/api/sources/v3.1"
+          "default": "/api/sources/v3.0"
         }
       }
     }
@@ -1944,11 +1519,6 @@
             "format": "date-time",
             "readOnly": true,
             "type": "string"
-          },
-          "paused_at": {
-            "format": "date-time",
-            "readOnly": true,
-            "type": "string"
           }
         },
         "additionalProperties": false
@@ -2046,51 +1616,6 @@
           }
         }
       },
-      "AppMetaData": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "format": "date-time",
-            "readOnly": true,
-            "type": "string"
-          },
-          "application_type_id": {
-            "type": "string"
-          },
-          "id": {
-            "$ref": "#/components/schemas/ID"
-          },
-          "name": {
-            "type": "string"
-          },
-          "payload": {
-            "type": "object"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "AppMetaDataCollection": {
-        "type": "object",
-        "properties": {
-          "meta": {
-            "$ref": "#/components/schemas/CollectionMetadata"
-          },
-          "links": {
-            "$ref": "#/components/schemas/CollectionLinks"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AppMetaData"
-            }
-          }
-        }
-      },
       "ApplicationsCollection": {
         "type": "object",
         "properties": {
@@ -2113,7 +1638,8 @@
         "properties": {
           "authtype": {
             "example": "openshift_default",
-            "type": "string"
+            "type": "string",
+            "readOnly": true
           },
           "availability_status": {
             "type": "string"
@@ -2166,11 +1692,6 @@
           },
           "username": {
             "example": "user@example.com",
-            "type": "string"
-          },
-          "paused_at": {
-            "format": "date-time",
-            "readOnly": true,
             "type": "string"
           }
         },
@@ -2317,71 +1838,6 @@
           }
         }
       },
-      "EndpointCreate": {
-        "type": "object",
-        "properties": {
-          "availability_status": {
-            "description": "The availability status of the endpoint.",
-            "example": "available",
-            "enum": ["", "available", "unavailable"],
-            "type": "string"
-          },
-          "certificate_authority": {
-            "description": "Optional X.509 Certificate Authority.",
-            "example": "Let's Encrypt",
-            "type": "string"
-          },
-          "default": {
-            "description": "Mark endpoint as the default endpoint? Each source can only have one default endpoint. It gets set to true by default if the given source has no endpoints.",
-            "example": false,
-            "type": "boolean"
-          },
-          "host": {
-            "description": "URI host component of the endpoint.",
-            "example": "example.com",
-            "type": "string"
-          },
-          "path": {
-            "description": "URI path component of the endpoint.",
-            "example": "/example/path",
-            "type": "string"
-          },
-          "port": {
-            "default": 443,
-            "description": "URI port component of the endpoint.",
-            "example": 443,
-            "type": "integer"
-          },
-          "receptor_node": {
-            "description": "Identifier of a receptor node.",
-            "type": "string"
-          },
-          "role": {
-            "description": "The role of the endpoint. It must be unique among the source's endpoints.",
-            "type": "string"
-          },
-          "scheme": {
-            "default": "https",
-            "description": "The scheme of the protocol.",
-            "example": "https",
-            "type": "string"
-          },
-          "source_id": {
-            "description": "The id of the source this endpoint relates to.",
-            "example": "12",
-            "type": "string"
-          },
-          "verify_ssl": {
-            "default": true,
-            "description": "Should the SSL certificate be verified?",
-            "example": true,
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "source_id"
-        ]
-      },
       "ErrorNotFound": {
         "type": "object",
         "properties": {
@@ -2451,14 +1907,6 @@
       "Source": {
         "type": "object",
         "properties": {
-          "app_creation_workflow": {
-            "type": "string",
-            "readOnly": true,
-            "enum": [
-              "manual_configuration",
-              "account_authorization"
-            ]
-          },
           "availability_status": {
             "type": "string"
           },
@@ -2506,11 +1954,6 @@
             "example": "6.5.0",
             "readOnly": true,
             "title": "Version",
-            "type": "string"
-          },
-          "paused_at": {
-            "format": "date-time",
-            "readOnly": true,
             "type": "string"
           }
         },
@@ -2583,229 +2026,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Source"
-            }
-          }
-        }
-      },
-      "BulkCreatePayload": {
-        "type": "object",
-        "properties": {
-          "sources": {
-            "description": "Array of Source objects to create. Only supported fields are name + type, source_type_id will automatically\nbe set based on the `source_type_name`.\n",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "source_type_name": {
-                  "type": "string",
-                  "description": "Source Type from supported types",
-                  "enum": [
-                    "amazon",
-                    "azure",
-                    "ansible-tower",
-                    "openshift",
-                    "satellite",
-                    "google",
-                    "ibm"
-                  ]
-                },
-                "source_ref": {
-                  "type": "string"
-                },
-                "source_type_id": {
-                  "type": "string"
-                },
-                "app_creation_workflow": {
-                  "type": "string",
-                  "enum": [
-                    "manual_configuration",
-                    "account_authorization"
-                  ]
-                }
-              }
-            }
-          },
-          "endpoints": {
-            "description": "Array of Endpoint objects to create. The operation looks up the parent source by the `source_name` attribute\nso the `source_name` must match one of the `source`'s names in the payload.\n",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "scheme": {
-                  "type": "string"
-                },
-                "host": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "string"
-                },
-                "port": {
-                  "type": "integer"
-                },
-                "verify_ssl": {
-                  "type": "boolean"
-                },
-                "source_name": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "applications": {
-            "description": "Array of Application objects to create. The operation looks up the parent Source by the `source_name` attribute\nso the `source_name` must match one of the `source`'s names in the payload.\n\napplication_type_id will be automatically looked up and set by the `application_type_name` attribute via regex.\n",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "application_type_name": {
-                  "type": "string"
-                },
-                "application_type_id": {
-                  "type": "string"
-                },
-                "extra": {
-                  "type": "object"
-                },
-                "source_name": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "authentications": {
-            "description": "Array of Authentications to create. This one is a bit more tricky. `resource_type` tells the action where to look for the parent, must be either application/endpoint/source\n\nif the parent is a source, it looks up by name.\nif the parent is an endpoint, it looks up via host so the hostname must match.\nif the parent is an application, it looks up via application type so the value must match the application type which matches\n",
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "authtype": {
-                  "type": "string"
-                },
-                "extra": {
-                  "type": "object"
-                },
-                "username": {
-                  "type": "string"
-                },
-                "password": {
-                  "type": "string"
-                },
-                "resource_name": {
-                  "type": "string"
-                },
-                "resource_type": {
-                  "type": "string",
-                  "enum": [
-                    "application",
-                    "endpoint",
-                    "source"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      },
-      "BulkCreateResponse": {
-        "type": "object",
-        "properties": {
-          "superkey": {
-            "type": "boolean",
-            "default": false
-          },
-          "sources": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Source"
-            }
-          },
-          "endpoints": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Endpoint"
-            }
-          },
-          "applications": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Application"
-            }
-          },
-          "authentications": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Authentication"
-            }
-          }
-        }
-      },
-      "ErrorUnpermittedParameters": {
-        "type": "object",
-        "properties": {
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "422"
-                },
-                "detail": {
-                  "type": "string",
-                  "example": "Found unpermitted parameters: xxx, yyy"
-                }
-              }
-            }
-          }
-        }
-      },
-      "PartialUpdateResponse": {
-        "type": "object",
-        "properties": {
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "422"
-                },
-                "detail": {
-                  "type": "string",
-                  "example": "Found unpermitted parameters: xxx, yyy"
-                }
-              }
-            }
-          },
-          "results": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "200"
-                },
-                "detail": {
-                  "type": "string",
-                  "example": "Listed parameters in 'resource' has been updated successfully."
-                },
-                "resource": {
-                  "type": "object",
-                  "properties": {
-                    "availability_status": {
-                      "type": "string",
-                      "example": "available"
-                    }
-                  }
-                }
-              }
             }
           }
         }

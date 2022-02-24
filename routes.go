@@ -1,11 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/middleware"
-	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,24 +20,10 @@ func setupRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	// TODO: pull this out into its own handler.
-	e.GET("/openapi.json", func(c echo.Context) error {
-		out, err := redis.Client.Get("openapi").Result()
-		if err != nil {
-			file, err := ioutil.ReadFile("public/openapi-3-v3.1.json")
-			if err != nil {
-				return c.NoContent(http.StatusBadRequest)
-			}
-			err = redis.Client.Set("openapi", string(file), -1).Err()
-			if err != nil {
-				return c.NoContent(http.StatusBadRequest)
-			}
-			out = string(file)
-		}
-		return c.String(http.StatusOK, out)
-	})
-
 	v3 := e.Group("/api/sources/v3.1", middleware.HandleErrors, middleware.ParseHeaders)
+
+	//openapi
+	v3.GET("/openapi.json", PublicOpenApiv31)
 
 	// Sources
 	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)
