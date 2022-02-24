@@ -77,7 +77,7 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 		authentications[i] = authenticationsByResource[i].ToEvent()
 	}
 
-	applicationAuthenticationDao := &ApplicationAuthenticationDaoImpl{TenantID: &source.TenantID}
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&source.TenantID)
 	applicationAuthenticationsFromResource, err := applicationAuthenticationDao.ApplicationAuthenticationsByResource(authentication.ResourceType, source.Applications, authenticationsByResource)
 
 	if err != nil {

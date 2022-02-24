@@ -19,7 +19,7 @@ func getApplicationAuthenticationDaoWithTenant(c echo.Context) (dao.ApplicationA
 		return nil, err
 	}
 
-	return &dao.ApplicationAuthenticationDaoImpl{TenantID: &tenantId}, nil
+	return dao.GetApplicationAuthenticationDao(&tenantId), nil
 }
 
 func ApplicationAuthenticationList(c echo.Context) error {

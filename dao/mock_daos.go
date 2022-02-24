@@ -478,3 +478,7 @@ func (m MockApplicationAuthenticationDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
+
+func (m MockApplicationAuthenticationDao) ApplicationAuthenticationsByResource(_ string, _ []m.Application, _ []m.Authentication) ([]m.ApplicationAuthentication, error) {
+	return m.ApplicationAuthentications, nil
+}
