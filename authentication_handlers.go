@@ -6,6 +6,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -76,6 +77,11 @@ func AuthenticationCreate(c echo.Context) error {
 	err = c.Bind(&createRequest)
 	if err != nil {
 		return err
+	}
+
+	err = service.ValidateAuthenticationCreationRequest(&createRequest)
+	if err != nil {
+		return util.NewErrBadRequest(err)
 	}
 
 	auth := &m.Authentication{
