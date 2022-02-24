@@ -20,7 +20,7 @@ func setupRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	v3 := e.Group("/api/sources/v3.1", middleware.HandleErrors, middleware.ParseHeaders)
+	v3 := e.Group("/api/sources/v3.1", middleware.Timing, middleware.HandleErrors, middleware.ParseHeaders)
 
 	//openapi
 	v3.GET("/openapi.json", PublicOpenApiv31)
