@@ -23,7 +23,7 @@ func getSourceDaoWithTenant(c echo.Context) (dao.SourceDao, error) {
 		return nil, err
 	}
 
-	return &dao.SourceDaoImpl{TenantID: &tenantId}, nil
+	return dao.GetSourceDao(&tenantId), nil
 }
 
 func SourceList(c echo.Context) error {

@@ -28,7 +28,7 @@ func TestMain(t *testing.M) {
 		database.ConnectAndMigrateDB("service")
 
 		endpointDao = dao.GetEndpointDao(&fixtures.TestTenantData[0].Id)
-		sourceDao = &dao.SourceDaoImpl{TenantID: &fixtures.TestTenantData[0].Id}
+		sourceDao = dao.GetSourceDao(&fixtures.TestTenantData[0].Id)
 		database.CreateFixtures()
 	} else {
 		endpointDao = &dao.MockEndpointDao{}

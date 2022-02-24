@@ -7,7 +7,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 )
 
-var sourceDao = SourceDaoImpl{
+var sourceDao = sourceDaoImpl{
 	TenantID: &fixtures.TestTenantData[0].Id,
 }
 
