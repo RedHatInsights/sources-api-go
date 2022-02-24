@@ -52,7 +52,7 @@ func CreateFixtures() {
 
 	dao.DB.Create(&fixtures.TestSourceData)
 	dao.DB.Create(&fixtures.TestApplicationData)
-	dao.DB.Create(&fixtures.TestApplicationAuthentication)
+	dao.DB.Create(&fixtures.TestApplicationAuthenticationData)
 
 	dao.DB.Create(&fixtures.TestRhcConnectionData)
 	dao.DB.Create(&fixtures.TestSourceRhcConnectionData)

@@ -72,8 +72,10 @@ func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 func (a *ApplicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
 	appAuth := &m.ApplicationAuthentication{ID: *id}
 	result := DB.First(&appAuth)
-
-	return appAuth, result.Error
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("application authentication")
+	}
+	return appAuth, nil
 }
 
 func (a *ApplicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {

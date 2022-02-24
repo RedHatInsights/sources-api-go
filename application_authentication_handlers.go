@@ -70,7 +70,7 @@ func ApplicationAuthenticationGet(c echo.Context) error {
 
 	app, err := applicationDB.GetById(&id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())
