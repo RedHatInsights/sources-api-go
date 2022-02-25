@@ -21,6 +21,9 @@ type SourceDao interface {
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error)
 	// ListForRhcConnection gets all the sources that are related to a given rhcConnection id.
 	ListForRhcConnection(rhcConnectionId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	BulkMessage(resource util.Resource) (map[string]interface{}, error)
+	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
+	ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
 type ApplicationDao interface {
@@ -31,6 +34,9 @@ type ApplicationDao interface {
 	Update(src *m.Application) error
 	Delete(id *int64) (*m.Application, error)
 	Tenant() *int64
+	BulkMessage(resource util.Resource) (map[string]interface{}, error)
+	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
+	ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
 type AuthenticationDao interface {
@@ -45,6 +51,9 @@ type AuthenticationDao interface {
 	Delete(id string) (*m.Authentication, error)
 	Tenant() *int64
 	AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error)
+	BulkMessage(resource util.Resource) (map[string]interface{}, error)
+	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
+	ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
 type ApplicationAuthenticationDao interface {
@@ -82,6 +91,9 @@ type EndpointDao interface {
 	IsRoleUniqueForSource(role string, sourceId int64) bool
 	// SourceHasEndpoints returns true if the provided source has any associated endpoints.
 	SourceHasEndpoints(sourceId int64) bool
+	BulkMessage(resource util.Resource) (map[string]interface{}, error)
+	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
+	ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
 type MetaDataDao interface {
