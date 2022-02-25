@@ -15,13 +15,13 @@ func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	var resource m.EventModelDao
 	switch resourceType {
 	case "Source":
-		resource = &sourceDaoImpl{}
+		resource = GetSourceDao(nil)
 	case "Endpoint":
-		resource = &endpointDaoImpl{}
+		resource = GetEndpointDao(nil)
 	case "Application":
-		resource = &applicationDaoImpl{}
+		resource = GetApplicationDao(nil)
 	case "Authentication":
-		resource = &authenticationDaoImpl{}
+		resource = GetAuthenticationDao(nil)
 	default:
 		return nil, fmt.Errorf("invalid resource_type (%s) to get DAO instance", resourceType)
 	}
@@ -65,7 +65,7 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 
 	bulkMessage["applications"] = applications
 
-	authDao := &authenticationDaoImpl{TenantID: &source.TenantID}
+	authDao := GetAuthenticationDao(&source.TenantID)
 	authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 	if err != nil {
 		return nil, err
