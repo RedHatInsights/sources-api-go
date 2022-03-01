@@ -20,7 +20,7 @@ type Authentication struct {
 	CreatedAt time.Time `json:"created_at"`
 
 	Name                    string                 `json:"name,omitempty"`
-	AuthType                string                 `json:"authtype"`
+	AuthType                string                 `gorm:"column:authtype" json:"authtype"`
 	Username                string                 `json:"username"`
 	Password                string                 `json:"password"`
 	Extra                   map[string]interface{} `gorm:"-" json:"extra,omitempty"`
