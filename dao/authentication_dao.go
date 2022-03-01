@@ -621,17 +621,44 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 		}
 	}
 
-	// Serialize the token as a string
-	serializedToken, err := json.Marshal(token)
-	if err != nil {
-		return fmt.Errorf("could not serialize marketplace token as a JSON string: %s", err)
+	if conf.VaultOn {
+		if auth.Extra == nil {
+			auth.Extra = make(map[string]interface{})
+		}
+
+		serializedToken, err := json.Marshal(token)
+		if err != nil {
+			return fmt.Errorf("could not serialize marketplace token as JSON: %s", err)
+		}
+
+		auth.Extra["marketplace"] = serializedToken
+	} else {
+		if auth.ExtraDb == nil {
+			// In case there is no content in the database we can safely marshal the token and return it directly.
+			auth.ExtraDb, err = json.Marshal(token)
+			if err != nil {
+				return err
+			}
+		} else {
+			// If there is already existing content, we must merge the existing JSON content with the token.
+			var tmpContent map[string]interface{}
+
+			// Unmarshal the existing content to a map, to be able to easily append the token.
+			err := json.Unmarshal(auth.ExtraDb, &tmpContent)
+			if err != nil {
+				return err
+			}
+
+			// Append the token and marshal the content back, so that it is ready to be sent.
+			tmpContent["marketplace"] = token
+
+			auth.ExtraDb, err = json.Marshal(tmpContent)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	if auth.Extra == nil {
-		auth.Extra = make(map[string]interface{})
-	}
-
-	auth.Extra["marketplace"] = string(serializedToken)
 	logging.Log.Log(logrus.InfoLevel, "marketplace token included in authentication")
 
 	return nil

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -439,5 +440,105 @@ func TestAuthFromVault(t *testing.T) {
 				t.Errorf(`authentication last checked at statuses are different. Want "%s", got "%s"`, want, got)
 			}
 		}
+	}
+}
+
+// TestAuthFromDbExtraNoContent tests that a proper serialized token is returned when there's a cache
+// miss and the token is successfully requested to the marketplace. It simulates the extra field not having any
+// previous content.
+func TestAuthFromDbExtraNoContent(t *testing.T) {
+	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
+	conf.VaultOn = false
+
+	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
+	// both miss the cache and be able to cache the provided token.
+	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
+		return &marketplaceTokenCacherNotCachedButCacheable{
+			TenantID: *tenantId,
+		}
+	}
+
+	// In this test we need the token provider to return a proper token.
+	GetMarketplaceTokenProvider = func(apiKey string) marketplace.TokenProvider {
+		return &marketplaceTokenProviderSuccessful{
+			ApiKey: &apiKey,
+		}
+	}
+
+	tenantId := int64(5)
+	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
+
+	auth := setUpValidMarketplaceAuth()
+
+	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
+	// logger.
+	logging.Log = logrus.New()
+
+	// Call the function under test
+	err := setMarketplaceTokenAuthExtraField(auth)
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
+	}
+
+	want, err := json.Marshal(setUpBearerToken())
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	if !bytes.Equal(want, auth.ExtraDb) {
+		t.Errorf(`want "%s", got "%s"`, want, auth.ExtraDb)
+	}
+}
+
+// TestAuthFromDbExtraPreviousContent tests that a proper serialized token is returned when there's a cache
+// miss and the token is successfully requested to the marketplace. It simulates the extra field having previous
+// content.
+func TestAuthFromDbExtraPreviousContent(t *testing.T) {
+	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
+	conf.VaultOn = false
+
+	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
+	// both miss the cache and be able to cache the provided token.
+	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
+		return &marketplaceTokenCacherNotCachedButCacheable{
+			TenantID: *tenantId,
+		}
+	}
+
+	// In this test we need the token provider to return a proper token.
+	GetMarketplaceTokenProvider = func(apiKey string) marketplace.TokenProvider {
+		return &marketplaceTokenProviderSuccessful{
+			ApiKey: &apiKey,
+		}
+	}
+
+	tenantId := int64(5)
+	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
+
+	auth := setUpValidMarketplaceAuth()
+	auth.ExtraDb = []byte(`{"hello": "world"}`)
+
+	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
+	// logger.
+	logging.Log = logrus.New()
+
+	// Call the function under test
+	err := setMarketplaceTokenAuthExtraField(auth)
+	if err != nil {
+		t.Errorf("want no error, got %s", err)
+	}
+
+	// tmpWant will hold the structure to what we are expecting to get in return when calling the function under test.
+	tmpWant := make(map[string]interface{})
+	tmpWant["hello"] = "world"
+	tmpWant["marketplace"] = setUpBearerToken()
+
+	want, err := json.Marshal(tmpWant)
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	if !bytes.Equal(want, auth.ExtraDb) {
+		t.Errorf(`want "%s", got "%s"`, want, auth.ExtraDb)
 	}
 }
