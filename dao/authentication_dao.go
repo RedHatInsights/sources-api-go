@@ -626,12 +626,7 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 			auth.Extra = make(map[string]interface{})
 		}
 
-		serializedToken, err := json.Marshal(token)
-		if err != nil {
-			return fmt.Errorf("could not serialize marketplace token as JSON: %s", err)
-		}
-
-		auth.Extra["marketplace"] = serializedToken
+		auth.Extra["marketplace"] = token
 	} else {
 		if auth.ExtraDb == nil {
 			// In case there is no content in the database we can safely marshal the token and return it directly.

@@ -123,9 +123,12 @@ func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
 	}
 }
 
-// TestAuthFromVaultMarketplaceCacheHit tests that when there's a cache hit with the marketplace token, it simply gets
-// serialized and properly returned on the "auth.Extra["marketplace]" object.
+// TestAuthFromVaultMarketplaceCacheHit tests that when there's a cache hit with the marketplace token, it simply
+// returns the token on the "extra" field.
 func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
+	// We need to simulate that the Vault is online.
+	conf.VaultOn = true
+
 	// For this test we need to simulate that there is a cache hit, so the token cacher must return a proper fake
 	// bearer token
 	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
@@ -149,20 +152,26 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 		t.Errorf("want no error, got %s", err)
 	}
 
-	serializedToken, err := json.Marshal(setUpBearerToken())
-	if err != nil {
-		t.Errorf("could not serialize the fake token: %s", err)
+	token, ok := auth.Extra["marketplace"].(*marketplace.BearerToken)
+	if !ok {
+		t.Errorf(`want type "bearer token", got "%s"`, reflect.TypeOf(auth.Extra["marketplace"]))
 	}
 
-	if auth != nil { // required to make the SA5011 linter rule "staticcheck" go away
-		if auth.Extra == nil {
-			t.Errorf(`got nil, want non empty "auth.Extra"`)
-		}
+	expectedToken := setUpBearerToken()
 
-		got := auth.Extra["marketplace"]
-		want := string(serializedToken)
-		if got != want {
-			t.Errorf("want %#v, got %#v", want, got)
+	{
+		want := *expectedToken.Token
+		got := *token.Token
+		if want != got {
+			t.Errorf(`invalid token string. Want "%s", got "%s"`, want, got)
+		}
+	}
+
+	{
+		want := *expectedToken.Expiration
+		got := *token.Expiration
+		if want != got {
+			t.Errorf(`invalid token expiration. Want "%d", got "%d"`, want, got)
 		}
 	}
 }
