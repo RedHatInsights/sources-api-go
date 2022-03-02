@@ -371,11 +371,7 @@ func JSONBytesEqual(a, b []byte) (bool, error) {
 
 // MockEventStreamSender is a mock for the "RaiseEvent" function, which gets called every time the status listener
 // processes an event.
-type MockEventStreamSender struct {
-	events.EventStreamSender
-	TestSuite *testing.T
-	types.StatusMessage
-}
+type MockEventStreamSender struct{}
 
 // testRaiseEventData is a function which gets called from RaiseEvent, which helps us customize what we want to have
 // checked on each test, in case different things need to be tested.
@@ -428,7 +424,7 @@ func TestConsumeStatusMessageSource(t *testing.T) {
 	// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
 	// values.
 	testRaiseEventWasCalled = false
-	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageSource}
+	sender := MockEventStreamSender{}
 	esp := &events.EventStreamProducer{Sender: &sender}
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(sourceTestData)
@@ -437,9 +433,9 @@ func TestConsumeStatusMessageSource(t *testing.T) {
 		var isResult bool
 		var expectedData []byte
 		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+			expectedData = BulkMessageFor(statusMessageSource.ResourceType, statusMessageSource.ResourceID)
 		} else {
-			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+			expectedData = ResourceJSONFor(statusMessageSource.ResourceType, statusMessageSource.ResourceID)
 		}
 
 		isResult, err := JSONBytesEqual(payload, expectedData)
@@ -453,8 +449,8 @@ func TestConsumeStatusMessageSource(t *testing.T) {
 				"Expected: %s \n" +
 				"Obtained: %s \n"
 
-			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			t.Errorf(errMsg, eventType, statusMessageSource.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, statusMessageSource.ResourceType, expectedData, payload)
 		}
 
 		return nil
@@ -490,7 +486,7 @@ func TestConsumeStatusMessageApplication(t *testing.T) {
 	// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
 	// values.
 	testRaiseEventWasCalled = false
-	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageApplication}
+	sender := MockEventStreamSender{}
 	esp := &events.EventStreamProducer{Sender: &sender}
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(applicationTestData)
@@ -499,9 +495,9 @@ func TestConsumeStatusMessageApplication(t *testing.T) {
 		var isResult bool
 		var expectedData []byte
 		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+			expectedData = BulkMessageFor(statusMessageApplication.ResourceType, statusMessageApplication.ResourceID)
 		} else {
-			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+			expectedData = ResourceJSONFor(statusMessageApplication.ResourceType, statusMessageApplication.ResourceID)
 		}
 
 		isResult, err := JSONBytesEqual(payload, expectedData)
@@ -515,8 +511,8 @@ func TestConsumeStatusMessageApplication(t *testing.T) {
 				"Expected: %s \n" +
 				"Obtained: %s \n"
 
-			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			t.Errorf(errMsg, eventType, statusMessageApplication.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, statusMessageApplication.ResourceType, expectedData, payload)
 		}
 
 		return nil
@@ -553,7 +549,7 @@ func TestConsumeStatusMessageEndpoint(t *testing.T) {
 	// values.
 	testRaiseEventWasCalled = false
 
-	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageEndpoint}
+	sender := MockEventStreamSender{}
 	esp := &events.EventStreamProducer{Sender: &sender}
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(endpointTestData)
@@ -562,9 +558,9 @@ func TestConsumeStatusMessageEndpoint(t *testing.T) {
 		var isResult bool
 		var expectedData []byte
 		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+			expectedData = BulkMessageFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
 		} else {
-			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+			expectedData = ResourceJSONFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
 		}
 
 		isResult, err := JSONBytesEqual(payload, expectedData)
@@ -578,8 +574,8 @@ func TestConsumeStatusMessageEndpoint(t *testing.T) {
 				"Expected: %s \n" +
 				"Obtained: %s \n"
 
-			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			t.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
 		}
 
 		return nil
@@ -616,7 +612,7 @@ func TestConsumeStatusMessageEndpointNotFound(t *testing.T) {
 	// values.
 	testRaiseEventWasCalled = false
 
-	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageEndpoint}
+	sender := MockEventStreamSender{}
 	esp := &events.EventStreamProducer{Sender: &sender}
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(endpointTestDataNotFound)
@@ -625,9 +621,9 @@ func TestConsumeStatusMessageEndpointNotFound(t *testing.T) {
 		var isResult bool
 		var expectedData []byte
 		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+			expectedData = BulkMessageFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
 		} else {
-			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+			expectedData = ResourceJSONFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
 		}
 
 		isResult, err := JSONBytesEqual(payload, expectedData)
@@ -641,8 +637,8 @@ func TestConsumeStatusMessageEndpointNotFound(t *testing.T) {
 				"Expected: %s \n" +
 				"Obtained: %s \n"
 
-			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			t.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
 		}
 
 		return nil
