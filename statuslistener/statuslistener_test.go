@@ -381,38 +381,14 @@ type MockEventStreamSender struct {
 	RaiseEventCalled bool
 }
 
+// testRaiseEventData is a function which gets called from RaiseEvent, which helps us customize what we want to have
+// checked on each test, in case different things need to be tested.
+var testRaiseEventData func(eventType string, payload []byte) error
+
 func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
 	streamProducerSender.RaiseEventCalled = true
-	var err error
 
-	for _, data := range testData {
-		if streamProducerSender.ResourceType == data.ResourceType && streamProducerSender.ResourceID == data.ResourceID {
-			var isResult bool
-			var expectedData []byte
-			if eventType == "Records.update" {
-				expectedData = BulkMessageFor(streamProducerSender.ResourceType, streamProducerSender.ResourceID)
-			} else {
-				expectedData = ResourceJSONFor(streamProducerSender.ResourceType, streamProducerSender.ResourceID)
-			}
-
-			isResult, err = JSONBytesEqual(payload, expectedData)
-			if isResult != true {
-				errMsg := "error in raising event of type %s with resource type %s.\n" +
-					"JSON payloads are not same:\n\n" +
-					"Expected: %s \n" +
-					"Obtained: %s \n"
-
-				streamProducerSender.TestSuite.Errorf(errMsg, eventType, streamProducerSender.ResourceType, expectedData, payload)
-				return fmt.Errorf(errMsg, eventType, streamProducerSender.ResourceType, expectedData, payload)
-			}
-		}
-	}
-
-	if err != nil {
-		streamProducerSender.TestSuite.Errorf("error with parsing JSON: %s", err.Error())
-	}
-
-	return err
+	return testRaiseEventData(eventType, payload)
 }
 
 type ExpectedData struct {
@@ -459,6 +435,36 @@ func TestConsumeStatusMessage(t *testing.T) {
 		esp := &events.EventStreamProducer{Sender: &sender}
 		avs := AvailabilityStatusListener{EventStreamProducer: esp}
 		message, _ := json.Marshal(testEntry)
+
+		testRaiseEventData = func(eventType string, payload []byte) error {
+			if sender.ResourceType == testEntry.ResourceType && sender.ResourceID == testEntry.ResourceID {
+				var isResult bool
+				var expectedData []byte
+				if eventType == "Records.update" {
+					expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+				} else {
+					expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+				}
+
+				isResult, err := JSONBytesEqual(payload, expectedData)
+				if err != nil {
+					t.Errorf("error with parsing JSON: %s", err.Error())
+				}
+
+				if isResult != true {
+					errMsg := "error in raising event of type %s with resource type %s.\n" +
+						"JSON payloads are not same:\n\n" +
+						"Expected: %s \n" +
+						"Obtained: %s \n"
+
+					t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+					return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+				}
+			}
+
+			return nil
+		}
+
 		avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: testEntry.MessageHeaders})
 
 		raiseEventCalled := esp.Sender.(*MockEventStreamSender).RaiseEventCalled
