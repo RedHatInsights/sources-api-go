@@ -21,8 +21,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var testData []TestData
-
 type MockFormatter struct {
 	Hostname              string
 	AppName               string
@@ -407,73 +405,252 @@ type TestData struct {
 	RaiseEventCalled bool
 }
 
-func TestConsumeStatusMessage(t *testing.T) {
+// TestConsumeStatusMessageSource tests whether a proper event is generated when a source's availability status gets
+// updated.
+func TestConsumeStatusMessageSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	setUpTests()
 	kafkaHeaders := setUpKafkaHeaders()
 
-	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", Status: m.Available}
-	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: kafkaHeaders, RaiseEventCalled: true}
+	statusMessageSource := types.StatusMessage{
+		ResourceType: "Source",
+		ResourceID:   "1",
+		Status:       m.Available,
+	}
 
-	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", Status: m.Available}
-	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: kafkaHeaders, RaiseEventCalled: true}
+	sourceTestData := TestData{
+		StatusMessage:    statusMessageSource,
+		MessageHeaders:   kafkaHeaders,
+		RaiseEventCalled: true,
+	}
 
-	statusMessageEndpoint := types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", Status: m.Available}
-	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: kafkaHeaders, RaiseEventCalled: true}
+	// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
+	// values.
+	testRaiseEventWasCalled = false
+	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageSource}
+	esp := &events.EventStreamProducer{Sender: &sender}
+	avs := AvailabilityStatusListener{EventStreamProducer: esp}
+	message, _ := json.Marshal(sourceTestData)
 
-	statusMessageEndpoint = types.StatusMessage{ResourceType: "Endpoint", ResourceID: "99", Status: m.Available}
-	endpointTestDataNotFound := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: kafkaHeaders, RaiseEventCalled: false}
-
-	testData = make([]TestData, 4)
-	testData[0] = sourceTestData
-	testData[1] = applicationTestData
-	testData[2] = endpointTestData
-	testData[3] = endpointTestDataNotFound
-
-	for _, testEntry := range testData {
-		// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
-		// values.
-		testRaiseEventWasCalled = false
-
-		sender := MockEventStreamSender{TestSuite: t, StatusMessage: testEntry.StatusMessage}
-		esp := &events.EventStreamProducer{Sender: &sender}
-		avs := AvailabilityStatusListener{EventStreamProducer: esp}
-		message, _ := json.Marshal(testEntry)
-
-		testRaiseEventData = func(eventType string, payload []byte) error {
-			if sender.ResourceType == testEntry.ResourceType && sender.ResourceID == testEntry.ResourceID {
-				var isResult bool
-				var expectedData []byte
-				if eventType == "Records.update" {
-					expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
-				} else {
-					expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
-				}
-
-				isResult, err := JSONBytesEqual(payload, expectedData)
-				if err != nil {
-					t.Errorf("error with parsing JSON: %s", err.Error())
-				}
-
-				if isResult != true {
-					errMsg := "error in raising event of type %s with resource type %s.\n" +
-						"JSON payloads are not same:\n\n" +
-						"Expected: %s \n" +
-						"Obtained: %s \n"
-
-					t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
-					return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
-				}
-			}
-
-			return nil
+	testRaiseEventData = func(eventType string, payload []byte) error {
+		var isResult bool
+		var expectedData []byte
+		if eventType == "Records.update" {
+			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+		} else {
+			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
 		}
 
-		avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: testEntry.MessageHeaders})
-
-		if testRaiseEventWasCalled != testEntry.RaiseEventCalled {
-			t.Errorf(`Was RaiseEvent called? Want: "%t", got "%t"`, testEntry.RaiseEventCalled, testRaiseEventWasCalled)
+		isResult, err := JSONBytesEqual(payload, expectedData)
+		if err != nil {
+			t.Errorf("error with parsing JSON: %s", err.Error())
 		}
+
+		if isResult != true {
+			errMsg := "error in raising event of type %s with resource type %s.\n" +
+				"JSON payloads are not same:\n\n" +
+				"Expected: %s \n" +
+				"Obtained: %s \n"
+
+			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+		}
+
+		return nil
+	}
+
+	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: sourceTestData.MessageHeaders})
+
+	if testRaiseEventWasCalled != sourceTestData.RaiseEventCalled {
+		t.Errorf(`Was raise event called? Want: "%t", got "%t"`, sourceTestData.RaiseEventCalled, testRaiseEventWasCalled)
+	}
+}
+
+// TestConsumeStatusMessageApplication tests whether a proper event is generated when a source's availability status
+// gets updated.
+func TestConsumeStatusMessageApplication(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	setUpTests()
+	kafkaHeaders := setUpKafkaHeaders()
+
+	statusMessageApplication := types.StatusMessage{
+		ResourceType: "Application",
+		ResourceID:   "1",
+		Status:       m.Available,
+	}
+
+	applicationTestData := TestData{
+		StatusMessage:    statusMessageApplication,
+		MessageHeaders:   kafkaHeaders,
+		RaiseEventCalled: true,
+	}
+
+	// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
+	// values.
+	testRaiseEventWasCalled = false
+	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageApplication}
+	esp := &events.EventStreamProducer{Sender: &sender}
+	avs := AvailabilityStatusListener{EventStreamProducer: esp}
+	message, _ := json.Marshal(applicationTestData)
+
+	testRaiseEventData = func(eventType string, payload []byte) error {
+		var isResult bool
+		var expectedData []byte
+		if eventType == "Records.update" {
+			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+		} else {
+			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+		}
+
+		isResult, err := JSONBytesEqual(payload, expectedData)
+		if err != nil {
+			t.Errorf("error with parsing JSON: %s", err.Error())
+		}
+
+		if isResult != true {
+			errMsg := "error in raising event of type %s with resource type %s.\n" +
+				"JSON payloads are not same:\n\n" +
+				"Expected: %s \n" +
+				"Obtained: %s \n"
+
+			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+		}
+
+		return nil
+	}
+
+	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: applicationTestData.MessageHeaders})
+
+	if testRaiseEventWasCalled != applicationTestData.RaiseEventCalled {
+		t.Errorf(`Was raise event called? Want: "%t", got "%t"`, applicationTestData.RaiseEventCalled, testRaiseEventWasCalled)
+	}
+}
+
+// TestConsumeStatusMessageEndpoint tests whether a proper event is generated when a source's availability status gets
+// updated.
+func TestConsumeStatusMessageEndpoint(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	setUpTests()
+	kafkaHeaders := setUpKafkaHeaders()
+
+	statusMessageEndpoint := types.StatusMessage{
+		ResourceType: "Endpoint",
+		ResourceID:   "1",
+		Status:       m.Available,
+	}
+
+	endpointTestData := TestData{
+		StatusMessage:    statusMessageEndpoint,
+		MessageHeaders:   kafkaHeaders,
+		RaiseEventCalled: true,
+	}
+
+	// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
+	// values.
+	testRaiseEventWasCalled = false
+
+	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageEndpoint}
+	esp := &events.EventStreamProducer{Sender: &sender}
+	avs := AvailabilityStatusListener{EventStreamProducer: esp}
+	message, _ := json.Marshal(endpointTestData)
+
+	testRaiseEventData = func(eventType string, payload []byte) error {
+		var isResult bool
+		var expectedData []byte
+		if eventType == "Records.update" {
+			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+		} else {
+			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+		}
+
+		isResult, err := JSONBytesEqual(payload, expectedData)
+		if err != nil {
+			t.Errorf("error with parsing JSON: %s", err.Error())
+		}
+
+		if isResult != true {
+			errMsg := "error in raising event of type %s with resource type %s.\n" +
+				"JSON payloads are not same:\n\n" +
+				"Expected: %s \n" +
+				"Obtained: %s \n"
+
+			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+		}
+
+		return nil
+	}
+
+	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: endpointTestData.MessageHeaders})
+
+	if testRaiseEventWasCalled != endpointTestData.RaiseEventCalled {
+		t.Errorf(`Was raise event called? Want: "%t", got "%t"`, endpointTestData.RaiseEventCalled, testRaiseEventWasCalled)
+	}
+}
+
+// TestConsumeStatusMessageEndpointNotFound tests that when a non-existing endpoint gets a availability status update,
+// no events are raised.
+func TestConsumeStatusMessageEndpointNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	setUpTests()
+	kafkaHeaders := setUpKafkaHeaders()
+
+	statusMessageEndpoint := types.StatusMessage{
+		ResourceType: "Endpoint",
+		ResourceID:   "99",
+		Status:       m.Available,
+	}
+
+	endpointTestDataNotFound := TestData{
+		StatusMessage:    statusMessageEndpoint,
+		MessageHeaders:   kafkaHeaders,
+		RaiseEventCalled: false,
+	}
+
+	// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
+	// values.
+	testRaiseEventWasCalled = false
+
+	sender := MockEventStreamSender{TestSuite: t, StatusMessage: statusMessageEndpoint}
+	esp := &events.EventStreamProducer{Sender: &sender}
+	avs := AvailabilityStatusListener{EventStreamProducer: esp}
+	message, _ := json.Marshal(endpointTestDataNotFound)
+
+	testRaiseEventData = func(eventType string, payload []byte) error {
+		var isResult bool
+		var expectedData []byte
+		if eventType == "Records.update" {
+			expectedData = BulkMessageFor(sender.ResourceType, sender.ResourceID)
+		} else {
+			expectedData = ResourceJSONFor(sender.ResourceType, sender.ResourceID)
+		}
+
+		isResult, err := JSONBytesEqual(payload, expectedData)
+		if err != nil {
+			t.Errorf("error with parsing JSON: %s", err.Error())
+		}
+
+		if isResult != true {
+			errMsg := "error in raising event of type %s with resource type %s.\n" +
+				"JSON payloads are not same:\n\n" +
+				"Expected: %s \n" +
+				"Obtained: %s \n"
+
+			t.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+			return fmt.Errorf(errMsg, eventType, sender.ResourceType, expectedData, payload)
+		}
+
+		return nil
+	}
+
+	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: endpointTestDataNotFound.MessageHeaders})
+
+	if testRaiseEventWasCalled != endpointTestDataNotFound.RaiseEventCalled {
+		t.Errorf(`Was RaiseEvent called? Want: "%t", got "%t"`, endpointTestDataNotFound.RaiseEventCalled, testRaiseEventWasCalled)
 	}
 }
