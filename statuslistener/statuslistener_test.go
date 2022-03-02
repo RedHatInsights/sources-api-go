@@ -373,9 +373,41 @@ func JSONBytesEqual(a, b []byte) (bool, error) {
 // processes an event.
 type MockEventStreamSender struct{}
 
+// getStatusMessageAndTestUtility is a function which allows returning the status message under test and the testing
+// utilities, so that any functions that need them can use them. This is useful when the "RaiseEvent" function calls
+// the "testRaiseEventData" function, since that one needs the status message used in the test.
+var getStatusMessageAndTestUtility func() (types.StatusMessage, *testing.T)
+
 // testRaiseEventData is a function which gets called from RaiseEvent, which helps us customize what we want to have
 // checked on each test, in case different things need to be tested.
-var testRaiseEventData func(eventType string, payload []byte) error
+func testRaiseEventData(eventType string, payload []byte) error {
+	statusMessage, t := getStatusMessageAndTestUtility()
+
+	var isResult bool
+	var expectedData []byte
+	if eventType == "Records.update" {
+		expectedData = BulkMessageFor(statusMessage.ResourceType, statusMessage.ResourceID)
+	} else {
+		expectedData = ResourceJSONFor(statusMessage.ResourceType, statusMessage.ResourceID)
+	}
+
+	isResult, err := JSONBytesEqual(payload, expectedData)
+	if err != nil {
+		t.Errorf("error with parsing JSON: %s", err.Error())
+	}
+
+	if isResult != true {
+		errMsg := "error in raising event of type %s with resource type %s.\n" +
+			"JSON payloads are not same:\n\n" +
+			"Expected: %s \n" +
+			"Obtained: %s \n"
+
+		t.Errorf(errMsg, eventType, statusMessage.ResourceType, expectedData, payload)
+		return fmt.Errorf(errMsg, eventType, statusMessage.ResourceType, expectedData, payload)
+	}
+
+	return nil
+}
 
 // testRaiseEventWasCalled is a variable which will tell us if the "RaiseEvent" was called or not.
 var testRaiseEventWasCalled bool
@@ -429,31 +461,8 @@ func TestConsumeStatusMessageSource(t *testing.T) {
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(sourceTestData)
 
-	testRaiseEventData = func(eventType string, payload []byte) error {
-		var isResult bool
-		var expectedData []byte
-		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(statusMessageSource.ResourceType, statusMessageSource.ResourceID)
-		} else {
-			expectedData = ResourceJSONFor(statusMessageSource.ResourceType, statusMessageSource.ResourceID)
-		}
-
-		isResult, err := JSONBytesEqual(payload, expectedData)
-		if err != nil {
-			t.Errorf("error with parsing JSON: %s", err.Error())
-		}
-
-		if isResult != true {
-			errMsg := "error in raising event of type %s with resource type %s.\n" +
-				"JSON payloads are not same:\n\n" +
-				"Expected: %s \n" +
-				"Obtained: %s \n"
-
-			t.Errorf(errMsg, eventType, statusMessageSource.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, statusMessageSource.ResourceType, expectedData, payload)
-		}
-
-		return nil
+	getStatusMessageAndTestUtility = func() (types.StatusMessage, *testing.T) {
+		return statusMessageSource, t
 	}
 
 	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: sourceTestData.MessageHeaders})
@@ -491,31 +500,8 @@ func TestConsumeStatusMessageApplication(t *testing.T) {
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(applicationTestData)
 
-	testRaiseEventData = func(eventType string, payload []byte) error {
-		var isResult bool
-		var expectedData []byte
-		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(statusMessageApplication.ResourceType, statusMessageApplication.ResourceID)
-		} else {
-			expectedData = ResourceJSONFor(statusMessageApplication.ResourceType, statusMessageApplication.ResourceID)
-		}
-
-		isResult, err := JSONBytesEqual(payload, expectedData)
-		if err != nil {
-			t.Errorf("error with parsing JSON: %s", err.Error())
-		}
-
-		if isResult != true {
-			errMsg := "error in raising event of type %s with resource type %s.\n" +
-				"JSON payloads are not same:\n\n" +
-				"Expected: %s \n" +
-				"Obtained: %s \n"
-
-			t.Errorf(errMsg, eventType, statusMessageApplication.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, statusMessageApplication.ResourceType, expectedData, payload)
-		}
-
-		return nil
+	getStatusMessageAndTestUtility = func() (types.StatusMessage, *testing.T) {
+		return statusMessageApplication, t
 	}
 
 	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: applicationTestData.MessageHeaders})
@@ -554,31 +540,8 @@ func TestConsumeStatusMessageEndpoint(t *testing.T) {
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(endpointTestData)
 
-	testRaiseEventData = func(eventType string, payload []byte) error {
-		var isResult bool
-		var expectedData []byte
-		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
-		} else {
-			expectedData = ResourceJSONFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
-		}
-
-		isResult, err := JSONBytesEqual(payload, expectedData)
-		if err != nil {
-			t.Errorf("error with parsing JSON: %s", err.Error())
-		}
-
-		if isResult != true {
-			errMsg := "error in raising event of type %s with resource type %s.\n" +
-				"JSON payloads are not same:\n\n" +
-				"Expected: %s \n" +
-				"Obtained: %s \n"
-
-			t.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
-		}
-
-		return nil
+	getStatusMessageAndTestUtility = func() (types.StatusMessage, *testing.T) {
+		return statusMessageEndpoint, t
 	}
 
 	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: endpointTestData.MessageHeaders})
@@ -617,31 +580,8 @@ func TestConsumeStatusMessageEndpointNotFound(t *testing.T) {
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(endpointTestDataNotFound)
 
-	testRaiseEventData = func(eventType string, payload []byte) error {
-		var isResult bool
-		var expectedData []byte
-		if eventType == "Records.update" {
-			expectedData = BulkMessageFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
-		} else {
-			expectedData = ResourceJSONFor(statusMessageEndpoint.ResourceType, statusMessageEndpoint.ResourceID)
-		}
-
-		isResult, err := JSONBytesEqual(payload, expectedData)
-		if err != nil {
-			t.Errorf("error with parsing JSON: %s", err.Error())
-		}
-
-		if isResult != true {
-			errMsg := "error in raising event of type %s with resource type %s.\n" +
-				"JSON payloads are not same:\n\n" +
-				"Expected: %s \n" +
-				"Obtained: %s \n"
-
-			t.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
-			return fmt.Errorf(errMsg, eventType, statusMessageEndpoint.ResourceType, expectedData, payload)
-		}
-
-		return nil
+	getStatusMessageAndTestUtility = func() (types.StatusMessage, *testing.T) {
+		return statusMessageEndpoint, t
 	}
 
 	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: endpointTestDataNotFound.MessageHeaders})
