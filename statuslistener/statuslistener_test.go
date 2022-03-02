@@ -58,6 +58,20 @@ func setUpKafkaHeaders() []kafkaGo.Header {
 	}
 }
 
+// setUpTests sets up the mocked Vault DAO and the logger so that the functions under test don't panic with a
+// dereference error.
+func setUpTests() {
+	dao.Vault = &mocks.MockVault{}
+
+	logging.Log = &logrus.Logger{
+		Out:          os.Stdout,
+		Level:        logrus.DebugLevel,
+		Formatter:    MockFormatter{},
+		Hooks:        make(logrus.LevelHooks),
+		ReportCaller: false,
+	}
+}
+
 func LoadJSONContentFrom(resourceType string, resourceID string, prefix string) []byte {
 	fileName := "./test_data/" + prefix + resourceType + "_" + resourceID + ".json"
 	fileContent, err := os.ReadFile(fileName)
@@ -419,18 +433,7 @@ type TestData struct {
 func TestConsumeStatusMessage(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
-	dao.Vault = &mocks.MockVault{}
-
-	log := logrus.Logger{
-		Out:          os.Stdout,
-		Level:        logrus.DebugLevel,
-		Formatter:    MockFormatter{},
-		Hooks:        make(logrus.LevelHooks),
-		ReportCaller: false,
-	}
-
-	logging.Log = &log
-
+	setUpTests()
 	kafkaHeaders := setUpKafkaHeaders()
 
 	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", Status: m.Available}
