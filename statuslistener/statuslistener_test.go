@@ -33,14 +33,6 @@ func (m MockFormatter) Format(_ *logrus.Entry) ([]byte, error) {
 	return []byte{}, nil
 }
 
-type MockEventStreamSender struct {
-	events.EventStreamSender
-	TestSuite *testing.T
-	types.StatusMessage
-
-	RaiseEventCalled bool
-}
-
 // setUpKafkaHeaders sets up the required Kafka headers that the status listener will be looking for.
 func setUpKafkaHeaders() []kafkaGo.Header {
 	eventTypeHeader := kafkaGo.Header{
@@ -363,6 +355,16 @@ func JSONBytesEqual(a, b []byte) (bool, error) {
 		return false, err
 	}
 	return reflect.DeepEqual(j2, j), nil
+}
+
+// MockEventStreamSender is a mock for the "RaiseEvent" function, which gets called every time the status listener
+// processes an event.
+type MockEventStreamSender struct {
+	events.EventStreamSender
+	TestSuite *testing.T
+	types.StatusMessage
+
+	RaiseEventCalled bool
 }
 
 func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
