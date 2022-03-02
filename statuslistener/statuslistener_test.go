@@ -70,19 +70,20 @@ func setUpTests() {
 	}
 }
 
-func LoadJSONContentFrom(resourceType string, resourceID string, prefix string) []byte {
-	fileName := "./test_data/" + prefix + resourceType + "_" + resourceID + ".json"
-	fileContent, err := os.ReadFile(fileName)
+// loadTestDataFile loads a file from the "test_data" directory. It doesn't return the parsed JSON, just the contents.
+func loadTestDataFile(prefix string, resourceType string, resourceID string) []byte {
+	path := fmt.Sprintf(`./test_data/%s%s_%s.json`, prefix, resourceType, resourceID)
+	contents, err := os.ReadFile(path)
 
 	if err != nil {
-		panic(fmt.Errorf("unable to read file %s because of %s", fileName, err.Error()))
+		panic(err)
 	}
 
-	return fileContent
+	return contents
 }
 
 func BulkMessageFor(resourceType string, resourceID string) []byte {
-	bulkMessage := LoadJSONContentFrom(resourceType, resourceID, "bulk_message_")
+	bulkMessage := loadTestDataFile("bulk_message_", resourceType, resourceID)
 	return TransformDateFieldsInJSONForBulkMessage(resourceType, resourceID, bulkMessage)
 }
 
@@ -354,7 +355,7 @@ func TransformDateFieldsInJSONForResource(resourceType string, resourceID string
 }
 
 func ResourceJSONFor(resourceType string, resourceID string) []byte {
-	content := LoadJSONContentFrom(resourceType, resourceID, "resource_")
+	content := loadTestDataFile("resource_", resourceType, resourceID)
 	return TransformDateFieldsInJSONForResource(resourceType, resourceID, content)
 }
 
