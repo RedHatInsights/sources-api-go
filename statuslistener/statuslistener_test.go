@@ -377,16 +377,17 @@ type MockEventStreamSender struct {
 	events.EventStreamSender
 	TestSuite *testing.T
 	types.StatusMessage
-
-	RaiseEventCalled bool
 }
 
 // testRaiseEventData is a function which gets called from RaiseEvent, which helps us customize what we want to have
 // checked on each test, in case different things need to be tested.
 var testRaiseEventData func(eventType string, payload []byte) error
 
+// testRaiseEventWasCalled is a variable which will tell us if the "RaiseEvent" was called or not.
+var testRaiseEventWasCalled bool
+
 func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
-	streamProducerSender.RaiseEventCalled = true
+	testRaiseEventWasCalled = true
 
 	return testRaiseEventData(eventType, payload)
 }
@@ -431,6 +432,10 @@ func TestConsumeStatusMessage(t *testing.T) {
 	testData[3] = endpointTestDataNotFound
 
 	for _, testEntry := range testData {
+		// testRaiseEventWasCalled must be set to false every time to avoid issues with tests which require different
+		// values.
+		testRaiseEventWasCalled = false
+
 		sender := MockEventStreamSender{TestSuite: t, StatusMessage: testEntry.StatusMessage}
 		esp := &events.EventStreamProducer{Sender: &sender}
 		avs := AvailabilityStatusListener{EventStreamProducer: esp}
@@ -467,19 +472,8 @@ func TestConsumeStatusMessage(t *testing.T) {
 
 		avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: testEntry.MessageHeaders})
 
-		raiseEventCalled := esp.Sender.(*MockEventStreamSender).RaiseEventCalled
-		if raiseEventCalled != testEntry.RaiseEventCalled {
-			wasOrWasNot := " "
-			if raiseEventCalled == false {
-				wasOrWasNot = " not "
-			}
-
-			wasOrWasNotExpected := " "
-			if testEntry.RaiseEventCalled == false {
-				wasOrWasNotExpected = " not "
-			}
-
-			sender.TestSuite.Errorf("RaiseEvent was%scalled while it was%sexpected", wasOrWasNot, wasOrWasNotExpected)
+		if testRaiseEventWasCalled != testEntry.RaiseEventCalled {
+			t.Errorf(`Was RaiseEvent called? Want: "%t", got "%t"`, testEntry.RaiseEventCalled, testRaiseEventWasCalled)
 		}
 	}
 }
