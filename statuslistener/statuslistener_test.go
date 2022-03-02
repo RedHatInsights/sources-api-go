@@ -41,6 +41,31 @@ type MockEventStreamSender struct {
 	RaiseEventCalled bool
 }
 
+// setUpKafkaHeaders sets up the required Kafka headers that the status listener will be looking for.
+func setUpKafkaHeaders() []kafkaGo.Header {
+	eventTypeHeader := kafkaGo.Header{
+		Key:   "event_type",
+		Value: []byte("availability_status"),
+	}
+
+	// {"identity":{"account_number":"12345","user": {"is_org_admin":true}}, "internal": {"org_id": "000001"}}
+	xRhIdentityHeader := kafkaGo.Header{
+		Key:   "x-rh-identity",
+		Value: []byte("eyJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjEyMzQ1IiwidXNlciI6IHsiaXNfb3JnX2FkbWluIjp0cnVlfX0sICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fQo="),
+	}
+
+	xRhSourcesAccountNumberHeader := kafkaGo.Header{
+		Key:   "x-rh-sources-account-number",
+		Value: []byte("12345"),
+	}
+
+	return []kafkaGo.Header{
+		eventTypeHeader,
+		xRhIdentityHeader,
+		xRhSourcesAccountNumberHeader,
+	}
+}
+
 func LoadJSONContentFrom(resourceType string, resourceID string, prefix string) []byte {
 	fileName := "./test_data/" + prefix + resourceType + "_" + resourceID + ".json"
 	fileContent, err := os.ReadFile(fileName)
@@ -404,22 +429,19 @@ func TestConsumeStatusMessage(t *testing.T) {
 
 	logging.Log = &log
 
-	header := kafkaGo.Header{Key: "event_type", Value: []byte("availability_status")}
-	// {"identity":{"account_number":"12345","user": {"is_org_admin":true}}, "internal": {"org_id": "000001"}}
-	header2 := kafkaGo.Header{Key: "x-rh-identity", Value: []byte("eyJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjEyMzQ1IiwidXNlciI6IHsiaXNfb3JnX2FkbWluIjp0cnVlfX0sICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fQo=")}
-	header3 := kafkaGo.Header{Key: "x-rh-sources-account-number", Value: []byte("12345")}
-	headers := []kafkaGo.Header{header, header2, header3}
+	kafkaHeaders := setUpKafkaHeaders()
+
 	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", Status: m.Available}
-	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: headers, RaiseEventCalled: true}
+	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: kafkaHeaders, RaiseEventCalled: true}
 
 	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", Status: m.Available}
-	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: headers, RaiseEventCalled: true}
+	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: kafkaHeaders, RaiseEventCalled: true}
 
 	statusMessageEndpoint := types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", Status: m.Available}
-	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: true}
+	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: kafkaHeaders, RaiseEventCalled: true}
 
 	statusMessageEndpoint = types.StatusMessage{ResourceType: "Endpoint", ResourceID: "99", Status: m.Available}
-	endpointTestDataNotFound := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: false}
+	endpointTestDataNotFound := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: kafkaHeaders, RaiseEventCalled: false}
 
 	testData = make([]TestData, 4)
 	testData[0] = sourceTestData
