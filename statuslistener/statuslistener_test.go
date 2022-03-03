@@ -21,16 +21,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type MockFormatter struct {
-	Hostname              string
-	AppName               string
-	InjectedToOtherLogger bool
-}
-
-func (m MockFormatter) Format(_ *logrus.Entry) ([]byte, error) {
-	return []byte{}, nil
-}
-
 // setUpKafkaHeaders sets up the required Kafka headers that the status listener will be looking for.
 func setUpKafkaHeaders() []kafkaGo.Header {
 	eventTypeHeader := kafkaGo.Header{
@@ -54,6 +44,17 @@ func setUpKafkaHeaders() []kafkaGo.Header {
 		xRhIdentityHeader,
 		xRhSourcesAccountNumberHeader,
 	}
+}
+
+// MockFormatter is just a formatter so that the logging works in the tests.
+type MockFormatter struct {
+	Hostname              string
+	AppName               string
+	InjectedToOtherLogger bool
+}
+
+func (m MockFormatter) Format(_ *logrus.Entry) ([]byte, error) {
+	return []byte{}, nil
 }
 
 // setUpTests sets up the mocked Vault DAO and the logger so that the functions under test don't panic with a
