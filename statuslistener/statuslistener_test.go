@@ -451,10 +451,13 @@ func TestConsumeStatusMessageApplication(t *testing.T) {
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(applicationTestData)
 
+	// Set the status message and the testing utilities which will be pulled in the "RaiseEvent" function of this test
+	// file.
 	getStatusMessageAndTestUtility = func() (types.StatusMessage, *testing.T) {
 		return statusMessageApplication, t
 	}
 
+	// This will end up calling the "RaiseEvent" function we've got in this test file.
 	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: applicationTestData.MessageHeaders})
 
 	if testRaiseEventWasCalled != applicationTestData.RaiseEventCalled {
@@ -491,10 +494,13 @@ func TestConsumeStatusMessageEndpoint(t *testing.T) {
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(endpointTestData)
 
+	// Set the status message and the testing utilities which will be pulled in the "RaiseEvent" function of this test
+	// file.
 	getStatusMessageAndTestUtility = func() (types.StatusMessage, *testing.T) {
 		return statusMessageEndpoint, t
 	}
 
+	// This will end up calling the "RaiseEvent" function we've got in this test file.
 	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: endpointTestData.MessageHeaders})
 
 	if testRaiseEventWasCalled != endpointTestData.RaiseEventCalled {
@@ -531,10 +537,13 @@ func TestConsumeStatusMessageEndpointNotFound(t *testing.T) {
 	avs := AvailabilityStatusListener{EventStreamProducer: esp}
 	message, _ := json.Marshal(endpointTestDataNotFound)
 
+	// Set the status message and the testing utilities which will be pulled in the "RaiseEvent" function of this test
+	// file.
 	getStatusMessageAndTestUtility = func() (types.StatusMessage, *testing.T) {
 		return statusMessageEndpoint, t
 	}
 
+	// This will end up calling the "RaiseEvent" function we've got in this test file.
 	avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: endpointTestDataNotFound.MessageHeaders})
 
 	if testRaiseEventWasCalled != endpointTestDataNotFound.RaiseEventCalled {
