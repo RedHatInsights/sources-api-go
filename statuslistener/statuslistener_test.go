@@ -326,7 +326,7 @@ var getStatusMessageAndTestUtility func() (types.StatusMessage, *testing.T)
 // testRaiseEventWasCalled is a variable which will tell us if the "RaiseEvent" was called or not.
 var testRaiseEventWasCalled bool
 
-func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
+func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, _ []kafka.Header) error {
 	testRaiseEventWasCalled = true
 
 	// Get the status message and the test suite from the running test. This function must be set on each test for this
