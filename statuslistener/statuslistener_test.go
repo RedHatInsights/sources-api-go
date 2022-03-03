@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
-	"time"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
-	"github.com/RedHatInsights/sources-api-go/util"
 	kafkaGo "github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 )
@@ -70,293 +70,248 @@ func setUpTests() {
 	}
 }
 
-// loadTestDataFile loads a file from the "test_data" directory. It doesn't return the parsed JSON, just the contents.
-func loadTestDataFile(prefix string, resourceType string, resourceID string) []byte {
-	path := fmt.Sprintf(`./test_data/%s%s_%s.json`, prefix, resourceType, resourceID)
-	contents, err := os.ReadFile(path)
+// getSourceMap creates the expected JSON structure that the status listener will produce when receiving a status
+// update. The function fetches the given source, its related applications, authentications and endpoints. Then, it
+// creates a base map which has all that information, ready to be edited at will.
+func getSourceMap(sourceId int64) (map[string]interface{}, error) {
+	// resultingMap will mimic the structure of how the bulk message needs to look like. The idea is to fill it with
+	// the required data that will be pulled from the database.
+	var resultingMap = make(map[string]interface{})
+
+	// Initialize the structure that we expect the status listener to build.
+	emptyArray := []interface{}{}
+
+	resultingMap["application_authentications"] = emptyArray
+	resultingMap["applications"] = emptyArray
+	resultingMap["authentications"] = emptyArray
+	resultingMap["endpoints"] = emptyArray
+
+	empty := struct{}{}
+	resultingMap["source"] = empty
+	resultingMap["updated"] = empty
+
+	// rawData will hold all the data that needs to be set in the resultingMap. As all the models return an
+	// "interface{}", it needs to be of that generic type.
+	var rawData []interface{}
+
+	// dbSource is the main source that connects everything in the bulk message.
+	var dbSource m.Source
+
+	// Pull the application authentications for the given source.
+	var appAuths = make([]m.ApplicationAuthentication, 0)
+	err := dao.DB.
+		Preload(`Tenant`).
+		Joins(`INNER JOIN applications ON "application_authentications"."application_id" = applications.id`).
+		Where(`applications.source_id = ?`, sourceId).
+		Find(&appAuths).
+		Error
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return contents
-}
-
-func BulkMessageFor(resourceType string, resourceID string) []byte {
-	bulkMessage := loadTestDataFile("bulk_message_", resourceType, resourceID)
-	return TransformDateFieldsInJSONForBulkMessage(resourceType, resourceID, bulkMessage)
-}
-
-type DateFields struct {
-	CreatedAt       time.Time
-	LastAvailableAt time.Time
-	LastCheckedAt   time.Time
-	UpdatedAt       time.Time
-}
-
-func UpdateDateFieldsTo(fieldsMap map[string]interface{}, dateFields DateFields) map[string]interface{} {
-	if !dateFields.CreatedAt.IsZero() {
-		fieldsMap["created_at"] = util.FormatTimeToString(dateFields.CreatedAt, util.RecordDateTimeFormat)
+	// Append the data to the "rawData" and set it in the resultingMap.
+	for _, appAuth := range appAuths {
+		rawData = append(rawData, appAuth.ToEvent())
 	}
+	resultingMap["application_authentications"] = rawData
 
-	if !dateFields.LastAvailableAt.IsZero() {
-		fieldsMap["last_available_at"] = util.FormatTimeToString(dateFields.LastAvailableAt, util.RecordDateTimeFormat)
-	}
+	err = dao.DB.
+		Preload(`Applications`).
+		Preload(`Applications.Tenant`).
+		Preload(`Endpoints`).
+		Preload(`Endpoints.Tenant`).
+		Preload(`Tenant`).
+		Where(`id = ?`, sourceId).
+		Find(&dbSource).
+		Error
 
-	if !dateFields.LastCheckedAt.IsZero() {
-		fieldsMap["last_checked_at"] = util.FormatTimeToString(dateFields.LastCheckedAt, util.RecordDateTimeFormat)
-	}
-
-	if !dateFields.UpdatedAt.IsZero() {
-		fieldsMap["updated_at"] = util.FormatTimeToString(dateFields.UpdatedAt, util.RecordDateTimeFormat)
-	}
-
-	return fieldsMap
-}
-
-func PopulateDateFieldsFrom(resource interface{}) DateFields {
-	dateFields := DateFields{}
-
-	switch typedResource := resource.(type) {
-	case *m.Source:
-		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = typedResource.LastCheckedAt
-		dateFields.UpdatedAt = typedResource.UpdatedAt
-	case *m.Application:
-		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = typedResource.LastCheckedAt
-		dateFields.UpdatedAt = typedResource.UpdatedAt
-	case *m.Endpoint:
-		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = typedResource.LastCheckedAt
-		dateFields.UpdatedAt = typedResource.UpdatedAt
-	case *m.ApplicationAuthentication:
-		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.UpdatedAt = typedResource.UpdatedAt
-	default:
-		panic("unable to find type")
-	}
-
-	return dateFields
-}
-
-func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (interface{}, map[string]interface{}) {
-	id, err := util.InterfaceToInt64(resourceID)
 	if err != nil {
-		panic("conversion error + " + err.Error())
+		return nil, err
 	}
 
-	var src interface{}
-	res := dao.DB
+	// Reset the rawData, so we don't include the previous data and append the data to the "rawData" and set it in the
+	// resultingMap.
+	rawData = []interface{}{}
+	for _, app := range dbSource.Applications {
+		rawData = append(rawData, app.ToEvent())
+	}
+	resultingMap["applications"] = rawData
 
-	bulkMessage := map[string]interface{}{}
+	// Pull the authentications for that given source.
+	authentication := &m.Authentication{ResourceID: sourceId, ResourceType: "Source"}
+	authDao := dao.AuthenticationDaoImpl{TenantID: &fixtures.TestTenantData[0].Id}
 
-	switch resourceType {
-	case "Source":
-		source := &m.Source{ID: id}
-		if forBulkMessage {
-			res = dao.DB.Preload("Applications").Preload("Endpoints")
-		}
-		res = res.Find(source)
-		bulkMessage["applications"] = source.Applications
-		bulkMessage["endpoints"] = source.Endpoints
+	authentications, err := authDao.AuthenticationsByResource(authentication)
+	if err != nil {
+		return nil, err
+	}
 
-		appIDs := make([]int64, len(source.Applications))
-		for index, application := range source.Applications {
-			appIDs[index] = application.ID
-		}
+	// Reset the rawData, so we don't include the previous data and append the data to the "rawData" and set it in the
+	// resultingMap.
+	rawData = []interface{}{}
+	for _, auth := range authentications {
+		// The tenant must be set the same way it is done in dao/common.go#BulkMessageFromSource
+		auth.Tenant = fixtures.TestTenantData[0]
+		rawData = append(rawData, auth.ToEvent())
+	}
+	resultingMap["authentications"] = rawData
 
-		var aa []m.ApplicationAuthentication
-		if len(appIDs) > 0 {
-			dao.DB.Where("application_id IN ?", appIDs).Find(&aa)
-			bulkMessage["application_authentications"] = aa
-		}
+	// Reset the rawData, so we don't include the previous data and append the data to the "rawData" and set it in the
+	// resultingMap.
+	rawData = []interface{}{}
+	for _, endpoint := range dbSource.Endpoints {
+		rawData = append(rawData, endpoint.ToEvent())
+	}
+	resultingMap["endpoints"] = rawData
 
-		src = source
+	// Include the source in the map as well.
+	resultingMap["source"] = dbSource.ToEvent()
+
+	return resultingMap, nil
+}
+
+// getSourceBulkMessage generates the expected bulk message that the status listener should generate. It returns a map
+// with the ideal structure, ready to be marshalled.
+func getSourceBulkMessage(sourceId int64) (map[string]interface{}, error) {
+	resultingMap, err := getSourceMap(sourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	// We expect the following fields to be updated from the Source.
+	updatedMetadata := map[string]interface{}{
+		"Source": map[string]interface{}{
+			"1": []string{"availability_status", "last_available_at", "last_checked_at"},
+		},
+	}
+	resultingMap["updated"] = updatedMetadata
+
+	return resultingMap, nil
+}
+
+// getApplicationBulkMessage returns a map representing what the status listener is expected to generate.
+func getApplicationBulkMessage(sourceId int64) (map[string]interface{}, error) {
+	// Ideally the function should hit the database to fetch all the related data for the application, but since all
+	// the fixtures belong to the same source, we simply fetch everything with the helper "getSourceMap" function and
+	// remove the bits we're not interested in. If the fixtures change in the future, we will have to refactor this.
+	resultingMap, err := getSourceMap(sourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	// We expect the following fields to be updated from the Source.
+	updatedMetadata := map[string]interface{}{
+		"Application": map[string]interface{}{
+			"1": []string{"availability_status", "availability_status_error", "last_available_at", "last_checked_at"},
+		},
+	}
+	resultingMap["updated"] = updatedMetadata
+
+	return resultingMap, nil
+}
+
+// getEndpointBulkMessage generates the expected bulk message that the status listener should generate. It returns a
+// map with the ideal structure, ready to be marshalled.
+func getEndpointBulkMessage(sourceId int64) (map[string]interface{}, error) {
+	// Ideally the function should hit the database to fetch all the related data for the endpoint, but since all
+	// the fixtures belong to the same source, we simply fetch everything with the helper "getSourceMap" function and
+	// remove the bits we're not interested in. If the fixtures change in the future, we will have to refactor this.
+	resultingMap, err := getSourceMap(sourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	// There will not be any application authentications related to the endpoint.
+	rawData := []interface{}{}
+	resultingMap["application_authentications"] = rawData
+	resultingMap["authentications"] = rawData
+
+	// We expect the following fields to be updated from the Source.
+	updatedMetadata := map[string]interface{}{
+		"Endpoint": map[string]interface{}{
+			"1": []string{"availability_status", "availability_status_error", "last_available_at", "last_checked_at"},
+		},
+	}
+	resultingMap["updated"] = updatedMetadata
+
+	return resultingMap, nil
+
+}
+
+// getResourceAsEvent fetches the resource specified in the status message and returns it in the ".ToEvent" format.
+func getResourceAsEvent(statusMessage types.StatusMessage) (interface{}, error) {
+	var err error
+	resourceId, err := strconv.ParseInt(statusMessage.ResourceID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	var event interface{}
+	switch statusMessage.ResourceType {
 	case "Application":
-		application := &m.Application{ID: id}
-		if forBulkMessage {
-			res = dao.DB.Preload("Source").Preload("Source.Applications").Preload("Source.Endpoints")
-		}
-
-		res = res.Find(application)
-		bulkMessage["applications"] = application.Source.Applications
-		bulkMessage["endpoints"] = application.Source.Endpoints
-
-		authentication := &m.Authentication{ResourceID: application.ID,
-			ResourceType:               "Application",
-			ApplicationAuthentications: []m.ApplicationAuthentication{},
-		}
-
-		authDao := &dao.AuthenticationDaoImpl{TenantID: &application.TenantID}
-		authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
-		if err != nil {
-			panic("error to fetch authentications: " + err.Error())
-		}
-
-		bulkMessage["authentications"] = authenticationsByResource
+		var application m.Application
+		err := dao.DB.Preload("Tenant").Where(`id = ?`, resourceId).Find(&application).Error
 
 		if err != nil {
-			panic("error in adding authentications: " + err.Error())
+			return nil, err
 		}
 
-		appIDs := make([]int64, len(application.Source.Applications))
-		for index, app := range application.Source.Applications {
-			appIDs[index] = app.ID
-		}
-
-		var aa []m.ApplicationAuthentication
-		if len(appIDs) > 0 {
-			dao.DB.Where("application_id IN ?", appIDs).Find(&aa)
-			bulkMessage["application_authentications"] = aa
-		}
-
-		src = application
+		event = application.ToEvent()
 	case "Endpoint":
-		endpoint := &m.Endpoint{ID: id}
-		if forBulkMessage {
-			res = dao.DB.Preload("Source").Preload("Source.Applications").Preload("Source.Endpoints")
-		}
-		res = res.Find(endpoint)
-		bulkMessage["applications"] = endpoint.Source.Applications
-		bulkMessage["endpoints"] = endpoint.Source.Endpoints
-
-		authentication := &m.Authentication{ResourceID: endpoint.ID,
-			ResourceType:               "Endpoint",
-			ApplicationAuthentications: []m.ApplicationAuthentication{},
-		}
-		authDao := &dao.AuthenticationDaoImpl{TenantID: &endpoint.TenantID}
-		authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
-		if err != nil {
-			return err, nil
-		}
+		var endpoint m.Endpoint
+		err := dao.DB.Preload("Tenant").Where(`id = ?`, resourceId).Find(&endpoint).Error
 
 		if err != nil {
-			panic("error in adding authentications: " + err.Error())
+			return nil, err
 		}
 
-		bulkMessage["authentications"] = authenticationsByResource
+		event = endpoint.ToEvent()
+	case "Source":
+		sourceDao := dao.SourceDaoImpl{TenantID: &fixtures.TestTenantData[0].Id}
 
-		src = endpoint
-	default:
-		panic("can't find resource type")
+		source, err := sourceDao.GetByIdWithPreload(&resourceId, "Tenant")
+
+		if err != nil {
+			return nil, err
+		}
+
+		event = source.ToEvent()
 	}
 
-	err = res.Error
-
-	if err != nil {
-		panic("Error fetch record " + resourceID)
-	}
-
-	return src, bulkMessage
+	return event, nil
 }
 
-func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID string, content []byte) []byte {
-	resource, bulkMessage := FetchDataFor(resourceType, resourceID, true)
-
-	contentMap := make(map[string]interface{})
-	err := json.Unmarshal(content, &contentMap)
+// getResourceBulkMessage simply returns the ideal bulk message structure for the given resource. That ideal bulk
+// message structure is what is expected for the status listener to generate.
+func getResourceBulkMessage(statusMessage types.StatusMessage) (map[string]interface{}, error) {
+	var err error
+	resourceId, err := strconv.ParseInt(statusMessage.ResourceID, 10, 64)
 	if err != nil {
-		panic("unmarshalling error + " + err.Error())
+		return nil, err
 	}
 
-	dateFields := PopulateDateFieldsFrom(resource)
-	contentMap["source"] = UpdateDateFieldsTo(contentMap["source"].(map[string]interface{}), dateFields)
-
-	var applications []interface{}
-
-	apps, success := bulkMessage["applications"].([]m.Application)
-	if !success {
-		panic("type assertion error: + " + err.Error())
-	}
-
-	for index, application := range apps {
-		dateFields = PopulateDateFieldsFrom(&application)
-		ap, success := contentMap["applications"].([]interface{})
-		if !success {
-			panic("type assertion error: + " + err.Error())
+	var bulkMessage map[string]interface{}
+	switch statusMessage.ResourceType {
+	case "Application":
+		bulkMessage, err = getApplicationBulkMessage(resourceId)
+		if err != nil {
+			return nil, err
 		}
 
-		upd := UpdateDateFieldsTo(ap[index].(map[string]interface{}), dateFields)
-		applications = append(applications, upd)
-	}
-	contentMap["applications"] = applications
-
-	var endpoints []interface{}
-
-	ends, success := bulkMessage["endpoints"].([]m.Endpoint)
-	if !success {
-		panic("type assertion error: + " + err.Error())
-	}
-
-	for index, endpoint := range ends {
-		dateFields = PopulateDateFieldsFrom(&endpoint)
-		ap, success := contentMap["endpoints"].([]interface{})
-		if !success {
-			panic("type assertion error: + " + err.Error())
+	case "Endpoint":
+		bulkMessage, err = getEndpointBulkMessage(resourceId)
+		if err != nil {
+			return nil, err
 		}
-
-		upd := UpdateDateFieldsTo(ap[index].(map[string]interface{}), dateFields)
-		endpoints = append(endpoints, upd)
-	}
-
-	contentMap["endpoints"] = endpoints
-
-	var applicationAuthentications []interface{}
-
-	if applicationAuthenticationsBulkMessage, ok := bulkMessage["application_authentications"].([]m.ApplicationAuthentication); ok {
-		for index, applicationAuthentication := range applicationAuthenticationsBulkMessage {
-			dateFields = PopulateDateFieldsFrom(&applicationAuthentication)
-			if ap, ok := contentMap["application_authentications"].([]interface{}); ok {
-				upd := UpdateDateFieldsTo(ap[index].(map[string]interface{}), dateFields)
-				applicationAuthentications = append(applicationAuthentications, upd)
-			} else {
-				panic("type assertion error: + " + err.Error())
-			}
-
+	case "Source":
+		bulkMessage, err = getSourceBulkMessage(resourceId)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	if applicationAuthentications != nil {
-		contentMap["application_authentications"] = applicationAuthentications
-	} else {
-		contentMap["application_authentications"] = []m.ApplicationAuthentication{}
-	}
-
-	contentJSON, err := json.Marshal(contentMap)
-	if err != nil {
-		panic("marshalling error + " + err.Error())
-	}
-
-	return contentJSON
-}
-
-func TransformDateFieldsInJSONForResource(resourceType string, resourceID string, content []byte) []byte {
-	resource, _ := FetchDataFor(resourceType, resourceID, false)
-
-	contentMap := make(map[string]interface{})
-	err := json.Unmarshal(content, &contentMap)
-	if err != nil {
-		panic("unmarshalling error + " + err.Error())
-	}
-
-	dateFields := PopulateDateFieldsFrom(resource)
-	contentMap = UpdateDateFieldsTo(contentMap, dateFields)
-
-	contentJSON, err := json.Marshal(contentMap)
-	if err != nil {
-		panic("marshalling error + " + err.Error())
-	}
-
-	return contentJSON
-}
-
-func ResourceJSONFor(resourceType string, resourceID string) []byte {
-	content := loadTestDataFile("resource_", resourceType, resourceID)
-	return TransformDateFieldsInJSONForResource(resourceType, resourceID, content)
+	return bulkMessage, nil
 }
 
 func JSONBytesEqual(a, b []byte) (bool, error) {
@@ -387,9 +342,25 @@ func testRaiseEventData(eventType string, payload []byte) error {
 	var isResult bool
 	var expectedData []byte
 	if eventType == "Records.update" {
-		expectedData = BulkMessageFor(statusMessage.ResourceType, statusMessage.ResourceID)
+		bulkMessage, err := getResourceBulkMessage(statusMessage)
+		if err != nil {
+			t.Errorf(`unexpected error when building the bulk message: %s`, err)
+		}
+
+		expectedData, err = json.Marshal(bulkMessage)
+		if err != nil {
+			t.Errorf(`unexpected error when marshalling the bulk message: %s`, err)
+		}
 	} else {
-		expectedData = ResourceJSONFor(statusMessage.ResourceType, statusMessage.ResourceID)
+		event, err := getResourceAsEvent(statusMessage)
+		if err != nil {
+			t.Errorf(`unexpected error when pulling the resource: %s`, err)
+		}
+
+		expectedData, err = json.Marshal(event)
+		if err != nil {
+			t.Errorf(`unexpected error when marshalling the event: %s`, err)
+		}
 	}
 
 	isResult, err := JSONBytesEqual(payload, expectedData)
