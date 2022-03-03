@@ -323,9 +323,14 @@ type MockEventStreamSender struct{}
 // the "testRaiseEventData" function, since that one needs the status message used in the test.
 var getStatusMessageAndTestUtility func() (types.StatusMessage, *testing.T)
 
-// testRaiseEventData is a function which gets called from RaiseEvent, which helps us customize what we want to have
-// checked on each test, in case different things need to be tested.
-func testRaiseEventData(eventType string, payload []byte) error {
+// testRaiseEventWasCalled is a variable which will tell us if the "RaiseEvent" was called or not.
+var testRaiseEventWasCalled bool
+
+func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
+	testRaiseEventWasCalled = true
+
+	// Get the status message and the test suite from the running test. This function must be set on each test for this
+	// to work!
 	statusMessage, t := getStatusMessageAndTestUtility()
 
 	var expectedData []byte
@@ -362,15 +367,6 @@ func testRaiseEventData(eventType string, payload []byte) error {
 	}
 
 	return nil
-}
-
-// testRaiseEventWasCalled is a variable which will tell us if the "RaiseEvent" was called or not.
-var testRaiseEventWasCalled bool
-
-func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
-	testRaiseEventWasCalled = true
-
-	return testRaiseEventData(eventType, payload)
 }
 
 type ExpectedData struct {
