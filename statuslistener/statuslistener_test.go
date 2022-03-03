@@ -1,10 +1,10 @@
 package statuslistener
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
 	"strconv"
 	"testing"
 
@@ -314,17 +314,6 @@ func getResourceBulkMessage(statusMessage types.StatusMessage) (map[string]inter
 	return bulkMessage, nil
 }
 
-func JSONBytesEqual(a, b []byte) (bool, error) {
-	var j, j2 interface{}
-	if err := json.Unmarshal(a, &j); err != nil {
-		return false, err
-	}
-	if err := json.Unmarshal(b, &j2); err != nil {
-		return false, err
-	}
-	return reflect.DeepEqual(j2, j), nil
-}
-
 // MockEventStreamSender is a mock for the "RaiseEvent" function, which gets called every time the status listener
 // processes an event.
 type MockEventStreamSender struct{}
@@ -339,7 +328,6 @@ var getStatusMessageAndTestUtility func() (types.StatusMessage, *testing.T)
 func testRaiseEventData(eventType string, payload []byte) error {
 	statusMessage, t := getStatusMessageAndTestUtility()
 
-	var isResult bool
 	var expectedData []byte
 	if eventType == "Records.update" {
 		bulkMessage, err := getResourceBulkMessage(statusMessage)
@@ -363,12 +351,7 @@ func testRaiseEventData(eventType string, payload []byte) error {
 		}
 	}
 
-	isResult, err := JSONBytesEqual(payload, expectedData)
-	if err != nil {
-		t.Errorf("error with parsing JSON: %s", err.Error())
-	}
-
-	if isResult != true {
+	if !bytes.Equal(expectedData, payload) {
 		errMsg := "error in raising event of type %s with resource type %s.\n" +
 			"JSON payloads are not same:\n\n" +
 			"Expected: %s \n" +
