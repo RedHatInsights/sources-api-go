@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
+	"time"
 
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
 )
 
@@ -292,5 +295,149 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 	err := setMarketplaceTokenAuthExtraField(auth)
 	if err == nil {
 		t.Error("want error, got nil")
+	}
+}
+
+// TestAuthFromVault tests that when Vault returns a properly formatted authentication, the authFromvault function is
+// able to successfully parse it.
+func TestAuthFromVault(t *testing.T) {
+	// Set up a test authentication.
+	now := time.Now()
+	lastAvailableCheckedAt := now.Add(time.Duration(-1) * time.Hour)
+	createdAt := now.Add(time.Duration(-2) * time.Hour)
+
+	authentication := m.Authentication{
+		Name:     "test-vault-auth",
+		AuthType: "test-authtype",
+		Username: "my-username",
+		Password: "my-password",
+		Extra:    nil,
+		AvailabilityStatus: m.AvailabilityStatus{
+			AvailabilityStatus: m.Available,
+			LastAvailableAt:    lastAvailableCheckedAt,
+			LastCheckedAt:      lastAvailableCheckedAt,
+		},
+		AvailabilityStatusError: "there was an error, wow",
+		ResourceType:            "source",
+		ResourceID:              123,
+		SourceID:                25,
+		CreatedAt:               createdAt,
+		Version:                 "500",
+	}
+
+	// Use the "ToVaultMap" function to simulate what Vault would store as an authentication.
+	vaultData, err := authentication.ToVaultMap()
+	if err != nil {
+		t.Errorf(`could not transform authentication to Vault map: %s`, err)
+	}
+
+	// The authFromVault function expects strings as timestamps, not "time.Time" types. This is a particularity of the
+	// tests since the data that comes from Vault will all be strings. In this case though, as we're directly assigning
+	// the data to the map, the latter stores it as the types that the "ToVaultMap" function returns, instead of
+	// storing the data as strings. This is why we overwrite that data manually.
+	data, ok := vaultData["data"].(map[string]interface{})
+	if !ok {
+		t.Errorf(`wrong type for the secret's data object. Want "map[string]interface{}", got "%s"'`, reflect.TypeOf(vaultData["data"]))
+	}
+	data["last_available_at"] = authentication.LastAvailableAt.Format(time.RFC3339Nano)
+
+	// We also want to test if the metadata gets correctly unmarshalled.
+	version := json.Number(authentication.Version)
+	vaultData["metadata"] = map[string]interface{}{
+		"created_time": authentication.CreatedAt.Format(time.RFC3339Nano),
+		"version":      version,
+	}
+
+	// Build the Vault secret.
+	vaultSecret := api.Secret{
+		Data: vaultData,
+	}
+
+	// Call the function under test and check the results.
+	resultingAuth := authFromVault(&vaultSecret)
+
+	// We need this if as otherwise the linter complains about possible nil pointer dereferences.
+	if resultingAuth == nil {
+		t.Errorf(`authFromVault didn't correctly parse the secret. Got a nil authentication`)
+	} else {
+		{
+			want := authentication.Name
+			got := resultingAuth.Name
+			if want != got {
+				t.Errorf(`authentication names are different. Want "%s", got "%s"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.AuthType
+			got := resultingAuth.AuthType
+			if want != got {
+				t.Errorf(`authentication types are different. Want "%s", got "%s"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.Username
+			got := resultingAuth.Username
+			if want != got {
+				t.Errorf(`authentication usernames are different. Want "%s", got "%s"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.Password
+			got := resultingAuth.Password
+			if want != got {
+				t.Errorf(`authentication passwords are different. Want "%s", got "%s"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.ResourceType
+			got := resultingAuth.ResourceType
+			if want != got {
+				t.Errorf(`authentication resoource types are different. Want "%s", got "%s"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.ResourceID
+			got := resultingAuth.ResourceID
+			if want != got {
+				t.Errorf(`authentication resource IDs are different. Want "%d", got "%d"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.SourceID
+			got := resultingAuth.SourceID
+			if want != got {
+				t.Errorf(`authentication passwords are different. Want "%d", got "%d"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.AvailabilityStatus.AvailabilityStatus
+			got := resultingAuth.AvailabilityStatus.AvailabilityStatus
+			if want != got {
+				t.Errorf(`authentication availability statuses are different. Want "%s", got "%s"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.AvailabilityStatus.LastAvailableAt.Format(time.RFC3339Nano)
+			got := resultingAuth.AvailabilityStatus.LastAvailableAt.Format(time.RFC3339Nano)
+			if want != got {
+				t.Errorf(`authentication last available at statuses are different. Want "%s", got "%s"`, want, got)
+			}
+		}
+
+		{
+			want := authentication.AvailabilityStatus.LastCheckedAt.Format(time.RFC3339Nano)
+			got := resultingAuth.AvailabilityStatus.LastCheckedAt.Format(time.RFC3339Nano)
+			if want != got {
+				t.Errorf(`authentication last checked at statuses are different. Want "%s", got "%s"`, want, got)
+			}
+		}
 	}
 }
