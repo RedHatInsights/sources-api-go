@@ -9,6 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/middleware"
@@ -25,6 +26,7 @@ var (
 	mockMetaDataDao                  dao.MetaDataDao
 	mockRhcConnectionDao             dao.RhcConnectionDao
 	mockApplicationAuthenticationDao dao.ApplicationAuthenticationDao
+	mockAuthenticationDao            dao.AuthenticationDao
 )
 
 func TestMain(t *testing.M) {
@@ -45,6 +47,12 @@ func TestMain(t *testing.M) {
 		getMetaDataDao = getMetaDataDaoWithTenant
 		getRhcConnectionDao = getDefaultRhcConnectionDao
 		getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
+		getAuthenticationDao = getAuthenticationDaoWithTenant
+
+		dao.Vault = &mocks.MockVault{}
+
+		// Set up marketplace's token management functions
+		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
 
 		database.CreateFixtures()
 		err := dao.PopulateStaticTypeCache()
@@ -60,6 +68,7 @@ func TestMain(t *testing.M) {
 		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: fixtures.TestMetaDataData}
 		mockRhcConnectionDao = &dao.MockRhcConnectionDao{RhcConnections: fixtures.TestRhcConnectionData, RelatedRhcConnections: fixtures.TestRhcConnectionData}
 		mockApplicationAuthenticationDao = &dao.MockApplicationAuthenticationDao{ApplicationAuthentications: fixtures.TestApplicationAuthenticationData}
+		mockAuthenticationDao = &dao.MockAuthenticationDao{Authentications: fixtures.TestAuthenticationData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }
@@ -71,6 +80,7 @@ func TestMain(t *testing.M) {
 		getApplicationAuthenticationDao = func(c echo.Context) (dao.ApplicationAuthenticationDao, error) {
 			return mockApplicationAuthenticationDao, nil
 		}
+		getAuthenticationDao = func(c echo.Context) (dao.AuthenticationDao, error) { return mockAuthenticationDao, nil }
 
 	}
 

@@ -1,9 +1,12 @@
 package mocks
 
 import (
+	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/hashicorp/vault/api"
 )
 
@@ -35,9 +38,21 @@ func (m *MockVault) List(_ string) (*api.Secret, error) {
 }
 
 func (m *MockVault) Write(path string, data map[string]interface{}) (*api.Secret, error) {
-	panic("implement me Write")
+	secret := &api.Secret{}
+	secret.Data = data
+	secret.Data["version"] = json.Number("2")
+
+	return secret, nil
 }
 
 func (m *MockVault) Delete(path string) (*api.Secret, error) {
-	panic("implement me Delete")
+	if strings.HasSuffix(path, fixtures.TestAuthenticationData[0].ID) {
+		secret := &api.Secret{}
+		secret.Data = make(map[string]interface{})
+		secret.Data["data"] = fixtures.TestAuthenticationVaultData
+		secret.Data["metadata"] = fixtures.TestAuthenticationVaultMetaData
+
+		return secret, nil
+	}
+	return nil, util.NewErrNotFound("authentication")
 }
