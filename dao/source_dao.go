@@ -239,7 +239,7 @@ func (s *sourceDaoImpl) ListForRhcConnection(rhcConnectionId *int64, limit, offs
 	return sources, count, err
 }
 
-func (s *sourceDaoImpl) Pause(id int64) (*m.Source, error) {
+func (s *sourceDaoImpl) Pause(id int64) error {
 	err := DB.Debug().Transaction(func(tx *gorm.DB) error {
 		err := tx.Debug().
 			Model(&m.Source{}).
@@ -262,15 +262,10 @@ func (s *sourceDaoImpl) Pause(id int64) (*m.Source, error) {
 		return err
 	})
 
-	if err != nil {
-		return nil, err
-	}
-
-	// GetByIdWithPreload already returns a source and an error.
-	return s.GetByIdWithPreload(&id, "Applications")
+	return err
 }
 
-func (s *sourceDaoImpl) Resume(id int64) (*m.Source, error) {
+func (s *sourceDaoImpl) Resume(id int64) error {
 	err := DB.Debug().Transaction(func(tx *gorm.DB) error {
 		err := tx.Debug().
 			Model(&m.Source{}).
@@ -293,10 +288,5 @@ func (s *sourceDaoImpl) Resume(id int64) (*m.Source, error) {
 		return err
 	})
 
-	if err != nil {
-		return nil, err
-	}
-
-	// GetByIdWithPreload already returns a source and an error.
-	return s.GetByIdWithPreload(&id, "Applications")
+	return err
 }

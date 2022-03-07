@@ -152,7 +152,7 @@ func (a *applicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error)
 	return data, err
 }
 
-func (a *applicationDaoImpl) Pause(id int64) (*m.Application, error) {
+func (a *applicationDaoImpl) Pause(id int64) error {
 	err := DB.Debug().
 		Model(&m.Application{}).
 		Where("id = ?", id).
@@ -160,15 +160,10 @@ func (a *applicationDaoImpl) Pause(id int64) (*m.Application, error) {
 		Update("paused_at", time.Now()).
 		Error
 
-	if err != nil {
-		return nil, err
-	}
-
-	// GetById already returns an app and an error.
-	return a.GetById(&id)
+	return err
 }
 
-func (a *applicationDaoImpl) Resume(id int64) (*m.Application, error) {
+func (a *applicationDaoImpl) Resume(id int64) error {
 	err := DB.Debug().
 		Model(&m.Application{}).
 		Where("id = ?", id).
@@ -176,10 +171,5 @@ func (a *applicationDaoImpl) Resume(id int64) (*m.Application, error) {
 		Update("paused_at", nil).
 		Error
 
-	if err != nil {
-		return nil, err
-	}
-
-	// GetById already returns an app and an error.
-	return a.GetById(&id)
+	return err
 }

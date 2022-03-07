@@ -244,9 +244,14 @@ func ApplicationPause(c echo.Context) error {
 		return err
 	}
 
-	application, err := applicationDao.Pause(applicationId)
+	err = applicationDao.Pause(applicationId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	application, err := applicationDao.GetById(&applicationId)
+	if err != nil {
+		return err
 	}
 
 	// Get the Kafka headers we will need to be forwarding.
@@ -273,9 +278,14 @@ func ApplicationResume(c echo.Context) error {
 		return err
 	}
 
-	application, err := applicationDao.Resume(applicationId)
+	err = applicationDao.Resume(applicationId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	application, err := applicationDao.GetById(&applicationId)
+	if err != nil {
+		return err
 	}
 
 	// Get the Kafka headers we will need to be forwarding.

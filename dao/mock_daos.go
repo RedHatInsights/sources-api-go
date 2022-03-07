@@ -3,8 +3,6 @@ package dao
 import (
 	"errors"
 	"fmt"
-	"time"
-
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -145,19 +143,12 @@ func (m *MockSourceDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	return nil, nil
 }
 
-func (s *MockSourceDao) Pause(id int64) (*m.Source, error) {
-	return &m.Source{
-		ID: id,
-		Pause: m.Pause{
-			PausedAt: time.Now(),
-		},
-	}, nil
+func (s *MockSourceDao) Pause(_ int64) error {
+	return nil
 }
 
-func (s *MockSourceDao) Resume(id int64) (*m.Source, error) {
-	return &m.Source{
-		ID: id,
-	}, nil
+func (s *MockSourceDao) Resume(_ int64) error {
+	return nil
 }
 
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
@@ -361,19 +352,12 @@ func (m *MockApplicationDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	return nil, nil
 }
 
-func (a *MockApplicationDao) Pause(id int64) (*m.Application, error) {
-	return &m.Application{
-		ID: id,
-		Pause: m.Pause{
-			PausedAt: time.Now(),
-		},
-	}, nil
+func (a *MockApplicationDao) Pause(_ int64) error {
+	return nil
 }
 
-func (a *MockApplicationDao) Resume(id int64) (*m.Application, error) {
-	return &m.Application{
-		ID: id,
-	}, nil
+func (a *MockApplicationDao) Resume(_ int64) error {
+	return nil
 }
 
 func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {

@@ -6,7 +6,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
-	"github.com/RedHatInsights/sources-api-go/model"
 )
 
 var sourceDao = sourceDaoImpl{
@@ -66,9 +65,14 @@ func TestPausingSource(t *testing.T) {
 	CreateFixtures("pause_unpause")
 
 	sourceDao := GetSourceDao(&testSource.TenantID)
-	source, err := sourceDao.Pause(testSource.ID)
+	err := sourceDao.Pause(testSource.ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	source, err := sourceDao.GetByIdWithPreload(&testSource.ID, "Applications")
+	if err != nil {
+		t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
 	}
 
 	want := time.Now()
@@ -76,10 +80,7 @@ func TestPausingSource(t *testing.T) {
 		t.Errorf(`want "%s", got "%s"`, want, source.PausedAt)
 	}
 
-	applications := make([]model.Application, 0)
-	DB.Debug().Where("source_id = ?", testSource.ID).Find(&applications)
-
-	for _, app := range applications {
+	for _, app := range source.Applications {
 		if !dateTimesAreSimilar(want, app.PausedAt) {
 			t.Errorf(`application not properly paused. Want "%s", got "%s"`, want, app.PausedAt)
 		}
@@ -95,9 +96,14 @@ func TestResumingSource(t *testing.T) {
 	CreateFixtures("pause_unpause")
 
 	sourceDao := GetSourceDao(&testSource.TenantID)
-	source, err := sourceDao.Resume(fixtures.TestSourceData[0].ID)
+	err := sourceDao.Resume(fixtures.TestSourceData[0].ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	source, err := sourceDao.GetByIdWithPreload(&testSource.ID, "Applications")
+	if err != nil {
+		t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
 	}
 
 	var want time.Time
@@ -105,10 +111,7 @@ func TestResumingSource(t *testing.T) {
 		t.Errorf(`want "%s", got "%s"`, want, source.PausedAt)
 	}
 
-	applications := make([]model.Application, 0)
-	DB.Debug().Where("source_id = ?", testSource.ID).Find(&applications)
-
-	for _, app := range applications {
+	for _, app := range source.Applications {
 		if !dateTimesAreSimilar(want, app.PausedAt) {
 			t.Errorf(`application not properly resumed. Want "%s", got "%s"`, want, app.PausedAt)
 		}

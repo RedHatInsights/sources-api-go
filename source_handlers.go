@@ -383,9 +383,14 @@ func SourcePause(c echo.Context) error {
 		return err
 	}
 
-	source, err := sourceDao.Pause(sourceId)
+	err = sourceDao.Pause(sourceId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+	}
+
+	source, err := sourceDao.GetByIdWithPreload(&sourceId, "Applications")
+	if err != nil {
+		return err
 	}
 
 	// Get the Kafka headers we will need to be forwarding.
@@ -421,10 +426,16 @@ func SourceResume(c echo.Context) error {
 		return err
 	}
 
-	source, err := sourceDao.Resume(sourceId)
+	err = sourceDao.Resume(sourceId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
 	}
+
+	source, err := sourceDao.GetByIdWithPreload(&sourceId, "Applications")
+	if err != nil {
+		return err
+	}
+
 	// Get the Kafka headers we will need to be forwarding.
 	kafkaHeaders := service.ForwadableHeaders(c)
 
