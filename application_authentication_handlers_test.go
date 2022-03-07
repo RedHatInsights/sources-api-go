@@ -73,6 +73,32 @@ func TestApplicationAuthenticationList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	badRequestApplicationAuthenticationList := ErrorHandlingContext(ApplicationAuthenticationList)
+	err := badRequestApplicationAuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestApplicationAuthenticationGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -130,4 +156,26 @@ func TestApplicationAuthenticationGetNotFound(t *testing.T) {
 	}
 
 	testutils.NotFoundTest(t, rec)
+}
+
+func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1//application_authentications/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+	err := badRequestApplicationAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }

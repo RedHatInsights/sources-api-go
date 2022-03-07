@@ -59,14 +59,17 @@ func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	count := int64(0)
 	query.Count(&count)
 
 	result := query.Limit(limit).Find(&appAuths)
-	return appAuths, count, result.Error
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
+	return appAuths, count, nil
 }
 
 func (a *ApplicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
