@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,20 +14,16 @@ import (
 var getApplicationTypeDao func(c echo.Context) (dao.ApplicationTypeDao, error)
 
 func getApplicationTypeDaoWithTenant(c echo.Context) (dao.ApplicationTypeDao, error) {
-	var tenantID int64
-	var ok bool
-	tenantVal := c.Get("tenantID")
+	tenantId, err := getTenantFromEchoContext(c)
 
-	// if we set the tenant on this request - include it. otherwise do not.
-	if tenantVal != nil {
-		tenantVal := c.Get("tenantID")
-		if tenantID, ok = tenantVal.(int64); !ok {
-			return nil, fmt.Errorf("failed to pull tenant from request")
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		return &dao.ApplicationTypeDaoImpl{TenantID: &tenantID}, nil
+	if tenantId == 0 && err == nil {
+		return dao.GetApplicationTypeDao(nil), nil
 	} else {
-		return &dao.ApplicationTypeDaoImpl{}, nil
+		return dao.GetApplicationTypeDao(&tenantId), nil
 	}
 }
 

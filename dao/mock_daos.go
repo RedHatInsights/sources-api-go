@@ -132,6 +132,18 @@ func (m *MockSourceDao) ListForRhcConnection(id *int64, limit, offset int, filte
 	return m.RelatedSources, count, nil
 }
 
+func (m *MockSourceDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (m *MockSourceDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) error {
+	return nil
+}
+
+func (m *MockSourceDao) ToEventJSON(_ util.Resource) ([]byte, error) {
+	return nil, nil
+}
+
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	count := int64(len(a.ApplicationTypes))
 	return a.ApplicationTypes, count, nil
@@ -321,6 +333,18 @@ func (a *MockApplicationDao) Tenant() *int64 {
 	return &tenant
 }
 
+func (m *MockApplicationDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (m *MockApplicationDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) error {
+	return nil
+}
+
+func (m *MockApplicationDao) ToEventJSON(_ util.Resource) ([]byte, error) {
+	return nil, nil
+}
+
 func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	var endpoints []m.Endpoint
 
@@ -384,6 +408,18 @@ func (m *MockEndpointDao) IsRoleUniqueForSource(role string, sourceId int64) boo
 
 func (m *MockEndpointDao) SourceHasEndpoints(sourceId int64) bool {
 	return true
+}
+
+func (m *MockEndpointDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (m *MockEndpointDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) error {
+	return nil
+}
+
+func (m *MockEndpointDao) ToEventJSON(_ util.Resource) ([]byte, error) {
+	return nil, nil
 }
 
 func (m *MockRhcConnectionDao) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
@@ -477,4 +513,8 @@ func (m MockApplicationAuthenticationDao) Delete(id *int64) error {
 func (m MockApplicationAuthenticationDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
+}
+
+func (m MockApplicationAuthenticationDao) ApplicationAuthenticationsByResource(_ string, _ []m.Application, _ []m.Authentication) ([]m.ApplicationAuthentication, error) {
+	return m.ApplicationAuthentications, nil
 }

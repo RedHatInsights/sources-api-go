@@ -161,7 +161,7 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 			ApplicationAuthentications: []m.ApplicationAuthentication{},
 		}
 
-		authDao := &dao.AuthenticationDaoImpl{TenantID: &application.TenantID}
+		authDao := dao.GetAuthenticationDao(&application.TenantID)
 		authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 		if err != nil {
 			panic("error to fetch authentications: " + err.Error())
@@ -198,7 +198,7 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 			ResourceType:               "Endpoint",
 			ApplicationAuthentications: []m.ApplicationAuthentication{},
 		}
-		authDao := &dao.AuthenticationDaoImpl{TenantID: &endpoint.TenantID}
+		authDao := dao.GetAuthenticationDao(&endpoint.TenantID)
 		authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 		if err != nil {
 			return err, nil

@@ -116,7 +116,8 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
-	tenant, err := dao.TenantByAccountNumber(accountNumber)
+	tenantDao := dao.GetTenantDao()
+	tenant, err := tenantDao.TenantByAccountNumber(accountNumber)
 	if err != nil {
 		l.Log.Error(err)
 		return

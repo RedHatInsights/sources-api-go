@@ -5,10 +5,24 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-type SourceTypeDaoImpl struct {
+// GetSourceTypeDao is a function definition that can be replaced in runtime in case some other DAO provider is
+// needed.
+var GetSourceTypeDao func() SourceTypeDao
+
+// getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
+func getDefaultSourceTypeDao() SourceTypeDao {
+	return &sourceTypeDaoImpl{}
 }
 
-func (st *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
+// init sets the default DAO implementation so that other packages can request it easily.
+func init() {
+	GetSourceTypeDao = getDefaultSourceTypeDao
+}
+
+type sourceTypeDaoImpl struct {
+}
+
+func (st *sourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sourceTypes := make([]m.SourceType, 0, limit)
@@ -32,7 +46,7 @@ func (st *SourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m
 	return sourceTypes, count, nil
 }
 
-func (st *SourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
+func (st *sourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
 	sourceType := &m.SourceType{Id: *id}
 	result := DB.Debug().First(sourceType)
 	if result.Error != nil {
@@ -41,14 +55,14 @@ func (st *SourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
 	return sourceType, nil
 }
 
-func (st *SourceTypeDaoImpl) Create(_ *m.SourceType) error {
+func (st *sourceTypeDaoImpl) Create(_ *m.SourceType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (st *SourceTypeDaoImpl) Update(_ *m.SourceType) error {
+func (st *sourceTypeDaoImpl) Update(_ *m.SourceType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (st *SourceTypeDaoImpl) Delete(_ *int64) error {
+func (st *sourceTypeDaoImpl) Delete(_ *int64) error {
 	panic("not needed (yet) due to seeding.")
 }

@@ -18,7 +18,23 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type AuthenticationDaoImpl struct {
+// GetAuthenticationDao is a function definition that can be replaced in runtime in case some other DAO provider is
+// needed.
+var GetAuthenticationDao func(*int64) AuthenticationDao
+
+// getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
+func getDefaultAuthenticationDao(tenantId *int64) AuthenticationDao {
+	return &authenticationDaoImpl{
+		TenantID: tenantId,
+	}
+}
+
+// init sets the default DAO implementation so that other packages can request it easily.
+func init() {
+	GetAuthenticationDao = getDefaultAuthenticationDao
+}
+
+type authenticationDaoImpl struct {
 	TenantID *int64
 }
 
@@ -58,7 +74,7 @@ func GetMarketplaceTokenProviderWithApiKey(apiKey string) marketplace.TokenProvi
 	TODO: Maybe parallelize fetching multiple records with goroutines +
 	waitgroup
 */
-func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
@@ -89,7 +105,7 @@ func (a *AuthenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 	return out, count, nil
 }
 
-func (a *AuthenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
@@ -111,7 +127,7 @@ func (a *AuthenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util
 	return out, int64(len(out)), nil
 }
 
-func (a *AuthenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+func (a *authenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	app := m.Application{ID: applicationID}
 	result := DB.
 		Where("tenant_id = ?", *a.TenantID).
@@ -130,7 +146,7 @@ func (a *AuthenticationDaoImpl) ListForApplication(applicationID int64, _, _ int
 	return auths, int64(len(auths)), nil
 }
 
-func (a *AuthenticationDaoImpl) ListForApplicationAuthentication(appauthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+func (a *authenticationDaoImpl) ListForApplicationAuthentication(appauthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	appauth := m.ApplicationAuthentication{ID: appauthID}
 	result := DB.
 		Where("tenant_id = ?", *a.TenantID).
@@ -148,7 +164,7 @@ func (a *AuthenticationDaoImpl) ListForApplicationAuthentication(appauthID int64
 	return auths, int64(len(auths)), nil
 }
 
-func (a *AuthenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+func (a *authenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
@@ -170,7 +186,7 @@ func (a *AuthenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset 
 	return auths, int64(len(auths)), nil
 }
 
-func (a *AuthenticationDaoImpl) getAuthsForAppAuth(appAuths []m.ApplicationAuthentication) ([]m.Authentication, error) {
+func (a *authenticationDaoImpl) getAuthsForAppAuth(appAuths []m.ApplicationAuthentication) ([]m.Authentication, error) {
 	out := make([]m.Authentication, len(appAuths))
 	for i, appAuth := range appAuths {
 		auth, err := a.getKey(appAuth.VaultPath)
@@ -190,7 +206,7 @@ func (a *AuthenticationDaoImpl) getAuthsForAppAuth(appAuths []m.ApplicationAuthe
 	will always incur 2 reqs to vault. It may be slower but that is a casualty
 	of not having an RDMS.
 */
-func (a *AuthenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
+func (a *authenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, err
@@ -214,7 +230,7 @@ func (a *AuthenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 	return a.getKey(fullKey)
 }
 
-func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
+func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 	query := DB.Select("source_id").Where("tenant_id = ?", *a.TenantID)
 
 	switch auth.ResourceType {
@@ -262,7 +278,7 @@ func (a *AuthenticationDaoImpl) Create(auth *m.Authentication) error {
 	return nil
 }
 
-func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
+func (a *authenticationDaoImpl) Update(auth *m.Authentication) error {
 	path := fmt.Sprintf("secret/data/%d/%s_%v_%s", *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 
 	data, err := auth.ToVaultMap()
@@ -283,7 +299,7 @@ func (a *AuthenticationDaoImpl) Update(auth *m.Authentication) error {
 	return nil
 }
 
-func (a *AuthenticationDaoImpl) Delete(uid string) (*m.Authentication, error) {
+func (a *authenticationDaoImpl) Delete(uid string) (*m.Authentication, error) {
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, err
@@ -301,7 +317,7 @@ func (a *AuthenticationDaoImpl) Delete(uid string) (*m.Authentication, error) {
 	return nil, fmt.Errorf("not found")
 }
 
-func (a *AuthenticationDaoImpl) Tenant() *int64 {
+func (a *authenticationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
@@ -310,7 +326,7 @@ func (a *AuthenticationDaoImpl) Tenant() *int64 {
 	of the fact that we can't search for a key based on name, type etc much like
 	a k/v store. (almost like the `vault kv get` and `vault kv put`)
 */
-func (a *AuthenticationDaoImpl) listKeys() ([]string, error) {
+func (a *authenticationDaoImpl) listKeys() ([]string, error) {
 	// List all the keys
 	path := fmt.Sprintf("secret/metadata/%d/", *a.TenantID)
 	list, err := Vault.List(path)
@@ -339,7 +355,7 @@ func (a *AuthenticationDaoImpl) listKeys() ([]string, error) {
 /*
 	Fetch a key from Vault (full path, type and id included)
 */
-func (a *AuthenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
+func (a *authenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 	secret, err := Vault.Read(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, path))
 	if err != nil || secret == nil {
 		return nil, fmt.Errorf("authentication not found")
@@ -488,7 +504,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	return auth
 }
 
-func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+func (a *authenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	a.TenantID = &resource.TenantID
 	authentication, err := a.GetById(resource.ResourceUID)
 	if err != nil {
@@ -498,7 +514,7 @@ func (a *AuthenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]
 	return BulkMessageFromSource(&authentication.Source, authentication)
 }
 
-func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+func (a *authenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
 	a.TenantID = &resource.TenantID
 	authentication, err := a.GetById(resource.ResourceUID)
 	if err != nil {
@@ -513,7 +529,7 @@ func (a *AuthenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateA
 	return a.Update(authentication)
 }
 
-func (a *AuthenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
+func (a *authenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
 	a.TenantID = &resource.TenantID
 	auth, err := a.GetById(resource.ResourceUID)
 	if err != nil {
@@ -583,7 +599,7 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 	return nil
 }
 
-func (a *AuthenticationDaoImpl) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
+func (a *authenticationDaoImpl) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
 	var err error
 	var resourceAuthentications []m.Authentication
 

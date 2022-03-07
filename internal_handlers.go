@@ -42,7 +42,7 @@ func InternalSourceList(c echo.Context) error {
 	}
 
 	// The DAO doesn't need a tenant set, since the queries won't be filtered by that tenant
-	sourcesDB := &dao.SourceDaoImpl{}
+	sourcesDB := dao.GetSourceDao(nil)
 	sources, count, err := sourcesDB.ListInternal(limit, offset, filters)
 
 	if err != nil {

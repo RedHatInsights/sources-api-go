@@ -8,11 +8,27 @@ import (
 	"gorm.io/datatypes"
 )
 
-type ApplicationTypeDaoImpl struct {
+// GetApplicationTypeDao is a function definition that can be replaced in runtime in case some other DAO provider is
+// needed.
+var GetApplicationTypeDao func(*int64) ApplicationTypeDao
+
+// getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
+func getDefaultApplicationTypeDao(tenantId *int64) ApplicationTypeDao {
+	return &applicationTypeDaoImpl{
+		TenantID: tenantId,
+	}
+}
+
+// init sets the default DAO implementation so that other packages can request it easily.
+func init() {
+	GetApplicationTypeDao = getDefaultApplicationTypeDao
+}
+
+type applicationTypeDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
+func (a *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	applicationTypes := make([]m.ApplicationType, 0, limit)
@@ -37,7 +53,7 @@ func (a *ApplicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 	return applicationTypes, count, nil
 }
 
-func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
+func (a *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	appTypes := make([]m.ApplicationType, 0, limit)
@@ -61,7 +77,7 @@ func (a *ApplicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) 
 	return appTypes, count, nil
 }
 
-func (a *ApplicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
+func (a *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
 	appType := &m.ApplicationType{Id: *id}
 	result := DB.Debug().First(appType)
 	if result.Error != nil {
@@ -71,19 +87,19 @@ func (a *ApplicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) 
 	return appType, nil
 }
 
-func (a *ApplicationTypeDaoImpl) Create(_ *m.ApplicationType) error {
+func (a *applicationTypeDaoImpl) Create(_ *m.ApplicationType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (a *ApplicationTypeDaoImpl) Update(_ *m.ApplicationType) error {
+func (a *applicationTypeDaoImpl) Update(_ *m.ApplicationType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (a *ApplicationTypeDaoImpl) Delete(_ *int64) error {
+func (a *applicationTypeDaoImpl) Delete(_ *int64) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (at *ApplicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error {
+func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error {
 	source := m.Source{ID: sourceId}
 	result := DB.Preload("SourceType").Find(&source)
 	if result.Error != nil {

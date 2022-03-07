@@ -5,11 +5,27 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-type MetaDataDaoImpl struct {
+// GetMetaDataDao is a function definition that can be replaced in runtime in case some other DAO provider is
+// needed.
+var GetMetaDataDao func(*int64) MetaDataDao
+
+// getDefaultMetaDataDao gets the default DAO implementation which will have the given tenant ID.
+func getDefaultMetaDataDao(tenantId *int64) MetaDataDao {
+	return &metaDataDaoImpl{
+		TenantID: tenantId,
+	}
+}
+
+// init sets the default DAO implementation so that other packages can request it easily.
+func init() {
+	GetMetaDataDao = getDefaultMetaDataDao
+}
+
+type metaDataDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
+func (a *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metadatas := make([]m.MetaData, 0, limit)
 	collection, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
@@ -34,7 +50,7 @@ func (a *MetaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 	return metadatas, count, result.Error
 }
 
-func (a *MetaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
+func (a *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
 	query := DB.Debug().Model(&m.MetaData{}).Where("type = 'AppMetaData'")
 
@@ -53,7 +69,7 @@ func (a *MetaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 	return metaData, count, nil
 }
 
-func (a *MetaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
+func (a *metaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
 	metaData := &m.MetaData{ID: *id}
 	result := DB.First(&metaData)
 	if result.Error != nil {

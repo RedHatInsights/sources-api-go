@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -15,19 +14,16 @@ import (
 var getMetaDataDao func(c echo.Context) (dao.MetaDataDao, error)
 
 func getMetaDataDaoWithTenant(c echo.Context) (dao.MetaDataDao, error) {
-	var tenantID int64
-	var ok bool
-	tenantVal := c.Get("tenantID")
+	tenantId, err := getTenantFromEchoContext(c)
 
-	// if we set the tenant on this request - include it. otherwise do not.
-	if tenantVal != nil {
-		if tenantID, ok = tenantVal.(int64); !ok {
-			return nil, fmt.Errorf("failed to pull tenant from request")
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		return &dao.MetaDataDaoImpl{TenantID: &tenantID}, nil
+	if tenantId == 0 && err == nil {
+		return dao.GetMetaDataDao(nil), nil
 	} else {
-		return &dao.MetaDataDaoImpl{}, nil
+		return dao.GetMetaDataDao(&tenantId), nil
 	}
 }
 

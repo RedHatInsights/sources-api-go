@@ -15,7 +15,7 @@ var getSourceTypeDao func(c echo.Context) (dao.SourceTypeDao, error)
 func getSourceTypeDaoWithoutTenant(_ echo.Context) (dao.SourceTypeDao, error) {
 	// we do not need tenancy for source type.
 
-	return &dao.SourceTypeDaoImpl{}, nil
+	return dao.GetSourceTypeDao(), nil
 }
 
 func SourceTypeList(c echo.Context) error {

@@ -7,11 +7,27 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-type ApplicationAuthenticationDaoImpl struct {
+// GetApplicationAuthenticationDao is a function definition that can be replaced in runtime in case some other DAO
+// provider is needed.
+var GetApplicationAuthenticationDao func(*int64) ApplicationAuthenticationDao
+
+// getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
+func getDefaultApplicationAuthenticationDao(tenantId *int64) ApplicationAuthenticationDao {
+	return &applicationAuthenticationDaoImpl{
+		TenantID: tenantId,
+	}
+}
+
+// init sets the default DAO implementation so that other packages can request it easily.
+func init() {
+	GetApplicationAuthenticationDao = getDefaultApplicationAuthenticationDao
+}
+
+type applicationAuthenticationDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplications(applications []m.Application) ([]m.ApplicationAuthentication, error) {
+func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplications(applications []m.Application) ([]m.ApplicationAuthentication, error) {
 	var applicationAuthentications []m.ApplicationAuthentication
 
 	applicationIDs := make([]int64, 0)
@@ -27,7 +43,7 @@ func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 	return applicationAuthentications, nil
 }
 
-func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentications(authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
+func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentications(authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
 	var applicationAuthentications []m.ApplicationAuthentication
 
 	authenticationUIDs := make([]string, 0)
@@ -43,7 +59,7 @@ func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentic
 	return applicationAuthentications, nil
 }
 
-func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByResource(resourceType string, applications []m.Application, authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
+func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByResource(resourceType string, applications []m.Application, authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
 	if resourceType == "Source" {
 		return a.ApplicationAuthenticationsByApplications(applications)
 	}
@@ -51,7 +67,7 @@ func (a *ApplicationAuthenticationDaoImpl) ApplicationAuthenticationsByResource(
 	return a.ApplicationAuthenticationsByAuthentications(authentications)
 }
 
-func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error) {
+func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error) {
 	appAuths := make([]m.ApplicationAuthentication, 0, limit)
 	query := DB.Debug().Model(&m.ApplicationAuthentication{}).
 		Offset(offset).
@@ -72,7 +88,7 @@ func (a *ApplicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 	return appAuths, count, nil
 }
 
-func (a *ApplicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
+func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
 	appAuth := &m.ApplicationAuthentication{ID: *id}
 	result := DB.First(&appAuth)
 	if result.Error != nil {
@@ -81,17 +97,17 @@ func (a *ApplicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAut
 	return appAuth, nil
 }
 
-func (a *ApplicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {
+func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {
 	result := DB.Create(appAuth)
 	return result.Error
 }
 
-func (a *ApplicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
+func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
 	result := DB.Updates(appAuth)
 	return result.Error
 }
 
-func (a *ApplicationAuthenticationDaoImpl) Delete(id *int64) error {
+func (a *applicationAuthenticationDaoImpl) Delete(id *int64) error {
 	appAuth := &m.ApplicationAuthentication{ID: *id}
 	if result := DB.Delete(appAuth); result.RowsAffected == 0 {
 		return fmt.Errorf("failed to delete application id %v", *id)
@@ -100,6 +116,6 @@ func (a *ApplicationAuthenticationDaoImpl) Delete(id *int64) error {
 	return nil
 }
 
-func (a *ApplicationAuthenticationDaoImpl) Tenant() *int64 {
+func (a *applicationAuthenticationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }

@@ -11,11 +11,27 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type RhcConnectionDaoImpl struct {
-	TenantID int64
+// GetRhcConnectionDao is a function definition that can be replaced in runtime in case some other DAO provider is
+// needed.
+var GetRhcConnectionDao func(*int64) RhcConnectionDao
+
+// getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
+func getDefaultRhcConnectionDao(tenantId *int64) RhcConnectionDao {
+	return &rhcConnectionDaoImpl{
+		TenantID: tenantId,
+	}
 }
 
-func (s *RhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
+// init sets the default DAO implementation so that other packages can request it easily.
+func init() {
+	GetRhcConnectionDao = getDefaultRhcConnectionDao
+}
+
+type rhcConnectionDaoImpl struct {
+	TenantID *int64
+}
+
+func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
 	query := DB.
 		Debug().
 		Model(&m.RhcConnection{}).
@@ -73,7 +89,7 @@ func (s *RhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 	return rhcConnections, count, nil
 }
 
-func (s *RhcConnectionDaoImpl) GetById(id *int64) (*m.RhcConnection, error) {
+func (s *rhcConnectionDaoImpl) GetById(id *int64) (*m.RhcConnection, error) {
 	query := DB.
 		Debug().
 		Model(&m.RhcConnection{}).
@@ -120,7 +136,7 @@ func (s *RhcConnectionDaoImpl) GetById(id *int64) (*m.RhcConnection, error) {
 	return rhcConnection, nil
 }
 
-func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error) {
+func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error) {
 	// If the source doesn't exist we cannot create the RhcConnection, since it needs to be linked to at least one
 	// source.
 	var sourceExists bool
@@ -158,7 +174,7 @@ func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 		sourceRhcConnection := m.SourceRhcConnection{
 			SourceId:        rhcConnection.Sources[0].ID,
 			RhcConnectionId: rhcConnection.ID,
-			TenantId:        s.TenantID,
+			TenantId:        *s.TenantID,
 		}
 
 		err = tx.Debug().
@@ -175,14 +191,14 @@ func (s *RhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 	return rhcConnection, err
 }
 
-func (s *RhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
+func (s *rhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
 	err := DB.Debug().
 		Updates(rhcConnection).
 		Error
 	return err
 }
 
-func (s *RhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
+func (s *rhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
 	var rhcConnection m.RhcConnection
 
 	err := DB.Debug().
@@ -203,7 +219,7 @@ func (s *RhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
 	return &rhcConnection, err
 }
 
-func (s *RhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
+func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
 	rhcConnections := make([]m.RhcConnection, 0)
 
 	query := DB.Debug().
