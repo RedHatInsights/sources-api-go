@@ -265,7 +265,7 @@ func ApplicationPause(c echo.Context) error {
 func ApplicationResume(c echo.Context) error {
 	applicationId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	applicationDao, err := getApplicationDao(c)

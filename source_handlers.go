@@ -413,7 +413,7 @@ func SourcePause(c echo.Context) error {
 func SourceResume(c echo.Context) error {
 	sourceId, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	sourceDao, err := getSourceDao(c)
