@@ -158,9 +158,7 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 	}
 
 	err = DB.Transaction(func(tx *gorm.DB) error {
-		var err error
-
-		err = tx.Debug().
+		err := tx.Debug().
 			Where(`rhc_id = ?`, rhcConnection.RhcId).
 			Omit(clause.Associations).
 			FirstOrCreate(&rhcConnection).
@@ -177,12 +175,18 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 			TenantId:        *s.TenantID,
 		}
 
-		err = tx.Debug().
-			Create(&sourceRhcConnection).
-			Error
+		result := tx.Debug().
+			FirstOrCreate(&sourceRhcConnection)
 
-		if err != nil {
-			return fmt.Errorf("cannot link red hat connection to source: %w", err)
+		// if the rows effected is 0 it was already there, e.g. the rhc
+		// connection is already attached to the source. This request was a bad
+		// request in this case.
+		if result.RowsAffected == 0 {
+			return util.NewErrBadRequest("connection already exists")
+		}
+
+		if result.Error != nil {
+			return fmt.Errorf("cannot link red hat connection to source: %w", result.Error)
 		}
 
 		return nil

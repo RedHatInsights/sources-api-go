@@ -221,7 +221,7 @@ func TestRhcConnectionCreateAlreadyExistingAssociation(t *testing.T) {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
 
-	want := "cannot link red hat connection to source:"
+	want := "connection already exists"
 
 	_, err = rhcConnectionDao.Create(rhcConnection)
 	if !strings.Contains(err.Error(), want) {
