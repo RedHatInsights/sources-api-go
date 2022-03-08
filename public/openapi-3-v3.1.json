@@ -688,7 +688,7 @@
           }
         ],
         "responses": {
-          "202": {
+          "204": {
             "description": "Application Un-Paused"
           },
           "400": {
@@ -2049,9 +2049,9 @@
     },
     "/sources/{id}/pause": {
       "post": {
-        "summary": "Pauses a Source",
+        "summary": "Pause a source and its applications",
         "operationId": "pauseSource",
-        "description": "Pauses a Source",
+        "description": "Pauses a source and all its dependant applications",
         "parameters": [
           {
             "$ref": "#/components/parameters/ID"
@@ -2059,7 +2059,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Source Paused"
+            "description": "Source and its applications paused"
           },
           "400": {
             "description": "Bad request"
@@ -2082,17 +2082,17 @@
     },
     "/sources/{id}/unpause": {
       "post": {
-        "summary": "Un-Pauses a Source",
+        "summary": "Un-Pauses a source and its applications",
         "operationId": "unpauseSource",
-        "description": "Un-Pauses a Source",
+        "description": "Un-Pauses a Source and all its dependant applications",
         "parameters": [
           {
             "$ref": "#/components/parameters/ID"
           }
         ],
         "responses": {
-          "202": {
-            "description": "Source Un-Paused"
+          "204": {
+            "description": "Source and its applications Un-Paused"
           },
           "400": {
             "description": "Bad request"
