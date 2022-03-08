@@ -24,6 +24,10 @@ type SourceDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
 	ToEventJSON(resource util.Resource) ([]byte, error)
+	// Pause pauses the given source and all its dependant applications.
+	Pause(id int64) error
+	// Resume resumes the given source and all its dependant applications.
+	Resume(id int64) error
 }
 
 type ApplicationDao interface {
@@ -37,6 +41,10 @@ type ApplicationDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
 	ToEventJSON(resource util.Resource) ([]byte, error)
+	// Pause pauses the application.
+	Pause(id int64) error
+	// Resume resumes the application.
+	Resume(id int64) error
 }
 
 type AuthenticationDao interface {

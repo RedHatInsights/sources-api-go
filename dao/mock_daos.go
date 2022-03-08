@@ -3,7 +3,6 @@ package dao
 import (
 	"errors"
 	"fmt"
-
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -142,6 +141,14 @@ func (m *MockSourceDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface
 
 func (m *MockSourceDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	return nil, nil
+}
+
+func (s *MockSourceDao) Pause(_ int64) error {
+	return nil
+}
+
+func (s *MockSourceDao) Resume(_ int64) error {
+	return nil
 }
 
 func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
@@ -343,6 +350,14 @@ func (m *MockApplicationDao) FetchAndUpdateBy(_ util.Resource, _ map[string]inte
 
 func (m *MockApplicationDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	return nil, nil
+}
+
+func (a *MockApplicationDao) Pause(_ int64) error {
+	return nil
+}
+
+func (a *MockApplicationDao) Resume(_ int64) error {
+	return nil
 }
 
 func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {

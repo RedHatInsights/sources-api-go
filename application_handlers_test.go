@@ -624,3 +624,55 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 
 	testutils.BadRequestTest(t, rec)
 }
+
+// TestPauseApplication tests that an application gets successfully paused.
+func TestPauseApplication(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	err := ApplicationPause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+}
+
+// TestResumeApplication tests that an application gets successfully resumed.
+func TestResumeApplication(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	err := ApplicationResume(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+}

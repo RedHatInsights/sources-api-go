@@ -2,6 +2,7 @@ package dao
 
 import (
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
@@ -52,4 +53,69 @@ func TestSourcesListForRhcConnections(t *testing.T) {
 	}
 
 	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+}
+
+// testSource holds the test source that will be used through tests. It is saved in a variable to avoid having to write
+// the full "fixtures..." thing every time.
+var testSource = fixtures.TestSourceData[0]
+
+// TestPausingSource checks whether the "paused_at" column gets successfully modified when pausing a source.
+func TestPausingSource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("pause_unpause")
+
+	sourceDao := GetSourceDao(&testSource.TenantID)
+	err := sourceDao.Pause(testSource.ID)
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	source, err := sourceDao.GetByIdWithPreload(&testSource.ID, "Applications")
+	if err != nil {
+		t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
+	}
+
+	want := time.Now()
+	if !dateTimesAreSimilar(want, source.PausedAt) {
+		t.Errorf(`want "%s", got "%s"`, want, source.PausedAt)
+	}
+
+	for _, app := range source.Applications {
+		if !dateTimesAreSimilar(want, app.PausedAt) {
+			t.Errorf(`application not properly paused. Want "%s", got "%s"`, want, app.PausedAt)
+		}
+	}
+
+	DoneWithFixtures("pause_unpause")
+}
+
+// TestResumingSource checks whether the "paused_at" column gets set as "NULL" when resuming a source.
+func TestResumingSource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	CreateFixtures("pause_unpause")
+
+	sourceDao := GetSourceDao(&testSource.TenantID)
+	err := sourceDao.Resume(fixtures.TestSourceData[0].ID)
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	source, err := sourceDao.GetByIdWithPreload(&testSource.ID, "Applications")
+	if err != nil {
+		t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
+	}
+
+	var want time.Time
+	if want != source.PausedAt {
+		t.Errorf(`want "%s", got "%s"`, want, source.PausedAt)
+	}
+
+	for _, app := range source.Applications {
+		if !dateTimesAreSimilar(want, app.PausedAt) {
+			t.Errorf(`application not properly resumed. Want "%s", got "%s"`, want, app.PausedAt)
+		}
+	}
+
+	DoneWithFixtures("pause_unpause")
 }
