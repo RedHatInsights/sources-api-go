@@ -83,7 +83,9 @@
             }
           }
         },
-        "tags": ["application authentications"]
+        "tags": [
+          "application authentications"
+        ]
       },
       "post": {
         "summary": "Create a new ApplicationAuthentication",
@@ -112,7 +114,9 @@
             }
           }
         },
-        "tags": ["application authentications"]
+        "tags": [
+          "application authentications"
+        ]
       }
     },
     "/application_authentications/{id}": {
@@ -147,7 +151,9 @@
             }
           }
         },
-        "tags": ["application authentications"]
+        "tags": [
+          "application authentications"
+        ]
       },
       "patch": {
         "summary": "Update an existing ApplicationAuthentication",
@@ -187,7 +193,9 @@
             }
           }
         },
-        "tags": ["application authentications"]
+        "tags": [
+          "application authentications"
+        ]
       },
       "delete": {
         "summary": "Delete an existing ApplicationAuthentication",
@@ -213,7 +221,9 @@
             }
           }
         },
-        "tags": ["application authentications"]
+        "tags": [
+          "application authentications"
+        ]
       }
     },
     "/application_types": {
@@ -247,7 +257,9 @@
             }
           }
         },
-        "tags": ["application types"]
+        "tags": [
+          "application types"
+        ]
       }
     },
     "/application_types/{id}": {
@@ -282,7 +294,9 @@
             }
           }
         },
-        "tags": ["application types"]
+        "tags": [
+          "application types"
+        ]
       }
     },
     "/application_types/{id}/sources": {
@@ -329,7 +343,9 @@
             }
           }
         },
-        "tags": ["application types"]
+        "tags": [
+          "application types"
+        ]
       }
     },
     "/application_types/{id}/app_meta_data": {
@@ -376,7 +392,9 @@
             }
           }
         },
-        "tags": ["application types"]
+        "tags": [
+          "application types"
+        ]
       }
     },
     "/applications": {
@@ -410,7 +428,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       },
       "post": {
         "summary": "Create a new Application",
@@ -439,7 +459,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       }
     },
     "/applications/{id}": {
@@ -474,7 +496,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       },
       "patch": {
         "summary": "Update an existing Application",
@@ -500,7 +524,7 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
+          "207": {
             "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
             "content": {
               "application/json": {
@@ -534,7 +558,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       },
       "delete": {
         "summary": "Delete an existing Application",
@@ -560,7 +586,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       }
     },
     "/applications/{id}/authentications": {
@@ -607,7 +635,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       }
     },
     "/applications/{id}/pause": {
@@ -638,7 +668,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       }
     },
     "/applications/{id}/unpause": {
@@ -669,7 +701,9 @@
             }
           }
         },
-        "tags": ["applications"]
+        "tags": [
+          "applications"
+        ]
       }
     },
     "/authentications": {
@@ -703,7 +737,9 @@
             }
           }
         },
-        "tags": ["authentications"]
+        "tags": [
+          "authentications"
+        ]
       },
       "post": {
         "summary": "Create a new Authentication",
@@ -732,7 +768,9 @@
             }
           }
         },
-        "tags": ["authentications"]
+        "tags": [
+          "authentications"
+        ]
       }
     },
     "/authentications/{id}": {
@@ -767,7 +805,9 @@
             }
           }
         },
-        "tags": ["authentications"]
+        "tags": [
+          "authentications"
+        ]
       },
       "patch": {
         "summary": "Update an existing Authentication",
@@ -793,7 +833,7 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
+          "207": {
             "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
             "content": {
               "application/json": {
@@ -827,7 +867,9 @@
             }
           }
         },
-        "tags": ["authentications"]
+        "tags": [
+          "authentications"
+        ]
       },
       "delete": {
         "summary": "Delete an existing Authentication",
@@ -853,7 +895,9 @@
             }
           }
         },
-        "tags": ["authentications"]
+        "tags": [
+          "authentications"
+        ]
       }
     },
     "/endpoints": {
@@ -887,7 +931,9 @@
             }
           }
         },
-        "tags": ["endpoints"]
+        "tags": [
+          "endpoints"
+        ]
       },
       "post": {
         "summary": "Create a new Endpoint",
@@ -916,7 +962,9 @@
             }
           }
         },
-        "tags": ["endpoints"]
+        "tags": [
+          "endpoints"
+        ]
       }
     },
     "/endpoints/{id}": {
@@ -951,7 +999,9 @@
             }
           }
         },
-        "tags": ["endpoints"]
+        "tags": [
+          "endpoints"
+        ]
       },
       "patch": {
         "summary": "Update an existing Endpoint",
@@ -977,7 +1027,7 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
+          "207": {
             "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
             "content": {
               "application/json": {
@@ -1011,7 +1061,9 @@
             }
           }
         },
-        "tags": ["endpoints"]
+        "tags": [
+          "endpoints"
+        ]
       },
       "delete": {
         "summary": "Delete an existing Endpoint",
@@ -1037,7 +1089,9 @@
             }
           }
         },
-        "tags": ["endpoints"]
+        "tags": [
+          "endpoints"
+        ]
       }
     },
     "/endpoints/{id}/authentications": {
@@ -1084,7 +1138,9 @@
             }
           }
         },
-        "tags": ["endpoints"]
+        "tags": [
+          "endpoints"
+        ]
       }
     },
     "/graphql": {
@@ -1166,7 +1222,9 @@
             }
           }
         },
-        "tags": ["source types"]
+        "tags": [
+          "source types"
+        ]
       }
     },
     "/source_types/{id}": {
@@ -1201,7 +1259,9 @@
             }
           }
         },
-        "tags": ["source types"]
+        "tags": [
+          "source types"
+        ]
       }
     },
     "/source_types/{id}/sources": {
@@ -1248,7 +1308,9 @@
             }
           }
         },
-        "tags": ["source types"]
+        "tags": [
+          "source types"
+        ]
       }
     },
     "/sources": {
@@ -1282,7 +1344,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       },
       "post": {
         "summary": "Create a new Source",
@@ -1311,7 +1375,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}": {
@@ -1346,7 +1412,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       },
       "patch": {
         "summary": "Update an existing Source",
@@ -1372,7 +1440,7 @@
           "204": {
             "description": "Updated, no content"
           },
-          "207" : {
+          "207": {
             "description": "Multi-status, some parameters are unpermitted due to paused resource(or related) but some parameters are valid.",
             "content": {
               "application/json": {
@@ -1406,7 +1474,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       },
       "delete": {
         "summary": "Delete an existing Source",
@@ -1435,7 +1505,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}/application_types": {
@@ -1482,7 +1554,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}/applications": {
@@ -1529,7 +1603,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}/authentications": {
@@ -1576,7 +1652,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}/check_availability": {
@@ -1604,7 +1682,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}/endpoints": {
@@ -1651,7 +1731,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}/pause": {
@@ -1682,7 +1764,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/sources/{id}/unpause": {
@@ -1713,7 +1797,9 @@
             }
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     },
     "/app_meta_data": {
@@ -1747,7 +1833,9 @@
             }
           }
         },
-        "tags": ["app metadata"]
+        "tags": [
+          "app metadata"
+        ]
       }
     },
     "/app_meta_data/{id}": {
@@ -1782,7 +1870,9 @@
             }
           }
         },
-        "tags": ["app metadata"]
+        "tags": [
+          "app metadata"
+        ]
       }
     },
     "/bulk_create": {
@@ -1814,7 +1904,9 @@
             "description": "Bad Request"
           }
         },
-        "tags": ["sources"]
+        "tags": [
+          "sources"
+        ]
       }
     }
   },
@@ -2323,7 +2415,11 @@
           "availability_status": {
             "description": "The availability status of the endpoint.",
             "example": "available",
-            "enum": ["", "available", "unavailable"],
+            "enum": [
+              "",
+              "available",
+              "unavailable"
+            ],
             "type": "string"
           },
           "certificate_authority": {
