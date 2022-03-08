@@ -375,7 +375,7 @@ func SourcesRhcConnectionList(c echo.Context) error {
 func SourcePause(c echo.Context) error {
 	sourceId, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	sourceDao, err := getSourceDao(c)
@@ -385,7 +385,7 @@ func SourcePause(c echo.Context) error {
 
 	err = sourceDao.Pause(sourceId)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	source, err := sourceDao.GetByIdWithPreload(&sourceId, "Applications")
@@ -428,7 +428,7 @@ func SourceResume(c echo.Context) error {
 
 	err = sourceDao.Resume(sourceId)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	source, err := sourceDao.GetByIdWithPreload(&sourceId, "Applications")
