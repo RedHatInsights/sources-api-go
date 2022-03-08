@@ -43,6 +43,10 @@
       "name": "endpoints"
     },
     {
+      "description": "Endpoints related to Red Hat Connector Connecctions",
+      "name": "rhc-connections"
+    },
+    {
       "description": "Endpoints related to sources",
       "name": "sources"
     },
@@ -1191,6 +1195,313 @@
         }
       }
     },
+    "/rhc_connections": {
+      "get": {
+        "description": "Returns an array of Red Hat Connector Connections",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-identity"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-sources-psk"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RHC Connections collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RhcConnectionRead"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "operationId": "getRhcConnections",
+        "summary": "List RHC Connections",
+        "tags": [
+          "rhc-connections"
+        ]
+      },
+      "post": {
+        "description": "Create a new Red Hat Connector Connection",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/x-rh-identity"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-sources-psk"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RhcConnectionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Connection created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RhcConnectionRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "operationId": "postRhcConnection",
+        "summary": "Create a new RHC Connection",
+        "tags": [
+          "rhc-connections"
+        ]
+      }
+    },
+    "/rhc_connections/{id}": {
+      "get": {
+        "description": "Returns a single Red Hat Connector Connection",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Red Hat Connector connection object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RhcConnectionRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "operationId": "getRhcConnection",
+        "summary": "Get an existing RHC Connection",
+        "tags": [
+          "rhc-connections"
+        ]
+      },
+      "patch": {
+        "description": "Updates a Red Hat Connector Connection",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RhcConnectionUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Red Hat Connector connection object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RhcConnectionRead"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "operationId": "updateRhcConnection",
+        "summary": "Update an RHC Connection",
+        "tags": [
+          "rhc-connections"
+        ]
+      },
+      "delete": {
+        "description": "Deletes a Red Hat Connector Connection",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The connection has been deleted"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "operationId": "deleteRhcConnection",
+        "summary": "Delete an RHC Connection",
+        "tags": [
+          "rhc-connections"
+        ]
+      }
+    },
+    "/rhc_connections/{id}/sources": {
+      "get": {
+        "description": "Returns an array of sources related to the provided Red Hat Connector Connection",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          },
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-identity"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-sources-psk"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sources collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SourcesCollection"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "operationId": "getRhcConnectionSources",
+        "summary": "List sources related to an RHC Connection",
+        "tags": [
+          "sources",
+          "rhc-connections"
+        ]
+      }
+    },
+    "/sources/{id}/rhc_connections": {
+      "get": {
+        "description": "Returns an array of Red Hat Connector Connections related to the provided source",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ID"
+          },
+          {
+            "$ref": "#/components/parameters/QueryLimit"
+          },
+          {
+            "$ref": "#/components/parameters/QueryOffset"
+          },
+          {
+            "$ref": "#/components/parameters/QueryFilter"
+          },
+          {
+            "$ref": "#/components/parameters/QuerySortBy"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-identity"
+          },
+          {
+            "$ref": "#/components/parameters/x-rh-sources-psk"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Red Hat Connector Collections",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RhcConnectionCollection"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "operationId": "getSourcesRhcConnection",
+        "summary": "List RHC Connections related to a source",
+        "tags": [
+          "sources",
+          "rhc-connections"
+        ]
+      }
+    },
     "/source_types": {
       "get": {
         "summary": "List SourceTypes",
@@ -1989,12 +2300,63 @@
         "schema": {
           "type": "object"
         }
+      },
+      "x-rh-identity": {
+        "description": "RH-Identity header, base64 encoded",
+        "in": "header",
+        "name": "x-rh-identity",
+        "schema": {
+          "example": "ewogICAgImlkZW50aXR5IjogewogICAgICAgICJhY2NvdW50X251bWJlciI6ICIxMjM0NSIKICAgIH0KfQ==",
+          "format": "byte",
+          "type": "string"
+        }
+      },
+      "x-rh-sources-psk": {
+        "description": "PSK identity header",
+        "in": "header",
+        "name": "x-rh-sources-psk",
+        "schema": {
+          "example": 12345,
+          "type": "string"
+        }
       }
     },
     "securitySchemes": {
       "UserSecurity": {
         "type": "http",
         "scheme": "basic"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "There is a problem either with the parameters or the payload",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorBadRequest"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "The requested resource was not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorNotFound"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Either the \"x-rh-identity\" or the \"x-rh-sources-psk\" headers are missing, or you don't have enough permission to query the endpoint",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorUnauthorized"
+            }
+          }
+        }
       }
     },
     "schemas": {
@@ -2478,7 +2840,8 @@
           "source_id"
         ]
       },
-      "ErrorNotFound": {
+      "ErrorBadRequest": {
+        "description": "Error structure for the \"Bad Request\" responses",
         "type": "object",
         "properties": {
           "errors": {
@@ -2487,12 +2850,62 @@
               "type": "object",
               "properties": {
                 "status": {
-                  "type": "string",
-                  "example": "404"
+                  "description": "Status of the response",
+                  "example": 400,
+                  "type": "string"
                 },
                 "detail": {
+                  "description": "Detail of the error",
                   "type": "string",
-                  "example": "Record not found"
+                  "example": "The provided path parameters are invalid"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorNotFound": {
+        "description": "Error structure for the \"Not Found\" responses",
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "description": "Status of the response",
+                  "example": 404,
+                  "type": "string"
+                },
+                "detail": {
+                  "description": "Detail of the error",
+                  "type": "string",
+                  "example": "The resource was not found"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorUnauthorized": {
+        "description": "Error structure for the \"Unauthorized\" responses",
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "description": "Status of the response",
+                  "example": 401,
+                  "type": "string"
+                },
+                "detail": {
+                  "description": "Detail of the error",
+                  "type": "string",
+                  "example": "x-rh-identity header missing"
                 }
               }
             }
@@ -2543,6 +2956,114 @@
         "description": "ID of the resource",
         "pattern": "^\\d+$",
         "readOnly": true
+      },
+      "RhcConnectionCollection": {
+        "description": "Collection of Red Hat Connector Connections along with the metadata",
+        "type": "object",
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/CollectionMetadata"
+          },
+          "links": {
+            "$ref": "#/components/schemas/CollectionLinks"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RhcConnectionRead"
+            }
+          }
+        }
+      },
+      "RhcConnectionCreate": {
+        "type": "object",
+        "properties": {
+          "rhc_id": {
+            "description": "The UUID of the connection",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "type": "string"
+          },
+          "extra": {
+            "description": "Extra data in JSON format",
+            "example": "{\"hello\": \"world\"}",
+            "type": "string"
+          },
+          "source_id": {
+            "description": "Hehe",
+            "type": "string"
+          }
+        }
+      },
+      "RhcConnectionRead": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ID"
+          },
+          "rhc_id": {
+            "description": "The UUID of the connection",
+            "example": "123e4567-e89b-12d3-a456-426614174000",
+            "readOnly": true,
+            "type": "string"
+          },
+          "extra": {
+            "description": "Extra data in JSON format",
+            "example": {
+              "hello": "world"
+            },
+            "type": "string"
+          },
+          "availability_status": {
+            "description": "The availability status of the connection",
+            "enum": [
+              "available",
+              "in_progress",
+              "partially_available",
+              "unavailable"
+            ],
+            "example": "available",
+            "type": "string"
+          },
+          "last_checked_at": {
+            "description": "Timestamp of the last time the availability was checked for the connection",
+            "example": "2000-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "last_available_at": {
+            "description": "Timestamp of the last time the connection was available",
+            "example": "2000-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "availability_status_error": {
+            "description": "The received error message when polling for the availability status",
+            "example": "Destination host unreachable",
+            "type": "string"
+          },
+          "source_ids": {
+            "description": "The connection's related sources",
+            "example": [
+              "92",
+              "106",
+              "231"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ID"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "RhcConnectionUpdate": {
+        "type": "object",
+        "properties": {
+          "extra": {
+            "description": "Extra data in JSON format",
+            "example": "{\"hello\": \"world\"}",
+            "type": "string"
+          }
+        }
       },
       "Source": {
         "type": "object",
