@@ -80,19 +80,27 @@ func runServer() {
 		e.Logger.Fatal(err)
 	}
 
-	// launch 2 listeners - one for metrics and one for the actual application
-	go metricExporter()
+	// launch 2 listeners - one for metrics and one for the actual application,
+	// one on 8000 and one on 9000 (per clowder)
+	go runMetricExporter()
+
+	// hiding the ascii art to make the logs more json-like
 	e.HideBanner = true
+	e.HidePort = true
+
+	logging.Log.Infof("API Server started on :8000")
 	e.Logger.Fatal(e.Start(":8000"))
 }
 
-func metricExporter() {
+func runMetricExporter() {
 	// creating a separate echo router for the metrics handler - since it has to listen on a separate port.
 	e := echo.New()
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
-	logging.Log.Infof("Metrics started on :%d", config.Get().MetricsPort)
 
-	// we need to have 2 listeners, one on 8000 and one on 9000 (per clowder)
+	// hiding the ascii art to make the logs more json-like
 	e.HideBanner = true
+	e.HidePort = true
+
+	logging.Log.Infof("Metrics Server started on :9000")
 	e.Logger.Fatal(e.Start(":9000"))
 }
