@@ -2,11 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -45,7 +40,9 @@ func runServer() {
 	// set the binder to the one that does not allow extra parameters in payload
 	e.Binder = &NoUnknownFieldsBinder{}
 
+	// recover from any `panic()`'s that happen in the handler, so the server doesn't crash.
 	e.Use(middleware.Recover())
+	// set up logging with our custom logger
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: logging.FormatForMiddleware(conf),
 		Output: &logging.LogWriter{Output: logging.LogOutputFrom(conf.LogHandler),
@@ -53,19 +50,9 @@ func runServer() {
 			LogLevel: conf.LogLevelForMiddlewareLogs},
 	}))
 
-	p := echoMetrics.NewPrometheus("sources", func(c echo.Context) bool {
-		// skip the internal requests. Don't need to report those.
-		if strings.Contains(c.Path(), "internal") || strings.HasPrefix(c.Path(), "/health") {
-			return true
-		}
-		return false
-	})
-
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
-	// we need to have 2 listeners, one on 8000 and one on 9000 (per clowder)
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return p.HandlerFunc(next)
-	})
+	p := echoMetrics.NewPrometheus("sources", nil)
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return p.HandlerFunc(next) })
 
 	setupRoutes(e)
 
@@ -93,13 +80,19 @@ func runServer() {
 		e.Logger.Fatal(err)
 	}
 
+	// launch 2 listeners - one for metrics and one for the actual application
 	go metricExporter()
+	e.HideBanner = true
 	e.Logger.Fatal(e.Start(":8000"))
 }
 
 func metricExporter() {
-	http.Handle("/metrics", promhttp.Handler())
-	fmt.Fprintf(os.Stderr, "Metrics started on :%d\n", config.Get().MetricsPort)
+	// creating a separate echo router for the metrics handler - since it has to listen on a separate port.
+	e := echo.New()
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	logging.Log.Infof("Metrics started on :%d", config.Get().MetricsPort)
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Get().MetricsPort), nil))
+	// we need to have 2 listeners, one on 8000 and one on 9000 (per clowder)
+	e.HideBanner = true
+	e.Logger.Fatal(e.Start(":9000"))
 }
