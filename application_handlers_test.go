@@ -3,17 +3,22 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/labstack/echo/v4"
 )
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {
@@ -675,4 +680,177 @@ func TestResumeApplication(t *testing.T) {
 	if rec.Code != http.StatusNoContent {
 		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
 	}
+}
+
+// TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
+func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	// We back up the producer so that we can restore it once the test has finished. This way we don't mess up with
+	// other tests that may need to raise events.
+	backupProducer := service.Producer
+	service.Producer = events.EventStreamProducer{Sender: MockSender{}}
+
+	var applicationRaiseEventCallCount int
+	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {
+		// Set up an error which will get returned. Probably will get overwritten if there are multiple errors, but
+		// we don't mind since we are logging every failure. Essentially, it just to satisfy the function signature.
+		err := applicationEventTestHelper(t, c, "Application.pause", eventType, payload, headers)
+
+		applicationRaiseEventCallCount++
+		return err
+	}
+
+	err := ApplicationPause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	{
+		// We are pausing a single application, therefore the "RaiseEvent" function should have been called once.
+		want := 1
+		got := applicationRaiseEventCallCount
+
+		if want != got {
+			t.Errorf(`raise event was called an incorrect number of times for the application event. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Restore the producer back to the original.
+	service.Producer = backupProducer
+}
+
+// TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is unpaused.
+func TestPauseApplicationUnpauseRaiseEventCheck(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	// We back up the producer so that we can restore it once the test has finished. This way we don't mess up with
+	// other tests that may need to raise events.
+	backupProducer := service.Producer
+	service.Producer = events.EventStreamProducer{Sender: MockSender{}}
+
+	var applicationRaiseEventCallCount int
+	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {
+		// Set up an error which will get returned. Probably will get overwritten if there are multiple errors, but
+		// we don't mind since we are logging every failure. Essentially, it just to satisfy the function signature.
+		err := applicationEventTestHelper(t, c, "Application.unpause", eventType, payload, headers)
+
+		applicationRaiseEventCallCount++
+		return err
+	}
+
+	err := ApplicationUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	{
+		// We are resuming a single application, therefore the "RaiseEvent" function should have been called once.
+		want := 1
+		got := applicationRaiseEventCallCount
+
+		if want != got {
+			t.Errorf(`raise event was called an incorrect number of times for the application event. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Restore the producer back to the original.
+	service.Producer = backupProducer
+}
+
+// applicationEventTestHelper helps to test whether the received payload and the headers from the "RaiseEvent" function
+// correspond to what we are expecting.
+func applicationEventTestHelper(t *testing.T, c echo.Context, expectedEventType string, eventType string, payload []byte, headers []kafka.Header) error {
+	if expectedEventType != eventType {
+		t.Errorf(`incorrect event type when raising the event. Want "%s", got "%s"`, expectedEventType, eventType)
+		return errors.New(`incorrect event type raised`)
+	}
+
+	// We have to unmarshal the payload to grab the ID and fetch the fixture from the database.
+	var content map[string]interface{}
+	err := json.Unmarshal(payload, &content)
+	if err != nil {
+		t.Errorf(`could not unmarshal the payload: %s`, err)
+		return err
+	}
+
+	// For some reason the ID comes as a float64.
+	tmpId, ok := content["id"].(float64)
+	if !ok {
+		t.Errorf(`incorrect type for the id. Want "string", got "%s"`, reflect.TypeOf(content["id"]))
+		return errors.New(`incorrect type for the id`)
+	}
+
+	id := int64(tmpId)
+
+	appDao, err := getApplicationDao(c)
+	if err != nil {
+		t.Errorf(`could not get the application DAO: %s`, err)
+		return err
+	}
+
+	app, err := appDao.GetById(&id)
+	if err != nil {
+		t.Errorf(`error fetching the application: %s`, err)
+		return err
+	}
+
+	{
+		// Turn the application into JSON.
+		want, err := json.Marshal(app.ToEvent())
+		if err != nil {
+			t.Errorf(`error marshalling the event: %s`, err)
+			return err
+		}
+
+		got := payload
+		if !bytes.Equal(want, got) {
+			t.Errorf(`incorrect payload given to RaiseEvent. Want "%s", got "%s"`, want, got)
+			return errors.New(`incorrect payload given to RaiseEvent`)
+		}
+	}
+
+	{
+		// The header should contain the expected event type as well.
+		want := expectedEventType
+		got := string(headers[0].Value)
+		if want != got {
+			t.Errorf(`incorrect header on raise event. Want "%s", got "%s"`, want, got)
+			return errors.New(`incorrect header on raise event`)
+		}
+	}
+
+	return nil
 }
