@@ -33,6 +33,9 @@ debug:
 test:
 	go test ./...
 
+alltest: test
+	go test --integration ./...
+
 lint:
 	go vet ./...
 	golangci-lint run -E gofmt,gci,bodyclose,forcetypeassert,misspell
@@ -47,4 +50,4 @@ vault:
 		-e 'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200' \
 		-p 8200:8200 vault
 
-.PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener
+.PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener alltest
