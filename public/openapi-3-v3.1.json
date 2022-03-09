@@ -2586,6 +2586,18 @@
                   }
                 },
                 "type": "object"
+              },
+              "marketplace": {
+                "additionalProperties": false,
+                "properties": {
+                  "expiration": {
+                    "type": "number"
+                  },
+                  "access_token": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
               }
             },
             "type": "object"
