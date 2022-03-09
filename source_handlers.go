@@ -397,14 +397,14 @@ func SourcePause(c echo.Context) error {
 	kafkaHeaders := service.ForwadableHeaders(c)
 
 	// Raise the pause event for the source.
-	err = service.RaiseEvent("Source.Pause", source, kafkaHeaders)
+	err = service.RaiseEvent("Source.pause", source, kafkaHeaders)
 	if err != nil {
 		return err
 	}
 
 	// Raise the pause event for its applications
 	for _, app := range source.Applications {
-		err := service.RaiseEvent("Application.Pause", &app, kafkaHeaders)
+		err := service.RaiseEvent("Application.pause", &app, kafkaHeaders)
 		if err != nil {
 			return err
 		}
@@ -440,14 +440,14 @@ func SourceResume(c echo.Context) error {
 	kafkaHeaders := service.ForwadableHeaders(c)
 
 	// Raise the resume event for the source.
-	err = service.RaiseEvent("Source.Unpause", source, kafkaHeaders)
+	err = service.RaiseEvent("Source.unpause", source, kafkaHeaders)
 	if err != nil {
 		return err
 	}
 
 	// Raise the resume event for its applications
 	for _, app := range source.Applications {
-		err := service.RaiseEvent("Application.Unpause", &app, kafkaHeaders)
+		err := service.RaiseEvent("Application.unpause", &app, kafkaHeaders)
 		if err != nil {
 			return err
 		}
