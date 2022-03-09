@@ -667,7 +667,7 @@ func TestResumeApplication(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 
-	err := ApplicationResume(c)
+	err := ApplicationUnpause(c)
 	if err != nil {
 		t.Error(err)
 	}

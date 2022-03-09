@@ -413,9 +413,9 @@ func SourcePause(c echo.Context) error {
 	return c.JSON(http.StatusNoContent, nil)
 }
 
-// SourceResume "unpauses" a source and all its dependant applications, by setting the former's and the latter's
+// SourceUnpause "unpauses" a source and all its dependant applications, by setting the former's and the latter's
 // "paused_at" columns to "null".
-func SourceResume(c echo.Context) error {
+func SourceUnpause(c echo.Context) error {
 	sourceId, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -426,7 +426,7 @@ func SourceResume(c echo.Context) error {
 		return err
 	}
 
-	err = sourceDao.Resume(sourceId)
+	err = sourceDao.Unpause(sourceId)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}

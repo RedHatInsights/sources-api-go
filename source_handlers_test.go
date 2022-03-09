@@ -911,7 +911,7 @@ func TestResumeSourceAndItsApplications(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues("1")
 
-	err := SourceResume(c)
+	err := SourceUnpause(c)
 	if err != nil {
 		t.Error(err)
 	}

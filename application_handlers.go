@@ -266,8 +266,8 @@ func ApplicationPause(c echo.Context) error {
 	return c.JSON(http.StatusNoContent, nil)
 }
 
-// ApplicationResume resumes a given application by setting its "paused_at" column to "NULL".
-func ApplicationResume(c echo.Context) error {
+// ApplicationUnpause resumes a given application by setting its "paused_at" column to "NULL".
+func ApplicationUnpause(c echo.Context) error {
 	applicationId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -278,7 +278,7 @@ func ApplicationResume(c echo.Context) error {
 		return err
 	}
 
-	err = applicationDao.Resume(applicationId)
+	err = applicationDao.Unpause(applicationId)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}

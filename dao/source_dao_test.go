@@ -96,7 +96,7 @@ func TestResumingSource(t *testing.T) {
 	CreateFixtures("pause_unpause")
 
 	sourceDao := GetSourceDao(&testSource.TenantID)
-	err := sourceDao.Resume(fixtures.TestSourceData[0].ID)
+	err := sourceDao.Unpause(fixtures.TestSourceData[0].ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
