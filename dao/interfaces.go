@@ -69,7 +69,7 @@ type ApplicationAuthenticationDao interface {
 	GetById(id *int64) (*m.ApplicationAuthentication, error)
 	Create(src *m.ApplicationAuthentication) error
 	Update(src *m.ApplicationAuthentication) error
-	Delete(id *int64) error
+	Delete(id *int64) (*m.ApplicationAuthentication, error)
 	Tenant() *int64
 	ApplicationAuthenticationsByResource(resourceType string, applications []m.Application, authentications []m.Authentication) ([]m.ApplicationAuthentication, error)
 }

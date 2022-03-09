@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -23,7 +25,7 @@ func getApplicationAuthenticationDaoWithTenant(c echo.Context) (dao.ApplicationA
 }
 
 func ApplicationAuthenticationList(c echo.Context) error {
-	applicationDB, err := getApplicationAuthenticationDao(c)
+	appAuthDB, err := getApplicationAuthenticationDao(c)
 	if err != nil {
 		return err
 	}
@@ -38,11 +40,11 @@ func ApplicationAuthenticationList(c echo.Context) error {
 		return err
 	}
 
-	applications, count, err := applicationDB.List(limit, offset, filters)
+	applications, count, err := appAuthDB.List(limit, offset, filters)
 	if err != nil {
 		return err
 	}
-	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
+	c.Logger().Infof("tenant: %v", *appAuthDB.Tenant())
 
 	out := make([]interface{}, len(applications))
 	for i, a := range applications {
@@ -53,7 +55,7 @@ func ApplicationAuthenticationList(c echo.Context) error {
 }
 
 func ApplicationAuthenticationGet(c echo.Context) error {
-	applicationDB, err := getApplicationAuthenticationDao(c)
+	appAuthDB, err := getApplicationAuthenticationDao(c)
 	if err != nil {
 		return err
 	}
@@ -65,12 +67,64 @@ func ApplicationAuthenticationGet(c echo.Context) error {
 
 	c.Logger().Infof("Getting ApplicationAuthentication ID %v", id)
 
-	app, err := applicationDB.GetById(&id)
+	app, err := appAuthDB.GetById(&id)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, app.ToResponse())
+}
+
+func ApplicationAuthenticationCreate(c echo.Context) error {
+	appAuthDB, err := getApplicationAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	input := m.ApplicationAuthenticationCreateRequest{}
+	if err := c.Bind(&input); err != nil {
+		return err
+	}
+
+	err = service.ValidateApplicationAuthenticationCreateRequest(&input)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	appAuth := &m.ApplicationAuthentication{
+		ApplicationID:    input.ApplicationID,
+		AuthenticationID: input.AuthenticationID,
+	}
+
+	err = appAuthDB.Create(appAuth)
+	if err != nil {
+		return err
+	}
+
+	setEventStreamResource(c, appAuth)
+
+	return c.JSON(http.StatusCreated, appAuth.ToResponse())
+}
+
+func ApplicationAuthenticationDelete(c echo.Context) error {
+	appAuthDB, err := getApplicationAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	appAuth, err := appAuthDB.Delete(&id)
+	if err != nil {
+		return err
+	}
+
+	setEventStreamResource(c, appAuth)
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 func ApplicationAuthenticationListAuthentications(c echo.Context) error {

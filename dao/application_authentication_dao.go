@@ -90,7 +90,7 @@ func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 
 func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
 	appAuth := &m.ApplicationAuthentication{ID: *id}
-	result := DB.First(&appAuth)
+	result := DB.Where("tenant_id = ?", a.TenantID).First(&appAuth)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("application authentication")
 	}
@@ -98,8 +98,13 @@ func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAut
 }
 
 func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {
-	result := DB.Create(appAuth)
-	return result.Error
+	appAuth.TenantID = *a.TenantID
+	err := DB.Create(appAuth).Error
+	if err != nil {
+		return util.NewErrBadRequest("failed to create application_authentication: " + err.Error())
+	}
+
+	return nil
 }
 
 func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
@@ -107,13 +112,20 @@ func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthenti
 	return result.Error
 }
 
-func (a *applicationAuthenticationDaoImpl) Delete(id *int64) error {
-	appAuth := &m.ApplicationAuthentication{ID: *id}
-	if result := DB.Delete(appAuth); result.RowsAffected == 0 {
-		return fmt.Errorf("failed to delete application id %v", *id)
+func (a *applicationAuthenticationDaoImpl) Delete(id *int64) (*m.ApplicationAuthentication, error) {
+	appAuth := &m.ApplicationAuthentication{ID: *id, TenantID: *a.TenantID}
+
+	result := DB.First(&appAuth)
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("application authentication")
 	}
 
-	return nil
+	result = DB.Where("tenant_id = ?").Delete(&appAuth)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to delete application id %v", *id)
+	}
+
+	return appAuth, nil
 }
 
 func (a *applicationAuthenticationDaoImpl) Tenant() *int64 {
