@@ -30,7 +30,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 			return err
 		}
 
-		s := dao.GetSourceDao(&id)
+		s := dao.GetSourceDao(&tenantId)
 
 		if s.IsSuperkey(id) {
 			xrhid, ok := c.Get("x-rh-identity").(string)
@@ -64,7 +64,7 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 			return err
 		}
 
-		a := dao.GetApplicationDao(&id)
+		a := dao.GetApplicationDao(&tenantId)
 
 		if a.IsSuperkey(id) {
 			xrhid, ok := c.Get("x-rh-identity").(string)
