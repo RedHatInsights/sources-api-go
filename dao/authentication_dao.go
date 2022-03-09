@@ -221,7 +221,7 @@ func (a *authenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 	}
 
 	if fullKey == "" {
-		return nil, fmt.Errorf("authentication not found")
+		return nil, util.NewErrNotFound("authentication")
 	}
 
 	// The token cacher is initialized here because "getKey" has a call to "authFromvault", and it's the only
@@ -314,7 +314,7 @@ func (a *authenticationDaoImpl) Delete(uid string) (*m.Authentication, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("not found")
+	return nil, util.NewErrNotFound("authentication")
 }
 
 func (a *authenticationDaoImpl) Tenant() *int64 {

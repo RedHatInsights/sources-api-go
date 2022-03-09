@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -40,6 +41,10 @@ type MockRhcConnectionDao struct {
 
 type MockApplicationAuthenticationDao struct {
 	ApplicationAuthentications []m.ApplicationAuthentication
+}
+
+type MockAuthenticationDao struct {
+	Authentications []m.Authentication
 }
 
 func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
@@ -533,4 +538,80 @@ func (m MockApplicationAuthenticationDao) Tenant() *int64 {
 
 func (m MockApplicationAuthenticationDao) ApplicationAuthenticationsByResource(_ string, _ []m.Application, _ []m.Authentication) ([]m.ApplicationAuthentication, error) {
 	return m.ApplicationAuthentications, nil
+}
+
+func (m MockAuthenticationDao) List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	count := int64(len(m.Authentications))
+	return m.Authentications, count, nil
+}
+
+func (m MockAuthenticationDao) GetById(id string) (*m.Authentication, error) {
+	for _, auth := range m.Authentications {
+		if auth.ID == id {
+			return &auth, nil
+		}
+	}
+
+	return nil, util.NewErrNotFound("authentication")
+}
+
+func (m MockAuthenticationDao) ListForSource(sourceID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) ListForApplication(applicationID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) Create(auth *m.Authentication) error {
+	switch auth.ResourceType {
+	case "Application", "Endpoint", "Source":
+		return nil
+	default:
+		return fmt.Errorf("bad resource type, supported types are [Application, Endpoint, Source]")
+	}
+}
+
+func (m MockAuthenticationDao) Update(auth *m.Authentication) error {
+	if auth.ID == fixtures.TestAuthenticationData[0].ID {
+		return nil
+	}
+	return util.NewErrNotFound("authentication")
+}
+
+func (m MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
+	for _, auth := range m.Authentications {
+		if auth.ID == id {
+			return &auth, nil
+		}
+	}
+	return nil, util.NewErrNotFound("authentication")
+}
+
+func (m MockAuthenticationDao) Tenant() *int64 {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+	panic("implement me")
+}
+
+func (m MockAuthenticationDao) ToEventJSON(resource util.Resource) ([]byte, error) {
+	panic("implement me")
 }

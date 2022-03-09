@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -59,7 +58,7 @@ func AuthenticationGet(c echo.Context) error {
 
 	auth, err := authDao.GetById(c.Param("uid"))
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 	return c.JSON(http.StatusOK, auth.ToResponse())
 }
@@ -87,7 +86,7 @@ func AuthenticationCreate(c echo.Context) error {
 	}
 	err = authDao.Create(auth)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	// TODO: once ToEvent() is added for authentication un-comment this.
@@ -104,18 +103,18 @@ func AuthenticationUpdate(c echo.Context) error {
 	updateRequest := &m.AuthenticationEditRequest{}
 	err = c.Bind(updateRequest)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return util.NewErrBadRequest(err)
 	}
 
 	auth, err := authDao.GetById(c.Param("uid"))
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(fmt.Sprintf("Authentication %v not found (%s)", c.Param("uid"), err.Error()), "404"))
+		return err
 	}
 
 	auth.UpdateFromRequest(updateRequest)
 	err = authDao.Update(auth)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	// TODO: once ToEvent() is added for authentication un-comment this.
