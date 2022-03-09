@@ -171,11 +171,6 @@ func EndpointEdit(c echo.Context) error {
 		return err
 	}
 
-	input := &m.EndpointEditRequest{}
-	if err := c.Bind(input); err != nil {
-		return err
-	}
-
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -186,8 +181,28 @@ func EndpointEdit(c echo.Context) error {
 		return err
 	}
 
+	// Store the previous status before updating the endpoint.
 	previousStatus := endpoint.AvailabilityStatus
-	endpoint.UpdateFromRequest(input)
+
+	// If "PausedAt" contains a date it means that the endpoint was paused back then.
+	if endpoint.PausedAt != nil {
+		input := &m.ResourceEditPausedRequest{}
+		if err := c.Bind(input); err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		if err := endpoint.UpdateFromRequestPaused(input); err != nil {
+			return util.NewErrBadRequest(err)
+		}
+	} else {
+		input := &m.EndpointEditRequest{}
+		if err := c.Bind(input); err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		endpoint.UpdateFromRequest(input)
+	}
+
 	err = endpointDao.Update(endpoint)
 	if err != nil {
 		return err

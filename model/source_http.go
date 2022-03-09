@@ -1,8 +1,10 @@
 package model
 
 import (
+	"fmt"
 	"time"
 
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -34,6 +36,13 @@ type SourceEditRequest struct {
 	// TODO: remove these once satellite goes away.
 	LastCheckedAt   *string `json:"last_checked_at"`
 	LastAvailableAt *string `json:"last_available_at"`
+}
+
+// SourcePausedEditRequest manages the payload we allow receiving when a paused source is tried to be edited.
+type SourcePausedEditRequest struct {
+	AvailabilityStatus *string `json:"availability_status"`
+	LastAvailableAt    *string `json:"last_available_at"`
+	LastCheckedAt      *string `json:"last_checked_at"`
 }
 
 // SourceResponse represents what we will always return to the users
@@ -91,4 +100,38 @@ func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
 		t, _ := time.Parse(util.RecordDateTimeFormat, *update.LastCheckedAt)
 		src.LastCheckedAt = &t
 	}
+}
+
+func (src *Source) UpdateFromRequestPaused(update *SourcePausedEditRequest) error {
+	availabilityStatus := update.AvailabilityStatus
+	lastAvailableAt := update.LastAvailableAt
+	lastCheckedAt := update.LastCheckedAt
+
+	if availabilityStatus != nil {
+		src.AvailabilityStatus = *availabilityStatus
+	}
+
+	if lastAvailableAt != nil {
+		t, err := time.Parse(util.RecordDateTimeFormat, *lastAvailableAt)
+		if err != nil {
+			logging.Log.Warnf(`[source_id: %d] invalid "last available at" date received to update a paused source: %s`, src.ID, *lastAvailableAt)
+
+			return fmt.Errorf(`the provided date is in an invalid format. Expected format: "%s"`, util.RecordDateTimeFormat)
+		}
+
+		src.LastAvailableAt = &t
+	}
+
+	if lastCheckedAt != nil {
+		t, err := time.Parse(util.RecordDateTimeFormat, *lastCheckedAt)
+		if err != nil {
+			logging.Log.Warnf(`[source_id: %d] invalid "last checked at" date received to update a paused source: %s`, src.ID, *lastCheckedAt)
+
+			return fmt.Errorf(`the provided date is in an invalid format. Expected format: "%s"`, util.RecordDateTimeFormat)
+		}
+
+		src.LastAvailableAt = &t
+	}
+
+	return nil
 }

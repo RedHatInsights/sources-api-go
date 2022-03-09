@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -1519,4 +1521,135 @@ func sourceEventTestHelper(t *testing.T, c echo.Context, expectedEventType strin
 	}
 
 	return nil
+}
+
+// TestSourceEditPausedIntegration tests that a "bad request" response is returned when a paused source is tried to be
+// updated when the payload has not allowed fields. Sets the first application of the fixtures as paused and then it
+// unpauses it back once the test is finished.
+func TestSourceEditPausedIntegration(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	newSourceName := "New source name"
+	req := m.SourceEditRequest{
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	// Make sure we are using the "NoUnknownFieldsBinder".
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	// Modify the source so that the underlying code identifies it as "paused".
+	err := dao.DB.Model(m.Source{}).Where("id = ?", 1).UpdateColumn("paused_at", time.Now()).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
+	err = badRequestSourceEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Revert the changes so other tests don't have any problems.
+	err = dao.DB.Model(m.Source{}).Where("id = ?", 1).UpdateColumn("paused_at", nil).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
+	}
+
+	want := "name"
+	got := rec.Body.String()
+	if !strings.Contains(got, want) {
+		t.Errorf(`unexpected body returned. Want "%s" contained in what we got "%s"`, want, got)
+	}
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
+}
+
+// TestSourceEditPausedUnit tests that a "bad request" response is returned when a paused source is tried to be updated
+// when the payload has not allowed fields. Runs on unit tests by swapping the mock source's DAO to one that simulates
+// that the endpoints are paused.
+func TestSourceEditPausedUnit(t *testing.T) {
+	newSourceName := "New source name"
+	req := m.SourceEditRequest{
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	// Get the specific SourceDao mock which simulates that the sources are paused.
+	backupDao := getSourceDao
+	getSourceDao = func(c echo.Context) (dao.SourceDao, error) {
+		return &dao.MockSourceDao{Sources: fixtures.TestSourceData}, nil
+	}
+
+	// Set the fixture source as "paused".
+	pausedAt := time.Now()
+	fixtures.TestSourceData[0].PausedAt = &pausedAt
+
+	// Make sure we don't accept the "Name" field we set up above.
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
+	err := badRequestSourceEdit(c)
+
+	// Revert the fixture endpoint to its default value.
+	fixtures.TestSourceData[0].PausedAt = nil
+	// Go back to the previous DAO mock.
+	getSourceDao = backupDao
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	got, err := io.ReadAll(rec.Body)
+	if err != nil {
+		t.Errorf(`error reading the response: %s`, err)
+	}
+
+	want := []byte("name")
+	if !bytes.Contains(got, want) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, want, err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
+	}
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
 }
