@@ -409,16 +409,16 @@ func TestConsumeStatusMessage(t *testing.T) {
 	header2 := kafkaGo.Header{Key: "x-rh-identity", Value: []byte("eyJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjEyMzQ1IiwidXNlciI6IHsiaXNfb3JnX2FkbWluIjp0cnVlfX0sICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fQo=")}
 	header3 := kafkaGo.Header{Key: "x-rh-sources-account-number", Value: []byte("12345")}
 	headers := []kafkaGo.Header{header, header2, header3}
-	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", Status: m.Available}
+	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: headers, RaiseEventCalled: true}
 
-	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", Status: m.Available}
+	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: headers, RaiseEventCalled: true}
 
-	statusMessageEndpoint := types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", Status: m.Available}
+	statusMessageEndpoint := types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: true}
 
-	statusMessageEndpoint = types.StatusMessage{ResourceType: "Endpoint", ResourceID: "99", Status: m.Available}
+	statusMessageEndpoint = types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", ResourceIDRaw: "99", Status: m.Available}
 	endpointTestDataNotFound := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: false}
 
 	testData = make([]TestData, 4)

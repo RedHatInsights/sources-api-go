@@ -52,3 +52,17 @@ func (message *Message) isEmpty() bool {
 
 	return isEmptyHeaders && message.Value == nil
 }
+
+// translate a kafka message's headers from segmentio/kafka -> our kafka
+func (message *Message) TranslateHeaders() []Header {
+	if len(message.Headers) < 1 {
+		return []Header{}
+	}
+
+	headers := make([]Header, len(message.Headers))
+	for index, header := range message.Headers {
+		headers[index] = Header{Key: header.Key, Value: header.Value}
+	}
+
+	return headers
+}

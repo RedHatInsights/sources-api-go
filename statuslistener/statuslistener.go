@@ -58,6 +58,11 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
 }
 
 func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Message) {
+	if message.GetHeader("event_type") != eventAvailabilityStatus {
+		l.Log.Warnf("Skipping invalid event_type %q", message.GetHeader("event_type"))
+		return
+	}
+
 	var statusMessage types.StatusMessage
 	err := message.ParseTo(&statusMessage)
 	if err != nil {
@@ -65,29 +70,17 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 		return
 	}
 
-	if message.GetHeader("event_type") != eventAvailabilityStatus {
-		l.Log.Warnf("Skipping invalid event_type %q", message.GetHeader("event_type"))
-		return
+	// parse the resource_id field - which can be either an integer or string
+	id, err := util.InterfaceToString(statusMessage.ResourceIDRaw)
+	if err != nil {
+		l.Log.Errorf("Invalid ID Passed: %v", statusMessage.ResourceIDRaw)
 	}
+	statusMessage.ResourceID = id
 
 	l.Log.Infof("Kafka message %s, %s received with payload: %s", message.Headers, message.Key, message.Value)
 
-	headers := avs.headersFrom(message)
-
+	headers := message.TranslateHeaders()
 	avs.processEvent(statusMessage, headers)
-}
-
-func (avs *AvailabilityStatusListener) headersFrom(message kafka.Message) []kafka.Header {
-	if len(message.Headers) < 1 {
-		return []kafka.Header{}
-	}
-
-	headers := make([]kafka.Header, len(message.Headers))
-	for index, header := range message.Headers {
-		headers[index] = kafka.Header{Key: header.Key, Value: header.Value}
-	}
-
-	return headers
 }
 
 func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMessage, headers []kafka.Header) {
@@ -146,6 +139,8 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}
 }
 
+var statusErrorModels = []string{"application", "authentication", "endpoint"}
+
 func (avs *AvailabilityStatusListener) attributesForUpdate(statusMessage types.StatusMessage) map[string]interface{} {
 	updateAttributes := make(map[string]interface{})
 
@@ -153,7 +148,6 @@ func (avs *AvailabilityStatusListener) attributesForUpdate(statusMessage types.S
 	updateAttributes["last_checked_at"] = time.Now().Format("2006-01-02T15:04:05.999Z")
 	updateAttributes["availability_status"] = statusMessage.Status
 
-	statusErrorModels := []string{"application", "authentication", "endpoint"}
 	if util.SliceContainsString(statusErrorModels, strings.ToLower(statusMessage.ResourceType)) {
 		updateAttributes["availability_status_error"] = statusMessage.Error
 	}

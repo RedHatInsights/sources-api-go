@@ -80,3 +80,40 @@ func DateTimeToRecordFormat(inputTime time.Time) *string {
 func DateTimeToRFC3339(inputTime time.Time) string {
 	return FormatTimeToString(inputTime, time.RFC3339)
 }
+
+// InterfaceToString takes a number in interface format and converts it to the
+// string representation
+func InterfaceToString(i interface{}) (string, error) {
+	switch value := i.(type) {
+	case float64:
+		return strconv.FormatInt(int64(value), 10), nil
+	case *float64:
+		if value == nil {
+			return "", fmt.Errorf("cannot parse a nil pointer to a string")
+		}
+
+		return strconv.FormatInt(int64(*value), 10), nil
+
+	case int64:
+		return strconv.FormatInt(value, 10), nil
+
+	case *int64:
+		if value == nil {
+			return "", fmt.Errorf("cannot parse a nil pointer to a string")
+		}
+
+		return strconv.FormatInt(*value, 10), nil
+	case string:
+		return value, nil
+
+	case *string:
+		if value == nil {
+			return "", fmt.Errorf("cannot parse a nil pointer to a string")
+		}
+
+		return *value, nil
+
+	default:
+		return "", fmt.Errorf("invalid format provided")
+	}
+}
