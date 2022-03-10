@@ -106,6 +106,13 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 }
 
 func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	// Check if sourceID exists
+	src := &m.Source{ID: sourceID}
+	result := DB.First(src)
+	if result.Error != nil {
+		return nil, 0, util.NewErrNotFound("source")
+	}
+
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err

@@ -16,6 +16,107 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
+func TestSourceListAuthentications(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	err := SourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	auth1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if auth1["id"] != fixtures.TestAuthenticationData[0].ID {
+		t.Error("ghosts infected the return")
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestSourceListAuthenticationsNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/30983098439/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("30983098439")
+
+	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := notFoundSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
+
+func TestSourceListAuthenticationsBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/xxx/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := badRequestSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,

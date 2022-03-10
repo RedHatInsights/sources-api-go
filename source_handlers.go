@@ -195,7 +195,7 @@ func SourceListAuthentications(c echo.Context) error {
 
 	auths, count, err := authDao.ListForSource(sourceID, 100, 0, nil)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	out := make([]interface{}, count)
