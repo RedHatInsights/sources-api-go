@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -178,4 +180,111 @@ func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 	}
 
 	testutils.BadRequestTest(t, rec)
+}
+
+func TestApplicationAuthenticationCreate(t *testing.T) {
+	if parser.RunningIntegrationTests {
+		t.Skip("Test not supported when using db backend")
+	}
+
+	input := m.ApplicationAuthenticationCreateRequest{
+		ApplicationIDRaw:    7,
+		AuthenticationIDRaw: 7,
+	}
+
+	body, _ := json.Marshal(&input)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/application_authentications",
+		bytes.NewBuffer(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json")
+
+	err := ApplicationAuthenticationCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 201 {
+		t.Errorf("Wrong response code, got %v wanted %v", rec.Code, 201)
+	}
+}
+
+func TestApplicationAuthenticationCreateBadAppId(t *testing.T) {
+	input := m.ApplicationAuthenticationCreateRequest{
+		ApplicationIDRaw:    "abcd",
+		AuthenticationIDRaw: 7,
+	}
+
+	body, _ := json.Marshal(&input)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/application_authentications",
+		bytes.NewBuffer(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json")
+
+	badRequestApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationCreate)
+	err := badRequestApplicationAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
+	input := m.ApplicationAuthenticationCreateRequest{
+		ApplicationIDRaw:    7,
+		AuthenticationIDRaw: "abcd",
+	}
+
+	body, _ := json.Marshal(&input)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/application_authentications",
+		bytes.NewBuffer(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json")
+
+	badRequestApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationCreate)
+	err := badRequestApplicationAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/application_authentications/1234523452542",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.SetParamNames("id")
+	c.SetParamValues("1234523452542")
+
+	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationDelete)
+	err := notFoundApplicationAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }

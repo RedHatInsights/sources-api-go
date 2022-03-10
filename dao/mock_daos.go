@@ -520,15 +520,15 @@ func (m MockApplicationAuthenticationDao) GetById(id *int64) (*m.ApplicationAuth
 }
 
 func (m MockApplicationAuthenticationDao) Create(src *m.ApplicationAuthentication) error {
-	panic("implement me")
+	return nil
 }
 
 func (m MockApplicationAuthenticationDao) Update(src *m.ApplicationAuthentication) error {
 	panic("implement me")
 }
 
-func (m MockApplicationAuthenticationDao) Delete(id *int64) error {
-	panic("implement me")
+func (m MockApplicationAuthenticationDao) Delete(id *int64) (*m.ApplicationAuthentication, error) {
+	return m.GetById(id)
 }
 
 func (m MockApplicationAuthenticationDao) Tenant() *int64 {

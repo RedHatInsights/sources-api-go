@@ -1,5 +1,12 @@
 package model
 
+type ApplicationAuthenticationCreateRequest struct {
+	ApplicationIDRaw    interface{} `json:"application_id"`
+	AuthenticationIDRaw interface{} `json:"authentication_id"`
+	ApplicationID       int64       `json:"-"`
+	AuthenticationID    int64       `json:"-"`
+}
+
 type ApplicationAuthenticationResponse struct {
 	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`

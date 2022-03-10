@@ -2,6 +2,7 @@ package model
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -27,7 +28,7 @@ type ApplicationAuthentication struct {
 	AuthenticationUID string `json:"-"`
 }
 
-func (aa *ApplicationAuthentication) ToEvent() *ApplicationAuthenticationEvent {
+func (aa *ApplicationAuthentication) ToEvent() interface{} {
 	aaEvent := &ApplicationAuthenticationEvent{
 		ID:                aa.ID,
 		PauseEvent:        PauseEvent{PausedAt: util.DateTimeToRecordFormat(aa.PausedAt)},
@@ -46,7 +47,13 @@ func (aa *ApplicationAuthentication) ToEvent() *ApplicationAuthenticationEvent {
 func (aa *ApplicationAuthentication) ToResponse() *ApplicationAuthenticationResponse {
 	id := strconv.FormatInt(aa.ID, 10)
 	appId := strconv.FormatInt(aa.ApplicationID, 10)
-	authId := strconv.FormatInt(aa.AuthenticationID, 10)
+	authId := ""
+	if aa.VaultPath != "" {
+		parts := strings.Split(aa.VaultPath, "/")
+		authId = parts[len(parts)-1]
+	} else {
+		authId = strconv.FormatInt(aa.AuthenticationID, 10)
+	}
 
 	return &ApplicationAuthenticationResponse{
 		ID:                id,
