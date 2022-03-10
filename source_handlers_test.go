@@ -156,7 +156,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestSourceData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -422,7 +422,7 @@ func TestSourceList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestSourceData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -685,7 +685,10 @@ func TestSourceCreate(t *testing.T) {
 
 	id, _ := strconv.ParseInt(src.ID, 10, 64)
 	dao, _ := getSourceDao(c)
-	_, _ = dao.Delete(&id)
+	_, err = dao.Delete(&id)
+	if err != nil {
+		t.Errorf("Failed to delete source id %v", id)
+	}
 }
 
 func TestSourceEdit(t *testing.T) {
@@ -795,6 +798,51 @@ func TestSourceEditBadRequest(t *testing.T) {
 	}
 
 	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourceDelete(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/100",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("100")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := SourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
+	}
+
+	// Check that source doesn't exist.
+	c, rec = request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/100",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("100")
+
+	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+	err = notFoundSourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestSourceDeleteNotFound(t *testing.T) {

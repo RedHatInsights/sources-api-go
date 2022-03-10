@@ -94,6 +94,7 @@ func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 }
 
 func (src *MockSourceDao) Create(s *m.Source) error {
+	src.Sources = append(src.Sources, *s)
 	return nil
 }
 
@@ -102,9 +103,11 @@ func (src *MockSourceDao) Update(s *m.Source) error {
 }
 
 func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
-	for _, i := range src.Sources {
-		if i.ID == *id {
-			return &i, nil
+	for i, source := range src.Sources {
+		if source.ID == *id {
+			src.Sources = append(src.Sources[:i], src.Sources[i+1:]...)
+
+			return &source, nil
 		}
 	}
 	return nil, util.NewErrNotFound("source")
