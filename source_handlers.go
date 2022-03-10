@@ -439,13 +439,13 @@ func SourceUnpause(c echo.Context) error {
 	// Get the Kafka headers we will need to be forwarding.
 	kafkaHeaders := service.ForwadableHeaders(c)
 
-	// Raise the resume event for the source.
+	// Raise the unpause event for the source.
 	err = service.RaiseEvent("Source.unpause", source, kafkaHeaders)
 	if err != nil {
 		return err
 	}
 
-	// Raise the resume event for its applications
+	// Raise the unpause event for its applications
 	for _, app := range source.Applications {
 		err := service.RaiseEvent("Application.unpause", &app, kafkaHeaders)
 		if err != nil {

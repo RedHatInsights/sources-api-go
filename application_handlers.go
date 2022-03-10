@@ -257,7 +257,7 @@ func ApplicationPause(c echo.Context) error {
 	// Get the Kafka headers we will need to be forwarding.
 	kafkaHeaders := service.ForwadableHeaders(c)
 
-	// Raise the resume event for the source.
+	// Raise the pause event for the application.
 	err = service.RaiseEvent("Application.pause", application, kafkaHeaders)
 	if err != nil {
 		return err
@@ -291,7 +291,7 @@ func ApplicationUnpause(c echo.Context) error {
 	// Get the Kafka headers we will need to be forwarding.
 	kafkaHeaders := service.ForwadableHeaders(c)
 
-	// Raise the resume event for the source.
+	// Raise the unpause event for the application.
 	err = service.RaiseEvent("Application.unpause", application, kafkaHeaders)
 	if err != nil {
 		return err
