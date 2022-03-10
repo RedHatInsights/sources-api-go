@@ -232,7 +232,7 @@ func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int,
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	// Getting the total count (filters included) for pagination.
@@ -242,6 +242,8 @@ func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int,
 	// Run the actual query.
 	err = query.Find(&rhcConnections).Error
 
-	return rhcConnections, count, err
-
+	if err != nil {
+		return nil, 0, util.NewErrBadRequest(err)
+	}
+	return rhcConnections, count, nil
 }

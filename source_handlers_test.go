@@ -968,6 +968,85 @@ func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
 	}
 }
 
+func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/0394830498/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("0394830498")
+
+	notFoundSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := notFoundSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
+
+func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/xxx/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := badRequestSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	badRequestSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := badRequestSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 // TestPauseSourceAndItsApplications tests that the "pause source" endpoint sets all the applications and the source
 // itself as paused, by modifying their "paused_at" column.
 func TestPauseSourceAndItsApplications(t *testing.T) {
