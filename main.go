@@ -1,8 +1,6 @@
 package main
 
 import (
-	"flag"
-
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
@@ -23,10 +21,7 @@ func main() {
 	dao.Init()
 	redis.Init()
 
-	availabilityListener := flag.Bool("listener", false, "run availability status listener")
-	flag.Parse()
-
-	if *availabilityListener {
+	if config.Get().StatusListener {
 		statuslistener.Run()
 	} else {
 		runServer()
@@ -73,12 +68,6 @@ func runServer() {
 
 	// setting up the "http.Client" for the marketplace token provider
 	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib
-
-	// Set up the TypeCache
-	err := dao.PopulateStaticTypeCache()
-	if err != nil {
-		e.Logger.Fatal(err)
-	}
 
 	// launch 2 listeners - one for metrics and one for the actual application,
 	// one on 8000 and one on 9000 (per clowder)
