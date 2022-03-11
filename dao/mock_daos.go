@@ -153,7 +153,7 @@ func (s *MockSourceDao) Pause(_ int64) error {
 	return nil
 }
 
-func (s *MockSourceDao) Resume(_ int64) error {
+func (s *MockSourceDao) Unpause(_ int64) error {
 	return nil
 }
 
@@ -362,7 +362,7 @@ func (a *MockApplicationDao) Pause(_ int64) error {
 	return nil
 }
 
-func (a *MockApplicationDao) Resume(_ int64) error {
+func (a *MockApplicationDao) Unpause(_ int64) error {
 	return nil
 }
 

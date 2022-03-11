@@ -413,9 +413,9 @@ func SourcePause(c echo.Context) error {
 	return c.JSON(http.StatusNoContent, nil)
 }
 
-// SourceResume "unpauses" a source and all its dependant applications, by setting the former's and the latter's
+// SourceUnpause "unpauses" a source and all its dependant applications, by setting the former's and the latter's
 // "paused_at" columns to "null".
-func SourceResume(c echo.Context) error {
+func SourceUnpause(c echo.Context) error {
 	sourceId, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -426,7 +426,7 @@ func SourceResume(c echo.Context) error {
 		return err
 	}
 
-	err = sourceDao.Resume(sourceId)
+	err = sourceDao.Unpause(sourceId)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
@@ -439,13 +439,13 @@ func SourceResume(c echo.Context) error {
 	// Get the Kafka headers we will need to be forwarding.
 	kafkaHeaders := service.ForwadableHeaders(c)
 
-	// Raise the resume event for the source.
+	// Raise the unpause event for the source.
 	err = service.RaiseEvent("Source.unpause", source, kafkaHeaders)
 	if err != nil {
 		return err
 	}
 
-	// Raise the resume event for its applications
+	// Raise the unpause event for its applications
 	for _, app := range source.Applications {
 		err := service.RaiseEvent("Application.unpause", &app, kafkaHeaders)
 		if err != nil {

@@ -43,7 +43,7 @@ func TestResumeApplication(t *testing.T) {
 	CreateFixtures("pause_unpause")
 
 	applicationDao := GetApplicationDao(&testApplication.TenantID)
-	err := applicationDao.Resume(testApplication.ID)
+	err := applicationDao.Unpause(testApplication.ID)
 
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)

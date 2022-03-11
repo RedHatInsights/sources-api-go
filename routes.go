@@ -38,7 +38,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.GET("/sources/:source_id/authentications", SourceListAuthentications, tenancyWithListMiddleware...)
 	v3.GET("/sources/:source_id/rhc_connections", SourcesRhcConnectionList, tenancyWithListMiddleware...)
 	v3.POST("/sources/:source_id/pause", SourcePause, middleware.Tenancy)
-	v3.POST("/sources/:source_id/unpause", SourceResume, middleware.Tenancy)
+	v3.POST("/sources/:source_id/unpause", SourceUnpause, middleware.Tenancy)
 
 	// Applications
 	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
@@ -48,7 +48,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.DELETE("/applications/:id", ApplicationDelete, permissionMiddleware...)
 	v3.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
 	v3.POST("/applications/:id/pause", ApplicationPause, middleware.Tenancy)
-	v3.POST("/applications/:id/unpause", ApplicationResume, middleware.Tenancy)
+	v3.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy)
 
 	// Authentications
 	v3.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)

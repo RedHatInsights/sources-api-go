@@ -163,7 +163,7 @@ func (a *applicationDaoImpl) Pause(id int64) error {
 	return err
 }
 
-func (a *applicationDaoImpl) Resume(id int64) error {
+func (a *applicationDaoImpl) Unpause(id int64) error {
 	err := DB.Debug().
 		Model(&m.Application{}).
 		Where("id = ?", id).

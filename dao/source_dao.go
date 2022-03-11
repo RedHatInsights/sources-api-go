@@ -265,7 +265,7 @@ func (s *sourceDaoImpl) Pause(id int64) error {
 	return err
 }
 
-func (s *sourceDaoImpl) Resume(id int64) error {
+func (s *sourceDaoImpl) Unpause(id int64) error {
 	err := DB.Debug().Transaction(func(tx *gorm.DB) error {
 		err := tx.Debug().
 			Model(&m.Source{}).

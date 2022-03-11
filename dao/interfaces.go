@@ -26,8 +26,8 @@ type SourceDao interface {
 	ToEventJSON(resource util.Resource) ([]byte, error)
 	// Pause pauses the given source and all its dependant applications.
 	Pause(id int64) error
-	// Resume resumes the given source and all its dependant applications.
-	Resume(id int64) error
+	// Unpause resumes the given source and all its dependant applications.
+	Unpause(id int64) error
 }
 
 type ApplicationDao interface {
@@ -43,8 +43,8 @@ type ApplicationDao interface {
 	ToEventJSON(resource util.Resource) ([]byte, error)
 	// Pause pauses the application.
 	Pause(id int64) error
-	// Resume resumes the application.
-	Resume(id int64) error
+	// Unpause resumes the application.
+	Unpause(id int64) error
 }
 
 type AuthenticationDao interface {

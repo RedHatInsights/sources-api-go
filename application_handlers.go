@@ -257,7 +257,7 @@ func ApplicationPause(c echo.Context) error {
 	// Get the Kafka headers we will need to be forwarding.
 	kafkaHeaders := service.ForwadableHeaders(c)
 
-	// Raise the resume event for the source.
+	// Raise the pause event for the application.
 	err = service.RaiseEvent("Application.pause", application, kafkaHeaders)
 	if err != nil {
 		return err
@@ -266,8 +266,8 @@ func ApplicationPause(c echo.Context) error {
 	return c.JSON(http.StatusNoContent, nil)
 }
 
-// ApplicationResume resumes a given application by setting its "paused_at" column to "NULL".
-func ApplicationResume(c echo.Context) error {
+// ApplicationUnpause resumes a given application by setting its "paused_at" column to "NULL".
+func ApplicationUnpause(c echo.Context) error {
 	applicationId, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -278,7 +278,7 @@ func ApplicationResume(c echo.Context) error {
 		return err
 	}
 
-	err = applicationDao.Resume(applicationId)
+	err = applicationDao.Unpause(applicationId)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
@@ -291,7 +291,7 @@ func ApplicationResume(c echo.Context) error {
 	// Get the Kafka headers we will need to be forwarding.
 	kafkaHeaders := service.ForwadableHeaders(c)
 
-	// Raise the resume event for the source.
+	// Raise the unpause event for the application.
 	err = service.RaiseEvent("Application.unpause", application, kafkaHeaders)
 	if err != nil {
 		return err
