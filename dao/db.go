@@ -58,9 +58,18 @@ func Init() {
 
 	Vault = vaultClient.Logical()
 
-	err = seedDatabase()
+	// we only want to seed the database when running the api pod - not the status listener
+	if !conf.StatusListener {
+		err = seedDatabase()
+		if err != nil {
+			logging.Log.Fatalf("Failed to seed db: %v", err)
+		}
+	}
+
+	// Set up the TypeCache
+	err = PopulateStaticTypeCache()
 	if err != nil {
-		logging.Log.Fatalf("Failed to seed db: %v", err)
+		logging.Log.Fatalf("Failed to populate static type cache: %v", err)
 	}
 }
 

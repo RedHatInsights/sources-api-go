@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -39,6 +40,7 @@ type SourcesApiConfig struct {
 	SlowSQLThreshold          int
 	Psks                      []string
 	BypassRbac                bool
+	StatusListener            bool
 }
 
 // Get - returns the config parsed from runtime vars
@@ -51,6 +53,7 @@ func Get() *SourcesApiConfig {
 	options := viper.New()
 	kafkaTopics := make(map[string]string)
 
+	// Parse clowder, else the environment
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
 
@@ -103,18 +106,27 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
 
-	var (
-		err      error
-		hostname string
-	)
+	// Parse any Flags (using our own flag set to not conflict with the global flag)
+	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
+	availabilityListener := fs.Bool("listener", false, "run availability status listener")
 
-	if hostname, err = os.Hostname(); err != nil {
+	err := fs.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error parsing flags: %v", err)
+	}
+
+	options.SetDefault("StatusListener", *availabilityListener)
+
+	// Hostname
+	hostname, err := os.Hostname()
+	if err != nil {
 		hostname = "unknown"
 	}
 
 	options.SetDefault("Hostname", hostname)
 	options.SetDefault("AppName", "source-api-go")
 
+	// psks for .... psk authentication
 	options.SetDefault("psks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
 	options.AutomaticEnv()
@@ -143,6 +155,7 @@ func Get() *SourcesApiConfig {
 		CachePassword:             options.GetString("CachePassword"),
 		Psks:                      options.GetStringSlice("psks"),
 		BypassRbac:                options.GetBool("BypassRbac"),
+		StatusListener:            options.GetBool("StatusListener"),
 	}
 
 	return parsedConfig
