@@ -94,6 +94,7 @@ func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 }
 
 func (src *MockSourceDao) Create(s *m.Source) error {
+	src.Sources = append(src.Sources, *s)
 	return nil
 }
 
@@ -102,9 +103,11 @@ func (src *MockSourceDao) Update(s *m.Source) error {
 }
 
 func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
-	for _, i := range src.Sources {
-		if i.ID == *id {
-			return &i, nil
+	for i, source := range src.Sources {
+		if source.ID == *id {
+			src.Sources = append(src.Sources[:i], src.Sources[i+1:]...)
+
+			return &source, nil
 		}
 	}
 	return nil, util.NewErrNotFound("source")
@@ -555,8 +558,30 @@ func (m MockAuthenticationDao) GetById(id string) (*m.Authentication, error) {
 	return nil, util.NewErrNotFound("authentication")
 }
 
-func (m MockAuthenticationDao) ListForSource(sourceID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
-	panic("implement me")
+func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	sourceExists := false
+
+	for _, src := range fixtures.TestSourceData {
+		if src.ID == sourceID {
+			sourceExists = true
+		}
+	}
+
+	if !sourceExists {
+		return nil, 0, util.NewErrNotFound("source")
+	}
+
+	count := int64(len(mAuth.Authentications))
+
+	out := make([]m.Authentication, 0)
+
+	for _, auth := range mAuth.Authentications {
+		if auth.SourceID == sourceID {
+			out = append(out, auth)
+		}
+	}
+
+	return out, count, nil
 }
 
 func (m MockAuthenticationDao) ListForApplication(applicationID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {

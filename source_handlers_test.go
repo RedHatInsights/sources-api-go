@@ -21,6 +21,107 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func TestSourceListAuthentications(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	err := SourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	auth1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if auth1["id"] != fixtures.TestAuthenticationData[0].ID {
+		t.Error("ghosts infected the return")
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestSourceListAuthenticationsNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/30983098439/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("30983098439")
+
+	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := notFoundSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
+
+func TestSourceListAuthenticationsBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/xxx/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := badRequestSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -60,7 +161,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestSourceData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -326,7 +427,7 @@ func TestSourceList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestSourceData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -589,7 +690,10 @@ func TestSourceCreate(t *testing.T) {
 
 	id, _ := strconv.ParseInt(src.ID, 10, 64)
 	dao, _ := getSourceDao(c)
-	_, _ = dao.Delete(&id)
+	_, err = dao.Delete(&id)
+	if err != nil {
+		t.Errorf("Failed to delete source id %v", id)
+	}
 }
 
 func TestSourceEdit(t *testing.T) {
@@ -699,6 +803,51 @@ func TestSourceEditBadRequest(t *testing.T) {
 	}
 
 	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourceDelete(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/100",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("100")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := SourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
+	}
+
+	// Check that source doesn't exist.
+	c, rec = request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/100",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("100")
+
+	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+	err = notFoundSourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
 }
 
 func TestSourceDeleteNotFound(t *testing.T) {
@@ -870,6 +1019,85 @@ func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
 			t.Error("model did not deserialize as a source")
 		}
 	}
+}
+
+func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/0394830498/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("0394830498")
+
+	notFoundSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := notFoundSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
+
+func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/xxx/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := badRequestSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
+
+	badRequestSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := badRequestSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
 }
 
 // TestPauseSourceAndItsApplications tests that the "pause source" endpoint sets all the applications and the source

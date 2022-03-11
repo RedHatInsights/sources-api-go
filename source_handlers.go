@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -195,7 +194,7 @@ func SourceListAuthentications(c echo.Context) error {
 
 	auths, count, err := authDao.ListForSource(sourceID, 100, 0, nil)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	out := make([]interface{}, count)
@@ -324,17 +323,17 @@ func SourcesRhcConnectionList(c echo.Context) error {
 
 	sourceId, err := strconv.ParseInt(paramId, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid id provided ", "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	filters, err := getFilters(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	limit, offset, err := getLimitAndOffset(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	// Check if the given source exists.
@@ -345,10 +344,7 @@ func SourcesRhcConnectionList(c echo.Context) error {
 
 	_, err = sourceDao.GetById(&sourceId)
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	rhcConnectionDao, err := getRhcConnectionDao(c)
