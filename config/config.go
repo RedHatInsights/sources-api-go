@@ -151,6 +151,8 @@ func Get() *SourcesApiConfig {
 		MetricsPort:               options.GetInt("MetricsPort"),
 		LogLevel:                  options.GetString("LogLevel"),
 		LogLevelForMiddlewareLogs: options.GetString("LogLevelForMiddlewareLogs"),
+		LogLevelForSqlLogs:        options.GetString("LogLevelForSqlLogs"),
+		SlowSQLThreshold:          options.GetInt("SlowSQLThreshold"),
 		LogHandler:                options.GetString("LogHandler"),
 		LogGroup:                  options.GetString("LogGroup"),
 		MarketplaceHost:           options.GetString("MarketplaceHost"),
