@@ -105,7 +105,7 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 	return map[string]interface{}{"data": data}, nil
 }
 
-func (auth *Authentication) ToEvent() *AuthenticationEvent {
+func (auth *Authentication) ToEvent() interface{} {
 	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(auth.AvailabilityStatus.AvailabilityStatus),
 		LastAvailableAt: util.DateTimeToRecordFormat(auth.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(auth.LastCheckedAt)}

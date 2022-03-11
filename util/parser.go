@@ -27,6 +27,14 @@ func InterfaceToInt64(i interface{}) (int64, error) {
 		}
 
 		return *value, nil
+	case int:
+		return int64(value), nil
+	case *int:
+		if value == nil {
+			return 0, fmt.Errorf("cannot parse a nil pointer to an int64")
+		}
+
+		return int64(*value), nil
 	case string:
 		parsedValue, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {

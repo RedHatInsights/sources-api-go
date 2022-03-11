@@ -5,6 +5,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -75,6 +76,11 @@ func AuthenticationCreate(c echo.Context) error {
 		return err
 	}
 
+	err = service.ValidateAuthenticationCreationRequest(&createRequest)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
 	auth := &m.Authentication{
 		Name:         createRequest.Name,
 		AuthType:     createRequest.AuthType,
@@ -89,8 +95,7 @@ func AuthenticationCreate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	// TODO: once ToEvent() is added for authentication un-comment this.
-	// setEventStreamResource(c, auth)
+	setEventStreamResource(c, auth)
 	return c.JSON(http.StatusCreated, auth.ToResponse())
 }
 
@@ -117,8 +122,7 @@ func AuthenticationUpdate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	// TODO: once ToEvent() is added for authentication un-comment this.
-	// setEventStreamResource(c, auth)
+	setEventStreamResource(c, auth)
 	return c.JSON(http.StatusOK, auth.ToResponse())
 }
 
@@ -128,12 +132,11 @@ func AuthenticationDelete(c echo.Context) error {
 		return err
 	}
 
-	_, err = authDao.Delete(c.Param("uid"))
+	auth, err := authDao.Delete(c.Param("uid"))
 	if err != nil {
 		return err
 	}
 
-	// TODO: once ToEvent() is added for authentication un-comment this.
-	// setEventStreamResource(c, auth)
+	setEventStreamResource(c, auth)
 	return c.NoContent(http.StatusNoContent)
 }

@@ -43,9 +43,10 @@ type AuthenticationCreateRequest struct {
 	Extra                   map[string]interface{} `json:"extra,omitempty"`
 	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
 
-	ResourceType string `json:"resource_type"`
-	ResourceID   int64  `json:"resource_id"`
-	SourceID     int64  `json:"source_id"`
+	ResourceType  string      `json:"resource_type"`
+	ResourceIDRaw interface{} `json:"resource_id"`
+	ResourceID    int64
+	SourceID      int64 `json:"source_id"`
 }
 
 type AuthenticationEditRequest struct {
