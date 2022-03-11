@@ -127,13 +127,13 @@ func TestAuthenticationGetNotFound(t *testing.T) {
 
 func TestAuthenticationCreate(t *testing.T) {
 	requestBody := m.AuthenticationCreateRequest{
-		Name:         "TestRequest",
-		AuthType:     "test",
-		Username:     "testUser",
-		Password:     "123456",
-		ResourceType: "Application",
-		ResourceID:   1,
-		SourceID:     1,
+		Name:          "TestRequest",
+		AuthType:      "test",
+		Username:      "testUser",
+		Password:      "123456",
+		ResourceType:  "Application",
+		ResourceIDRaw: 1,
+		SourceID:      1,
 	}
 
 	body, err := json.Marshal(requestBody)
