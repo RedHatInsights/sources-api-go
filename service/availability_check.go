@@ -92,7 +92,7 @@ func httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
 	defer resp.Body.Close()
 
 	// anything greater than 299 is bad, right??? right????
-	if resp.StatusCode%100 > 2 {
+	if resp.StatusCode/100 > 2 {
 		l.Log.Warnf("Bad response from client: %v", resp.StatusCode)
 	}
 }
