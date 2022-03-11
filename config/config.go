@@ -106,9 +106,14 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
 
-	// Parse any Flags
-	availabilityListener := flag.Bool("listener", false, "run availability status listener")
-	flag.Parse()
+	// Parse any Flags (using our own flag set to not conflict with the global flag)
+	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
+	availabilityListener := fs.Bool("listener", false, "run availability status listener")
+
+	err := fs.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error parsing flags: %v", err)
+	}
 
 	options.SetDefault("StatusListener", *availabilityListener)
 
