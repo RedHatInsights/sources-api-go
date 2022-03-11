@@ -35,6 +35,9 @@ func runServer() {
 	e := echo.New()
 	logging.InitEchoLogger(e, conf)
 
+	// set the binder to the one that does not allow extra parameters in payload
+	e.Binder = &NoUnknownFieldsBinder{}
+
 	e.Use(middleware.Recover())
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: logging.FormatForMiddleware(conf),
