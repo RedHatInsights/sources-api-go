@@ -24,7 +24,7 @@ func (t *tenantDaoImpl) GetOrCreateTenantID(accountNumber string) (*int64, error
 	tenant := m.Tenant{ExternalTenant: accountNumber}
 
 	// Find the tenant, scanning into the struct above
-	result := DB.
+	result := DB.Debug().
 		Where("external_tenant = ?", accountNumber).
 		First(&tenant)
 
@@ -39,7 +39,7 @@ func (t *tenantDaoImpl) GetOrCreateTenantID(accountNumber string) (*int64, error
 func (t *tenantDaoImpl) TenantByAccountNumber(accountNumber string) (*m.Tenant, error) {
 	tenant := m.Tenant{ExternalTenant: accountNumber}
 
-	result := DB.
+	result := DB.Debug().
 		Where("external_tenant = ?", accountNumber).
 		First(&tenant)
 

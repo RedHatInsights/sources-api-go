@@ -36,7 +36,10 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 		applicationIDs = append(applicationIDs, value.ID)
 	}
 
-	err := DB.Preload("Tenant").Where("application_id IN ?", applicationIDs).Find(&applicationAuthentications).Error
+	err := DB.Debug().
+		Preload("Tenant").
+		Where("application_id IN ?", applicationIDs).
+		Find(&applicationAuthentications).Error
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +55,10 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentic
 		authenticationUIDs = append(authenticationUIDs, value.ID)
 	}
 
-	result := DB.Preload("Tenant").Where("authentication_uid IN ?", authenticationUIDs).Find(&applicationAuthentications)
+	result := DB.Debug().
+		Preload("Tenant").
+		Where("authentication_uid IN ?", authenticationUIDs).
+		Find(&applicationAuthentications)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -70,7 +76,8 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByResource(
 
 func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error) {
 	appAuths := make([]m.ApplicationAuthentication, 0, limit)
-	query := DB.Debug().Model(&m.ApplicationAuthentication{}).
+	query := DB.Debug().
+		Model(&m.ApplicationAuthentication{}).
 		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)
 
@@ -91,7 +98,8 @@ func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 
 func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
 	appAuth := &m.ApplicationAuthentication{ID: *id}
-	result := DB.Where("tenant_id = ?", a.TenantID).First(&appAuth)
+	result := DB.Debug().
+		Where("tenant_id = ?", a.TenantID).First(&appAuth)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("application authentication")
 	}
@@ -100,7 +108,7 @@ func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAut
 
 func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {
 	appAuth.TenantID = *a.TenantID
-	err := DB.Create(appAuth).Error
+	err := DB.Debug().Create(appAuth).Error
 	if err != nil {
 		return util.NewErrBadRequest("failed to create application_authentication: " + err.Error())
 	}
@@ -108,7 +116,7 @@ func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthenti
 }
 
 func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
-	result := DB.Updates(appAuth)
+	result := DB.Debug().Updates(appAuth)
 	return result.Error
 }
 

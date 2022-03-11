@@ -112,7 +112,7 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 
 func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	result := DB.First(src)
+	result := DB.Debug().First(src)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("source")
 	}
@@ -123,7 +123,7 @@ func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 // Function that searches for a source and preloads any specified relations
 func (s *sourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	q := DB.Where("tenant_id = ?", s.TenantID)
+	q := DB.Debug().Where("tenant_id = ?", s.TenantID)
 
 	for _, preload := range preloads {
 		q = q.Preload(preload)
@@ -138,12 +138,12 @@ func (s *sourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.So
 
 func (s *sourceDaoImpl) Create(src *m.Source) error {
 	src.TenantID = *s.TenantID // the TenantID gets injected in the middleware
-	result := DB.Create(src)
+	result := DB.Debug().Create(src)
 	return result.Error
 }
 
 func (s *sourceDaoImpl) Update(src *m.Source) error {
-	result := DB.Updates(src)
+	result := DB.Debug().Updates(src)
 	return result.Error
 }
 
@@ -174,7 +174,7 @@ func (s *sourceDaoImpl) Tenant() *int64 {
 
 func (s *sourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 	src := &m.Source{Name: name}
-	result := DB.Where("name = ? AND tenant_id = ?", name, s.TenantID).First(src)
+	result := DB.Debug().Where("name = ? AND tenant_id = ?", name, s.TenantID).First(src)
 
 	// If the name is found, GORM returns one row and no errors.
 	return result.Error == nil
@@ -197,7 +197,7 @@ func (s *sourceDaoImpl) IsSuperkey(id int64) bool {
 
 func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	src := m.Source{ID: resource.ResourceID}
-	result := DB.Find(&src)
+	result := DB.Debug().Find(&src)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -207,7 +207,7 @@ func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interfac
 }
 
 func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
-	result := DB.Model(&m.Source{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := DB.Debug().Model(&m.Source{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("source not found %v", resource)
 	}
@@ -217,7 +217,7 @@ func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribute
 
 func (s *sourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	result := DB.Preload("Tenant").Find(&src)
+	result := DB.Debug().Preload("Tenant").Find(&src)
 
 	return src, result.Error
 }

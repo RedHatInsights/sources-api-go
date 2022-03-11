@@ -61,7 +61,7 @@ func (a *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) 
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	appTypes := make([]m.ApplicationType, 0, limit)
-	query := DB.Model(&m.ApplicationType{}).Debug()
+	query := DB.Debug().Model(&m.ApplicationType{})
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -114,7 +114,7 @@ func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, so
 	// Looks up the source ID and then compare's the source-type's name with the
 	// application type's supported source types
 	source := m.Source{ID: sourceId}
-	result := DB.Preload("SourceType").Find(&source)
+	result := DB.Debug().Preload("SourceType").Find(&source)
 	if result.Error != nil {
 		return fmt.Errorf("source not found")
 	}
