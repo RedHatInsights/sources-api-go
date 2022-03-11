@@ -12,17 +12,16 @@ require (
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jackc/pgx/v4 v4.11.0
-	github.com/labstack/echo/v4 v4.4.0
-	github.com/labstack/gommon v0.3.0
+	github.com/labstack/echo-contrib v0.12.0
+	github.com/labstack/echo/v4 v4.6.1
+	github.com/labstack/gommon v0.3.1
 	github.com/neko-neko/echo-logrus/v2 v2.0.1
-	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/onsi/gomega v1.13.0 // indirect
+	github.com/prometheus/client_golang v1.11.0
 	github.com/redhatinsights/app-common-go v1.5.1
 	github.com/redhatinsights/platform-go-middlewares v0.8.1
 	github.com/segmentio/kafka-go v0.4.20
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.8.1
-	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
 	gorm.io/datatypes v1.0.1
 	gorm.io/driver/postgres v1.1.0
 	gorm.io/gorm v1.21.11
