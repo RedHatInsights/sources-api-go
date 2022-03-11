@@ -134,3 +134,34 @@ func TestPassingInvalidFormats(t *testing.T) {
 		}
 	}
 }
+
+func TestGoodStringValues(t *testing.T) {
+	types := []interface{}{
+		"1",
+		int64(1),
+		new(int64),
+		1.2,
+		new(float64),
+	}
+
+	for i := range types {
+		_, err := InterfaceToString(types[i])
+		if err != nil {
+			t.Error(err)
+		}
+	}
+}
+
+func TestNilStringValue(t *testing.T) {
+	var x *float64
+	var y *int64
+	var z *string
+	types := []interface{}{x, y, z, nil}
+
+	for i := range types {
+		_, err := InterfaceToString(types[i])
+		if err == nil {
+			t.Errorf("did not handle nil properly")
+		}
+	}
+}
