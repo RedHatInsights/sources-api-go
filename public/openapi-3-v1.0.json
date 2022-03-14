@@ -1190,11 +1190,11 @@
   },
   "servers": [
     {
-      "url": "https://cloud.redhat.com/{basePath}",
+      "url": "https://console.redhat.com/{basePath}",
       "description": "Production Server",
       "variables": {
         "basePath": {
-          "default": "/api/sources/v1.0"
+          "default": "api/sources/v1.0"
         }
       }
     },
@@ -1206,7 +1206,7 @@
           "default": "3000"
         },
         "basePath": {
-          "default": "/api/sources/v1.0"
+          "default": "api/sources/v1.0"
         }
       }
     }
