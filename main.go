@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
@@ -21,11 +25,23 @@ func main() {
 	dao.Init()
 	redis.Init()
 
-	if config.Get().StatusListener {
-		statuslistener.Run()
+	if conf.StatusListener {
+		go statuslistener.Run()
 	} else {
-		runServer()
+		// launch 2 listeners - one for metrics and one for the actual application,
+		// one on 8000 and one on 9000 (per clowder)
+		go runServer()
+		go runMetricExporter()
 	}
+
+	interrupts := make(chan os.Signal, 1)
+	signal.Notify(interrupts, os.Interrupt, syscall.SIGTERM)
+
+	// Block waiting for a signal from the OS, exit cleanly once we get it.
+	s := <-interrupts
+
+	logging.Log.Warnf("Received %v, exiting", s)
+	os.Exit(0)
 }
 
 func runServer() {
@@ -68,10 +84,6 @@ func runServer() {
 
 	// setting up the "http.Client" for the marketplace token provider
 	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib
-
-	// launch 2 listeners - one for metrics and one for the actual application,
-	// one on 8000 and one on 9000 (per clowder)
-	go runMetricExporter()
 
 	// hiding the ascii art to make the logs more json-like
 	e.HideBanner = true
