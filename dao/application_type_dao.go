@@ -40,6 +40,11 @@ func (a *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 
 	query := applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
 
+	query, err = applyFilters(query, filters)
+	if err != nil {
+		return nil, 0, util.NewErrBadRequest(err.Error())
+	}
+
 	// getting the total count (filters included) for pagination
 	count := int64(0)
 	query.Model(&m.ApplicationType{}).Count(&count)
