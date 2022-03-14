@@ -93,7 +93,7 @@ func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
 	testutils.NotFoundTest(t, rec)
 }
 
-func TestSourceApplicationTypeSubcollectionListBadRequest(t *testing.T) {
+func TestSourceApplicationTypeSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/xxx/application_types",
@@ -108,6 +108,35 @@ func TestSourceApplicationTypeSubcollectionListBadRequest(t *testing.T) {
 
 	c.SetParamNames("source_id")
 	c.SetParamValues("xxx")
+
+	badRequestSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+	err := badRequestSourceListApplicationTypes(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("1")
 
 	badRequestSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
 	err := badRequestSourceListApplicationTypes(c)
