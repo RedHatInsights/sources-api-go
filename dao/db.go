@@ -55,6 +55,10 @@ func Init() {
 		if err != nil {
 			logging.Log.Fatalf(`Error creatings the "public" schema: %s`, err)
 		}
+
+		// Log and exit so that the application can be rerun without the "reset" flag.
+		logging.Log.Info(`The schema "public" has been reset`)
+		os.Exit(0)
 	}
 
 	if conf.MigrationsSetup {
