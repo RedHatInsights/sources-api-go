@@ -52,7 +52,7 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	// Set the migrations lock.
-	err = redis.Client.SetNX(redisLockKey, uuid.String(), redisLockExpirationTime).Err()
+	err = redis.Client.Set(redisLockKey, uuid.String(), redisLockExpirationTime).Err()
 	if err != nil {
 		return err
 	}
