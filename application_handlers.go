@@ -111,6 +111,27 @@ func ApplicationCreate(c echo.Context) error {
 	}
 
 	setEventStreamResource(c, application)
+
+	// do not raise if it is a superkey application. The worker will post back
+	// with the resources and then we raise the create event.
+	if applicationDB.IsSuperkey(application.ID) {
+		c.Set("skip_raise", true)
+
+		// do the rest async. Don't want to be tied to kafka.
+		go func() {
+			xrhid, ok := c.Get("x-rh-identity").(string)
+			if !ok {
+				c.Logger().Warnf("Failed to pull x-rh-identity from request - ditching post to kafka")
+				return
+			}
+
+			err := service.SendSuperKeyCreateRequest(xrhid, application)
+			if err != nil {
+				c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
+			}
+		}()
+	}
+
 	return c.JSON(http.StatusCreated, application.ToResponse())
 }
 
@@ -142,6 +163,15 @@ func ApplicationEdit(c echo.Context) error {
 	}
 
 	setEventStreamResource(c, app)
+
+	// for this model we ONLY raise the update for superkey sources once the
+	// worker posts back.
+	if applicationDB.IsSuperkey(app.ID) {
+		if app.GotSuperkeyUpdate {
+			c.Set("event_override", "Application.create")
+		}
+	}
+
 	return c.JSON(http.StatusOK, app.ToResponse())
 }
 

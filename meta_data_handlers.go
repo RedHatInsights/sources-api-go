@@ -13,18 +13,8 @@ import (
 // function that defines how we get the dao - default implementation below.
 var getMetaDataDao func(c echo.Context) (dao.MetaDataDao, error)
 
-func getMetaDataDaoWithTenant(c echo.Context) (dao.MetaDataDao, error) {
-	tenantId, err := getTenantFromEchoContext(c)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if tenantId == 0 && err == nil {
-		return dao.GetMetaDataDao(nil), nil
-	} else {
-		return dao.GetMetaDataDao(&tenantId), nil
-	}
+func getMetaDataDaoWithoutTenant(c echo.Context) (dao.MetaDataDao, error) {
+	return dao.GetMetaDataDao(), nil
 }
 
 func MetaDataList(c echo.Context) error {

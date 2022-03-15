@@ -8,12 +8,17 @@ import (
 	"gorm.io/datatypes"
 )
 
+const (
+	APP_META_DATA      = "AppMetaData"
+	SUPERKEY_META_DATA = "SuperKeyMetaData"
+)
+
 type MetaData struct {
 	ID        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	Step          int64          `json:"step"`
+	Step          int            `json:"step"`
 	Name          string         `json:"name"`
 	Payload       datatypes.JSON `json:"payload"`
 	Substitutions datatypes.JSON `json:"substitutions"`

@@ -29,7 +29,7 @@ type ApplicationCreateRequest struct {
 }
 
 type ApplicationEditRequest struct {
-	Extra datatypes.JSON `json:"extra,omitempty"`
+	Extra map[string]interface{} `json:"extra,omitempty"`
 
 	AvailabilityStatus      *string `json:"availability_status"`
 	AvailabilityStatusError *string `json:"availability_status_error"`

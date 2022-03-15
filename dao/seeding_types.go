@@ -30,7 +30,7 @@ type superKeySeed struct {
 }
 
 type superKeyStep struct {
-	Step          int64       `json:"step"`
+	Step          int         `json:"step"`
 	Name          string      `json:"name"`
 	Payload       interface{} `json:"payload"`
 	Substitutions interface{} `json:"substitutions"`

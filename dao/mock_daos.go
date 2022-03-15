@@ -124,6 +124,10 @@ func (src *MockSourceDao) NameExistsInCurrentTenant(name string) bool {
 	return false
 }
 
+func (src *MockSourceDao) IsSuperkey(id int64) bool {
+	return false
+}
+
 func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
 	for _, i := range src.Sources {
 		if i.ID == *id {
@@ -223,6 +227,14 @@ func (a *MockMetaDataDao) Delete(id *int64) error {
 	panic("not implemented") // TODO: Implement
 }
 
+func (md *MockMetaDataDao) GetSuperKeySteps(_ int64) ([]m.MetaData, error) {
+	panic("not implemented")
+}
+
+func (md *MockMetaDataDao) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
+	panic("not implemented!")
+}
+
 func (a *MockApplicationTypeDao) Create(src *m.ApplicationType) error {
 	panic("not implemented") // TODO: Implement
 }
@@ -262,6 +274,10 @@ func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64)
 	}
 
 	return errors.New("Not compatible!")
+}
+
+func (at *MockApplicationTypeDao) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
+	panic("not needed")
 }
 
 func (a *MockSourceTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
@@ -327,6 +343,16 @@ func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
 	return nil, util.NewErrNotFound("application")
 }
 
+func (a *MockApplicationDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
+	for _, app := range a.Applications {
+		if app.ID == *id {
+			return &app, nil
+		}
+	}
+
+	return nil, util.NewErrNotFound("application")
+}
+
 func (a *MockApplicationDao) Create(src *m.Application) error {
 	return nil
 }
@@ -367,6 +393,10 @@ func (a *MockApplicationDao) Pause(_ int64) error {
 
 func (a *MockApplicationDao) Unpause(_ int64) error {
 	return nil
+}
+
+func (src *MockApplicationDao) IsSuperkey(id int64) bool {
+	return false
 }
 
 func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {

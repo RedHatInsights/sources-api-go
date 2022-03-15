@@ -483,7 +483,7 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 
 func TestApplicationEdit(t *testing.T) {
 	req := m.ApplicationEditRequest{
-		Extra:                   []byte(`{"thing": true}`),
+		Extra:                   map[string]interface{}{"thing": true},
 		AvailabilityStatus:      request.PointerToString("available"),
 		AvailabilityStatusError: request.PointerToString(""),
 	}
@@ -526,7 +526,7 @@ func TestApplicationEdit(t *testing.T) {
 
 func TestApplicationEditNotFound(t *testing.T) {
 	req := m.ApplicationEditRequest{
-		Extra:                   []byte(`{"thing": true}`),
+		Extra:                   map[string]interface{}{"thing": true},
 		AvailabilityStatus:      request.PointerToString("available"),
 		AvailabilityStatusError: request.PointerToString(""),
 	}
@@ -557,7 +557,7 @@ func TestApplicationEditNotFound(t *testing.T) {
 
 func TestApplicationEditBadRequest(t *testing.T) {
 	req := m.ApplicationEditRequest{
-		Extra:                   []byte(`{"thing": true}`),
+		Extra:                   map[string]interface{}{"thing": true},
 		AvailabilityStatus:      request.PointerToString("available"),
 		AvailabilityStatusError: request.PointerToString(""),
 	}

@@ -84,6 +84,19 @@ func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	return app, nil
 }
 
+// Function that searches for an application and preloads any specified relations
+func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
+	app := &m.Application{ID: *id}
+	q := DB.Where("tenant_id = ?", a.TenantID)
+
+	for _, preload := range preloads {
+		q = q.Preload(preload)
+	}
+
+	result := q.First(&app)
+	return app, result.Error
+}
+
 func (a *applicationDaoImpl) Create(app *m.Application) error {
 	app.TenantID = *a.TenantID
 	result := DB.Create(app)
@@ -112,6 +125,23 @@ func (a *applicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 
 func (a *applicationDaoImpl) Tenant() *int64 {
 	return a.TenantID
+}
+
+func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
+	var valid bool
+
+	result := DB.Model(&m.Application{}).
+		Select(`"Source".app_creation_workflow = ?`, m.AccountAuth).
+		Where("applications.id = ?", id).
+		Where("applications.tenant_id = ?", a.TenantID).
+		Joins("Source").
+		First(&valid)
+
+	if result.Error != nil {
+		return false
+	}
+
+	return valid
 }
 
 func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {

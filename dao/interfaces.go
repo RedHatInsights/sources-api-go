@@ -28,6 +28,7 @@ type SourceDao interface {
 	Pause(id int64) error
 	// Unpause resumes the given source and all its dependant applications.
 	Unpause(id int64) error
+	IsSuperkey(id int64) bool
 }
 
 type ApplicationDao interface {
@@ -45,6 +46,8 @@ type ApplicationDao interface {
 	Pause(id int64) error
 	// Unpause resumes the application.
 	Unpause(id int64) error
+	GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error)
+	IsSuperkey(id int64) bool
 }
 
 type AuthenticationDao interface {
@@ -82,6 +85,7 @@ type ApplicationTypeDao interface {
 	Update(src *m.ApplicationType) error
 	Delete(id *int64) error
 	ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error
+	GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error)
 }
 
 type EndpointDao interface {
@@ -108,6 +112,8 @@ type MetaDataDao interface {
 	List(limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	GetById(id *int64) (*m.MetaData, error)
+	GetSuperKeySteps(applicationTypeId int64) ([]m.MetaData, error)
+	GetSuperKeyAccountNumber(applicationTypeId int64) (string, error)
 }
 
 type SourceTypeDao interface {

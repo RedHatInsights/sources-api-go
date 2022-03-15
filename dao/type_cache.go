@@ -26,6 +26,18 @@ func (tc *typeCache) GetSourceTypeId(name string) int64 {
 	return tc.sourceTypes[name]
 }
 
+// inverse of the above function - takes an id and returns the string name for
+// the source type id
+func (tc *typeCache) GetSourceTypeName(id int64) string {
+	for k, v := range tc.sourceTypes {
+		if v == id {
+			return k
+		}
+	}
+
+	return ""
+}
+
 /*
     Returns the application type id for a given name, 0 if not found.
 
@@ -35,6 +47,29 @@ func (tc *typeCache) GetSourceTypeId(name string) int64 {
 */
 func (tc *typeCache) GetApplicationTypeId(name string) int64 {
 	return tc.applicationTypes[name]
+}
+
+// inverse of id function - takes an id and returns the short-form name of the
+// application type
+func (tc *typeCache) GetApplicationTypeName(id int64) string {
+	for k, v := range tc.applicationTypes {
+		if v == id && !strings.Contains(k, "/") {
+			return k
+		}
+	}
+
+	return ""
+}
+
+// same as above function - but fetches the long-form name
+func (tc *typeCache) GetApplicationTypeFullName(id int64) string {
+	for k, v := range tc.applicationTypes {
+		if v == id && strings.Contains(k, "/") {
+			return k
+		}
+	}
+
+	return ""
 }
 
 /*

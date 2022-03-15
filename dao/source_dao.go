@@ -172,6 +172,21 @@ func (s *sourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 	return result.Error == nil
 }
 
+func (s *sourceDaoImpl) IsSuperkey(id int64) bool {
+	var valid bool
+	result := DB.Model(&m.Source{}).
+		Select("app_creation_workflow = ?", m.AccountAuth).
+		Where("tenant_id = ?", s.TenantID).
+		Where("id = ?", id).
+		First(&valid)
+
+	if result.Error != nil {
+		return false
+	}
+
+	return valid
+}
+
 func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	src := m.Source{ID: resource.ResourceID}
 	result := DB.Find(&src)
