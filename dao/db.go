@@ -2,7 +2,7 @@ package dao
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
@@ -50,11 +50,24 @@ func Init() {
 		DB.Exec(`CREATE SCHEMA "public"`)
 	}
 
-	if conf.MigrationsSetup || conf.MigrationsReset {
-		err := migrations.Migrate(DB)
+	if conf.MigrationsSetup {
+		// Using parameters on a "CREATE DATABASE" statement doesn't work, so we use Sprintf instead. This should be
+		// safe since it's a command that will run.
+		sql := fmt.Sprintf(`CREATE DATABASE "%s"`, conf.DatabaseName)
+
+		err = DB.Exec(sql).Error
 		if err != nil {
-			log.Fatal(err)
+			logging.Log.Fatalf(`Error creating database "%s": %s`, conf.DatabaseName, err)
 		}
+
+		// Log and exit so that the application can be rerun without the "setup" flag.
+		logging.Log.Infof(`Database "%s" created`, conf.DatabaseName)
+		os.Exit(0)
+	}
+
+	err = migrations.Migrate(DB)
+	if err != nil {
+		logging.Log.Fatalf(`Error migrating database "%s": %s`, conf.DatabaseName, err)
 	}
 
 	// Open up the conn to Vault
