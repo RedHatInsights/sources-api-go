@@ -217,6 +217,83 @@ azure:
         hideField: true
         initializeOnMount: true
         initialValue: azure
+bitbucket:
+  product_name: Bitbucket
+  vendor: Atlassian
+  schema:
+    authentication:
+      - type: bitbucket-app-password
+        name: Bitbucket app password
+        fields:
+          - component: text-field
+            name: authentication.authtype
+            hideField: true
+            initializeOnMount: true
+            initialValue: bitbucket-app-password
+          - component: text-field
+            name: authentication.username
+            label: Username for the Bitbucket account
+          - component: text-field
+            name: authentication.password
+            label: App passowrd for the Bitbucket account
+dockerhub:
+  prodcut_name: Docker Hub
+  vendor: Docker
+  schema:
+    authentication:
+      - type: docker-access-token
+        name: Docker access token
+        fields:
+          - component: text-field
+            name: authentication.authtype
+            hideField: true
+            initializeOnMount: true
+            initialValue: docker-access-token
+          - component: text-field
+            name: authentication.username
+            label: Username of the Docker Hub account
+          - component: text-field
+            name: authentication.password
+            label: Acces Token for the Docker Hub account
+github:
+  product_name: GitHub
+  vendor: Microsoft
+  schema:
+    authentication:
+      - type: github-personal-access-token
+        name: GitHub personal access token
+        fields:
+          - component: text-field
+            name: authentication.authtype
+            hideField: true
+            initializeOnMount: true
+            initialValue: github-personal-access-token
+          - component: text-field
+            name: authentication.username
+            label: Username of the GitHub account
+          - component: text-field
+            name: authentication.password
+            label: Personal Acces Token (PAT) for the GitHub account
+gitlab:
+  product_name: GitLab
+  vendor: GitLab
+  schema:
+    authentication:
+      - type: gitlab-personal-access-token
+        name: GitLab personal access token
+        fields:
+          - component: text-field
+            name: authentication.authtype
+            hideField: true
+            initializeOnMount: true
+            initialValue: gitlab-personal-access-token
+          - component: text-field
+            name: authentication.username
+            label: Username of the GitLab account
+          - component: text-field
+            name: authentication.password
+            label: Personal Acces Token for the GitLab account
+
 openshift:
   product_name: Red Hat OpenShift Container Platform
   schema:
@@ -264,6 +341,25 @@ openshift:
           is: true
   vendor: Red Hat
   icon_url: "/apps/frontend-assets/platform-logos/openshift-container-platform.svg"
+quay:
+  product_name: Quay
+  vendor: Red Hat
+  schema:
+    authentication:
+      - type: quay-encrypted-password
+        name: Quay's encrypted password
+        fields:
+          - component: text-field
+            name: authentication.authtype
+            hideField: true
+            initializeOnMount: true
+            initialValue: quay-encrypted-password
+          - component: text-field
+            name: authentication.username
+            label: Username of the Quay account
+          - component: text-field
+            name: authentication.password
+            label: Quay account's encrypted password
 rh-marketplace:
   product_name: Red Hat Marketplace
   vendor: Red Hat
