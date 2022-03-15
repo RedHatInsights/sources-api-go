@@ -29,9 +29,11 @@ func main() {
 	conf.MigrationsSetup = *setUpDatabase
 	conf.MigrationsReset = *resetDatabase
 
-	dao.Init()
+	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
+	// a time can run the migrations.
 	redis.Init()
 	jobs.Init()
+	dao.Init()
 
 	if config.Get().StatusListener {
 		statuslistener.Run()
