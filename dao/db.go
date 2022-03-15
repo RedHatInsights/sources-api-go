@@ -46,8 +46,15 @@ func Init() {
 
 	// Perform database migrations
 	if conf.MigrationsReset {
-		DB.Exec(`DROP SCHEMA "public" CASCADE`)
-		DB.Exec(`CREATE SCHEMA "public"`)
+		err = DB.Exec(`DROP SCHEMA "public" CASCADE`).Error
+		if err != nil {
+			logging.Log.Fatalf(`Error dropping the "public" schema: %s`, err)
+		}
+
+		err = DB.Exec(`CREATE SCHEMA "public"`).Error
+		if err != nil {
+			logging.Log.Fatalf(`Error creatings the "public" schema: %s`, err)
+		}
 	}
 
 	if conf.MigrationsSetup {
