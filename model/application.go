@@ -11,11 +11,11 @@ import (
 
 type Application struct {
 	AvailabilityStatus
-	Pause
 
 	ID        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	PausedAt  time.Time `json:"paused_at"`
 
 	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
@@ -70,7 +70,7 @@ func (app *Application) ToResponse() *ApplicationResponse {
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(app.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(app.UpdatedAt),
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(app.PausedAt)},
+		PausedAt:                   util.DateTimeToRFC3339(app.PausedAt),
 		AvailabilityStatusError:    app.AvailabilityStatusError,
 		Extra:                      app.Extra,
 		SourceID:                   sourceId,

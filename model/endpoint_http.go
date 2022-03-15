@@ -2,11 +2,11 @@ package model
 
 type EndpointResponse struct {
 	AvailabilityStatusResponse
-	PauseResponse
 
 	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	PausedAt  string `json:"paused_at,omitempty"`
 
 	Role                    *string `json:"role,omitempty"`
 	Port                    *int    `json:"port,omitempty"`

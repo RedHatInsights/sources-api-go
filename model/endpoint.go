@@ -9,11 +9,11 @@ import (
 
 type Endpoint struct {
 	AvailabilityStatus
-	Pause
 
 	ID        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	PausedAt  time.Time `json:"paused_at"`
 
 	Role                    *string `json:"role,omitempty"`
 	Port                    *int    `json:"port,omitempty"`
@@ -72,10 +72,10 @@ func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 
 	return &EndpointResponse{
 		AvailabilityStatusResponse: asResponse,
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(endpoint.PausedAt)},
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(endpoint.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(endpoint.UpdatedAt),
+		PausedAt:                   util.DateTimeToRFC3339(endpoint.PausedAt),
 		Role:                       endpoint.Role,
 		Port:                       endpoint.Port,
 		Default:                    endpoint.Default,

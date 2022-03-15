@@ -17,12 +17,12 @@ const (
 // used internally for business logic
 type Source struct {
 	AvailabilityStatus
-	Pause
 
 	//fields for gorm
 	ID        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	PausedAt  time.Time `json:"paused_at"`
 
 	// standard source fields
 	Name                string  `json:"name"`
@@ -79,10 +79,10 @@ func (src *Source) ToResponse() *SourceResponse {
 
 	return &SourceResponse{
 		AvailabilityStatusResponse: asResponse,
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(src.PausedAt)},
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(src.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(src.UpdatedAt),
+		PausedAt:                   util.DateTimeToRFC3339(src.PausedAt),
 		Name:                       &src.Name,
 		Uid:                        src.Uid,
 		Version:                    src.Version,

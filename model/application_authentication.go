@@ -9,11 +9,10 @@ import (
 )
 
 type ApplicationAuthentication struct {
-	Pause
-
 	ID        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	PausedAt  time.Time `json:"paused_at"`
 
 	VaultPath string `json:"vault_path"`
 

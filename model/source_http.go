@@ -30,11 +30,11 @@ type SourceEditRequest struct {
 // of the API after a request.
 type SourceResponse struct {
 	AvailabilityStatusResponse
-	PauseResponse
 
 	ID                  string  `json:"id"`
 	CreatedAt           string  `json:"created_at"`
 	UpdatedAt           string  `json:"updated_at"`
+	PausedAt            string  `json:"paused_at,omitempty"`
 	Name                *string `json:"name"`
 	Uid                 *string `json:"uid,omitempty"`
 	Version             *string `json:"version,omitempty"`
