@@ -235,7 +235,7 @@ bitbucket:
             label: Username for the Bitbucket account
           - component: text-field
             name: authentication.password
-            label: App passowrd for the Bitbucket account
+            label: App password for the Bitbucket account
 dockerhub:
   prodcut_name: Docker Hub
   vendor: Docker
