@@ -91,12 +91,6 @@ func CreateFixtures(schema string) {
 // the database in the previous schema.
 func DoneWithFixtures(schema string) {
 	DropSchema(schema)
-
-	DB.Create(&fixtures.TestApplicationTypeData)
-
-	DB.Create(&fixtures.TestSourceData)
-	DB.Create(&fixtures.TestApplicationData)
-
 	ConnectToTestDB("dao")
 }
 
