@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 )
 
 /*
@@ -28,85 +30,73 @@ import (
 	4. Saving the ApplicationAuthentications if necessary
 */
 func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput, error) {
-	// initiate a transaction that we'll rollback if anything bad happens.
-	tx := dao.DbTransaction{}
-	tx.Start()
-
 	// the output from this request.
 	var output m.BulkCreateOutput
-	var err error
 
-	// parse the sources, then save them in the transaction.
-	output.Sources, err = parseSources(req.Sources, tenantID)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	err = tx.Save(m.Source{}, &output.Sources[0])
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+	// initiate a transaction that we'll rollback if anything bad happens.
+	err := dao.DB.Transaction(func(tx *gorm.DB) error {
+		var err error
 
-	output.Applications, err = parseApplications(req.Applications, &output, tenantID)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	err = tx.Save(m.Application{}, &output.Applications)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	output.Endpoints, err = parseEndpoints(req.Endpoints, &output, tenantID)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	err = tx.Save(m.Endpoint{}, &output.Endpoints)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	// link up the authentications to their polymorphic relations.
-	output.Authentications, err = linkUpAuthentications(req, &output, tenantID)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	for i := 0; i < len(output.Authentications); i++ {
-		err = dao.GetAuthenticationDao(tenantID).BulkCreate(&output.Authentications[i])
+		// parse the sources, then save them in the transaction.
+		output.Sources, err = parseSources(req.Sources, tenantID)
 		if err != nil {
-			tx.Rollback()
-			return nil, err
+			return err
+		}
+		err = tx.Create(&output.Sources[0]).Error
+		if err != nil {
+			return err
 		}
 
-		if strings.ToLower(output.Authentications[i].ResourceType) == "application" {
-			output.ApplicationAuthentications = append(output.ApplicationAuthentications, m.ApplicationAuthentication{
-				// TODO: After vault migration.
-				// VaultPath:         output.Authentications[i].Path(),
-				ApplicationID:     output.Authentications[i].ResourceID,
-				AuthenticationUID: output.Authentications[i].ID,
-				TenantID:          *tenantID,
-			})
+		output.Applications, err = parseApplications(req.Applications, &output, tenantID)
+		if err != nil {
+			return err
 		}
-	}
+		err = tx.Create(&output.Applications).Error
+		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
+			return err
+		}
 
-	err = tx.Save(m.ApplicationAuthentication{}, &output.ApplicationAuthentications)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
+		output.Endpoints, err = parseEndpoints(req.Endpoints, &output, tenantID)
+		if err != nil {
+			return err
+		}
+		err = tx.Create(&output.Endpoints).Error
+		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
+			return err
+		}
 
-	err = tx.Commit()
-	if err != nil {
-		return nil, err
-	}
+		// link up the authentications to their polymorphic relations.
+		output.Authentications, err = linkUpAuthentications(req, &output, tenantID)
+		if err != nil {
+			return err
+		}
 
-	return &output, nil
+		for i := 0; i < len(output.Authentications); i++ {
+			err = dao.GetAuthenticationDao(tenantID).BulkCreate(&output.Authentications[i])
+			if err != nil {
+				return err
+			}
+
+			if strings.ToLower(output.Authentications[i].ResourceType) == "application" {
+				output.ApplicationAuthentications = append(output.ApplicationAuthentications, m.ApplicationAuthentication{
+					// TODO: After vault migration.
+					// VaultPath:         output.Authentications[i].Path(),
+					ApplicationID:     output.Authentications[i].ResourceID,
+					AuthenticationUID: output.Authentications[i].ID,
+					TenantID:          *tenantID,
+				})
+			}
+		}
+
+		err = tx.Create(&output.ApplicationAuthentications).Error
+		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
+			return err
+		}
+
+		return nil
+	})
+
+	return &output, err
 }
 
 func parseSources(reqSources []m.BulkCreateSource, tenantID *int64) ([]m.Source, error) {
