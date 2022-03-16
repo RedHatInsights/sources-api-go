@@ -5,6 +5,7 @@ import (
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm/clause"
 )
 
 // GetApplicationAuthenticationDao is a function definition that can be replaced in runtime in case some other DAO
@@ -113,19 +114,24 @@ func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthenti
 }
 
 func (a *applicationAuthenticationDaoImpl) Delete(id *int64) (*m.ApplicationAuthentication, error) {
-	appAuth := &m.ApplicationAuthentication{ID: *id, TenantID: *a.TenantID}
+	var applicationAuthentication m.ApplicationAuthentication
 
-	result := DB.First(&appAuth)
+	result := DB.
+		Debug().
+		Clauses(clause.Returning{}).
+		Where("id = ?", id).
+		Where("tenant_id = ?", a.TenantID).
+		Delete(&applicationAuthentication)
+
 	if result.Error != nil {
+		return nil, fmt.Errorf(`failed to delete application authentication with id "%d": %s`, id, result.Error)
+	}
+
+	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("application authentication")
 	}
 
-	result = DB.Where("tenant_id = ?").Delete(&appAuth)
-	if result.Error != nil {
-		return nil, fmt.Errorf("failed to delete application id %v", *id)
-	}
-
-	return appAuth, nil
+	return &applicationAuthentication, nil
 }
 
 func (a *applicationAuthenticationDaoImpl) Tenant() *int64 {

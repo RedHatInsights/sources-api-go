@@ -1,11 +1,14 @@
 package dao
 
 import (
+	"errors"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 var sourceDao = sourceDaoImpl{
@@ -118,4 +121,66 @@ func TestResumingSource(t *testing.T) {
 	}
 
 	DoneWithFixtures("pause_unpause")
+}
+
+// TestDeleteSource tests that a source gets correctly deleted, and its data returned.
+func TestDeleteSource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("delete")
+
+	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)
+
+	source := fixtures.TestSourceData[0]
+	// Set the ID to 0 to let GORM know it should insert a new source and not update an existing one.
+	source.ID = 0
+	// Set some data to compare the returned source.
+	source.Name = "cool source"
+
+	// Create the test source.
+	err := sourceDao.Create(&source)
+	if err != nil {
+		t.Errorf("error creating source: %s", err)
+	}
+
+	deletedSource, err := sourceDao.Delete(&source.ID)
+	if err != nil {
+		t.Errorf("error deleting an source: %s", err)
+	}
+
+	{
+		want := source.ID
+		got := deletedSource.ID
+
+		if want != got {
+			t.Errorf(`incorrect source deleted. Want id "%d", got "%d"`, want, got)
+		}
+	}
+
+	{
+		want := source.Name
+		got := deletedSource.Name
+
+		if want != got {
+			t.Errorf(`incorrect source deleted. Want "%s" in the name field, got "%s"`, want, got)
+		}
+	}
+
+	DoneWithFixtures("delete")
+}
+
+// TestDeleteSourceNotExists tests that when a source that doesn't exist is tried to be deleted, an error is returned.
+func TestDeleteSourceNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("delete")
+
+	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)
+
+	nonExistentId := int64(12345)
+	_, err := sourceDao.Delete(&nonExistentId)
+
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
+	}
+
+	DoneWithFixtures("delete")
 }

@@ -2,6 +2,7 @@ package dao
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/dao/mappers"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -217,22 +218,23 @@ func (s *rhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
 func (s *rhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
 	var rhcConnection m.RhcConnection
 
-	err := DB.Debug().
+	// The foreign key and the "cascade on delete" in the join table takes care of deleting the related
+	// "source_rhc_connection" row.
+	result := DB.
+		Debug().
+		Clauses(clause.Returning{}).
 		Where("id = ?", id).
-		First(&rhcConnection).
-		Error
+		Delete(&rhcConnection)
 
-	if err != nil {
+	if result.Error != nil {
+		return nil, fmt.Errorf(`failed to delete rhcConnection with id "%d": %s`, id, result.Error)
+	}
+
+	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("rhcConnection")
 	}
 
-	// The foreign key in the join table takes care of deleting the associated row.
-	err = DB.Debug().
-		Where(`id = ?`, *id).
-		Delete(&m.RhcConnection{}).
-		Error
-
-	return &rhcConnection, err
+	return &rhcConnection, nil
 }
 
 func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
