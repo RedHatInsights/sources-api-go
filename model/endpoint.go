@@ -10,10 +10,10 @@ import (
 type Endpoint struct {
 	AvailabilityStatus
 
-	ID        int64     `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	PausedAt  time.Time `json:"paused_at"`
+	ID        int64      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	PausedAt  *time.Time `json:"paused_at"`
 
 	Role                    *string `json:"role,omitempty"`
 	Port                    *int    `json:"port,omitempty"`
@@ -40,7 +40,7 @@ func (endpoint *Endpoint) ToEvent() interface{} {
 
 	endpointEvent := &EndpointEvent{
 		AvailabilityStatusEvent: asEvent,
-		PausedAt:                util.DateTimeToRecordFormat(endpoint.PausedAt),
+		PausedAt:                util.DateTimePointerToRecordFormat(endpoint.PausedAt),
 		ID:                      endpoint.ID,
 		CertificateAuthority:    endpoint.CertificateAuthority,
 		Host:                    endpoint.Host,
@@ -75,7 +75,7 @@ func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(endpoint.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(endpoint.UpdatedAt),
-		PausedAt:                   util.DateTimeToRFC3339(endpoint.PausedAt),
+		PausedAt:                   util.DateTimePointerToRFC3339(endpoint.PausedAt),
 		Role:                       endpoint.Role,
 		Port:                       endpoint.Port,
 		Default:                    endpoint.Default,

@@ -85,8 +85,22 @@ func DateTimeToRecordFormat(inputTime time.Time) *string {
 	return StringValueOrNil(FormatTimeToString(inputTime, RecordDateTimeFormat))
 }
 
+func DateTimePointerToRecordFormat(inputTime *time.Time) *string {
+	if inputTime == nil {
+		return nil
+	}
+	return StringValueOrNil(FormatTimeToString(*inputTime, RecordDateTimeFormat))
+}
+
 func DateTimeToRFC3339(inputTime time.Time) string {
 	return FormatTimeToString(inputTime, time.RFC3339)
+}
+
+func DateTimePointerToRFC3339(inputTime *time.Time) string {
+	if inputTime == nil {
+		return ""
+	}
+	return FormatTimeToString(*inputTime, time.RFC3339)
 }
 
 // InterfaceToString takes a number in interface format and converts it to the

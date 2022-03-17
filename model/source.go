@@ -19,10 +19,10 @@ type Source struct {
 	AvailabilityStatus
 
 	//fields for gorm
-	ID        int64     `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	PausedAt  time.Time `json:"paused_at"`
+	ID        int64      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	PausedAt  *time.Time `json:"paused_at"`
 
 	// standard source fields
 	Name                string  `json:"name"`
@@ -51,7 +51,7 @@ func (src *Source) ToEvent() interface{} {
 
 	sourceEvent := &SourceEvent{
 		AvailabilityStatusEvent: asEvent,
-		PausedAt:                util.DateTimeToRecordFormat(src.PausedAt),
+		PausedAt:                util.DateTimePointerToRecordFormat(src.PausedAt),
 		ID:                      &src.ID,
 		CreatedAt:               util.DateTimeToRecordFormat(src.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(src.UpdatedAt),
@@ -82,7 +82,7 @@ func (src *Source) ToResponse() *SourceResponse {
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(src.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(src.UpdatedAt),
-		PausedAt:                   util.DateTimeToRFC3339(src.PausedAt),
+		PausedAt:                   util.DateTimePointerToRFC3339(src.PausedAt),
 		Name:                       &src.Name,
 		Uid:                        src.Uid,
 		Version:                    src.Version,

@@ -12,10 +12,10 @@ import (
 type Application struct {
 	AvailabilityStatus
 
-	ID        int64     `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	PausedAt  time.Time `json:"paused_at"`
+	ID        int64      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	PausedAt  *time.Time `json:"paused_at"`
 
 	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
@@ -41,7 +41,7 @@ func (app *Application) ToEvent() interface{} {
 
 	appEvent := &ApplicationEvent{
 		AvailabilityStatusEvent: asEvent,
-		PausedAt:                util.DateTimeToRecordFormat(app.PausedAt),
+		PausedAt:                util.DateTimePointerToRecordFormat(app.PausedAt),
 		Extra:                   app.Extra,
 		ID:                      app.ID,
 		CreatedAt:               util.DateTimeToRecordFormat(app.CreatedAt),
@@ -70,7 +70,7 @@ func (app *Application) ToResponse() *ApplicationResponse {
 		ID:                         id,
 		CreatedAt:                  util.DateTimeToRFC3339(app.CreatedAt),
 		UpdatedAt:                  util.DateTimeToRFC3339(app.UpdatedAt),
-		PausedAt:                   util.DateTimeToRFC3339(app.PausedAt),
+		PausedAt:                   util.DateTimePointerToRFC3339(app.PausedAt),
 		AvailabilityStatusError:    app.AvailabilityStatusError,
 		Extra:                      app.Extra,
 		SourceID:                   sourceId,
