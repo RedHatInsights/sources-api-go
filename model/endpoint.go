@@ -40,7 +40,7 @@ func (endpoint *Endpoint) ToEvent() interface{} {
 
 	endpointEvent := &EndpointEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(endpoint.PausedAt)},
+		PausedAt:                util.DateTimeToRecordFormat(endpoint.PausedAt),
 		ID:                      endpoint.ID,
 		CertificateAuthority:    endpoint.CertificateAuthority,
 		Host:                    endpoint.Host,

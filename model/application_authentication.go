@@ -30,7 +30,7 @@ type ApplicationAuthentication struct {
 func (aa *ApplicationAuthentication) ToEvent() interface{} {
 	aaEvent := &ApplicationAuthenticationEvent{
 		ID:                aa.ID,
-		PauseEvent:        PauseEvent{PausedAt: util.DateTimeToRecordFormat(aa.PausedAt)},
+		PausedAt:          util.DateTimeToRecordFormat(aa.PausedAt),
 		CreatedAt:         util.DateTimeToRecordFormat(aa.CreatedAt),
 		UpdatedAt:         util.DateTimeToRecordFormat(aa.UpdatedAt),
 		ApplicationID:     aa.ApplicationID,

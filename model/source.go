@@ -51,7 +51,7 @@ func (src *Source) ToEvent() interface{} {
 
 	sourceEvent := &SourceEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(src.PausedAt)},
+		PausedAt:                util.DateTimeToRecordFormat(src.PausedAt),
 		ID:                      &src.ID,
 		CreatedAt:               util.DateTimeToRecordFormat(src.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(src.UpdatedAt),

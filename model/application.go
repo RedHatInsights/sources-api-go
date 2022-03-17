@@ -41,7 +41,7 @@ func (app *Application) ToEvent() interface{} {
 
 	appEvent := &ApplicationEvent{
 		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(app.PausedAt)},
+		PausedAt:                util.DateTimeToRecordFormat(app.PausedAt),
 		Extra:                   app.Extra,
 		ID:                      app.ID,
 		CreatedAt:               util.DateTimeToRecordFormat(app.CreatedAt),

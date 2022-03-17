@@ -6,10 +6,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-type PauseEvent struct {
-	PausedAt *string `json:"paused_at"`
-}
-
 type AvailabilityStatusEvent struct {
 	AvailabilityStatus *string `json:"availability_status"`
 	LastCheckedAt      *string `json:"last_checked_at"`
@@ -18,11 +14,11 @@ type AvailabilityStatusEvent struct {
 
 type ApplicationEvent struct {
 	AvailabilityStatusEvent
-	PauseEvent
 
 	ID        int64   `json:"id"`
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`
+	PausedAt  *string `json:"paused_at"`
 
 	AvailabilityStatusError *string        `json:"availability_status_error"`
 	Extra                   datatypes.JSON `json:"extra"`
@@ -52,11 +48,10 @@ type AuthenticationEvent struct {
 }
 
 type ApplicationAuthenticationEvent struct {
-	PauseEvent
-
 	ID        int64   `json:"id"`
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`
+	PausedAt  *string `json:"paused_at"`
 
 	ApplicationID     int64  `json:"application_id"`
 	AuthenticationID  int64  `json:"authentication_id"`
@@ -68,11 +63,11 @@ type ApplicationAuthenticationEvent struct {
 
 type EndpointEvent struct {
 	AvailabilityStatusEvent
-	PauseEvent
 
 	ID        int64   `json:"id"`
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`
+	PausedAt  *string `json:"paused_at"`
 
 	Role                    *string `json:"role"`
 	Port                    *int    `json:"port"`
@@ -91,11 +86,11 @@ type EndpointEvent struct {
 
 type SourceEvent struct {
 	AvailabilityStatusEvent
-	PauseEvent
 
 	ID                  *int64  `json:"id"`
 	CreatedAt           *string `json:"created_at"`
 	UpdatedAt           *string `json:"updated_at"`
+	PausedAt            *string `json:"paused_at"`
 	Name                *string `json:"name"`
 	UID                 *string `json:"uid"`
 	Version             *string `json:"version"`
