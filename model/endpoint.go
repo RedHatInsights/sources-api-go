@@ -36,12 +36,7 @@ type Endpoint struct {
 }
 
 func (endpoint *Endpoint) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus),
-		LastAvailableAt: util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
-		LastCheckedAt:   util.DateTimeToRecordFormat(endpoint.LastCheckedAt)}
-
 	endpointEvent := &EndpointEvent{
-		AvailabilityStatusEvent: asEvent,
 		PausedAt:                util.DateTimePointerToRecordFormat(endpoint.PausedAt),
 		ID:                      endpoint.ID,
 		CertificateAuthority:    endpoint.CertificateAuthority,
@@ -56,6 +51,9 @@ func (endpoint *Endpoint) ToEvent() interface{} {
 		Path:                    endpoint.Path,
 		CreatedAt:               util.DateTimeToRecordFormat(endpoint.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(endpoint.UpdatedAt),
+		AvailabilityStatus:      util.StringValueOrNil(endpoint.AvailabilityStatus),
+		LastAvailableAt:         util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
+		LastCheckedAt:           util.DateTimeToRecordFormat(endpoint.LastCheckedAt),
 		AvailabilityStatusError: util.StringValueOrNil(endpoint.AvailabilityStatusError),
 		Tenant:                  &endpoint.Tenant.ExternalTenant,
 	}

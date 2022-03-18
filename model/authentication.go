@@ -120,13 +120,8 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 }
 
 func (auth *Authentication) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(auth.AvailabilityStatus),
-		LastAvailableAt: util.DateTimeToRecordFormat(auth.LastAvailableAt),
-		LastCheckedAt:   util.DateTimeToRecordFormat(auth.LastCheckedAt)}
-
 	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationEvent{
-		AvailabilityStatusEvent: asEvent,
 		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
 		Name:                    auth.Name,
@@ -134,6 +129,9 @@ func (auth *Authentication) ToEvent() interface{} {
 		Version:                 auth.Version,
 		Username:                auth.Username,
 		Extra:                   extra,
+		AvailabilityStatus:      util.StringValueOrNil(auth.AvailabilityStatus),
+		LastAvailableAt:         util.DateTimeToRecordFormat(auth.LastAvailableAt),
+		LastCheckedAt:           util.DateTimeToRecordFormat(auth.LastCheckedAt),
 		AvailabilityStatusError: &auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              auth.ResourceID,

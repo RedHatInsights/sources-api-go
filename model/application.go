@@ -37,18 +37,16 @@ type Application struct {
 }
 
 func (app *Application) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus),
-		LastAvailableAt: util.DateTimeToRecordFormat(app.LastAvailableAt),
-		LastCheckedAt:   util.DateTimeToRecordFormat(app.LastCheckedAt)}
-
 	appEvent := &ApplicationEvent{
-		AvailabilityStatusEvent: asEvent,
-		PausedAt:                util.DateTimePointerToRecordFormat(app.PausedAt),
-		Extra:                   app.Extra,
 		ID:                      app.ID,
+		Extra:                   app.Extra,
 		CreatedAt:               util.DateTimeToRecordFormat(app.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(app.UpdatedAt),
+		PausedAt:                util.DateTimePointerToRecordFormat(app.PausedAt),
 		ApplicationTypeID:       app.ApplicationTypeID,
+		AvailabilityStatus:      util.StringValueOrNil(app.AvailabilityStatus),
+		LastAvailableAt:         util.DateTimeToRecordFormat(app.LastAvailableAt),
+		LastCheckedAt:           util.DateTimeToRecordFormat(app.LastCheckedAt),
 		AvailabilityStatusError: util.StringValueOrNil(app.AvailabilityStatusError),
 		SourceID:                app.SourceID,
 		Tenant:                  &app.Tenant.ExternalTenant,

@@ -6,20 +6,15 @@ import (
 	"gorm.io/datatypes"
 )
 
-type AvailabilityStatusEvent struct {
-	AvailabilityStatus *string `json:"availability_status"`
-	LastCheckedAt      *string `json:"last_checked_at"`
-	LastAvailableAt    *string `json:"last_available_at"`
-}
-
 type ApplicationEvent struct {
-	AvailabilityStatusEvent
-
 	ID        int64   `json:"id"`
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`
 	PausedAt  *string `json:"paused_at"`
 
+	AvailabilityStatus      *string        `json:"availability_status"`
+	LastCheckedAt           *string        `json:"last_checked_at"`
+	LastAvailableAt         *string        `json:"last_available_at"`
 	AvailabilityStatusError *string        `json:"availability_status_error"`
 	Extra                   datatypes.JSON `json:"extra"`
 	SuperkeyData            datatypes.JSON `json:"superkey_data"`
@@ -30,8 +25,6 @@ type ApplicationEvent struct {
 }
 
 type AuthenticationEvent struct {
-	AvailabilityStatusEvent
-
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 
@@ -40,6 +33,9 @@ type AuthenticationEvent struct {
 	Username                string                 `json:"username"`
 	Extra                   map[string]interface{} `json:"extra"`
 	Version                 string                 `json:"version"`
+	AvailabilityStatus      *string                `json:"availability_status"`
+	LastCheckedAt           *string                `json:"last_checked_at"`
+	LastAvailableAt         *string                `json:"last_available_at"`
 	AvailabilityStatusError *string                `json:"availability_status_error"`
 	ResourceType            string                 `json:"resource_type"`
 	ResourceID              int64                  `json:"resource_id"`
@@ -62,8 +58,6 @@ type ApplicationAuthenticationEvent struct {
 }
 
 type EndpointEvent struct {
-	AvailabilityStatusEvent
-
 	ID        int64   `json:"id"`
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`
@@ -78,6 +72,9 @@ type EndpointEvent struct {
 	VerifySsl               *bool   `json:"verify_ssl"`
 	CertificateAuthority    *string `json:"certificate_authority"`
 	ReceptorNode            *string `json:"receptor_node"`
+	AvailabilityStatus      *string `json:"availability_status"`
+	LastCheckedAt           *string `json:"last_checked_at"`
+	LastAvailableAt         *string `json:"last_available_at"`
 	AvailabilityStatusError *string `json:"availability_status_error"`
 
 	SourceID int64   `json:"source_id"`
@@ -85,7 +82,9 @@ type EndpointEvent struct {
 }
 
 type SourceEvent struct {
-	AvailabilityStatusEvent
+	AvailabilityStatus *string `json:"availability_status"`
+	LastCheckedAt      *string `json:"last_checked_at"`
+	LastAvailableAt    *string `json:"last_available_at"`
 
 	ID                  *int64  `json:"id"`
 	CreatedAt           *string `json:"created_at"`
@@ -102,12 +101,14 @@ type SourceEvent struct {
 }
 
 type RhcConnectionEvent struct {
-	ID    *string        `json:"id"`
-	RhcId *string        `json:"rhc_id"`
-	Extra datatypes.JSON `json:"extra"`
-	AvailabilityStatusEvent
-	AvailabilityStatusError *string  `json:"availability_status_error"`
-	SourceIds               []string `json:"source_ids"`
+	ID                      *string        `json:"id"`
+	RhcId                   *string        `json:"rhc_id"`
+	Extra                   datatypes.JSON `json:"extra"`
+	AvailabilityStatus      *string        `json:"availability_status"`
+	LastCheckedAt           *string        `json:"last_checked_at"`
+	LastAvailableAt         *string        `json:"last_available_at"`
+	AvailabilityStatusError *string        `json:"availability_status_error"`
+	SourceIds               []string       `json:"source_ids"`
 
 	CreatedAt *string `json:"created_at"`
 	UpdatedAt *string `json:"updated_at"`

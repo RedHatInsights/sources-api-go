@@ -47,24 +47,22 @@ type Source struct {
 }
 
 func (src *Source) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus),
-		LastAvailableAt: util.DateTimeToRecordFormat(src.LastAvailableAt),
-		LastCheckedAt:   util.DateTimeToRecordFormat(src.LastCheckedAt)}
-
 	sourceEvent := &SourceEvent{
-		AvailabilityStatusEvent: asEvent,
-		PausedAt:                util.DateTimePointerToRecordFormat(src.PausedAt),
-		ID:                      &src.ID,
-		CreatedAt:               util.DateTimeToRecordFormat(src.CreatedAt),
-		UpdatedAt:               util.DateTimeToRecordFormat(src.UpdatedAt),
-		Name:                    &src.Name,
-		UID:                     src.Uid,
-		Version:                 src.Version,
-		Imported:                src.Imported,
-		SourceRef:               src.SourceRef,
-		AppCreationWorkflow:     &src.AppCreationWorkflow,
-		SourceTypeID:            &src.SourceTypeID,
-		Tenant:                  &src.Tenant.ExternalTenant,
+		ID:                  &src.ID,
+		CreatedAt:           util.DateTimeToRecordFormat(src.CreatedAt),
+		UpdatedAt:           util.DateTimeToRecordFormat(src.UpdatedAt),
+		PausedAt:            util.DateTimePointerToRecordFormat(src.PausedAt),
+		AvailabilityStatus:  util.StringValueOrNil(src.AvailabilityStatus),
+		LastAvailableAt:     util.DateTimeToRecordFormat(src.LastAvailableAt),
+		LastCheckedAt:       util.DateTimeToRecordFormat(src.LastCheckedAt),
+		Name:                &src.Name,
+		UID:                 src.Uid,
+		Version:             src.Version,
+		Imported:            src.Imported,
+		SourceRef:           src.SourceRef,
+		AppCreationWorkflow: &src.AppCreationWorkflow,
+		SourceTypeID:        &src.SourceTypeID,
+		Tenant:              &src.Tenant.ExternalTenant,
 	}
 
 	return sourceEvent
