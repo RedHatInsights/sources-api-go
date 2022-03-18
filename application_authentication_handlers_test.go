@@ -104,7 +104,7 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 func TestApplicationAuthenticationGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
-		"/api/sources/v3.1//application_authentications/1",
+		"/api/sources/v3.1/application_authentications/1",
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
@@ -141,7 +141,7 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 func TestApplicationAuthenticationGetNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
-		"/api/sources/v3.1//application_authentications/13094830948",
+		"/api/sources/v3.1/application_authentications/13094830948",
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
@@ -163,7 +163,7 @@ func TestApplicationAuthenticationGetNotFound(t *testing.T) {
 func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
-		"/api/sources/v3.1//application_authentications/xxx",
+		"/api/sources/v3.1/application_authentications/xxx",
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
