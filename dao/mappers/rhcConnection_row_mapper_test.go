@@ -74,7 +74,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 
 	{
 		want := validAvailabilityStatus
-		got := result.AvailabilityStatus.AvailabilityStatus
+		got := result.AvailabilityStatus
 		if want != got {
 			t.Errorf(`Unexpected different availability statuses found. Want "%s", got "%s"`, want, got)
 		}

@@ -12,7 +12,10 @@ type RhcConnection struct {
 	ID    int64          `gorm:"primaryKey" json:"id"`
 	RhcId string         `json:"rhc_id"`
 	Extra datatypes.JSON `json:"extra,omitempty"`
-	AvailabilityStatus
+
+	AvailabilityStatus      string    `json:"availability_status,omitempty"`
+	LastCheckedAt           time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         time.Time `json:"last_available_at,omitempty"`
 	AvailabilityStatusError string    `json:"availability_status_error,omitempty"`
 	CreatedAt               time.Time `json:"created_at"`
 	UpdatedAt               time.Time `json:"updated_at"`
@@ -28,7 +31,7 @@ func (r *RhcConnection) ToEvent() interface{} {
 	id := strconv.FormatInt(r.ID, 10)
 
 	asEvent := AvailabilityStatusEvent{
-		AvailabilityStatus: util.StringValueOrNil(r.AvailabilityStatus.AvailabilityStatus),
+		AvailabilityStatus: util.StringValueOrNil(r.AvailabilityStatus),
 		LastAvailableAt:    util.DateTimeToRecordFormat(r.LastAvailableAt),
 		LastCheckedAt:      util.DateTimeToRecordFormat(r.LastCheckedAt),
 	}

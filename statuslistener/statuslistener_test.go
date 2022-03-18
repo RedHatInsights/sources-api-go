@@ -381,7 +381,11 @@ type ExpectedData struct {
 
 type TestData struct {
 	types.StatusMessage
-	m.AvailabilityStatus
+
+	AvailabilityStatus string
+	LastCheckedAt      time.Time
+	LastAvailableAt    time.Time
+
 	ExpectedData
 
 	MessageHeaders []kafkaGo.Header

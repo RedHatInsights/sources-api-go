@@ -23,11 +23,9 @@ var rhcConnectionDao = rhcConnectionDaoImpl{
 // setUpValidRhcConnection returns a valid RhcConnection object.
 func setUpValidRhcConnection() *model.RhcConnection {
 	return &model.RhcConnection{
-		RhcId: "rhcIdUuid",
-		Extra: []byte(`{"hello": "world"}`),
-		AvailabilityStatus: model.AvailabilityStatus{
-			AvailabilityStatus: "available",
-		},
+		RhcId:              "rhcIdUuid",
+		Extra:              []byte(`{"hello": "world"}`),
+		AvailabilityStatus: "available",
 		Sources: []model.Source{
 			{
 				ID: fixtures.TestSourceData[0].ID,
@@ -61,11 +59,11 @@ func TestRhcConnectionCreate(t *testing.T) {
 		t.Errorf(`ẁant "%s", got "%s"`, want.Extra, got.Extra)
 	}
 
-	if want.AvailabilityStatus.AvailabilityStatus != got.AvailabilityStatus.AvailabilityStatus {
+	if want.AvailabilityStatus != got.AvailabilityStatus {
 		t.Errorf(
 			`want "%s", got "%s"`,
-			want.AvailabilityStatus.AvailabilityStatus,
-			got.AvailabilityStatus.AvailabilityStatus,
+			want.AvailabilityStatus,
+			got.AvailabilityStatus,
 		)
 	}
 
@@ -145,11 +143,11 @@ func TestRhcConnectionCreateExisting(t *testing.T) {
 		t.Errorf(`ẁant "%s", got "%s"`, want.Extra, got.Extra)
 	}
 
-	if want.AvailabilityStatus.AvailabilityStatus != got.AvailabilityStatus.AvailabilityStatus {
+	if want.AvailabilityStatus != got.AvailabilityStatus {
 		t.Errorf(
 			`want "%s", got "%s"`,
-			want.AvailabilityStatus.AvailabilityStatus,
-			got.AvailabilityStatus.AvailabilityStatus,
+			want.AvailabilityStatus,
+			got.AvailabilityStatus,
 		)
 	}
 

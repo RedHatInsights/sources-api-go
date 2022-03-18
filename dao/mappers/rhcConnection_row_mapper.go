@@ -11,7 +11,6 @@ import (
 
 func MapRowToRhcConnection(row map[string]interface{}) (*model.RhcConnection, error) {
 	var rhcConnection model.RhcConnection
-	rhcConnection.AvailabilityStatus = model.AvailabilityStatus{}
 
 	if value, ok := row["id"]; ok {
 		if id, ok := value.(int64); ok {
@@ -33,7 +32,7 @@ func MapRowToRhcConnection(row map[string]interface{}) (*model.RhcConnection, er
 
 	if value, ok := row["availability_status"]; ok {
 		if availabilityStatus, ok := value.(string); ok {
-			rhcConnection.AvailabilityStatus.AvailabilityStatus = availabilityStatus
+			rhcConnection.AvailabilityStatus = availabilityStatus
 		}
 	}
 
@@ -50,7 +49,7 @@ func MapRowToRhcConnection(row map[string]interface{}) (*model.RhcConnection, er
 				return nil, err
 			}
 
-			rhcConnection.AvailabilityStatus.LastCheckedAt = lastCheckedAt
+			rhcConnection.LastCheckedAt = lastCheckedAt
 		}
 	}
 
@@ -61,7 +60,7 @@ func MapRowToRhcConnection(row map[string]interface{}) (*model.RhcConnection, er
 				return nil, err
 			}
 
-			rhcConnection.AvailabilityStatus.LastAvailableAt = lastAvailableAt
+			rhcConnection.LastAvailableAt = lastAvailableAt
 		}
 	}
 

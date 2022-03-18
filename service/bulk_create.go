@@ -128,7 +128,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenantID *int64) ([]m.Source,
 		s.Imported = source.Imported
 		s.SourceRef = source.SourceRef
 		s.AppCreationWorkflow = source.AppCreationWorkflow
-		s.AvailabilityStatus = m.AvailabilityStatus{AvailabilityStatus: source.AvailabilityStatus}
+		s.AvailabilityStatus = source.AvailabilityStatus
 		s.SourceTypeID = *source.SourceTypeID
 		s.TenantID = *tenantID
 

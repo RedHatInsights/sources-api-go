@@ -17,7 +17,7 @@ var TestSourceData = []m.Source{
 		Name:               "Source1",
 		SourceTypeID:       1,
 		TenantID:           1,
-		AvailabilityStatus: m.AvailabilityStatus{AvailabilityStatus: "available"},
+		AvailabilityStatus: "available",
 		Uid:                &uid1,
 	},
 	{
@@ -25,7 +25,7 @@ var TestSourceData = []m.Source{
 		Name:               "Source2",
 		SourceTypeID:       1,
 		TenantID:           1,
-		AvailabilityStatus: m.AvailabilityStatus{AvailabilityStatus: "unavailable"},
+		AvailabilityStatus: "unavailable",
 		Uid:                &uid2,
 	},
 	{
@@ -33,7 +33,7 @@ var TestSourceData = []m.Source{
 		Name:               "Source3 for TestSourceDelete()",
 		SourceTypeID:       1,
 		TenantID:           1,
-		AvailabilityStatus: m.AvailabilityStatus{AvailabilityStatus: "available"},
+		AvailabilityStatus: "available",
 		Uid:                &uid3,
 	},
 	{
@@ -41,7 +41,7 @@ var TestSourceData = []m.Source{
 		Name:               "Source4",
 		SourceTypeID:       2,
 		TenantID:           1,
-		AvailabilityStatus: m.AvailabilityStatus{AvailabilityStatus: "available"},
+		AvailabilityStatus: "available",
 		Uid:                &uid4,
 	},
 }

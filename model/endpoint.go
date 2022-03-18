@@ -8,23 +8,25 @@ import (
 )
 
 type Endpoint struct {
-	AvailabilityStatus
-
 	ID        int64      `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	PausedAt  *time.Time `json:"paused_at"`
 
-	Role                    *string `json:"role,omitempty"`
-	Port                    *int    `json:"port,omitempty"`
-	Default                 *bool   `json:"default,omitempty"`
-	Scheme                  *string `json:"scheme,omitempty"`
-	Host                    *string `json:"host,omitempty"`
-	Path                    *string `json:"path,omitempty"`
-	VerifySsl               *bool   `json:"verify_ssl,omitempty"`
-	CertificateAuthority    *string `json:"certificate_authority,omitempty"`
-	ReceptorNode            *string `json:"receptor_node,omitempty"`
-	AvailabilityStatusError *string `json:"availability_status_error,omitempty"`
+	Role                 *string `json:"role,omitempty"`
+	Port                 *int    `json:"port,omitempty"`
+	Default              *bool   `json:"default,omitempty"`
+	Scheme               *string `json:"scheme,omitempty"`
+	Host                 *string `json:"host,omitempty"`
+	Path                 *string `json:"path,omitempty"`
+	VerifySsl            *bool   `json:"verify_ssl,omitempty"`
+	CertificateAuthority *string `json:"certificate_authority,omitempty"`
+	ReceptorNode         *string `json:"receptor_node,omitempty"`
+
+	AvailabilityStatus      string    `json:"availability_status,omitempty"`
+	LastCheckedAt           time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatusError *string   `json:"availability_status_error,omitempty"`
 
 	SourceID int64 `json:"source_id"`
 	Source   Source
@@ -34,7 +36,7 @@ type Endpoint struct {
 }
 
 func (endpoint *Endpoint) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus),
 		LastAvailableAt: util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(endpoint.LastCheckedAt)}
 
@@ -65,7 +67,7 @@ func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 	id := strconv.FormatInt(endpoint.ID, 10)
 	sourceId := strconv.FormatInt(endpoint.SourceID, 10)
 	asResponse := AvailabilityStatusResponse{
-		AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus.AvailabilityStatus),
+		AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus),
 		LastCheckedAt:      util.DateTimeToRFC3339(endpoint.LastCheckedAt),
 		LastAvailableAt:    util.DateTimeToRFC3339(endpoint.LastAvailableAt),
 	}

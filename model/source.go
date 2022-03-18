@@ -16,7 +16,9 @@ const (
 // Source struct that includes all of the fields on the table
 // used internally for business logic
 type Source struct {
-	AvailabilityStatus
+	AvailabilityStatus string    `json:"availability_status,omitempty"`
+	LastCheckedAt      time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt    time.Time `json:"last_available_at,omitempty"`
 
 	//fields for gorm
 	ID        int64      `gorm:"primarykey" json:"id"`
@@ -45,7 +47,7 @@ type Source struct {
 }
 
 func (src *Source) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
+	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus),
 		LastAvailableAt: util.DateTimeToRecordFormat(src.LastAvailableAt),
 		LastCheckedAt:   util.DateTimeToRecordFormat(src.LastCheckedAt)}
 
@@ -72,7 +74,7 @@ func (src *Source) ToResponse() *SourceResponse {
 	id := strconv.FormatInt(src.ID, 10)
 	stid := strconv.FormatInt(src.SourceTypeID, 10)
 	asResponse := AvailabilityStatusResponse{
-		AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
+		AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus),
 		LastCheckedAt:      util.DateTimeToRFC3339(src.LastCheckedAt),
 		LastAvailableAt:    util.DateTimeToRFC3339(src.LastAvailableAt),
 	}
@@ -99,7 +101,7 @@ func (src *Source) ToInternalResponse() *SourceInternalResponse {
 
 	source := &SourceInternalResponse{
 		Id:                 &id,
-		AvailabilityStatus: &src.AvailabilityStatus.AvailabilityStatus,
+		AvailabilityStatus: &src.AvailabilityStatus,
 		ExternalTenant:     &src.Tenant.ExternalTenant,
 	}
 

@@ -317,16 +317,14 @@ func TestAuthFromVault(t *testing.T) {
 	createdAt := now.Add(time.Duration(-2) * time.Hour)
 
 	authentication := m.Authentication{
-		Name:     "test-vault-auth",
-		AuthType: "test-authtype",
-		Username: "my-username",
-		Password: "my-password",
-		Extra:    nil,
-		AvailabilityStatus: m.AvailabilityStatus{
-			AvailabilityStatus: m.Available,
-			LastAvailableAt:    lastAvailableCheckedAt,
-			LastCheckedAt:      lastAvailableCheckedAt,
-		},
+		Name:                    "test-vault-auth",
+		AuthType:                "test-authtype",
+		Username:                "my-username",
+		Password:                "my-password",
+		Extra:                   nil,
+		AvailabilityStatus:      m.Available,
+		LastAvailableAt:         lastAvailableCheckedAt,
+		LastCheckedAt:           lastAvailableCheckedAt,
 		AvailabilityStatusError: "there was an error, wow",
 		ResourceType:            "source",
 		ResourceID:              123,
@@ -427,24 +425,24 @@ func TestAuthFromVault(t *testing.T) {
 		}
 
 		{
-			want := authentication.AvailabilityStatus.AvailabilityStatus
-			got := resultingAuth.AvailabilityStatus.AvailabilityStatus
+			want := authentication.AvailabilityStatus
+			got := resultingAuth.AvailabilityStatus
 			if want != got {
 				t.Errorf(`authentication availability statuses are different. Want "%s", got "%s"`, want, got)
 			}
 		}
 
 		{
-			want := authentication.AvailabilityStatus.LastAvailableAt.Format(time.RFC3339Nano)
-			got := resultingAuth.AvailabilityStatus.LastAvailableAt.Format(time.RFC3339Nano)
+			want := authentication.LastAvailableAt.Format(time.RFC3339Nano)
+			got := resultingAuth.LastAvailableAt.Format(time.RFC3339Nano)
 			if want != got {
 				t.Errorf(`authentication last available at statuses are different. Want "%s", got "%s"`, want, got)
 			}
 		}
 
 		{
-			want := authentication.AvailabilityStatus.LastCheckedAt.Format(time.RFC3339Nano)
-			got := resultingAuth.AvailabilityStatus.LastCheckedAt.Format(time.RFC3339Nano)
+			want := authentication.LastCheckedAt.Format(time.RFC3339Nano)
+			got := resultingAuth.LastCheckedAt.Format(time.RFC3339Nano)
 			if want != got {
 				t.Errorf(`authentication last checked at statuses are different. Want "%s", got "%s"`, want, got)
 			}

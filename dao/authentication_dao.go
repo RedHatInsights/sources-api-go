@@ -528,7 +528,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	}
 
 	if data["availability_status"] != nil {
-		if auth.AvailabilityStatus.AvailabilityStatus, ok = data["availability_status"].(string); !ok {
+		if auth.AvailabilityStatus, ok = data["availability_status"].(string); !ok {
 			return nil
 		}
 	}
@@ -538,7 +538,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 			return nil
 		}
 
-		auth.AvailabilityStatus.LastAvailableAt, err = time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
+		auth.LastAvailableAt, err = time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
 		if err != nil {
 			return nil
 		}
@@ -549,7 +549,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 			return nil
 		}
 
-		auth.AvailabilityStatus.LastCheckedAt, err = time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
+		auth.LastCheckedAt, err = time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
 		if err != nil {
 			return nil
 		}

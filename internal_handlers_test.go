@@ -75,7 +75,7 @@ func TestSourceListInternal(t *testing.T) {
 			t.Errorf("Tenants don't match. Want %#v, got %#v", want, responseExternalTenant)
 		}
 
-		if want := fixtures.TestSourceData[i].AvailabilityStatus.AvailabilityStatus; want != responseAvailabilityStatus {
+		if want := fixtures.TestSourceData[i].AvailabilityStatus; want != responseAvailabilityStatus {
 			t.Errorf("Availability statuses don't match. Want %s, got %s", want, responseAvailabilityStatus)
 		}
 	}

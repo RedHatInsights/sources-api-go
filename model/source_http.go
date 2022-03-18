@@ -67,8 +67,6 @@ func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
 		src.SourceRef = update.SourceRef
 	}
 	if update.AvailabilityStatus != nil {
-		src.AvailabilityStatus = AvailabilityStatus{
-			AvailabilityStatus: *update.AvailabilityStatus,
-		}
+		src.AvailabilityStatus = *update.AvailabilityStatus
 	}
 }
