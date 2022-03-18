@@ -112,7 +112,7 @@ func Get() *SourcesApiConfig {
 
 	err := fs.Parse(os.Args[1:])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error parsing flags: %v", err)
+		fmt.Fprintf(os.Stderr, "error parsing flags: %v\n", err)
 	}
 
 	options.SetDefault("StatusListener", *availabilityListener)
