@@ -29,7 +29,9 @@ type SourceEditRequest struct {
 // SourceResponse represents what we will always return to the users
 // of the API after a request.
 type SourceResponse struct {
-	AvailabilityStatusResponse
+	AvailabilityStatus *string `json:"availability_status,omitempty"`
+	LastCheckedAt      string  `json:"last_checked_at,omitempty"`
+	LastAvailableAt    string  `json:"last_available_at,omitempty"`
 
 	ID                  string  `json:"id"`
 	CreatedAt           string  `json:"created_at"`

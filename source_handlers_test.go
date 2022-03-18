@@ -858,8 +858,8 @@ func TestSourceEdit(t *testing.T) {
 		t.Errorf("Unexpected source name: expected '%s', got '%s'", newSourceName, *src.Name)
 	}
 
-	if *src.AvailabilityStatusResponse.AvailabilityStatus != "available" {
-		t.Errorf("Wrong availability status, wanted %v got %v", "available", *src.AvailabilityStatusResponse.AvailabilityStatus)
+	if *src.AvailabilityStatus != "available" {
+		t.Errorf("Wrong availability status, wanted %v got %v", "available", *src.AvailabilityStatus)
 	}
 }
 

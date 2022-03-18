@@ -66,28 +66,25 @@ func (endpoint *Endpoint) ToEvent() interface{} {
 func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 	id := strconv.FormatInt(endpoint.ID, 10)
 	sourceId := strconv.FormatInt(endpoint.SourceID, 10)
-	asResponse := AvailabilityStatusResponse{
-		AvailabilityStatus: util.StringValueOrNil(endpoint.AvailabilityStatus),
-		LastCheckedAt:      util.DateTimeToRFC3339(endpoint.LastCheckedAt),
-		LastAvailableAt:    util.DateTimeToRFC3339(endpoint.LastAvailableAt),
-	}
 
 	return &EndpointResponse{
-		AvailabilityStatusResponse: asResponse,
-		ID:                         id,
-		CreatedAt:                  util.DateTimeToRFC3339(endpoint.CreatedAt),
-		UpdatedAt:                  util.DateTimeToRFC3339(endpoint.UpdatedAt),
-		PausedAt:                   util.DateTimePointerToRFC3339(endpoint.PausedAt),
-		Role:                       endpoint.Role,
-		Port:                       endpoint.Port,
-		Default:                    endpoint.Default,
-		Scheme:                     endpoint.Scheme,
-		Host:                       endpoint.Host,
-		Path:                       endpoint.Path,
-		VerifySsl:                  endpoint.VerifySsl,
-		CertificateAuthority:       endpoint.CertificateAuthority,
-		ReceptorNode:               endpoint.ReceptorNode,
-		AvailabilityStatusError:    endpoint.AvailabilityStatusError,
-		SourceID:                   sourceId,
+		ID:                      id,
+		CreatedAt:               util.DateTimeToRFC3339(endpoint.CreatedAt),
+		UpdatedAt:               util.DateTimeToRFC3339(endpoint.UpdatedAt),
+		PausedAt:                util.DateTimePointerToRFC3339(endpoint.PausedAt),
+		Role:                    endpoint.Role,
+		Port:                    endpoint.Port,
+		Default:                 endpoint.Default,
+		Scheme:                  endpoint.Scheme,
+		Host:                    endpoint.Host,
+		Path:                    endpoint.Path,
+		VerifySsl:               endpoint.VerifySsl,
+		CertificateAuthority:    endpoint.CertificateAuthority,
+		ReceptorNode:            endpoint.ReceptorNode,
+		AvailabilityStatus:      util.StringValueOrNil(endpoint.AvailabilityStatus),
+		LastCheckedAt:           util.DateTimeToRFC3339(endpoint.LastCheckedAt),
+		LastAvailableAt:         util.DateTimeToRFC3339(endpoint.LastAvailableAt),
+		AvailabilityStatusError: endpoint.AvailabilityStatusError,
+		SourceID:                sourceId,
 	}
 }

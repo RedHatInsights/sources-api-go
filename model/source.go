@@ -73,25 +73,22 @@ func (src *Source) ToEvent() interface{} {
 func (src *Source) ToResponse() *SourceResponse {
 	id := strconv.FormatInt(src.ID, 10)
 	stid := strconv.FormatInt(src.SourceTypeID, 10)
-	asResponse := AvailabilityStatusResponse{
-		AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus),
-		LastCheckedAt:      util.DateTimeToRFC3339(src.LastCheckedAt),
-		LastAvailableAt:    util.DateTimeToRFC3339(src.LastAvailableAt),
-	}
 
 	return &SourceResponse{
-		AvailabilityStatusResponse: asResponse,
-		ID:                         id,
-		CreatedAt:                  util.DateTimeToRFC3339(src.CreatedAt),
-		UpdatedAt:                  util.DateTimeToRFC3339(src.UpdatedAt),
-		PausedAt:                   util.DateTimePointerToRFC3339(src.PausedAt),
-		Name:                       &src.Name,
-		Uid:                        src.Uid,
-		Version:                    src.Version,
-		Imported:                   src.Imported,
-		SourceRef:                  src.SourceRef,
-		AppCreationWorkflow:        &src.AppCreationWorkflow,
-		SourceTypeId:               stid,
+		AvailabilityStatus:  util.StringValueOrNil(src.AvailabilityStatus),
+		LastCheckedAt:       util.DateTimeToRFC3339(src.LastCheckedAt),
+		LastAvailableAt:     util.DateTimeToRFC3339(src.LastAvailableAt),
+		ID:                  id,
+		CreatedAt:           util.DateTimeToRFC3339(src.CreatedAt),
+		UpdatedAt:           util.DateTimeToRFC3339(src.UpdatedAt),
+		PausedAt:            util.DateTimePointerToRFC3339(src.PausedAt),
+		Name:                &src.Name,
+		Uid:                 src.Uid,
+		Version:             src.Version,
+		Imported:            src.Imported,
+		SourceRef:           src.SourceRef,
+		AppCreationWorkflow: &src.AppCreationWorkflow,
+		SourceTypeId:        stid,
 	}
 }
 

@@ -1,8 +1,6 @@
 package model
 
 type EndpointResponse struct {
-	AvailabilityStatusResponse
-
 	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
@@ -17,6 +15,9 @@ type EndpointResponse struct {
 	VerifySsl               *bool   `json:"verify_ssl,omitempty"`
 	CertificateAuthority    *string `json:"certificate_authority,omitempty"`
 	ReceptorNode            *string `json:"receptor_node,omitempty"`
+	AvailabilityStatus      *string `json:"availability_status,omitempty"`
+	LastCheckedAt           string  `json:"last_checked_at,omitempty"`
+	LastAvailableAt         string  `json:"last_available_at,omitempty"`
 	AvailabilityStatusError *string `json:"availability_status_error,omitempty"`
 
 	SourceID string `json:"source_id"`
