@@ -30,12 +30,20 @@ func getLimitAndOffset(c echo.Context) (int, int, error) {
 
 	limitVal := c.Get("limit")
 	if limit, ok = limitVal.(int); !ok {
-		return 0, 0, fmt.Errorf("failed to parse limit")
+		return 0, 0, util.NewErrBadRequest("failed to parse limit")
+	}
+
+	if limit < 1 {
+		return 0, 0, util.NewErrBadRequest("limit is less than 1")
 	}
 
 	offsetVal := c.Get("offset")
 	if offset, ok = offsetVal.(int); !ok {
-		return 0, 0, fmt.Errorf("failed to parse offset")
+		return 0, 0, util.NewErrBadRequest("failed to parse offset")
+	}
+
+	if offset < 0 {
+		return 0, 0, util.NewErrBadRequest("offset is less than 0")
 	}
 
 	return limit, offset, nil
