@@ -305,6 +305,7 @@ func SourceCheckAvailability(c echo.Context) error {
 		"Applications",
 		"Applications.ApplicationType",
 		"Endpoints",
+		"Endpoints.Tenant",
 		"Tenant",
 	)
 	if err != nil {
