@@ -133,6 +133,7 @@ func AuthenticationUpdate(c echo.Context) error {
 		return err
 	}
 
+	previousStatus := auth.AvailabilityStatus
 	err = auth.UpdateFromRequest(updateRequest)
 	if err != nil {
 		return util.NewErrBadRequest(`invalid JSON given in "extra" field`)
@@ -143,6 +144,14 @@ func AuthenticationUpdate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	sourceDao := dao.GetSourceDao(authDao.Tenant())
+	source, err := sourceDao.GetById(&auth.SourceID)
+	if err != nil {
+		return err
+	}
+	auth.Source = *source
+
+	setNotificationForAvailabilityStatus(c, previousStatus, auth)
 	setEventStreamResource(c, auth)
 	return c.JSON(http.StatusOK, auth.ToResponse())
 }

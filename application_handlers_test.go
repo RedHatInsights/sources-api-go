@@ -13,11 +13,15 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/kafka"
+	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo/v4"
 )
 
@@ -482,6 +486,9 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 }
 
 func TestApplicationEdit(t *testing.T) {
+	backupNotificationProducer := service.NotificationProducer
+	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
+
 	req := m.ApplicationEditRequest{
 		Extra:                   map[string]interface{}{"thing": true},
 		AvailabilityStatus:      request.PointerToString("available"),
@@ -502,8 +509,10 @@ func TestApplicationEdit(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("accountNumber", fixtures.TestTenantData[0].ExternalTenant)
 
-	err := ApplicationEdit(c)
+	appEditHandlerWithNotifier := middleware.Notifier(ApplicationEdit)
+	err := appEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -522,6 +531,25 @@ func TestApplicationEdit(t *testing.T) {
 	if *app.AvailabilityStatus != "available" {
 		t.Errorf("Wrong availability status, wanted %v got %v", "available", *app.AvailabilityStatus)
 	}
+
+	notificationProducer, ok := service.NotificationProducer.(*mocks.MockAvailabilityStatusNotificationProducer)
+	if !ok {
+		t.Errorf("unable to cast notification producer")
+	}
+
+	emailNotificationInfo := &m.EmailNotificationInfo{ResourceDisplayName: "Application",
+		CurrentAvailabilityStatus:  "available",
+		PreviousAvailabilityStatus: "",
+		SourceName:                 fixtures.TestSourceData[0].Name,
+		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
+	}
+
+	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
+		t.Errorf("Invalid email notification data:")
+		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
+	}
+
+	service.NotificationProducer = backupNotificationProducer
 }
 
 func TestApplicationEditNotFound(t *testing.T) {

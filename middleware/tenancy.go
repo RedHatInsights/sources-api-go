@@ -42,7 +42,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			c.Set("tenantID", *t)
-
+			c.Set("accountNumber", accountNumber)
 		case c.Get("identity") != nil:
 			identity, ok := c.Get("identity").(identity.XRHID)
 			if !ok {
@@ -62,7 +62,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			c.Set("tenantID", *t)
-
+			c.Set("accountNumber", identity.Identity.AccountNumber)
 		default:
 			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}

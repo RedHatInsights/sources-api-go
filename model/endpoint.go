@@ -132,3 +132,13 @@ func (endpoint *Endpoint) UpdateFromRequest(req *EndpointEditRequest) {
 		endpoint.AvailabilityStatus = *req.AvailabilityStatus
 	}
 }
+
+func (endpoint *Endpoint) ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo {
+	return &EmailNotificationInfo{
+		SourceID:                   strconv.FormatInt(endpoint.SourceID, 10),
+		SourceName:                 endpoint.Source.Name,
+		ResourceDisplayName:        "Endpoint",
+		CurrentAvailabilityStatus:  endpoint.AvailabilityStatus,
+		PreviousAvailabilityStatus: previousStatus,
+	}
+}

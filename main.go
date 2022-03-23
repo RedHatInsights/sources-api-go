@@ -11,6 +11,7 @@ import (
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	echoMetrics "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
@@ -28,6 +29,8 @@ func main() {
 	redis.Init()
 	jobs.Init()
 	dao.Init()
+
+	service.NotificationProducer = &service.AvailabilityStatusNotifier{}
 
 	if conf.StatusListener {
 		go statuslistener.Run()

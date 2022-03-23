@@ -5,13 +5,18 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestSourceEndpointSubcollectionList(t *testing.T) {
@@ -399,6 +404,9 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 }
 
 func TestEndpointEdit(t *testing.T) {
+	backupNotificationProducer := service.NotificationProducer
+	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
+
 	req := m.EndpointEditRequest{
 		ReceptorNode:            request.PointerToString("receptor_node"),
 		Role:                    request.PointerToString("role"),
@@ -424,8 +432,10 @@ func TestEndpointEdit(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("accountNumber", fixtures.TestTenantData[0].ExternalTenant)
 
-	err := EndpointEdit(c)
+	sourceEditHandlerWithNotifier := middleware.Notifier(EndpointEdit)
+	err := sourceEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -444,6 +454,24 @@ func TestEndpointEdit(t *testing.T) {
 	if *app.AvailabilityStatus != "available" {
 		t.Errorf("Wrong availability status, wanted %v got %v", "available", *app.AvailabilityStatus)
 	}
+	notificationProducer, ok := service.NotificationProducer.(*mocks.MockAvailabilityStatusNotificationProducer)
+	if !ok {
+		t.Errorf("unable to cast notification producer")
+	}
+
+	emailNotificationInfo := &m.EmailNotificationInfo{ResourceDisplayName: "Endpoint",
+		CurrentAvailabilityStatus:  "available",
+		PreviousAvailabilityStatus: "unavailable",
+		SourceName:                 "",
+		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
+	}
+
+	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
+		t.Errorf("Invalid email notification data:")
+		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
+	}
+
+	service.NotificationProducer = backupNotificationProducer
 
 	if *app.ReceptorNode != "receptor_node" {
 		t.Errorf("Wrong receptor node, wanted %v got %v", "available", *app.AvailabilityStatus)
