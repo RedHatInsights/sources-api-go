@@ -1,4 +1,25 @@
 ---
+"/insights/platform/app-studio":
+  display_name: App Studio
+  dependent_applications: []
+  supported_source_types:
+    - bitbucket
+    - dockerhub
+    - github
+    - gitlab
+    - quay
+  supported_authentication_types:
+    bitbucket:
+      - bitbucket-app-password
+    dockerhub:
+      - docker-access-token
+    github:
+      - github-personal-access-token
+    gitlab:
+      - gitlab-personal-access-token
+    quay:
+      - quay-encrypted-password
+
 "/insights/platform/catalog":
   display_name: Automation Services Catalog
   dependent_applications: []
