@@ -2,7 +2,6 @@ package dao
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/dao/mappers"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -168,25 +167,38 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 			return err
 		}
 
-		// Try to insert an sourceRhcConnection. If it exists the database will complain.
+		// Try to insert an sourceRhcConnection, which is just the relation between a rhcConnection and a source.
 		sourceRhcConnection := m.SourceRhcConnection{
 			SourceId:        rhcConnection.Sources[0].ID,
 			RhcConnectionId: rhcConnection.ID,
 			TenantId:        *s.TenantID,
 		}
 
-		result := tx.Debug().
-			FirstOrCreate(&sourceRhcConnection)
+		// Check if it exists first.
+		var relationExists bool
+		err = tx.Debug().
+			Model(&m.SourceRhcConnection{}).
+			Select(`1`).
+			Where(`source_id = ?`, sourceRhcConnection.SourceId).
+			Where(`rhc_connection_id = ?`, sourceRhcConnection.RhcConnectionId).
+			Where(`tenant_id = ?`, sourceRhcConnection.TenantId).
+			Scan(&relationExists).
+			Error
+		if err != nil {
+			return err
+		}
 
-		// if the rows effected is 0 it was already there, e.g. the rhc
-		// connection is already attached to the source. This request was a bad
-		// request in this case.
-		if result.RowsAffected == 0 {
+		// If it exists, we let the client know. If it doesn't, we attempt to create it.
+		if relationExists {
 			return util.NewErrBadRequest("connection already exists")
 		}
 
-		if result.Error != nil {
-			return fmt.Errorf("cannot link red hat connection to source: %w", result.Error)
+		err = tx.
+			Debug().
+			Create(&sourceRhcConnection).
+			Error
+		if err != nil {
+			return err
 		}
 
 		return nil

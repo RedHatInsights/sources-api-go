@@ -11,7 +11,8 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/iancoleman/strcase v0.2.0
-	github.com/jackc/pgx/v4 v4.11.0
+	github.com/jackc/pgx/v4 v4.15.0
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/labstack/gommon v0.3.1
@@ -23,8 +24,9 @@ require (
 	github.com/segmentio/kafka-go v0.4.25
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.0
+	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
 	gorm.io/datatypes v1.0.1
-	gorm.io/driver/postgres v1.1.0
-	gorm.io/gorm v1.21.11
+	gorm.io/driver/postgres v1.3.1
+	gorm.io/gorm v1.23.2
 	sigs.k8s.io/yaml v1.3.0
 )
