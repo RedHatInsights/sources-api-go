@@ -26,7 +26,7 @@ type ApplicationAuthentication struct {
 	// TODO: fix correctly PR#40
 	AuthenticationID int64 `json:"authentication_id"`
 
-	AuthenticationUID string `json:"-" gorm:"-"`
+	AuthenticationUID string `json:"-"`
 }
 
 func (aa *ApplicationAuthentication) ToEvent() interface{} {
