@@ -166,6 +166,16 @@ func (auth *Authentication) Path() string {
 	return fmt.Sprintf("secret/data/%d/%s_%v_%s", auth.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 }
 
+func (auth *Authentication) ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo {
+	return &EmailNotificationInfo{
+		ResourceDisplayName:        "Authentication",
+		CurrentAvailabilityStatus:  auth.AvailabilityStatus,
+		PreviousAvailabilityStatus: previousStatus,
+		SourceName:                 auth.Source.Name,
+		SourceID:                   strconv.FormatInt(auth.SourceID, 10),
+	}
+}
+
 // mapIdExtraFields returns the ID and the Extra fields ready to be assigned to the response model, depending on
 func mapIdExtraFields(auth *Authentication) (string, map[string]interface{}) {
 	var id string

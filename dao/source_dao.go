@@ -206,13 +206,19 @@ func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interfac
 	return BulkMessageFromSource(&src, authentication)
 }
 
-func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
 	result := DB.Debug().Model(&m.Source{ID: resource.ResourceID}).Updates(updateAttributes)
+
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("source not found %v", resource)
+		return nil, fmt.Errorf("source not found %v", resource)
 	}
 
-	return nil
+	source, err := s.GetById(&resource.ResourceID)
+	if err != nil {
+		return nil, err
+	}
+
+	return source, nil
 }
 
 func (s *sourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {

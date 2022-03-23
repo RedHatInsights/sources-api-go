@@ -5,7 +5,7 @@ type EmailNotificationInfoInterface interface {
 }
 
 type EmailNotificationInfo struct {
-	ResourceDisplayName        string `json:"resource_type"`
+	ResourceDisplayName        string `json:"resource_display_name"`
 	CurrentAvailabilityStatus  string `json:"current_availability_status"`
 	PreviousAvailabilityStatus string `json:"previous_availability_status"`
 	SourceID                   string `json:"source_id"`

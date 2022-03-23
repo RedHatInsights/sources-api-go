@@ -570,19 +570,30 @@ func (a *authenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]
 	return BulkMessageFromSource(&authentication.Source, authentication)
 }
 
-func (a *authenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+func (a *authenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
 	a.TenantID = &resource.TenantID
 	authentication, err := a.GetById(resource.ResourceUID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = authentication.UpdateBy(updateAttributes)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	err = a.Update(authentication)
+	if err != nil {
+		return nil, err
 	}
 
-	return a.Update(authentication)
+	sourceDao := GetSourceDao(a.TenantID)
+	source, err := sourceDao.GetById(&authentication.SourceID)
+	if err != nil {
+		return nil, err
+	}
+	authentication.Source = *source
+
+	return authentication, nil
 }
 
 func (a *authenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {

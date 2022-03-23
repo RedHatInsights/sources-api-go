@@ -651,7 +651,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 	}
 
 	// Call the function under test.
-	err = dao.FetchAndUpdateBy(resource, attributes)
+	_, err = dao.FetchAndUpdateBy(resource, attributes)
 	if err != nil {
 		t.Errorf(`error with "FetchAndUpdateBy" function: %s`, err)
 	}

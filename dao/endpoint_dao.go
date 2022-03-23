@@ -77,6 +77,19 @@ func (a *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 	return endpoints, count, nil
 }
 
+// Function that searches for an application and preloads any specified relations
+func (a *endpointDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Endpoint, error) {
+	app := &m.Endpoint{ID: *id}
+	q := DB.Where("tenant_id = ?", a.TenantID)
+
+	for _, preload := range preloads {
+		q = q.Preload(preload)
+	}
+
+	result := q.First(&app)
+	return app, result.Error
+}
+
 func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 	app := &m.Endpoint{ID: *id}
 	result := DB.Debug().First(&app)
@@ -160,13 +173,20 @@ func (a *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interf
 	return BulkMessageFromSource(&endpoint.Source, authentication)
 }
 
-func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
 	result := DB.Debug().Model(&m.Endpoint{ID: resource.ResourceID}).Updates(updateAttributes)
+
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("endpoint not found %v", resource)
+		return nil, fmt.Errorf("endpoint not found %v", resource)
 	}
 
-	return nil
+	a.TenantID = &resource.TenantID
+	endpoint, err := a.GetByIdWithPreload(&resource.ResourceID, "Source")
+	if err != nil {
+		return nil, err
+	}
+
+	return endpoint, nil
 }
 
 func (a *endpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
