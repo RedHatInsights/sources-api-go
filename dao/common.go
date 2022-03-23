@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 const (
@@ -28,6 +29,49 @@ func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	}
 
 	return &resource, nil
+}
+
+func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, resourceType string) (string, error) {
+	switch resourceType {
+	case "Source":
+		recordID, err := util.InterfaceToInt64(resourceID)
+		if err != nil {
+			return "", err
+		}
+		resource, err := GetSourceDao(&tenantID).GetById(&recordID)
+		if err != nil {
+			return "", err
+		}
+		return resource.AvailabilityStatus, err
+	case "Endpoint":
+		recordID, err := util.InterfaceToInt64(resourceID)
+		if err != nil {
+			return "", err
+		}
+		resource, err := GetEndpointDao(&tenantID).GetById(&recordID)
+		if err != nil {
+			return "", err
+		}
+		return resource.AvailabilityStatus, err
+	case "Application":
+		recordID, err := util.InterfaceToInt64(resourceID)
+		if err != nil {
+			return "", err
+		}
+		resource, err := GetApplicationDao(&tenantID).GetById(&recordID)
+		if err != nil {
+			return "", err
+		}
+		return resource.AvailabilityStatus, err
+	case "Authentication":
+		resource, err := GetAuthenticationDao(&tenantID).GetById(resourceID)
+		if err != nil {
+			return "", err
+		}
+		return resource.AvailabilityStatus, err
+	default:
+		return "", fmt.Errorf("invalid resource_type (%s) to get DAO instance", resourceType)
+	}
 }
 
 /*

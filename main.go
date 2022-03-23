@@ -33,6 +33,7 @@ func main() {
 	service.NotificationProducer = &service.AvailabilityStatusNotifier{}
 
 	if conf.StatusListener {
+		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
 		go statuslistener.Run()
 	} else {
 		// launch 2 listeners - one for metrics and one for the actual application,

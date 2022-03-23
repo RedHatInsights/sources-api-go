@@ -14,7 +14,7 @@ type Event interface {
 
 type EventModelDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
-	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
+	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error)
 	ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
