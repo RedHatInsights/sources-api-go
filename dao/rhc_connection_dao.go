@@ -191,14 +191,14 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 		// If it exists, we let the client know. If it doesn't, we attempt to create it.
 		if relationExists {
 			return util.NewErrBadRequest("connection already exists")
-		} else {
-			err = tx.
-				Debug().
-				Create(&sourceRhcConnection).
-				Error
-			if err != nil {
-				return err
-			}
+		}
+
+		err = tx.
+			Debug().
+			Create(&sourceRhcConnection).
+			Error
+		if err != nil {
+			return err
 		}
 
 		return nil
