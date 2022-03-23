@@ -3,6 +3,7 @@ package dao
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
@@ -426,6 +427,12 @@ func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
 func (a *MockApplicationDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
 	for _, app := range a.Applications {
 		if app.ID == *id {
+			for _, preload := range preloads {
+				if strings.Contains(strings.ToLower(preload), "source") {
+					app.Source = fixtures.TestSourceData[0]
+				}
+			}
+
 			return &app, nil
 		}
 	}

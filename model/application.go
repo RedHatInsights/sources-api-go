@@ -111,3 +111,13 @@ func (app *Application) UpdateFromRequest(req *ApplicationEditRequest) {
 		app.LastCheckedAt = &t
 	}
 }
+
+func (app *Application) ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo {
+	return &EmailNotificationInfo{
+		SourceID:                   strconv.FormatInt(app.SourceID, 10),
+		SourceName:                 app.Source.Name,
+		ResourceDisplayName:        "Application",
+		CurrentAvailabilityStatus:  app.AvailabilityStatus,
+		PreviousAvailabilityStatus: previousStatus,
+	}
+}

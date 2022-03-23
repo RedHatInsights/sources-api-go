@@ -151,17 +151,19 @@ func ApplicationEdit(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	app, err := applicationDB.GetByIdWithPreload(&id, "Tenant")
+	app, err := applicationDB.GetByIdWithPreload(&id, "Tenant", "Source")
 	if err != nil {
-		return err
+		return util.NewErrNotFound("application")
 	}
 
+	previousStatus := app.AvailabilityStatus
 	app.UpdateFromRequest(input)
 	err = applicationDB.Update(app)
 	if err != nil {
 		return err
 	}
 
+	setNotificationForAvailabilityStatus(c, previousStatus, app)
 	setEventStreamResource(c, app)
 
 	// for this model we ONLY raise the update for superkey sources once the

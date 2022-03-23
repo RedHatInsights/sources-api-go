@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"io"
 	"net/http"
 	"strconv"
@@ -11,11 +12,16 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
+
+	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestAuthenticationList(t *testing.T) {
@@ -251,6 +257,11 @@ func TestAuthenticationCreateBadRequest(t *testing.T) {
 }
 
 func TestAuthenticationEdit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	backupNotificationProducer := service.NotificationProducer
+	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
+
 	newAvailabilityStatus := "new status"
 
 	requestBody := m.AuthenticationEditRequest{
@@ -279,8 +290,10 @@ func TestAuthenticationEdit(t *testing.T) {
 		c.SetParamValues(id)
 	}
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("accountNumber", fixtures.TestTenantData[0].ExternalTenant)
 
-	err = AuthenticationEdit(c)
+	authEditHandlerWithNotifier := middleware.Notifier(AuthenticationEdit)
+	err = authEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,6 +312,25 @@ func TestAuthenticationEdit(t *testing.T) {
 	if auth.AvailabilityStatus != newAvailabilityStatus {
 		t.Errorf("Wrong availability status, wanted %v got %v", newAvailabilityStatus, auth.AvailabilityStatus)
 	}
+
+	notificationProducer, ok := service.NotificationProducer.(*mocks.MockAvailabilityStatusNotificationProducer)
+	if !ok {
+		t.Errorf("unable to cast notification producer")
+	}
+
+	emailNotificationInfo := &m.EmailNotificationInfo{ResourceDisplayName: "Authentication",
+		CurrentAvailabilityStatus:  newAvailabilityStatus,
+		PreviousAvailabilityStatus: "",
+		SourceName:                 fixtures.TestSourceData[0].Name,
+		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
+	}
+
+	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
+		t.Errorf("Invalid email notification data:")
+		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
+	}
+
+	service.NotificationProducer = backupNotificationProducer
 }
 
 func TestAuthenticationEditNotFound(t *testing.T) {

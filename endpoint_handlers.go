@@ -186,12 +186,14 @@ func EndpointEdit(c echo.Context) error {
 		return err
 	}
 
+	previousStatus := endpoint.AvailabilityStatus
 	endpoint.UpdateFromRequest(input)
 	err = endpointDao.Update(endpoint)
 	if err != nil {
 		return err
 	}
 
+	setNotificationForAvailabilityStatus(c, previousStatus, endpoint)
 	setEventStreamResource(c, endpoint)
 
 	return c.JSON(http.StatusOK, endpoint.ToResponse())
