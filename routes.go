@@ -100,6 +100,9 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
 	}
 
+	// GraphQL
+	v3.POST("/graphql", ProxyGraphqlToLegacySources)
+
 	/**            **\
 	 * Internal API *
 	\**            **/
