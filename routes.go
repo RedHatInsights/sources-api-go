@@ -94,6 +94,9 @@ func setupRoutes(e *echo.Echo) {
 	v3.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
 	v3.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
 
+	// GraphQL
+	v3.POST("/graphql", ProxyGraphqlToLegacySources)
+
 	/**            **\
 	 * Internal API *
 	\**            **/
