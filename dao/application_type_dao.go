@@ -130,7 +130,8 @@ func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSourceType(appTyp
 	// datatypes.JsonQuery("application_types.supported_source_types") but that
 	// doesn't work when we're specifying something joined in, in this case
 	// "source_types.name"
-	result := DB.Select("application_types.*").
+	result := DB.Debug().
+		Select("application_types.*").
 		Joins("LEFT JOIN source_types ON source_types.id = ?", sourceTypeId).
 		Where("application_types.id = ?", appTypeId).
 		Where("application_types.supported_source_types::jsonb ? source_types.name").
@@ -147,7 +148,8 @@ func (at *applicationTypeDaoImpl) GetSuperKeyResultType(applicationTypeId int64,
 	//
 	// the short story is that we're pulling the `authType` key out of the
 	// supportedAuthenticationTypes which is an array and then plucking index 0
-	result := DB.Model(&m.ApplicationType{Id: applicationTypeId}).
+	result := DB.Debug().
+		Model(&m.ApplicationType{Id: applicationTypeId}).
 		Select("application_types.supported_authentication_types::json -> ? ->> 0", authType).
 		Scan(&resultType)
 
