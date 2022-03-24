@@ -237,7 +237,7 @@ bitbucket:
             name: authentication.password
             label: App password for the Bitbucket account
 dockerhub:
-  prodcut_name: Docker Hub
+  product_name: Docker Hub
   vendor: Docker
   schema:
     authentication:
