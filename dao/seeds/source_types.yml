@@ -293,7 +293,27 @@ gitlab:
           - component: text-field
             name: authentication.password
             label: Personal Acces Token for the GitLab account
-
+oracle-cloud-infrastructure:
+  product_name: Oracle Cloud Infrastructure
+  vendor: Oracle
+  schema:
+    authentication:
+      - type: ocid
+        name: Oracle Cloud ID (OCID)
+        fields:
+          - component: text-field
+            hideField: true
+            initializeOnMount: true
+            initialValue: ocid
+            name: authentication.authtype
+          - component: text-field
+            isRequired: true
+            label: Oracle Cloud ID (OCID)
+            name: authentication.username
+            validate:
+              - type: required
+              - type: pattern
+                pattern: "^ocid1\\..*"
 openshift:
   product_name: Red Hat OpenShift Container Platform
   schema:
