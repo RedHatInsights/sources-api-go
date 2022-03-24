@@ -369,3 +369,66 @@ func TestRhcConnectionRowsClosed(t *testing.T) {
 
 	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
 }
+
+// TestDeleteRhcConnection tests that an rhcConnection gets correctly deleted, and its data returned.
+func TestDeleteRhcConnection(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("delete")
+
+	rhcConnection := fixtures.TestRhcConnectionData[0]
+	// Set the ID to 0 to let GORM know it should insert a new rhcConnection and not update an existing one.
+	rhcConnection.ID = 0
+	// Set the required source for the create operation to work.
+	rhcConnection.Sources = []model.Source{{ID: fixtures.TestSourceData[2].ID}}
+	// Set some data to compare the returned rhcConnection.
+	rhcConnection.Extra = []byte(`{"hello": "world"}`)
+
+	// Create the test rhcConnection.
+	_, err := rhcConnectionDao.Create(&rhcConnection)
+	if err != nil {
+		t.Errorf("error creating rhcConnection: %s", err)
+	}
+
+	deletedDbRhcConnection, err := rhcConnectionDao.Delete(&rhcConnection.ID)
+	if err != nil {
+		t.Errorf("error deleting an rhcConnection: %s", err)
+	}
+
+	{
+		want := rhcConnection.ID
+		got := deletedDbRhcConnection.ID
+
+		if want != got {
+			t.Errorf(`incorrect rhcConnection deleted. Want id "%d", got "%d"`, want, got)
+		}
+	}
+
+	{
+		want := rhcConnection.Extra
+		got := deletedDbRhcConnection.Extra
+
+		if !bytes.Equal(want, got) {
+			t.Errorf(`incorrect rhcConnection deleted. Want "%s" in the extra field, got "%s"`, want, got)
+		}
+	}
+
+	DoneWithFixtures("delete")
+}
+
+// TestDeleteRhcConnectionNotExists tests that when an rhcConnection that doesn't exist is tried to be deleted, an
+// error is returned.
+func TestDeleteRhcConnectionNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("delete")
+
+	RhcConnectionDao := GetRhcConnectionDao(&fixtures.TestSourceData[0].TenantID)
+
+	nonExistentId := int64(12345)
+	_, err := RhcConnectionDao.Delete(&nonExistentId)
+
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
+	}
+
+	DoneWithFixtures("delete")
+}

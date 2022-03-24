@@ -6,6 +6,7 @@ import (
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm/clause"
 )
 
 // GetEndpointDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -99,17 +100,24 @@ func (a *endpointDaoImpl) Update(app *m.Endpoint) error {
 }
 
 func (a *endpointDaoImpl) Delete(id *int64) (*m.Endpoint, error) {
-	endpt := &m.Endpoint{ID: *id}
-	result := DB.Where("tenant_id = ?", a.TenantID).First(&endpt)
+	var endpoint m.Endpoint
+
+	result := DB.
+		Debug().
+		Clauses(clause.Returning{}).
+		Where("id = ?", id).
+		Where("tenant_id = ?", a.TenantID).
+		Delete(&endpoint)
+
 	if result.Error != nil {
+		return nil, fmt.Errorf(`failed to delete endpoint with id "%d": %s`, id, result.Error)
+	}
+
+	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("endpoint")
 	}
 
-	if result := DB.Delete(endpt); result.Error != nil {
-		return nil, fmt.Errorf("failed to delete endpoint id %v", *id)
-	}
-
-	return endpt, nil
+	return &endpoint, nil
 }
 
 func (a *endpointDaoImpl) Tenant() *int64 {

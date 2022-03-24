@@ -7,6 +7,7 @@ import (
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm/clause"
 )
 
 // GetApplicationDao is a function definition that can be replaced in runtime in case some other DAO
@@ -110,17 +111,24 @@ func (a *applicationDaoImpl) Update(app *m.Application) error {
 }
 
 func (a *applicationDaoImpl) Delete(id *int64) (*m.Application, error) {
-	app := &m.Application{ID: *id}
-	result := DB.Where("tenant_id = ?", a.TenantID).First(app)
+	var application m.Application
+
+	result := DB.
+		Debug().
+		Clauses(clause.Returning{}).
+		Where("id = ?", id).
+		Where("tenant_id = ?", a.TenantID).
+		Delete(&application)
+
 	if result.Error != nil {
+		return nil, fmt.Errorf(`failed to delete application with id "%d": %s`, id, result.Error)
+	}
+
+	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("application")
 	}
 
-	if result := DB.Delete(app); result.Error != nil {
-		return nil, fmt.Errorf("failed to delete application id %v", *id)
-	}
-
-	return app, nil
+	return &application, nil
 }
 
 func (a *applicationDaoImpl) Tenant() *int64 {

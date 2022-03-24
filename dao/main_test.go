@@ -77,12 +77,14 @@ func CreateFixtures(schema string) {
 	DB.Create(&fixtures.TestSourceTypeData)
 
 	DB.Create(&fixtures.TestSourceData)
+	DB.Create(&fixtures.TestEndpointData)
 
 	DB.Create(&fixtures.TestRhcConnectionData)
 	DB.Create(&fixtures.TestSourceRhcConnectionData)
 
 	DB.Create(&fixtures.TestApplicationTypeData)
 	DB.Create(&fixtures.TestApplicationData)
+	DB.Create(&fixtures.TestApplicationAuthenticationData)
 
 	UpdateTablesSequences(schema)
 }
@@ -111,9 +113,11 @@ func MigrateSchema() {
 		&m.MetaData{},
 
 		&m.Source{},
+		&m.Endpoint{},
 		&m.RhcConnection{},
 		&m.SourceRhcConnection{},
 		&m.Application{},
+		&m.ApplicationAuthentication{},
 	)
 
 	if err != nil {
@@ -158,6 +162,10 @@ func UpdateTablesSequences(schema string) {
 		"source_types",
 		"rhc_connections",
 		"tenants",
+		"applications",
+		"endpoints",
+		"rhc_connections",
+		"application_authentications",
 	}
 
 	for _, table := range tables {

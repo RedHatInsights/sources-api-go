@@ -8,6 +8,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // GetSourceDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -147,17 +148,24 @@ func (s *sourceDaoImpl) Update(src *m.Source) error {
 }
 
 func (s *sourceDaoImpl) Delete(id *int64) (*m.Source, error) {
-	src := &m.Source{ID: *id}
-	result := DB.Where("tenant_id = ?", s.TenantID).First(src)
+	var source m.Source
+
+	result := DB.
+		Debug().
+		Clauses(clause.Returning{}).
+		Where("id = ?", id).
+		Where("tenant_id = ?", s.TenantID).
+		Delete(&source)
+
 	if result.Error != nil {
+		return nil, fmt.Errorf(`failed to source endpoint with id "%d": %s`, id, result.Error)
+	}
+
+	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("source")
 	}
 
-	if result := DB.Delete(src); result.Error != nil {
-		return nil, fmt.Errorf("failed to delete source id %v", *id)
-	}
-
-	return src, nil
+	return &source, nil
 }
 
 func (s *sourceDaoImpl) Tenant() *int64 {
