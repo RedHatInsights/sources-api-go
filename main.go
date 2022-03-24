@@ -1,8 +1,6 @@
 package main
 
 import (
-	"flag"
-
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
@@ -20,14 +18,6 @@ var conf = config.Get()
 
 func main() {
 	logging.InitLogger(conf)
-
-	setUpDatabase := flag.Bool("setup", false, "create the schema and run the migrations")
-	resetDatabase := flag.Bool("reset", false, "drop the schema, recreate it and run the migrations")
-
-	flag.Parse()
-
-	conf.MigrationsSetup = *setUpDatabase
-	conf.MigrationsReset = *resetDatabase
 
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
 	// a time can run the migrations.

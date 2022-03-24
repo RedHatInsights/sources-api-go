@@ -111,6 +111,8 @@ func Get() *SourcesApiConfig {
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
 	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
 	availabilityListener := fs.Bool("listener", false, "run availability status listener")
+	setUpDatabase := fs.Bool("setup", false, "create the schema and run the migrations")
+	resetDatabase := fs.Bool("reset", false, "drop the schema, recreate it and run the migrations")
 
 	err := fs.Parse(os.Args[1:])
 	if err != nil {
@@ -118,6 +120,8 @@ func Get() *SourcesApiConfig {
 	}
 
 	options.SetDefault("StatusListener", *availabilityListener)
+	options.SetDefault("MigrationsSetup", *setUpDatabase)
+	options.SetDefault("MigrationsReset", *resetDatabase)
 
 	// Hostname
 	hostname, err := os.Hostname()
@@ -158,6 +162,8 @@ func Get() *SourcesApiConfig {
 		Psks:                      options.GetStringSlice("psks"),
 		BypassRbac:                options.GetBool("BypassRbac"),
 		StatusListener:            options.GetBool("StatusListener"),
+		MigrationsSetup:           options.GetBool("MigrationsSetup"),
+		MigrationsReset:           options.GetBool("MigrationsReset"),
 	}
 
 	return parsedConfig
