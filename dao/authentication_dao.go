@@ -362,13 +362,44 @@ func (a *authenticationDaoImpl) Delete(uid string) (*m.Authentication, error) {
 	for _, key := range keys {
 		if strings.HasSuffix(key, uid) {
 			path := fmt.Sprintf("secret/metadata/%d/%s", *a.TenantID, key)
-			sec, err := Vault.Delete(path)
+			// fetch the key (for returning)
+			sec, _ := a.getKey(key)
+			// ...then delete it
+			_, err := Vault.Delete(path)
 
-			return authFromVault(sec), err
+			return sec, err
 		}
 	}
 
 	return nil, util.NewErrNotFound("authentication")
+}
+
+// Deletes all authentications for a parent resource. Sources are handled
+// differently than other parent resources mostly due to the cascade effect from
+// a source delete
+func (a *authenticationDaoImpl) Cleanup(resourceType string, resourceID int64) error {
+	resourceType = util.Capitalize(resourceType)
+
+	auths, _, err := a.List(100, 0, []util.Filter{})
+	if err != nil {
+		return err
+	}
+
+	for _, auth := range auths {
+		if resourceType == "Source" && resourceID == auth.SourceID {
+			_, err := a.Delete(auth.ID)
+			if err != nil {
+				logging.Log.Warnf("Failed to delete authentication %v", auth.ID)
+			}
+		} else if auth.ResourceID == resourceID && auth.ResourceType == resourceType {
+			_, err := a.Delete(auth.ID)
+			if err != nil {
+				logging.Log.Warnf("Failed to delete authentication %v", auth.ID)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (a *authenticationDaoImpl) Tenant() *int64 {

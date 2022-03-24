@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -17,7 +18,7 @@ var VaultPath = []string{fmt.Sprintf("Application_%d_%v", fixtures.TestTenantDat
 
 func (m *MockVault) Read(path string) (*api.Secret, error) {
 	if path != fmt.Sprintf("secret/data/%d/%v", fixtures.TestTenantData[0].Id, VaultPath[0]) {
-		return nil, nil
+		return nil, errors.New("boom")
 	}
 
 	secret := &api.Secret{}

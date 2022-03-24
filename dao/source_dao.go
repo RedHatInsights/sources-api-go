@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
@@ -163,6 +164,11 @@ func (s *sourceDaoImpl) Delete(id *int64) (*m.Source, error) {
 
 	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("source")
+	}
+
+	err := GetAuthenticationDao(s.TenantID).Cleanup("Source", *id)
+	if err != nil {
+		l.Log.Warnf("error cleaning up authentications: %v", err)
 	}
 
 	return &source, nil

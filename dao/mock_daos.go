@@ -692,6 +692,10 @@ func (m MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
 	return nil, util.NewErrNotFound("authentication")
 }
 
+func (m MockAuthenticationDao) Cleanup(rt string, rid int64) error {
+	panic("implement me")
+}
+
 func (m MockAuthenticationDao) Tenant() *int64 {
 	panic("implement me")
 }

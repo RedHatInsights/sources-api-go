@@ -66,6 +66,7 @@ type AuthenticationDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
 	ToEventJSON(resource util.Resource) ([]byte, error)
+	Cleanup(string, int64) error
 }
 
 type ApplicationAuthenticationDao interface {

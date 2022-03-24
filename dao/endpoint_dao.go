@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm/clause"
@@ -115,6 +116,11 @@ func (a *endpointDaoImpl) Delete(id *int64) (*m.Endpoint, error) {
 
 	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("endpoint")
+	}
+
+	err := GetAuthenticationDao(a.TenantID).Cleanup("Endpoint", *id)
+	if err != nil {
+		l.Log.Warnf("error cleaning up authentications: %v", err)
 	}
 
 	return &endpoint, nil

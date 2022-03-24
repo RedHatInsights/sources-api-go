@@ -49,8 +49,6 @@ func TestMain(t *testing.M) {
 		getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
 		getAuthenticationDao = getAuthenticationDaoWithTenant
 
-		dao.Vault = &mocks.MockVault{}
-
 		// Set up marketplace's token management functions
 		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
 
@@ -83,6 +81,8 @@ func TestMain(t *testing.M) {
 		getAuthenticationDao = func(c echo.Context) (dao.AuthenticationDao, error) { return mockAuthenticationDao, nil }
 
 	}
+
+	dao.Vault = &mocks.MockVault{}
 
 	code := t.Run()
 
