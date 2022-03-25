@@ -104,8 +104,7 @@ func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthenti
 	if err != nil {
 		return util.NewErrBadRequest("failed to create application_authentication: " + err.Error())
 	}
-
-	return nil
+	return err
 }
 
 func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {

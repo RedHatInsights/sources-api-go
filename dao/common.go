@@ -2,6 +2,7 @@ package dao
 
 import (
 	"fmt"
+	"strings"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
@@ -13,14 +14,14 @@ const (
 
 func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 	var resource m.EventModelDao
-	switch resourceType {
-	case "Source":
+	switch strings.ToLower(resourceType) {
+	case "source":
 		resource = GetSourceDao(nil)
-	case "Endpoint":
+	case "endpoint":
 		resource = GetEndpointDao(nil)
-	case "Application":
+	case "application":
 		resource = GetApplicationDao(nil)
-	case "Authentication":
+	case "authentication":
 		resource = GetAuthenticationDao(nil)
 	default:
 		return nil, fmt.Errorf("invalid resource_type (%s) to get DAO instance", resourceType)

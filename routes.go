@@ -25,6 +25,9 @@ func setupRoutes(e *echo.Echo) {
 	//openapi
 	v3.GET("/openapi.json", PublicOpenApiv31)
 
+	// Bulk Create
+	v3.POST("/bulk_create", BulkCreate, permissionMiddleware...)
+
 	// Sources
 	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)
 	v3.GET("/sources/:id", SourceGet, middleware.Tenancy)

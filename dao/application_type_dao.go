@@ -5,7 +5,6 @@ import (
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"gorm.io/datatypes"
 )
 
 // GetApplicationTypeDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -92,6 +91,13 @@ func (a *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) 
 	return appType, nil
 }
 
+func (a *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, error) {
+	apptype := &m.ApplicationType{}
+	result := DB.Debug().Where("name LIKE ?", "%"+name+"%").First(&apptype)
+
+	return apptype, result.Error
+}
+
 func (a *applicationTypeDaoImpl) Create(_ *m.ApplicationType) error {
 	panic("not needed (yet) due to seeding.")
 }
@@ -105,18 +111,31 @@ func (a *applicationTypeDaoImpl) Delete(_ *int64) error {
 }
 
 func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error {
+	// Looks up the source ID and then compare's the source-type's name with the
+	// application type's supported source types
 	source := m.Source{ID: sourceId}
 	result := DB.Preload("SourceType").Find(&source)
 	if result.Error != nil {
 		return fmt.Errorf("source not found")
 	}
 
+	return at.ApplicationTypeCompatibleWithSourceType(typeId, source.SourceType.Id)
+}
+
+func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSourceType(appTypeId, sourceTypeId int64) error {
 	// searching for the application type that has the source type's name in its
 	// supported source types column.
-	result = DB.First(
-		&m.ApplicationType{Id: typeId},
-		datatypes.JSONQuery("supported_source_types").HasKey(source.SourceType.Name),
-	)
+	//
+	// initially i tried to use the
+	// datatypes.JsonQuery("application_types.supported_source_types") but that
+	// doesn't work when we're specifying something joined in, in this case
+	// "source_types.name"
+	result := DB.Debug().
+		Select("application_types.*").
+		Joins("LEFT JOIN source_types ON source_types.id = ?", sourceTypeId).
+		Where("application_types.id = ?", appTypeId).
+		Where("application_types.supported_source_types::jsonb ? source_types.name").
+		First(&m.ApplicationType{})
 
 	return result.Error
 }
@@ -129,7 +148,8 @@ func (at *applicationTypeDaoImpl) GetSuperKeyResultType(applicationTypeId int64,
 	//
 	// the short story is that we're pulling the `authType` key out of the
 	// supportedAuthenticationTypes which is an array and then plucking index 0
-	result := DB.Model(&m.ApplicationType{Id: applicationTypeId}).
+	result := DB.Debug().
+		Model(&m.ApplicationType{Id: applicationTypeId}).
 		Select("application_types.supported_authentication_types::json -> ? ->> 0", authType).
 		Scan(&resultType)
 

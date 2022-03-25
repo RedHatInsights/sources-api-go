@@ -58,6 +58,7 @@ type AuthenticationDao interface {
 	ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	Create(src *m.Authentication) error
+	BulkCreate(src *m.Authentication) error
 	Update(src *m.Authentication) error
 	Delete(id string) (*m.Authentication, error)
 	Tenant() *int64
@@ -86,6 +87,8 @@ type ApplicationTypeDao interface {
 	Delete(id *int64) error
 	ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error
 	GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error)
+	ApplicationTypeCompatibleWithSourceType(appTypeId, sourceTypeId int64) error
+	GetByName(name string) (*m.ApplicationType, error)
 }
 
 type EndpointDao interface {
@@ -122,6 +125,7 @@ type SourceTypeDao interface {
 	Create(src *m.SourceType) error
 	Update(src *m.SourceType) error
 	Delete(id *int64) error
+	GetByName(name string) (*m.SourceType, error)
 }
 
 type VaultClient interface {

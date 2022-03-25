@@ -41,6 +41,7 @@ type Source struct {
 	ApplicationTypes []*ApplicationType `gorm:"many2many:applications"`
 	Applications     []Application
 	Endpoints        []Endpoint
+	Authentications  []Authentication `gorm:"-"`
 }
 
 func (src *Source) ToEvent() interface{} {
