@@ -54,7 +54,6 @@ type ComplexityRoot struct {
 		AvailabilityStatusError func(childComplexity int) int
 		ID                      func(childComplexity int) int
 		PausedAt                func(childComplexity int) int
-		Source                  func(childComplexity int) int
 		TenantID                func(childComplexity int) int
 	}
 
@@ -81,13 +80,12 @@ type ComplexityRoot struct {
 		ReceptorNode            func(childComplexity int) int
 		Role                    func(childComplexity int) int
 		Scheme                  func(childComplexity int) int
-		Source                  func(childComplexity int) int
 		TenantID                func(childComplexity int) int
 		VerifySsl               func(childComplexity int) int
 	}
 
 	Query struct {
-		Sources func(childComplexity int) int
+		Sources func(childComplexity int, limit *int, offset *int) int
 	}
 
 	Source struct {
@@ -112,7 +110,6 @@ type ComplexityRoot struct {
 
 type ApplicationResolver interface {
 	ID(ctx context.Context, obj *model.Application) (string, error)
-
 	ApplicationTypeID(ctx context.Context, obj *model.Application) (string, error)
 	AvailabilityStatus(ctx context.Context, obj *model.Application) (*string, error)
 
@@ -134,7 +131,7 @@ type EndpointResolver interface {
 	TenantID(ctx context.Context, obj *model.Endpoint) (string, error)
 }
 type QueryResolver interface {
-	Sources(ctx context.Context) ([]model.Source, error)
+	Sources(ctx context.Context, limit *int, offset *int) ([]*model.Source, error)
 }
 type SourceResolver interface {
 	ID(ctx context.Context, obj *model.Source) (string, error)
@@ -205,13 +202,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Application.PausedAt(childComplexity), true
-
-	case "Application.source":
-		if e.complexity.Application.Source == nil {
-			break
-		}
-
-		return e.complexity.Application.Source(childComplexity), true
 
 	case "Application.tenant_id":
 		if e.complexity.Application.TenantID == nil {
@@ -353,13 +343,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Endpoint.Scheme(childComplexity), true
 
-	case "Endpoint.source":
-		if e.complexity.Endpoint.Source == nil {
-			break
-		}
-
-		return e.complexity.Endpoint.Source(childComplexity), true
-
 	case "Endpoint.tenant_id":
 		if e.complexity.Endpoint.TenantID == nil {
 			break
@@ -379,7 +362,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Sources(childComplexity), true
+		args, err := ec.field_Query_sources_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Sources(childComplexity, args["limit"].(*int), args["offset"].(*int)), true
 
 	case "Source.app_creation_workflow":
 		if e.complexity.Source.AppCreationWorkflow == nil {
@@ -554,7 +542,7 @@ var sources = []*ast.Source{
 scalar Time
 
 type Query {
-  sources: [Source!]!
+  sources(limit: Int, offset: Int): [Source!]!
 }
 
 type Source {
@@ -579,7 +567,6 @@ type Source {
 
 type Endpoint {
   id: ID!
-  source: Source
 
   scheme: String
   host: String
@@ -598,7 +585,6 @@ type Endpoint {
 
 type Application {
   id: ID!
-  source: Source
 
   application_type_id: String!
   availability_status: String
@@ -640,6 +626,30 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_sources_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
 	return args, nil
 }
 
@@ -714,38 +724,6 @@ func (ec *executionContext) _Application_id(ctx context.Context, field graphql.C
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Application_source(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Application",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(model.Source)
-	fc.Result = res
-	return ec.marshalOSource2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Application_application_type_id(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
@@ -1258,38 +1236,6 @@ func (ec *executionContext) _Endpoint_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_source(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Endpoint",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(model.Source)
-	fc.Result = res
-	return ec.marshalOSource2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Endpoint_scheme(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1696,9 +1642,16 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_sources_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Sources(rctx)
+		return ec.resolvers.Query().Sources(rctx, args["limit"].(*int), args["offset"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1710,9 +1663,9 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]model.Source)
+	res := resTmp.([]*model.Source)
 	fc.Result = res
-	return ec.marshalNSource2ᚕgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
+	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3552,13 +3505,6 @@ func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionS
 				return innerFunc(ctx)
 
 			})
-		case "source":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Application_source(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
 		case "application_type_id":
 			field := field
 
@@ -3816,13 +3762,6 @@ func (ec *executionContext) _Endpoint(ctx context.Context, sel ast.SelectionSet,
 				return innerFunc(ctx)
 
 			})
-		case "source":
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Endpoint_source(ctx, field, obj)
-			}
-
-			out.Values[i] = innerFunc(ctx)
-
 		case "scheme":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Endpoint_scheme(ctx, field, obj)
@@ -4821,11 +4760,7 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNSource2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v model.Source) graphql.Marshaler {
-	return ec._Source(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNSource2ᚕgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Source) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4849,7 +4784,7 @@ func (ec *executionContext) marshalNSource2ᚕgithubᚗcomᚋRedHatInsightsᚋso
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSource2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx, sel, v[i])
+			ret[i] = ec.marshalNSource2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4867,6 +4802,16 @@ func (ec *executionContext) marshalNSource2ᚕgithubᚗcomᚋRedHatInsightsᚋso
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model.Source) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Source(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -5213,10 +5158,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
-}
-
-func (ec *executionContext) marshalOSource2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v model.Source) graphql.Marshaler {
-	return ec._Source(ctx, sel, &v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

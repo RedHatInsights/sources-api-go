@@ -9,7 +9,7 @@
 scalar Time
 
 type Query {
-  sources: [Source!]!
+  sources(limit: Int, offset: Int): [Source!]!
 }
 
 type Source {
@@ -34,7 +34,6 @@ type Source {
 
 type Endpoint {
   id: ID!
-  source: Source
 
   scheme: String
   host: String
@@ -53,7 +52,6 @@ type Endpoint {
 
 type Application {
   id: ID!
-  source: Source
 
   application_type_id: String!
   availability_status: String

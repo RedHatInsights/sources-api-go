@@ -30,7 +30,7 @@ func (r *applicationResolver) AvailabilityStatus(ctx context.Context, obj *model
 }
 
 func (r *applicationResolver) Authentications(ctx context.Context, obj *model.Application) ([]*model.Authentication, error) {
-	auths, _, err := dao.GetAuthenticationDao(&r.Resolver.TenantID).ListForApplication(obj.ID, 100, 0, []util.Filter{})
+	auths, _, err := dao.GetAuthenticationDao(tenantIdFromContext(ctx)).ListForApplication(obj.ID, 100, 0, []util.Filter{})
 	out := make([]*model.Authentication, len(auths))
 	for i := range auths {
 		out[i] = &auths[i]
@@ -39,7 +39,7 @@ func (r *applicationResolver) Authentications(ctx context.Context, obj *model.Ap
 }
 
 func (r *applicationResolver) TenantID(ctx context.Context, obj *model.Application) (string, error) {
-	return strconv.Itoa(int(r.Resolver.TenantID)), nil
+	return strconv.Itoa(int(*tenantIdFromContext(ctx))), nil
 }
 
 func (r *authenticationResolver) AvailabilityStatus(ctx context.Context, obj *model.Authentication) (*string, error) {
@@ -55,7 +55,7 @@ func (r *authenticationResolver) ResourceID(ctx context.Context, obj *model.Auth
 }
 
 func (r *authenticationResolver) TenantID(ctx context.Context, obj *model.Authentication) (string, error) {
-	return strconv.Itoa(int(r.Resolver.TenantID)), nil
+	return strconv.Itoa(int(*tenantIdFromContext(ctx))), nil
 }
 
 func (r *endpointResolver) ID(ctx context.Context, obj *model.Endpoint) (string, error) {
@@ -71,7 +71,7 @@ func (r *endpointResolver) AvailabilityStatus(ctx context.Context, obj *model.En
 }
 
 func (r *endpointResolver) Authentications(ctx context.Context, obj *model.Endpoint) ([]*model.Authentication, error) {
-	auths, _, err := dao.GetAuthenticationDao(&r.Resolver.TenantID).ListForEndpoint(obj.ID, 100, 0, []util.Filter{})
+	auths, _, err := dao.GetAuthenticationDao(tenantIdFromContext(ctx)).ListForEndpoint(obj.ID, 100, 0, []util.Filter{})
 	out := make([]*model.Authentication, len(auths))
 	for i := range auths {
 		out[i] = &auths[i]
@@ -80,12 +80,16 @@ func (r *endpointResolver) Authentications(ctx context.Context, obj *model.Endpo
 }
 
 func (r *endpointResolver) TenantID(ctx context.Context, obj *model.Endpoint) (string, error) {
-	return strconv.Itoa(int(r.Resolver.TenantID)), nil
+	return strconv.Itoa(int(*tenantIdFromContext(ctx))), nil
 }
 
-func (r *queryResolver) Sources(ctx context.Context) ([]model.Source, error) {
-	srces, _, err := dao.GetSourceDao(&r.TenantID).List(100, 0, []util.Filter{})
-	return srces, err
+func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int) ([]*model.Source, error) {
+	srces, _, err := dao.GetSourceDao(tenantIdFromContext(ctx)).List(100, 0, []util.Filter{})
+	out := make([]*model.Source, len(srces))
+	for i := range srces {
+		out[i] = &srces[i]
+	}
+	return out, err
 }
 
 func (r *sourceResolver) ID(ctx context.Context, obj *model.Source) (string, error) {
@@ -105,7 +109,7 @@ func (r *sourceResolver) AvailabilityStatus(ctx context.Context, obj *model.Sour
 }
 
 func (r *sourceResolver) Authentications(ctx context.Context, obj *model.Source) ([]*model.Authentication, error) {
-	auths, _, err := dao.GetAuthenticationDao(&r.Resolver.TenantID).ListForSource(obj.ID, 100, 0, []util.Filter{})
+	auths, _, err := dao.GetAuthenticationDao(tenantIdFromContext(ctx)).ListForSource(obj.ID, 100, 0, []util.Filter{})
 	out := make([]*model.Authentication, len(auths))
 	for i := range auths {
 		out[i] = &auths[i]
@@ -114,7 +118,7 @@ func (r *sourceResolver) Authentications(ctx context.Context, obj *model.Source)
 }
 
 func (r *sourceResolver) Endpoints(ctx context.Context, obj *model.Source) ([]*model.Endpoint, error) {
-	endpts, _, err := dao.GetEndpointDao(&r.Resolver.TenantID).SubCollectionList(*obj, 100, 0, []util.Filter{})
+	endpts, _, err := dao.GetEndpointDao(tenantIdFromContext(ctx)).SubCollectionList(*obj, 100, 0, []util.Filter{})
 	out := make([]*model.Endpoint, len(endpts))
 	for i := range endpts {
 		out[i] = &endpts[i]
@@ -123,7 +127,7 @@ func (r *sourceResolver) Endpoints(ctx context.Context, obj *model.Source) ([]*m
 }
 
 func (r *sourceResolver) Applications(ctx context.Context, obj *model.Source) ([]*model.Application, error) {
-	apps, _, err := dao.GetApplicationDao(&r.Resolver.TenantID).SubCollectionList(*obj, 100, 0, []util.Filter{})
+	apps, _, err := dao.GetApplicationDao(tenantIdFromContext(ctx)).SubCollectionList(*obj, 100, 0, []util.Filter{})
 	out := make([]*model.Application, len(apps))
 	for i := range apps {
 		out[i] = &apps[i]
@@ -132,7 +136,7 @@ func (r *sourceResolver) Applications(ctx context.Context, obj *model.Source) ([
 }
 
 func (r *sourceResolver) TenantID(ctx context.Context, obj *model.Source) (string, error) {
-	return strconv.Itoa(int(r.Resolver.TenantID)), nil
+	return strconv.Itoa(int(*tenantIdFromContext(ctx))), nil
 }
 
 // Application returns generated.ApplicationResolver implementation.

@@ -2,77 +2,29 @@ package main
 
 import (
 	"context"
-	"io"
-	"net/http"
 	"os"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/RedHatInsights/sources-api-go/graph"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
-	l "github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/service"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/echo/v4"
 )
 
-// this is the uri to hit "old" sources api, initialized in the init() function
-var legacyUri string
+// the graphql handler server var - initialized in the init() function below
+var h *handler.Server
 
-// set the default host/port to what we'll see in k8s environments. Override
-// this by setting these values locally
 func init() {
-	legacyHost := os.Getenv("RAILS_HOST")
-	if legacyHost == "" {
-		legacyHost = "sources-api-svc"
+	// setup the graphQL server
+	h = handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	h.AddTransport(transport.POST{})
+
+	// only set up introspection if we're not on stage/prod
+	if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
+		h.Use(extension.Introspection{})
 	}
-
-	legacyPort := os.Getenv("RAILS_PORT")
-	if legacyPort == "" {
-		legacyPort = "8000"
-	}
-
-	legacyUri = "http://" + legacyHost + ":" + legacyPort + "/api/sources/v3.1/graphql"
-}
-
-// this handler proxies the graphql request body + headers included over to the
-// legacy rails side.
-//
-// it will probably sit here for quite a while - basically until we decide to
-// implement graphql on the golang side which is a very low priority.
-func ProxyGraphqlToLegacySources(c echo.Context) error {
-	l.Log.Debugf("Proxying /graphql to [%v]", legacyUri)
-
-	// set up a context with the parent as the request - limiting execution time to 10 seconds
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Second)
-	defer cancel()
-
-	// create a request - passing the body right along
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, legacyUri, c.Request().Body)
-	if err != nil {
-		return err
-	}
-
-	// fetch the headers to forward along
-	for _, h := range service.ForwadableHeaders(c) {
-		req.Header.Add(h.Key, string(h.Value))
-	}
-
-	// add the content-type header, rails won't pick up the body otherwise
-	req.Header.Add("Content-Type", "application/json")
-
-	// run the request!
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	bytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return c.JSONBlob(resp.StatusCode, bytes)
 }
 
 func GraphQLQuery(c echo.Context) error {
@@ -81,11 +33,16 @@ func GraphQLQuery(c echo.Context) error {
 		return err
 	}
 
-	h := handler.NewDefaultServer(
-		generated.NewExecutableSchema(generated.Config{
-			// injecting the tenant into the resolver
-			Resolvers: &graph.Resolver{TenantID: tenant},
-		}))
+	// storing the tenant ID on the request context because the echo context's
+	// store is just a map[string]interface{} not an actual context. Annoying.
+	c.SetRequest(
+		c.Request().WithContext(context.WithValue(
+			c.Request().Context(),
+			m.Tenant{},
+			&m.Tenant{Id: tenant},
+		)),
+	)
 
+	// wrapping the http handler and calling it with the echo context
 	return echo.WrapHandler(h)(c)
 }

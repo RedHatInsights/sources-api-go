@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/labstack/echo/v4"
 )
@@ -104,7 +105,7 @@ func setupRoutes(e *echo.Echo) {
 	v3.POST("/graphql", GraphQLQuery, middleware.Tenancy)
 
 	// uncomment to get the graphql playground. usually using this or the Insomnia rest client are a good way to develop graphQL queries
-	// v3.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
+	v3.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
 
 	/**            **\
 	 * Internal API *
