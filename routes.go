@@ -101,7 +101,10 @@ func setupRoutes(e *echo.Echo) {
 	}
 
 	// GraphQL
-	v3.POST("/graphql", ProxyGraphqlToLegacySources)
+	v3.POST("/graphql", GraphQLQuery, middleware.Tenancy)
+
+	// uncomment to get the graphql playground. usually using this or the Insomnia rest client are a good way to develop graphQL queries
+	// v3.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
 
 	/**            **\
 	 * Internal API *

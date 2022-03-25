@@ -1,0 +1,77 @@
+# Sources API GraphQL Schema
+
+# To add a field to this, do these steps:
+# 1. add the field below, with type. Docs here: https://graphql.org/learn/schema/
+# 2. run `make generate` to re-generate the gql handler
+# 3. Open up `graph/schema.resolvers.go` and implement the resolver (if required)
+# 4. PR it in!
+
+scalar Time
+
+type Query {
+  sources: [Source!]!
+}
+
+type Source {
+  id: ID!
+  created_at: Time!
+  updated_at: Time!
+  source_type_id: String!
+  name: String!
+  imported: String
+  availability_status: String
+  source_ref: String
+  app_creation_workflow: String!
+  last_checked_at: Time
+  last_available_at: Time
+  paused_at: Time
+
+  authentications: [Authentication]!
+  endpoints: [Endpoint]!
+  applications: [Application]!
+  tenant_id: String!
+}
+
+type Endpoint {
+  id: ID!
+  source: Source
+
+  scheme: String
+  host: String
+  port: Int
+  path: String
+  receptor_node: String
+  role: String
+  certificate_authority: String
+  verify_ssl: Boolean
+  availability_status: String
+  availability_status_error: String
+
+  authentications: [Authentication]!
+  tenant_id: String!
+}
+
+type Application {
+  id: ID!
+  source: Source
+
+  application_type_id: String!
+  availability_status: String
+  availability_status_error: String
+  paused_at: Time
+
+  authentications: [Authentication]!
+  tenant_id: String!
+}
+
+type Authentication {
+  id: ID!
+
+  authtype: String!
+  username: String!
+  availability_status: String
+  availability_status_error: String
+  resource_type: String!
+  resource_id: String!
+  tenant_id: String!
+}

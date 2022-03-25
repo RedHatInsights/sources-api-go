@@ -50,4 +50,7 @@ vault:
 		-e 'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200' \
 		-p 8200:8200 vault
 
-.PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener alltest
+generate:
+	go generate ./...
+
+.PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener alltest generate

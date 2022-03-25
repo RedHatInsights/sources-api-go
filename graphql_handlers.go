@@ -7,6 +7,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/RedHatInsights/sources-api-go/graph"
+	"github.com/RedHatInsights/sources-api-go/graph/generated"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
@@ -70,4 +73,19 @@ func ProxyGraphqlToLegacySources(c echo.Context) error {
 	}
 
 	return c.JSONBlob(resp.StatusCode, bytes)
+}
+
+func GraphQLQuery(c echo.Context) error {
+	tenant, err := getTenantFromEchoContext(c)
+	if err != nil {
+		return err
+	}
+
+	h := handler.NewDefaultServer(
+		generated.NewExecutableSchema(generated.Config{
+			// injecting the tenant into the resolver
+			Resolvers: &graph.Resolver{TenantID: tenant},
+		}))
+
+	return echo.WrapHandler(h)(c)
 }

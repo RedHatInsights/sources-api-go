@@ -3,6 +3,7 @@ module github.com/RedHatInsights/sources-api-go
 go 1.16
 
 require (
+	github.com/99designs/gqlgen v0.17.2
 	github.com/RedHatInsights/rbac-client-go v1.0.0
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/aws/aws-sdk-go v1.42.22
@@ -26,6 +27,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.25
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.0
+	github.com/vektah/gqlparser/v2 v2.4.0
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
 	gorm.io/datatypes v1.0.1
 	gorm.io/driver/postgres v1.3.1
