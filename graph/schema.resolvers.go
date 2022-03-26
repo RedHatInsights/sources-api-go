@@ -9,6 +9,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
+	model1 "github.com/RedHatInsights/sources-api-go/graph/model"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -83,13 +84,30 @@ func (r *endpointResolver) TenantID(ctx context.Context, obj *model.Endpoint) (s
 	return strconv.Itoa(int(*tenantIdFromContext(ctx))), nil
 }
 
-func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int) ([]*model.Source, error) {
-	srces, _, err := dao.GetSourceDao(tenantIdFromContext(ctx)).List(100, 0, []util.Filter{})
+func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, sortBy *string) ([]*model.Source, error) {
+	if limit == nil {
+		limit = new(int)
+		*limit = 100
+	}
+	if offset == nil {
+		offset = new(int)
+		*offset = 0
+	}
+
+	filters := getFilters(sortBy)
+	srces, _, err := dao.GetSourceDao(tenantIdFromContext(ctx)).List(*limit, *offset, filters)
+
 	out := make([]*model.Source, len(srces))
 	for i := range srces {
 		out[i] = &srces[i]
 	}
 	return out, err
+}
+
+func (r *queryResolver) Meta(ctx context.Context) (*model1.Meta, error) {
+	return &model1.Meta{
+		Count: new(int),
+	}, nil
 }
 
 func (r *sourceResolver) ID(ctx context.Context, obj *model.Source) (string, error) {

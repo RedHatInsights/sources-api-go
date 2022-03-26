@@ -13,6 +13,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	model1 "github.com/RedHatInsights/sources-api-go/graph/model"
 	"github.com/RedHatInsights/sources-api-go/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -84,8 +85,13 @@ type ComplexityRoot struct {
 		VerifySsl               func(childComplexity int) int
 	}
 
+	Meta struct {
+		Count func(childComplexity int) int
+	}
+
 	Query struct {
-		Sources func(childComplexity int, limit *int, offset *int) int
+		Meta    func(childComplexity int) int
+		Sources func(childComplexity int, limit *int, offset *int, sortBy *string) int
 	}
 
 	Source struct {
@@ -131,7 +137,8 @@ type EndpointResolver interface {
 	TenantID(ctx context.Context, obj *model.Endpoint) (string, error)
 }
 type QueryResolver interface {
-	Sources(ctx context.Context, limit *int, offset *int) ([]*model.Source, error)
+	Sources(ctx context.Context, limit *int, offset *int, sortBy *string) ([]*model.Source, error)
+	Meta(ctx context.Context) (*model1.Meta, error)
 }
 type SourceResolver interface {
 	ID(ctx context.Context, obj *model.Source) (string, error)
@@ -357,6 +364,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Endpoint.VerifySsl(childComplexity), true
 
+	case "Meta.count":
+		if e.complexity.Meta.Count == nil {
+			break
+		}
+
+		return e.complexity.Meta.Count(childComplexity), true
+
+	case "Query.meta":
+		if e.complexity.Query.Meta == nil {
+			break
+		}
+
+		return e.complexity.Query.Meta(childComplexity), true
+
 	case "Query.sources":
 		if e.complexity.Query.Sources == nil {
 			break
@@ -367,7 +388,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Sources(childComplexity, args["limit"].(*int), args["offset"].(*int)), true
+		return e.complexity.Query.Sources(childComplexity, args["limit"].(*int), args["offset"].(*int), args["sort_by"].(*string)), true
 
 	case "Source.app_creation_workflow":
 		if e.complexity.Source.AppCreationWorkflow == nil {
@@ -542,7 +563,13 @@ var sources = []*ast.Source{
 scalar Time
 
 type Query {
-  sources(limit: Int, offset: Int): [Source!]!
+  sources(
+    limit: Int,
+    offset: Int,
+    sort_by: String
+    ): [Source!]!
+
+  meta: Meta!
 }
 
 type Source {
@@ -606,6 +633,10 @@ type Authentication {
   resource_id: String!
   tenant_id: String!
 }
+
+type Meta {
+  count: Int
+}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -650,6 +681,15 @@ func (ec *executionContext) field_Query_sources_args(ctx context.Context, rawArg
 		}
 	}
 	args["offset"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["sort_by"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort_by"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort_by"] = arg2
 	return args, nil
 }
 
@@ -1626,6 +1666,38 @@ func (ec *executionContext) _Endpoint_tenant_id(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Meta_count(ctx context.Context, field graphql.CollectedField, obj *model1.Meta) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Meta",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Count, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*int)
+	fc.Result = res
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1651,7 +1723,7 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Sources(rctx, args["limit"].(*int), args["offset"].(*int))
+		return ec.resolvers.Query().Sources(rctx, args["limit"].(*int), args["offset"].(*int), args["sort_by"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1666,6 +1738,41 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 	res := resTmp.([]*model.Source)
 	fc.Result = res
 	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_meta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Meta(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model1.Meta)
+	fc.Result = res
+	return ec.marshalNMeta2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3893,6 +4000,34 @@ func (ec *executionContext) _Endpoint(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var metaImplementors = []string{"Meta"}
+
+func (ec *executionContext) _Meta(ctx context.Context, sel ast.SelectionSet, obj *model1.Meta) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, metaImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Meta")
+		case "count":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Meta_count(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3922,6 +4057,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_sources(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "meta":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_meta(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -4758,6 +4916,20 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNMeta2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v model1.Meta) graphql.Marshaler {
+	return ec._Meta(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMeta2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v *model1.Meta) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Meta(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Source) graphql.Marshaler {

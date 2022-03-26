@@ -13,18 +13,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// the graphql handler server var - initialized in the init() function below
-var h *handler.Server
+var (
+	// the graphql handler server - initialized in the init() function below
+	srv *handler.Server
+	// the wrapped handler function for graphql
+	h echo.HandlerFunc
+)
 
 func init() {
 	// setup the graphQL server
-	h = handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-	h.AddTransport(transport.POST{})
+	srv = handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
+	srv.AddTransport(transport.POST{})
 
 	// only set up introspection if we're not on stage/prod
 	if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
-		h.Use(extension.Introspection{})
+		srv.Use(extension.Introspection{})
 	}
+
+	h = echo.WrapHandler(srv)
 }
 
 func GraphQLQuery(c echo.Context) error {
@@ -43,6 +49,5 @@ func GraphQLQuery(c echo.Context) error {
 		)),
 	)
 
-	// wrapping the http handler and calling it with the echo context
-	return echo.WrapHandler(h)(c)
+	return h(c)
 }

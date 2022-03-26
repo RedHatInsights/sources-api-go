@@ -9,7 +9,13 @@
 scalar Time
 
 type Query {
-  sources(limit: Int, offset: Int): [Source!]!
+  sources(
+    limit: Int,
+    offset: Int,
+    sort_by: String
+    ): [Source!]!
+
+  meta: Meta!
 }
 
 type Source {
@@ -72,4 +78,8 @@ type Authentication {
   resource_type: String!
   resource_id: String!
   tenant_id: String!
+}
+
+type Meta {
+  count: Int
 }
