@@ -13,7 +13,7 @@ var e *echo.Echo
 var conf = config.Get()
 
 func TestParseFilterWithOperation(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[name][eq]=test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[name][eq]=test", nil)
 	c := e.NewContext(req, nil)
 
 	filters := parseFilter(c)
@@ -28,7 +28,7 @@ func TestParseFilterWithOperation(t *testing.T) {
 		t.Error("did not parse field name correctly")
 	}
 
-	if f.Operation != "[eq]" {
+	if f.Operation != "eq" {
 		t.Error("did not parse operation correctly")
 	}
 
