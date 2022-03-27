@@ -8,7 +8,10 @@ import (
 )
 
 func tenantIdFromContext(ctx context.Context) *int64 {
-	t := ctx.Value(m.Tenant{}).(*m.Tenant)
+	t, ok := ctx.Value(m.Tenant{}).(*m.Tenant)
+	if !ok {
+		panic("could not pull tenant id from context")
+	}
 	return &t.Id
 }
 
