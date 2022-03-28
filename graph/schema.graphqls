@@ -7,6 +7,7 @@
 # 4. PR it in!
 
 scalar Time
+scalar Any
 
 type Query {
   sources(
@@ -63,6 +64,7 @@ type Application {
   availability_status: String
   availability_status_error: String
   paused_at: Time
+  extra: Any
 
   authentications: [Authentication]!
   tenant_id: String!

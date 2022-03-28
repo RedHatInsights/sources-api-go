@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -28,6 +29,12 @@ func (r *applicationResolver) AvailabilityStatus(ctx context.Context, obj *model
 	}
 
 	return &obj.AvailabilityStatus.AvailabilityStatus, nil
+}
+
+func (r *applicationResolver) Extra(ctx context.Context, obj *model.Application) (interface{}, error) {
+	m := make(map[string]interface{})
+	err := json.Unmarshal(obj.Extra, &m)
+	return m, err
 }
 
 func (r *applicationResolver) Authentications(ctx context.Context, obj *model.Application) ([]*model.Authentication, error) {

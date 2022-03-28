@@ -53,6 +53,7 @@ type ComplexityRoot struct {
 		Authentications         func(childComplexity int) int
 		AvailabilityStatus      func(childComplexity int) int
 		AvailabilityStatusError func(childComplexity int) int
+		Extra                   func(childComplexity int) int
 		ID                      func(childComplexity int) int
 		PausedAt                func(childComplexity int) int
 		TenantID                func(childComplexity int) int
@@ -119,6 +120,7 @@ type ApplicationResolver interface {
 	ApplicationTypeID(ctx context.Context, obj *model.Application) (string, error)
 	AvailabilityStatus(ctx context.Context, obj *model.Application) (*string, error)
 
+	Extra(ctx context.Context, obj *model.Application) (interface{}, error)
 	Authentications(ctx context.Context, obj *model.Application) ([]*model.Authentication, error)
 	TenantID(ctx context.Context, obj *model.Application) (string, error)
 }
@@ -195,6 +197,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Application.AvailabilityStatusError(childComplexity), true
+
+	case "Application.extra":
+		if e.complexity.Application.Extra == nil {
+			break
+		}
+
+		return e.complexity.Application.Extra(childComplexity), true
 
 	case "Application.id":
 		if e.complexity.Application.ID == nil {
@@ -561,6 +570,7 @@ var sources = []*ast.Source{
 # 4. PR it in!
 
 scalar Time
+scalar Any
 
 type Query {
   sources(
@@ -617,6 +627,7 @@ type Application {
   availability_status: String
   availability_status_error: String
   paused_at: Time
+  extra: Any
 
   authentications: [Authentication]!
   tenant_id: String!
@@ -895,6 +906,38 @@ func (ec *executionContext) _Application_paused_at(ctx context.Context, field gr
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Application_extra(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Application",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Application().Extra(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Application_authentications(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
@@ -3663,6 +3706,23 @@ func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = innerFunc(ctx)
 
+		case "extra":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Application_extra(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "authentications":
 			field := field
 
@@ -5266,6 +5326,22 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
+	return res
+}
+
+func (ec *executionContext) unmarshalOAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
 	return res
 }
 
