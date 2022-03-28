@@ -2,6 +2,7 @@ package dao
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -46,14 +47,32 @@ func Init() {
 
 	// Perform database migrations
 	if conf.MigrationsReset {
-		err = DB.Exec(`DROP SCHEMA "public" CASCADE`).Error
+		// A new connection needs to be opened because Postgres doesn't allow deleting the database you are connected
+		// too. You can search for "cannot drop the currently open database" error for more information.
+		adminConnection, err := gorm.Open(postgres.Open(dbStringDefaultDb()), &gorm.Config{Logger: l})
 		if err != nil {
-			logging.Log.Fatalf(`Error dropping the "public" schema: %s`, err)
+			log.Fatalln(err)
 		}
 
-		err = DB.Exec(`CREATE SCHEMA "public"`).Error
+		// Terminate any other connections to the database, since otherwise Postgres will not allow deleting a database.
+		disconnectSql := fmt.Sprintf(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s'`, conf.DatabaseName)
+		err = adminConnection.Exec(disconnectSql).Error
 		if err != nil {
-			logging.Log.Fatalf(`Error creatings the "public" schema: %s`, err)
+			log.Fatalln(err)
+		}
+
+		// Perform the database deletion.
+		dropDbSql := fmt.Sprintf(`DROP DATABASE %s`, conf.DatabaseName)
+		err = adminConnection.Exec(dropDbSql).Error
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// Recreate the database.
+		createDb := fmt.Sprintf(`CREATE DATABASE %s`, conf.DatabaseName)
+		err = adminConnection.Exec(createDb).Error
+		if err != nil {
+			log.Fatalln(err)
 		}
 
 		// Log and exit so that the application can be rerun without the "reset" flag.
@@ -119,6 +138,18 @@ func dbString() string {
 		config.Get().DatabaseUser,
 		config.Get().DatabasePassword,
 		config.Get().DatabaseName,
+		config.Get().DatabaseHost,
+		config.Get().DatabasePort,
+	)
+}
+
+// dbStringDefaultDb returns a DSN wit the "dbname" set to "postgres", so that the connection can be used to perform
+// any management operations like creating or deleting a database.
+func dbStringDefaultDb() string {
+	return fmt.Sprintf(
+		"user=%s password=%s dbname=postgres host=%s port=%d sslmode=disable",
+		config.Get().DatabaseUser,
+		config.Get().DatabasePassword,
 		config.Get().DatabaseHost,
 		config.Get().DatabasePort,
 	)
