@@ -10,7 +10,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
-	model1 "github.com/RedHatInsights/sources-api-go/graph/model"
+	generated_model "github.com/RedHatInsights/sources-api-go/graph/model"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -101,8 +101,9 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 		*offset = 0
 	}
 
-	filters := getFilters(sortBy)
-	srces, _, err := dao.GetSourceDao(tenantIdFromContext(ctx)).List(*limit, *offset, filters)
+	f := getFilters(sortBy)
+	srces, count, err := dao.GetSourceDao(tenantIdFromContext(ctx)).List(*limit, *offset, f)
+	sendCount(ctx, count)
 
 	out := make([]*model.Source, len(srces))
 	for i := range srces {
@@ -111,10 +112,9 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 	return out, err
 }
 
-func (r *queryResolver) Meta(ctx context.Context) (*model1.Meta, error) {
-	return &model1.Meta{
-		Count: new(int),
-	}, nil
+func (r *queryResolver) Meta(ctx context.Context) (*generated_model.Meta, error) {
+	count := getCount(ctx)
+	return &generated_model.Meta{Count: &count}, nil
 }
 
 func (r *sourceResolver) ID(ctx context.Context, obj *model.Source) (string, error) {

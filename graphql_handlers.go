@@ -9,7 +9,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/RedHatInsights/sources-api-go/graph"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
-	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/echo/v4"
 )
 
@@ -39,13 +38,18 @@ func GraphQLQuery(c echo.Context) error {
 		return err
 	}
 
-	// storing the tenant ID on the request context because the echo context's
-	// store is just a map[string]interface{} not an actual context. Annoying.
+	// store the `RequestData` we need for this request - this is the way we can
+	// store certain data about the request for usage in the resolvers. kind of
+	// like the graphql request context.
 	c.SetRequest(
 		c.Request().WithContext(context.WithValue(
 			c.Request().Context(),
-			m.Tenant{},
-			&m.Tenant{Id: tenant},
+			graph.RequestData{},
+			&graph.RequestData{
+				TenantID: tenant,
+				// using a buffered channel so it does not block whens ending if the count wasn't requested. it will be GC'd when the request is done.
+				CountChan: make(chan int, 1),
+			},
 		)),
 	)
 
