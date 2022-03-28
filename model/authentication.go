@@ -25,10 +25,10 @@ type Authentication struct {
 	ExtraDb  datatypes.JSON         `gorm:"column:extra"`
 	Version  string                 `json:"version"`
 
-	AvailabilityStatus      string    `json:"availability_status,omitempty"`
-	LastCheckedAt           time.Time `json:"last_checked_at,omitempty"`
-	LastAvailableAt         time.Time `json:"last_available_at,omitempty"`
-	AvailabilityStatusError string    `json:"availability_status_error,omitempty"`
+	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
 
 	SourceID int64 `json:"source_id"`
 	Source   Source
@@ -130,8 +130,8 @@ func (auth *Authentication) ToEvent() interface{} {
 		Username:                auth.Username,
 		Extra:                   extra,
 		AvailabilityStatus:      util.StringValueOrNil(auth.AvailabilityStatus),
-		LastAvailableAt:         util.DateTimeToRecordFormat(auth.LastAvailableAt),
-		LastCheckedAt:           util.DateTimeToRecordFormat(auth.LastCheckedAt),
+		LastAvailableAt:         util.DateTimePointerToRecordFormat(auth.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRecordFormat(auth.LastCheckedAt),
 		AvailabilityStatusError: &auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              auth.ResourceID,
@@ -142,11 +142,13 @@ func (auth *Authentication) ToEvent() interface{} {
 
 func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 	if attributes["last_checked_at"] != nil {
-		auth.LastCheckedAt, _ = time.Parse(time.RFC3339Nano, attributes["last_checked_at"].(string))
+		lastCheckedAt, _ := time.Parse(time.RFC3339Nano, attributes["last_checked_at"].(string))
+		auth.LastCheckedAt = &lastCheckedAt
 	}
 
 	if attributes["last_available_at"] != nil {
-		auth.LastAvailableAt, _ = time.Parse(time.RFC3339Nano, attributes["last_available_at"].(string))
+		lastAvailableAt, _ := time.Parse(time.RFC3339Nano, attributes["last_available_at"].(string))
+		auth.LastAvailableAt = &lastAvailableAt
 	}
 
 	if attributes["availability_status_error"] != nil {

@@ -16,9 +16,9 @@ const (
 // Source struct that includes all of the fields on the table
 // used internally for business logic
 type Source struct {
-	AvailabilityStatus string    `json:"availability_status,omitempty"`
-	LastCheckedAt      time.Time `json:"last_checked_at,omitempty"`
-	LastAvailableAt    time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatus string     `json:"availability_status,omitempty"`
+	LastCheckedAt      *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt    *time.Time `json:"last_available_at,omitempty"`
 
 	//fields for gorm
 	ID        int64      `gorm:"primarykey" json:"id"`
@@ -53,8 +53,8 @@ func (src *Source) ToEvent() interface{} {
 		UpdatedAt:           util.DateTimeToRecordFormat(src.UpdatedAt),
 		PausedAt:            util.DateTimePointerToRecordFormat(src.PausedAt),
 		AvailabilityStatus:  util.StringValueOrNil(src.AvailabilityStatus),
-		LastAvailableAt:     util.DateTimeToRecordFormat(src.LastAvailableAt),
-		LastCheckedAt:       util.DateTimeToRecordFormat(src.LastCheckedAt),
+		LastAvailableAt:     util.DateTimePointerToRecordFormat(src.LastAvailableAt),
+		LastCheckedAt:       util.DateTimePointerToRecordFormat(src.LastCheckedAt),
 		Name:                &src.Name,
 		UID:                 src.Uid,
 		Version:             src.Version,
@@ -74,8 +74,8 @@ func (src *Source) ToResponse() *SourceResponse {
 
 	return &SourceResponse{
 		AvailabilityStatus:  util.StringValueOrNil(src.AvailabilityStatus),
-		LastCheckedAt:       util.DateTimeToRFC3339(src.LastCheckedAt),
-		LastAvailableAt:     util.DateTimeToRFC3339(src.LastAvailableAt),
+		LastCheckedAt:       util.DateTimePointerToRFC3339(src.LastCheckedAt),
+		LastAvailableAt:     util.DateTimePointerToRFC3339(src.LastAvailableAt),
 		ID:                  id,
 		CreatedAt:           util.DateTimeToRFC3339(src.CreatedAt),
 		UpdatedAt:           util.DateTimeToRFC3339(src.UpdatedAt),

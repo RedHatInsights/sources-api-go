@@ -15,10 +15,10 @@ type Application struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	PausedAt  *time.Time `json:"paused_at"`
 
-	AvailabilityStatus      string    `json:"availability_status,omitempty"`
-	LastCheckedAt           time.Time `json:"last_checked_at,omitempty"`
-	LastAvailableAt         time.Time `json:"last_available_at,omitempty"`
-	AvailabilityStatusError string    `json:"availability_status_error,omitempty"`
+	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
 
 	Extra             datatypes.JSON `json:"extra,omitempty"`
 	SuperkeyData      datatypes.JSON `json:"-"`
@@ -45,8 +45,8 @@ func (app *Application) ToEvent() interface{} {
 		PausedAt:                util.DateTimePointerToRecordFormat(app.PausedAt),
 		ApplicationTypeID:       app.ApplicationTypeID,
 		AvailabilityStatus:      util.StringValueOrNil(app.AvailabilityStatus),
-		LastAvailableAt:         util.DateTimeToRecordFormat(app.LastAvailableAt),
-		LastCheckedAt:           util.DateTimeToRecordFormat(app.LastCheckedAt),
+		LastAvailableAt:         util.DateTimePointerToRecordFormat(app.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRecordFormat(app.LastCheckedAt),
 		AvailabilityStatusError: util.StringValueOrNil(app.AvailabilityStatusError),
 		SourceID:                app.SourceID,
 		Tenant:                  &app.Tenant.ExternalTenant,
@@ -66,8 +66,8 @@ func (app *Application) ToResponse() *ApplicationResponse {
 		UpdatedAt:               util.DateTimeToRFC3339(app.UpdatedAt),
 		PausedAt:                util.DateTimePointerToRFC3339(app.PausedAt),
 		AvailabilityStatus:      util.StringValueOrNil(app.AvailabilityStatus),
-		LastCheckedAt:           util.DateTimeToRFC3339(app.LastCheckedAt),
-		LastAvailableAt:         util.DateTimeToRFC3339(app.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRFC3339(app.LastCheckedAt),
+		LastAvailableAt:         util.DateTimePointerToRFC3339(app.LastAvailableAt),
 		AvailabilityStatusError: app.AvailabilityStatusError,
 		Extra:                   app.Extra,
 		SourceID:                sourceId,

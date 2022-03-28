@@ -13,12 +13,12 @@ type RhcConnection struct {
 	RhcId string         `json:"rhc_id"`
 	Extra datatypes.JSON `json:"extra,omitempty"`
 
-	AvailabilityStatus      string    `json:"availability_status,omitempty"`
-	LastCheckedAt           time.Time `json:"last_checked_at,omitempty"`
-	LastAvailableAt         time.Time `json:"last_available_at,omitempty"`
-	AvailabilityStatusError string    `json:"availability_status_error,omitempty"`
-	CreatedAt               time.Time `json:"created_at"`
-	UpdatedAt               time.Time `json:"updated_at"`
+	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
+	CreatedAt               time.Time  `json:"created_at"`
+	UpdatedAt               time.Time  `json:"updated_at"`
 
 	Sources []Source `gorm:"many2many:source_rhc_connections"`
 }
@@ -35,8 +35,8 @@ func (r *RhcConnection) ToEvent() interface{} {
 		RhcId:                   &r.RhcId,
 		Extra:                   r.Extra,
 		AvailabilityStatus:      util.StringValueOrNil(r.AvailabilityStatus),
-		LastAvailableAt:         util.DateTimeToRecordFormat(r.LastAvailableAt),
-		LastCheckedAt:           util.DateTimeToRecordFormat(r.LastCheckedAt),
+		LastAvailableAt:         util.DateTimePointerToRecordFormat(r.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRecordFormat(r.LastCheckedAt),
 		AvailabilityStatusError: &r.AvailabilityStatusError,
 		CreatedAt:               util.DateTimeToRecordFormat(r.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(r.UpdatedAt),

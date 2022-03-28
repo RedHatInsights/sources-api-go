@@ -94,7 +94,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 			t.Errorf("error parsing time: %s", err)
 		}
 
-		got := result.LastCheckedAt
+		got := *result.LastCheckedAt
 		if want != got {
 			t.Errorf(`Unexpected different last cheked at times found. Want "%s", got "%s"`, want, got)
 		}
@@ -106,7 +106,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 			t.Errorf("error parsing time: %s", err)
 		}
 
-		got := result.LastAvailableAt
+		got := *result.LastAvailableAt
 		if want != got {
 			t.Errorf(`Unexpected different last available times found. Want "%s", got "%s"`, want, got)
 		}

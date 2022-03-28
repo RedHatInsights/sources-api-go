@@ -49,7 +49,7 @@ func MapRowToRhcConnection(row map[string]interface{}) (*model.RhcConnection, er
 				return nil, err
 			}
 
-			rhcConnection.LastCheckedAt = lastCheckedAt
+			rhcConnection.LastCheckedAt = &lastCheckedAt
 		}
 	}
 
@@ -60,7 +60,7 @@ func MapRowToRhcConnection(row map[string]interface{}) (*model.RhcConnection, er
 				return nil, err
 			}
 
-			rhcConnection.LastAvailableAt = lastAvailableAt
+			rhcConnection.LastAvailableAt = &lastAvailableAt
 		}
 	}
 

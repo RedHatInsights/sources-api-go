@@ -538,10 +538,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 			return nil
 		}
 
-		auth.LastAvailableAt, err = time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
+		parsedLastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
 		if err != nil {
 			return nil
 		}
+		auth.LastAvailableAt = &parsedLastAvailableAt
 	}
 
 	if lastCheckedAt, ok := data["last_available_at"]; ok {
@@ -549,10 +550,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 			return nil
 		}
 
-		auth.LastCheckedAt, err = time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
+		parsedLastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
 		if err != nil {
 			return nil
 		}
+		auth.LastCheckedAt = &parsedLastCheckedAt
 	}
 
 	return auth

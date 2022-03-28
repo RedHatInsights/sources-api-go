@@ -23,10 +23,10 @@ type Endpoint struct {
 	CertificateAuthority *string `json:"certificate_authority,omitempty"`
 	ReceptorNode         *string `json:"receptor_node,omitempty"`
 
-	AvailabilityStatus      string    `json:"availability_status,omitempty"`
-	LastCheckedAt           time.Time `json:"last_checked_at,omitempty"`
-	LastAvailableAt         time.Time `json:"last_available_at,omitempty"`
-	AvailabilityStatusError *string   `json:"availability_status_error,omitempty"`
+	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatusError *string    `json:"availability_status_error,omitempty"`
 
 	SourceID int64 `json:"source_id"`
 	Source   Source
@@ -52,8 +52,8 @@ func (endpoint *Endpoint) ToEvent() interface{} {
 		CreatedAt:               util.DateTimeToRecordFormat(endpoint.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(endpoint.UpdatedAt),
 		AvailabilityStatus:      util.StringValueOrNil(endpoint.AvailabilityStatus),
-		LastAvailableAt:         util.DateTimeToRecordFormat(endpoint.LastAvailableAt),
-		LastCheckedAt:           util.DateTimeToRecordFormat(endpoint.LastCheckedAt),
+		LastAvailableAt:         util.DateTimePointerToRecordFormat(endpoint.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRecordFormat(endpoint.LastCheckedAt),
 		AvailabilityStatusError: util.StringValueOrNil(endpoint.AvailabilityStatusError),
 		Tenant:                  &endpoint.Tenant.ExternalTenant,
 	}
@@ -80,8 +80,8 @@ func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 		CertificateAuthority:    endpoint.CertificateAuthority,
 		ReceptorNode:            endpoint.ReceptorNode,
 		AvailabilityStatus:      util.StringValueOrNil(endpoint.AvailabilityStatus),
-		LastCheckedAt:           util.DateTimeToRFC3339(endpoint.LastCheckedAt),
-		LastAvailableAt:         util.DateTimeToRFC3339(endpoint.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRFC3339(endpoint.LastCheckedAt),
+		LastAvailableAt:         util.DateTimePointerToRFC3339(endpoint.LastAvailableAt),
 		AvailabilityStatusError: endpoint.AvailabilityStatusError,
 		SourceID:                sourceId,
 	}
