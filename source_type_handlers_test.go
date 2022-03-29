@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -48,7 +49,7 @@ func TestSourceTypeList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != len(fixtures.TestSourceTypeData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -57,8 +58,7 @@ func TestSourceTypeList(t *testing.T) {
 		if !ok {
 			t.Error("model did not deserialize as a application type response")
 		}
-
-		if s["name"] != "amazon" {
+		if s["id"] == 1 && s["name"] != "amazon" {
 			t.Error("ghosts infected the return")
 		}
 	}
