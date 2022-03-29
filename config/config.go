@@ -111,8 +111,8 @@ func Get() *SourcesApiConfig {
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
 	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
 	availabilityListener := fs.Bool("listener", false, "run availability status listener")
-	setUpDatabase := fs.Bool("setup", false, "create the schema and run the migrations")
-	resetDatabase := fs.Bool("reset", false, "drop the schema, recreate it and run the migrations")
+	setUpDatabase := fs.Bool("setup", false, "create the database and exit")
+	resetDatabase := fs.Bool("reset", false, "drop the database, recreate it and exit")
 
 	err := fs.Parse(os.Args[1:])
 	if err != nil {

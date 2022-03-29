@@ -76,7 +76,7 @@ func Init() {
 		}
 
 		// Log and exit so that the application can be rerun without the "reset" flag.
-		logging.Log.Info(`The schema "public" has been reset`)
+		logging.Log.Infof(`The database "%s" has been reset`, conf.DatabaseName)
 		os.Exit(0)
 	}
 
