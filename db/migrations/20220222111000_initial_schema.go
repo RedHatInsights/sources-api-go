@@ -3,6 +3,7 @@ package migrations
 import (
 	_ "embed"
 
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )
@@ -16,6 +17,9 @@ func InitialSchema() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "20220222110000",
 		Migrate: func(db *gorm.DB) error {
+			logging.Log.Info(`Migration "20220222110000" started`)
+			defer logging.Log.Info(`Migration "20220222110000" ended`)
+
 			err := db.Transaction(func(tx *gorm.DB) error {
 				err := tx.Exec(schemaContents).Error
 				if err != nil {
