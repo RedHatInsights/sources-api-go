@@ -50,26 +50,52 @@ type MockAuthenticationDao struct {
 func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	var sources []m.Source
 
-	for index, i := range src.Sources {
-		switch object := primaryCollection.(type) {
-		case m.SourceType:
-			if i.SourceTypeID == object.Id {
-				sources = append(sources, src.Sources[index])
+	switch object := primaryCollection.(type) {
+	case m.SourceType:
+		var sourceTypeExists bool
+		for _, sourceType := range fixtures.TestSourceTypeData {
+			if sourceType.Id == object.Id {
+				sourceTypeExists = true
 			}
-		case m.ApplicationType:
-			if i.ID == object.Id {
-				sources = append(sources, src.Sources[index])
-			}
-		default:
-			return nil, 0, fmt.Errorf("unexpected primary collection type")
 		}
+
+		// Source type doesn't exist = return Not Found err
+		if !sourceTypeExists {
+			return nil, 0, util.NewErrNotFound("source type")
+		}
+
+		// Source type exists = return sources subcollection
+		for index, source := range src.Sources {
+			if source.SourceTypeID == object.Id {
+				sources = append(sources, src.Sources[index])
+			}
+		}
+
+	case m.ApplicationType:
+		var appTypeExists bool
+		for _, appType := range fixtures.TestApplicationTypeData {
+			if appType.Id == object.Id {
+				appTypeExists = true
+			}
+		}
+
+		// Application type doesn't exist = return Not Found err
+		if !appTypeExists {
+			return nil, 0, util.NewErrNotFound("application type")
+		}
+
+		// Application type exists = return sources subcollection
+		for index, source := range src.Sources {
+			if source.ID == object.Id {
+				sources = append(sources, src.Sources[index])
+			}
+		}
+
+	default:
+		return nil, 0, fmt.Errorf("unexpected primary collection type")
 	}
 
 	count := int64(len(sources))
-	if count == 0 {
-		return nil, count, util.NewErrNotFound("source")
-	}
-
 	return sources, count, nil
 }
 

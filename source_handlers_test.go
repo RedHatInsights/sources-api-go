@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -123,6 +124,8 @@ func TestSourceListAuthenticationsBadRequest(t *testing.T) {
 }
 
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
+	sourceTypeId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/source_types/1/sources",
@@ -136,14 +139,14 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	)
 
 	c.SetParamNames("source_type_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceTypeId))
 
 	err := SourceTypeListSource(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -161,7 +164,84 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestSourceData) {
+	// How many sources with given source type is in fixtures
+	// (adding new fixtures will not affect the test)
+	var wantSourcesCount int
+	for _, i := range fixtures.TestSourceData {
+		if i.SourceTypeID == sourceTypeId {
+			wantSourcesCount++
+		}
+	}
+
+	if len(out.Data) != wantSourcesCount {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	for _, src := range out.Data {
+		_, ok := src.(map[string]interface{})
+
+		if !ok {
+			t.Error("model did not deserialize as a source")
+		}
+
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// Existing source type + not existing source with this source type
+// expected is Status OK + empty subcollection in response
+func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
+	sourceTypeId := int64(100)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_type_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceTypeId))
+
+	err := SourceTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	// How many sources with given source type is in fixtures
+	// (adding new fixtures will not affect the test)
+	var wantSourcesCount int
+	for _, i := range fixtures.TestSourceData {
+		if i.SourceTypeID == sourceTypeId {
+			wantSourcesCount++
+		}
+	}
+
+	if len(out.Data) != wantSourcesCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
