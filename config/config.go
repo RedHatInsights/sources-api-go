@@ -90,8 +90,14 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("DatabasePort", os.Getenv("DATABASE_PORT"))
 		options.SetDefault("DatabaseUser", os.Getenv("DATABASE_USER"))
 		options.SetDefault("DatabasePassword", os.Getenv("DATABASE_PASSWORD"))
-		options.SetDefault("DatabaseName", os.Getenv("DATABASE_NAME"))
-
+		// Setting a default database name mimics the behaviour of the Rails app, which would set a default database
+		// name for development in the case it wasn't overridden.
+		databaseName := os.Getenv("DATABASE_NAME")
+		if databaseName != "" {
+			options.SetDefault("DatabaseName", databaseName)
+		} else {
+			options.SetDefault("DatabaseName", "sources_api_development")
+		}
 		options.SetDefault("CacheHost", os.Getenv("REDIS_CACHE_HOST"))
 		options.SetDefault("CachePort", os.Getenv("REDIS_CACHE_PORT"))
 		options.SetDefault("CachePassword", os.Getenv("REDIS_CACHE_PASSWORD"))
