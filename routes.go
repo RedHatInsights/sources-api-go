@@ -20,82 +20,85 @@ func setupRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	v3 := e.Group("/api/sources/v3.1", middleware.Timing, middleware.HandleErrors, middleware.ParseHeaders)
+	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1"}
+	for _, version := range apiVersions {
+		r := e.Group("/api/sources/"+version, middleware.Timing, middleware.HandleErrors, middleware.ParseHeaders)
 
-	//openapi
-	v3.GET("/openapi.json", PublicOpenApiv31)
+		// openapi
+		r.GET("/openapi.json", PublicOpenApi(version))
 
-	// Bulk Create
-	v3.POST("/bulk_create", BulkCreate, permissionMiddleware...)
+		// Bulk Create
+		r.POST("/bulk_create", BulkCreate, permissionMiddleware...)
 
-	// Sources
-	v3.GET("/sources", SourceList, tenancyWithListMiddleware...)
-	v3.GET("/sources/:id", SourceGet, middleware.Tenancy)
-	v3.POST("/sources", SourceCreate, permissionMiddleware...)
-	v3.PATCH("/sources/:id", SourceEdit, permissionMiddleware...)
-	v3.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
-	v3.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy)
-	v3.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
-	v3.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
-	v3.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
-	v3.GET("/sources/:source_id/authentications", SourceListAuthentications, tenancyWithListMiddleware...)
-	v3.GET("/sources/:source_id/rhc_connections", SourcesRhcConnectionList, tenancyWithListMiddleware...)
-	v3.POST("/sources/:source_id/pause", SourcePause, middleware.Tenancy)
-	v3.POST("/sources/:source_id/unpause", SourceUnpause, middleware.Tenancy)
+		// Sources
+		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
+		r.GET("/sources/:id", SourceGet, middleware.Tenancy)
+		r.POST("/sources", SourceCreate, permissionMiddleware...)
+		r.PATCH("/sources/:id", SourceEdit, permissionMiddleware...)
+		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
+		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy)
+		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
+		r.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
+		r.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
+		r.GET("/sources/:source_id/authentications", SourceListAuthentications, tenancyWithListMiddleware...)
+		r.GET("/sources/:source_id/rhc_connections", SourcesRhcConnectionList, tenancyWithListMiddleware...)
+		r.POST("/sources/:source_id/pause", SourcePause, middleware.Tenancy)
+		r.POST("/sources/:source_id/unpause", SourceUnpause, middleware.Tenancy)
 
-	// Applications
-	v3.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
-	v3.GET("/applications/:id", ApplicationGet, middleware.Tenancy)
-	v3.POST("/applications", ApplicationCreate, permissionMiddleware...)
-	v3.PATCH("/applications/:id", ApplicationEdit, permissionMiddleware...)
-	v3.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.SuperKeyDestroyApplication)...)
-	v3.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
-	v3.POST("/applications/:id/pause", ApplicationPause, middleware.Tenancy)
-	v3.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy)
+		// Applications
+		r.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
+		r.GET("/applications/:id", ApplicationGet, middleware.Tenancy)
+		r.POST("/applications", ApplicationCreate, permissionMiddleware...)
+		r.PATCH("/applications/:id", ApplicationEdit, permissionMiddleware...)
+		r.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.SuperKeyDestroyApplication)...)
+		r.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
+		r.POST("/applications/:id/pause", ApplicationPause, middleware.Tenancy)
+		r.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy)
 
-	// Authentications
-	v3.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
-	v3.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
-	v3.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
-	v3.PATCH("/authentications/:uid", AuthenticationUpdate, permissionMiddleware...)
-	v3.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
+		// Authentications
+		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
+		r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
+		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
+		r.PATCH("/authentications/:uid", AuthenticationUpdate, permissionMiddleware...)
+		r.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
 
-	// ApplicationTypes
-	v3.GET("/application_types", ApplicationTypeList, listMiddleware...)
-	v3.GET("/application_types/:id", ApplicationTypeGet)
-	v3.GET("/application_types/:application_type_id/sources", ApplicationTypeListSource, tenancyWithListMiddleware...)
+		// ApplicationTypes
+		r.GET("/application_types", ApplicationTypeList, listMiddleware...)
+		r.GET("/application_types/:id", ApplicationTypeGet)
+		r.GET("/application_types/:application_type_id/sources", ApplicationTypeListSource, tenancyWithListMiddleware...)
 
-	// Endpoints
-	v3.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
-	v3.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
-	v3.POST("/endpoints", EndpointCreate, permissionMiddleware...)
-	v3.DELETE("/endpoints/:id", EndpointDelete, permissionMiddleware...)
-	v3.GET("/endpoints/:endpoint_id/authentications", EndpointListAuthentications, tenancyWithListMiddleware...)
+		// Endpoints
+		r.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
+		r.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
+		r.POST("/endpoints", EndpointCreate, permissionMiddleware...)
+		r.DELETE("/endpoints/:id", EndpointDelete, permissionMiddleware...)
+		r.GET("/endpoints/:endpoint_id/authentications", EndpointListAuthentications, tenancyWithListMiddleware...)
 
-	// ApplicationAuthentications
-	v3.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
-	v3.GET("/application_authentications/:id", ApplicationAuthenticationGet, middleware.Tenancy)
-	v3.GET("/application_authentications/:application_authentication_id/authentications", ApplicationAuthenticationListAuthentications, tenancyWithListMiddleware...)
-	v3.POST("/application_authentications", ApplicationAuthenticationCreate, permissionMiddleware...)
-	v3.DELETE("/application_authentications/:id", ApplicationAuthenticationDelete, permissionMiddleware...)
+		// ApplicationAuthentications
+		r.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
+		r.GET("/application_authentications/:id", ApplicationAuthenticationGet, middleware.Tenancy)
+		r.GET("/application_authentications/:application_authentication_id/authentications", ApplicationAuthenticationListAuthentications, tenancyWithListMiddleware...)
+		r.POST("/application_authentications", ApplicationAuthenticationCreate, permissionMiddleware...)
+		r.DELETE("/application_authentications/:id", ApplicationAuthenticationDelete, permissionMiddleware...)
 
-	// AppMetaData
-	v3.GET("/app_meta_data", MetaDataList, listMiddleware...)
-	v3.GET("/app_meta_data/:id", MetaDataGet)
-	v3.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, listMiddleware...)
+		// AppMetaData
+		r.GET("/app_meta_data", MetaDataList, listMiddleware...)
+		r.GET("/app_meta_data/:id", MetaDataGet)
+		r.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, listMiddleware...)
 
-	// SourceTypes
-	v3.GET("/source_types", SourceTypeList, listMiddleware...)
-	v3.GET("/source_types/:id", SourceTypeGet)
-	v3.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
+		// SourceTypes
+		r.GET("/source_types", SourceTypeList, listMiddleware...)
+		r.GET("/source_types/:id", SourceTypeGet)
+		r.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
 
-	// Red Hat Connector Connections
-	v3.GET("/rhc_connections", RhcConnectionList, tenancyWithListMiddleware...)
-	v3.GET("/rhc_connections/:id", RhcConnectionGetById, permissionMiddleware...)
-	v3.POST("/rhc_connections", RhcConnectionCreate, permissionMiddleware...)
-	v3.PATCH("/rhc_connections/:id", RhcConnectionUpdate, permissionMiddleware...)
-	v3.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
-	v3.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
+		// Red Hat Connector Connections
+		r.GET("/rhc_connections", RhcConnectionList, tenancyWithListMiddleware...)
+		r.GET("/rhc_connections/:id", RhcConnectionGetById, permissionMiddleware...)
+		r.POST("/rhc_connections", RhcConnectionCreate, permissionMiddleware...)
+		r.PATCH("/rhc_connections/:id", RhcConnectionUpdate, permissionMiddleware...)
+		r.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
+		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
+	}
 
 	/**            **\
 	 * Internal API *
