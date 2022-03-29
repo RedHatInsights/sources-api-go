@@ -22,9 +22,17 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 		if filter.Subresource != "" {
 			switch filter.Subresource {
 			case "source_type":
+				if query.Statement.Table != "sources" {
+					return nil, fmt.Errorf("cannot filter based on source_type subresource for table %q", query.Statement.Table)
+				}
+
 				query = query.Joins("SourceType")
 				filterName = fmt.Sprintf("%v.%v", `"SourceType"`, filter.Name)
 			case "application_type":
+				if query.Statement.Table != "applications" {
+					return nil, fmt.Errorf("cannot filter based on application_type subresource for table %q", query.Statement.Table)
+				}
+
 				query = query.Joins("ApplicationType")
 				filterName = fmt.Sprintf("%v.%v", `"ApplicationType"`, filter.Name)
 			default:
