@@ -8,9 +8,12 @@ import (
 
 var TestAuthenticationData = []m.Authentication{
 	{
-		ID:       "611a8a38-f434-4e62-bda0-78cd45ffae5b",
-		TenantID: TestTenantData[0].Id,
-		SourceID: 1,
+		ID:           "611a8a38-f434-4e62-bda0-78cd45ffae5b",
+		DbID:         1,
+		TenantID:     TestTenantData[0].Id,
+		SourceID:     1,
+		ResourceType: "Source",
+		ResourceID:   1,
 	},
 }
 
