@@ -2,7 +2,7 @@
   "application_authentications": [
     {
       "application_id": 1,
-      "authentication_id": 0,
+      "authentication_id": 1,
       "authentication_uid": "611a8a38-f434-4e62-bda0-78cd45ffae5b",
       "created_at": "2022-01-19 11:57:23 CET",
       "id": 1,

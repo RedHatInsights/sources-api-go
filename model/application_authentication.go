@@ -15,8 +15,7 @@ type ApplicationAuthentication struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	// TODO: this doesn't exist yet
-	VaultPath string `json:"vault_path" gorm:"-"`
+	VaultPath string `json:"vault_path"`
 
 	TenantID int64
 	Tenant   Tenant
