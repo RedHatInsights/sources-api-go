@@ -3,12 +3,14 @@ package database
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/gommon/log"
+	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -52,6 +54,7 @@ func CreateFixtures() {
 
 	dao.DB.Create(&fixtures.TestSourceData)
 	dao.DB.Create(&fixtures.TestApplicationData)
+	dao.DB.Create(&fixtures.TestAuthenticationData)
 	dao.DB.Create(&fixtures.TestApplicationAuthenticationData)
 
 	dao.DB.Create(&fixtures.TestRhcConnectionData)
@@ -91,15 +94,38 @@ func DropSchema(dbSchema string) {
 
 // MigrateSchema migrates all the models.
 func MigrateSchema() {
+	// Use a custom "authentication" table to avoid Gorm creating FKs when the real databases don't have them.
+	type authentication struct {
+		Id                      int64          `gorm:"primaryKey"`
+		Name                    string         `gorm:"column:name"`
+		AuthType                string         `gorm:"column:authtype"`
+		Username                string         `gorm:"column:username"`
+		Password                string         `gorm:"column:password"`
+		Extra                   datatypes.JSON `gorm:"column:extra"`
+		Version                 string         `gorm:"column:version"`
+		AvailabilityStatus      string         `gorm:"column:availability_status"`
+		AvailabilityStatusError string         `gorm:"column:availability_status_error"`
+		LastCheckedAt           time.Time      `gorm:"column:last_checked_at"`
+		LastAvailableAt         time.Time      `gorm:"column:last_available_at"`
+		SourceId                int64          `gorm:"column:source_id"`
+		TenantId                int64          `gorm:"column:tenant_id"`
+		ResourceType            string         `gorm:"column:resource_type"`
+		ResourceId              int64          `gorm:"column:resource_id"`
+		CreatedAt               time.Time      `gorm:"column:created_at"`
+		UpdatedAt               time.Time      `gorm:"column:updated_at"`
+	}
+
 	err := dao.DB.AutoMigrate(
 		&m.Tenant{},
 
 		&m.SourceType{},
 		&m.ApplicationType{},
-		&m.ApplicationAuthentication{},
 
 		&m.Source{},
 		&m.Application{},
+
+		&authentication{},
+		&m.ApplicationAuthentication{},
 
 		&m.RhcConnection{},
 		&m.SourceRhcConnection{},
@@ -124,6 +150,7 @@ func UpdateTablesSequences() {
 		"applications",
 		"application_authentications",
 		"application_types",
+		"authentications",
 		"rhc_connections",
 		"sources",
 		"source_rhc_connections",

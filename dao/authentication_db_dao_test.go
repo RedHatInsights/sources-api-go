@@ -271,10 +271,7 @@ func TestListForSource(t *testing.T) {
 			AuthType:     TestAuthType,
 			ResourceID:   source.ID,
 			ResourceType: "Source",
-			// We must pass the "SourceID" as well because Gorm automatically generates a FK for the authentications
-			// table, even though the production table doesn't have one.
-			SourceID: source.ID,
-			TenantID: fixtures.TestTenantData[1].Id,
+			TenantID:     fixtures.TestTenantData[1].Id,
 		}
 
 		if err = dao.Create(auth); err != nil {
@@ -367,10 +364,7 @@ func TestListForApplication(t *testing.T) {
 			AuthType:     TestAuthType,
 			ResourceID:   application.ID,
 			ResourceType: "Application",
-			// We must pass the "SourceID" as well because Gorm automatically generates a FK for the authentications
-			// table, even though the production table doesn't have one.
-			SourceID: source.ID,
-			TenantID: fixtures.TestTenantData[1].Id,
+			TenantID:     fixtures.TestTenantData[1].Id,
 		}
 
 		if err = dao.Create(auth); err != nil {
@@ -569,10 +563,7 @@ func TestListForEndpoint(t *testing.T) {
 			AuthType:     TestAuthType,
 			ResourceID:   endpoint.ID,
 			ResourceType: "Endpoint",
-			// We must pass the "SourceID" as well because Gorm automatically generates a FK for the authentications
-			// table, even though the production table doesn't have one.
-			SourceID: source.ID,
-			TenantID: fixtures.TestTenantData[1].Id,
+			TenantID:     fixtures.TestTenantData[1].Id,
 		}
 
 		if err = dao.Create(auth); err != nil {

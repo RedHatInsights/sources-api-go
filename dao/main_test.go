@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -109,6 +110,27 @@ func DropSchema(dbSchema string) {
 
 // MigrateSchema migrates all the models.
 func MigrateSchema() {
+	// Use a custom "authentication" table to avoid Gorm creating FKs when the real databases don't have them.
+	type authentication struct {
+		Id                      int64          `gorm:"primaryKey"`
+		Name                    string         `gorm:"column:name"`
+		AuthType                string         `gorm:"column:authtype"`
+		Username                string         `gorm:"column:username"`
+		Password                string         `gorm:"column:password"`
+		Extra                   datatypes.JSON `gorm:"column:extra"`
+		Version                 string         `gorm:"column:version"`
+		AvailabilityStatus      string         `gorm:"column:availability_status"`
+		AvailabilityStatusError string         `gorm:"column:availability_status_error"`
+		LastCheckedAt           time.Time      `gorm:"column:last_checked_at"`
+		LastAvailableAt         time.Time      `gorm:"column:last_available_at"`
+		SourceId                int64          `gorm:"column:source_id"`
+		TenantId                int64          `gorm:"column:tenant_id"`
+		ResourceType            string         `gorm:"column:resource_type"`
+		ResourceId              int64          `gorm:"column:resource_id"`
+		CreatedAt               time.Time      `gorm:"column:created_at"`
+		UpdatedAt               time.Time      `gorm:"column:updated_at"`
+	}
+
 	err := DB.AutoMigrate(
 		&m.SourceType{},
 		&m.ApplicationType{},
@@ -119,7 +141,7 @@ func MigrateSchema() {
 		&m.RhcConnection{},
 		&m.SourceRhcConnection{},
 		&m.Application{},
-		&m.Authentication{},
+		&authentication{},
 		&m.ApplicationAuthentication{},
 	)
 

@@ -3,6 +3,7 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
