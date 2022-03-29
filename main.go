@@ -23,9 +23,11 @@ var conf = config.Get()
 func main() {
 	logging.InitLogger(conf)
 
-	dao.Init()
+	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
+	// a time can run the migrations.
 	redis.Init()
 	jobs.Init()
+	dao.Init()
 
 	if conf.StatusListener {
 		go statuslistener.Run()
