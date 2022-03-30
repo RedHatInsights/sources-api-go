@@ -13,7 +13,7 @@ var e *echo.Echo
 var conf = config.Get()
 
 func TestParseFilterWithOperation(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[name][eq]=test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[name][eq]=test", nil)
 	c := e.NewContext(req, nil)
 
 	filters := parseFilter(c)
@@ -28,7 +28,7 @@ func TestParseFilterWithOperation(t *testing.T) {
 		t.Error("did not parse field name correctly")
 	}
 
-	if f.Operation != "[eq]" {
+	if f.Operation != "eq" {
 		t.Error("did not parse operation correctly")
 	}
 
@@ -105,5 +105,63 @@ func TestParseSortingMultiple(t *testing.T) {
 
 	if sortFilter.Value[1] != "uid" {
 		t.Error("sort[1] value did not get parsed correctly")
+	}
+}
+
+func TestParseSubresourceFilterWithOperation(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[source_type][name][eq]=test", nil)
+	c := e.NewContext(req, nil)
+
+	filters := parseFilter(c)
+
+	if len(filters) != 1 {
+		t.Error("wrong number of filters")
+	}
+
+	f := filters[0]
+
+	if f.Subresource != "source_type" {
+		t.Error("did not parse subresource correctly")
+	}
+
+	if f.Name != "name" {
+		t.Error("did not parse field name correctly")
+	}
+
+	if f.Operation != "eq" {
+		t.Error("did not parse operation correctly")
+	}
+
+	if f.Value[0] != "test" {
+		t.Error("did not parse value correctly")
+	}
+}
+
+func TestParseSubresourceFilterWithoutOperation(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[source_type][name]=test", nil)
+	c := e.NewContext(req, nil)
+
+	filters := parseFilter(c)
+
+	if len(filters) != 1 {
+		t.Error("wrong number of filters")
+	}
+
+	f := filters[0]
+
+	if f.Subresource != "source_type" {
+		t.Error("did not parse subresource correctly")
+	}
+
+	if f.Name != "name" {
+		t.Error("did not parse field name correctly")
+	}
+
+	if f.Operation != "" {
+		t.Error("did not parse operation correctly")
+	}
+
+	if f.Value[0] != "test" {
+		t.Error("did not parse value correctly")
 	}
 }

@@ -24,10 +24,30 @@ func parseFilter(c echo.Context) []util.Filter {
 	for key, values := range c.QueryParams() {
 		if strings.HasPrefix(key, "filter") {
 			matches := util.FilterRegex.FindAllStringSubmatch(key, -1)
+			filter := util.Filter{}
 
-			filter := util.Filter{Name: matches[0][1], Value: values}
-			if len(matches[0]) == 3 {
-				filter.Operation = matches[0][2]
+			// matching filter[subresource][field][operation]
+			// we only support filtering on source type/application type
+			if matches[1][0] == "source_type" || matches[1][0] == "application_type" {
+				filter = util.Filter{
+					Subresource: matches[1][0],
+					Name:        matches[2][0],
+					Value:       values,
+				}
+
+				// this will only be present if the user used a operation. it
+				// defaults to "" which we use as eq
+				if len(matches) == 4 {
+					filter.Operation = matches[3][0]
+				}
+			} else {
+				// matching filter[field][operation]
+				filter = util.Filter{Name: matches[1][0], Value: values}
+				// this will only be present if the user used a operation. it
+				// defaults to "" which we use as eq
+				if len(matches) == 3 {
+					filter.Operation = matches[2][0]
+				}
 			}
 
 			f = append(f, filter)
