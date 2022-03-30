@@ -13,8 +13,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	model1 "github.com/RedHatInsights/sources-api-go/graph/model"
-	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/graph/model"
+	model1 "github.com/RedHatInsights/sources-api-go/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -92,7 +92,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Meta    func(childComplexity int) int
-		Sources func(childComplexity int, limit *int, offset *int, sortBy *string) int
+		Sources func(childComplexity int, limit *int, offset *int, sortBy []*model.SortBy, filter []*model.Filter) int
 	}
 
 	Source struct {
@@ -116,43 +116,43 @@ type ComplexityRoot struct {
 }
 
 type ApplicationResolver interface {
-	ID(ctx context.Context, obj *model.Application) (string, error)
-	ApplicationTypeID(ctx context.Context, obj *model.Application) (string, error)
-	AvailabilityStatus(ctx context.Context, obj *model.Application) (*string, error)
+	ID(ctx context.Context, obj *model1.Application) (string, error)
+	ApplicationTypeID(ctx context.Context, obj *model1.Application) (string, error)
+	AvailabilityStatus(ctx context.Context, obj *model1.Application) (*string, error)
 
-	Extra(ctx context.Context, obj *model.Application) (interface{}, error)
-	Authentications(ctx context.Context, obj *model.Application) ([]*model.Authentication, error)
-	TenantID(ctx context.Context, obj *model.Application) (string, error)
+	Extra(ctx context.Context, obj *model1.Application) (interface{}, error)
+	Authentications(ctx context.Context, obj *model1.Application) ([]*model1.Authentication, error)
+	TenantID(ctx context.Context, obj *model1.Application) (string, error)
 }
 type AuthenticationResolver interface {
-	AvailabilityStatus(ctx context.Context, obj *model.Authentication) (*string, error)
+	AvailabilityStatus(ctx context.Context, obj *model1.Authentication) (*string, error)
 
-	ResourceID(ctx context.Context, obj *model.Authentication) (string, error)
-	TenantID(ctx context.Context, obj *model.Authentication) (string, error)
+	ResourceID(ctx context.Context, obj *model1.Authentication) (string, error)
+	TenantID(ctx context.Context, obj *model1.Authentication) (string, error)
 }
 type EndpointResolver interface {
-	ID(ctx context.Context, obj *model.Endpoint) (string, error)
+	ID(ctx context.Context, obj *model1.Endpoint) (string, error)
 
-	AvailabilityStatus(ctx context.Context, obj *model.Endpoint) (*string, error)
+	AvailabilityStatus(ctx context.Context, obj *model1.Endpoint) (*string, error)
 
-	Authentications(ctx context.Context, obj *model.Endpoint) ([]*model.Authentication, error)
-	TenantID(ctx context.Context, obj *model.Endpoint) (string, error)
+	Authentications(ctx context.Context, obj *model1.Endpoint) ([]*model1.Authentication, error)
+	TenantID(ctx context.Context, obj *model1.Endpoint) (string, error)
 }
 type QueryResolver interface {
-	Sources(ctx context.Context, limit *int, offset *int, sortBy *string) ([]*model.Source, error)
-	Meta(ctx context.Context) (*model1.Meta, error)
+	Sources(ctx context.Context, limit *int, offset *int, sortBy []*model.SortBy, filter []*model.Filter) ([]*model1.Source, error)
+	Meta(ctx context.Context) (*model.Meta, error)
 }
 type SourceResolver interface {
-	ID(ctx context.Context, obj *model.Source) (string, error)
+	ID(ctx context.Context, obj *model1.Source) (string, error)
 
-	SourceTypeID(ctx context.Context, obj *model.Source) (string, error)
+	SourceTypeID(ctx context.Context, obj *model1.Source) (string, error)
 
-	AvailabilityStatus(ctx context.Context, obj *model.Source) (*string, error)
+	AvailabilityStatus(ctx context.Context, obj *model1.Source) (*string, error)
 
-	Authentications(ctx context.Context, obj *model.Source) ([]*model.Authentication, error)
-	Endpoints(ctx context.Context, obj *model.Source) ([]*model.Endpoint, error)
-	Applications(ctx context.Context, obj *model.Source) ([]*model.Application, error)
-	TenantID(ctx context.Context, obj *model.Source) (string, error)
+	Authentications(ctx context.Context, obj *model1.Source) ([]*model1.Authentication, error)
+	Endpoints(ctx context.Context, obj *model1.Source) ([]*model1.Endpoint, error)
+	Applications(ctx context.Context, obj *model1.Source) ([]*model1.Application, error)
+	TenantID(ctx context.Context, obj *model1.Source) (string, error)
 }
 
 type executableSchema struct {
@@ -397,7 +397,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Sources(childComplexity, args["limit"].(*int), args["offset"].(*int), args["sort_by"].(*string)), true
+		return e.complexity.Query.Sources(childComplexity, args["limit"].(*int), args["offset"].(*int), args["sort_by"].([]*model.SortBy), args["filter"].([]*model.Filter)), true
 
 	case "Source.app_creation_workflow":
 		if e.complexity.Source.AppCreationWorkflow == nil {
@@ -569,14 +569,37 @@ var sources = []*ast.Source{
 # 3. Open up ` + "`" + `graph/schema.resolvers.go` + "`" + ` and implement the resolver (if required)
 # 4. PR it in!
 
-scalar Time
-scalar Any
+scalar Time # builtin to handle times for us
+scalar Any  # shortcut to allow ` + "`" + `interface{}` + "`" + ` to be returned
 
+# Filter object, where:
+# 1. name is the column and can include subresources, e.g. ` + "`" + `source_type.vendor` + "`" + `
+# 2. operation is a filter operation, matching our query params. "" is eq
+# 3. value is the value to filter on
+input Filter {
+  name: String!
+  operation: String
+  value: String!
+}
+
+# validation on the direction for SortBy
+enum Direction {
+  asc, desc
+}
+
+# SortBy Object with just a field (which is required) and a direction asc/desc
+input SortBy{
+  field: String!
+  direction: Direction
+}
+
+# Base Query Object, which returns the array of sources with metadata
 type Query {
   sources(
     limit: Int,
     offset: Int,
-    sort_by: String
+    sort_by: [SortBy]
+    filter: [Filter]
     ): [Source!]!
 
   meta: Meta!
@@ -646,7 +669,7 @@ type Authentication {
 }
 
 type Meta {
-  count: Int
+  count: Int!
 }
 `, BuiltIn: false},
 }
@@ -692,15 +715,24 @@ func (ec *executionContext) field_Query_sources_args(ctx context.Context, rawArg
 		}
 	}
 	args["offset"] = arg1
-	var arg2 *string
+	var arg2 []*model.SortBy
 	if tmp, ok := rawArgs["sort_by"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort_by"))
-		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐSortBy(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["sort_by"] = arg2
+	var arg3 []*model.Filter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg3, err = ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg3
 	return args, nil
 }
 
@@ -742,7 +774,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Application_id(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_id(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -777,7 +809,7 @@ func (ec *executionContext) _Application_id(ctx context.Context, field graphql.C
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Application_application_type_id(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_application_type_id(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -812,7 +844,7 @@ func (ec *executionContext) _Application_application_type_id(ctx context.Context
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Application_availability_status(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_availability_status(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -844,7 +876,7 @@ func (ec *executionContext) _Application_availability_status(ctx context.Context
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Application_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -876,7 +908,7 @@ func (ec *executionContext) _Application_availability_status_error(ctx context.C
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Application_paused_at(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_paused_at(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -908,7 +940,7 @@ func (ec *executionContext) _Application_paused_at(ctx context.Context, field gr
 	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Application_extra(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_extra(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -940,7 +972,7 @@ func (ec *executionContext) _Application_extra(ctx context.Context, field graphq
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Application_authentications(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_authentications(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -970,12 +1002,12 @@ func (ec *executionContext) _Application_authentications(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Authentication)
+	res := resTmp.([]*model1.Authentication)
 	fc.Result = res
 	return ec.marshalNAuthentication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Application_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model.Application) (ret graphql.Marshaler) {
+func (ec *executionContext) _Application_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1010,7 +1042,7 @@ func (ec *executionContext) _Application_tenant_id(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_id(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_id(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1045,7 +1077,7 @@ func (ec *executionContext) _Authentication_id(ctx context.Context, field graphq
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_authtype(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_authtype(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1080,7 +1112,7 @@ func (ec *executionContext) _Authentication_authtype(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_username(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_username(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1115,7 +1147,7 @@ func (ec *executionContext) _Authentication_username(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_availability_status(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_availability_status(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1147,7 +1179,7 @@ func (ec *executionContext) _Authentication_availability_status(ctx context.Cont
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1179,7 +1211,7 @@ func (ec *executionContext) _Authentication_availability_status_error(ctx contex
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_resource_type(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_resource_type(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1214,7 +1246,7 @@ func (ec *executionContext) _Authentication_resource_type(ctx context.Context, f
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_resource_id(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_resource_id(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1249,7 +1281,7 @@ func (ec *executionContext) _Authentication_resource_id(ctx context.Context, fie
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Authentication_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model.Authentication) (ret graphql.Marshaler) {
+func (ec *executionContext) _Authentication_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1284,7 +1316,7 @@ func (ec *executionContext) _Authentication_tenant_id(ctx context.Context, field
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_id(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_id(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1319,7 +1351,7 @@ func (ec *executionContext) _Endpoint_id(ctx context.Context, field graphql.Coll
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_scheme(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_scheme(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1351,7 +1383,7 @@ func (ec *executionContext) _Endpoint_scheme(ctx context.Context, field graphql.
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_host(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_host(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1383,7 +1415,7 @@ func (ec *executionContext) _Endpoint_host(ctx context.Context, field graphql.Co
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_port(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_port(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1415,7 +1447,7 @@ func (ec *executionContext) _Endpoint_port(ctx context.Context, field graphql.Co
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_path(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_path(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1447,7 +1479,7 @@ func (ec *executionContext) _Endpoint_path(ctx context.Context, field graphql.Co
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_receptor_node(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_receptor_node(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1479,7 +1511,7 @@ func (ec *executionContext) _Endpoint_receptor_node(ctx context.Context, field g
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_role(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_role(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1511,7 +1543,7 @@ func (ec *executionContext) _Endpoint_role(ctx context.Context, field graphql.Co
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_certificate_authority(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_certificate_authority(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1543,7 +1575,7 @@ func (ec *executionContext) _Endpoint_certificate_authority(ctx context.Context,
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_verify_ssl(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_verify_ssl(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1575,7 +1607,7 @@ func (ec *executionContext) _Endpoint_verify_ssl(ctx context.Context, field grap
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_availability_status(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_availability_status(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1607,7 +1639,7 @@ func (ec *executionContext) _Endpoint_availability_status(ctx context.Context, f
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1639,7 +1671,7 @@ func (ec *executionContext) _Endpoint_availability_status_error(ctx context.Cont
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_authentications(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_authentications(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1669,12 +1701,12 @@ func (ec *executionContext) _Endpoint_authentications(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Authentication)
+	res := resTmp.([]*model1.Authentication)
 	fc.Result = res
 	return ec.marshalNAuthentication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Endpoint_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model.Endpoint) (ret graphql.Marshaler) {
+func (ec *executionContext) _Endpoint_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1709,7 +1741,7 @@ func (ec *executionContext) _Endpoint_tenant_id(ctx context.Context, field graph
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Meta_count(ctx context.Context, field graphql.CollectedField, obj *model1.Meta) (ret graphql.Marshaler) {
+func (ec *executionContext) _Meta_count(ctx context.Context, field graphql.CollectedField, obj *model.Meta) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1734,11 +1766,14 @@ func (ec *executionContext) _Meta_count(ctx context.Context, field graphql.Colle
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1766,7 +1801,7 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Sources(rctx, args["limit"].(*int), args["offset"].(*int), args["sort_by"].(*string))
+		return ec.resolvers.Query().Sources(rctx, args["limit"].(*int), args["offset"].(*int), args["sort_by"].([]*model.SortBy), args["filter"].([]*model.Filter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1778,7 +1813,7 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Source)
+	res := resTmp.([]*model1.Source)
 	fc.Result = res
 	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
 }
@@ -1813,7 +1848,7 @@ func (ec *executionContext) _Query_meta(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model1.Meta)
+	res := resTmp.(*model.Meta)
 	fc.Result = res
 	return ec.marshalNMeta2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx, field.Selections, res)
 }
@@ -1889,7 +1924,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_id(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_id(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1924,7 +1959,7 @@ func (ec *executionContext) _Source_id(ctx context.Context, field graphql.Collec
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_created_at(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_created_at(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1959,7 +1994,7 @@ func (ec *executionContext) _Source_created_at(ctx context.Context, field graphq
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_updated_at(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_updated_at(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1994,7 +2029,7 @@ func (ec *executionContext) _Source_updated_at(ctx context.Context, field graphq
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_source_type_id(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_source_type_id(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2029,7 +2064,7 @@ func (ec *executionContext) _Source_source_type_id(ctx context.Context, field gr
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_name(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_name(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2064,7 +2099,7 @@ func (ec *executionContext) _Source_name(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_imported(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_imported(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2096,7 +2131,7 @@ func (ec *executionContext) _Source_imported(ctx context.Context, field graphql.
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_availability_status(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_availability_status(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2128,7 +2163,7 @@ func (ec *executionContext) _Source_availability_status(ctx context.Context, fie
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_source_ref(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_source_ref(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2160,7 +2195,7 @@ func (ec *executionContext) _Source_source_ref(ctx context.Context, field graphq
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_app_creation_workflow(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_app_creation_workflow(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2195,7 +2230,7 @@ func (ec *executionContext) _Source_app_creation_workflow(ctx context.Context, f
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_last_checked_at(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_last_checked_at(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2227,7 +2262,7 @@ func (ec *executionContext) _Source_last_checked_at(ctx context.Context, field g
 	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_last_available_at(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_last_available_at(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2259,7 +2294,7 @@ func (ec *executionContext) _Source_last_available_at(ctx context.Context, field
 	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_paused_at(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_paused_at(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2291,7 +2326,7 @@ func (ec *executionContext) _Source_paused_at(ctx context.Context, field graphql
 	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_authentications(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_authentications(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2321,12 +2356,12 @@ func (ec *executionContext) _Source_authentications(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Authentication)
+	res := resTmp.([]*model1.Authentication)
 	fc.Result = res
 	return ec.marshalNAuthentication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_endpoints(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_endpoints(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2356,12 +2391,12 @@ func (ec *executionContext) _Source_endpoints(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Endpoint)
+	res := resTmp.([]*model1.Endpoint)
 	fc.Result = res
 	return ec.marshalNEndpoint2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐEndpoint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_applications(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_applications(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2391,12 +2426,12 @@ func (ec *executionContext) _Source_applications(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Application)
+	res := resTmp.([]*model1.Application)
 	fc.Result = res
 	return ec.marshalNApplication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplication(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_tenant_id(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3617,6 +3652,76 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj interface{}) (model.Filter, error) {
+	var it model.Filter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "operation":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operation"))
+			it.Operation, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interface{}) (model.SortBy, error) {
+	var it model.SortBy
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "field":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			it.Field, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "direction":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+			it.Direction, err = ec.unmarshalODirection2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐDirection(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -3627,7 +3732,7 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 
 var applicationImplementors = []string{"Application"}
 
-func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionSet, obj *model.Application) graphql.Marshaler {
+func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionSet, obj *model1.Application) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, applicationImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -3776,7 +3881,7 @@ func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionS
 
 var authenticationImplementors = []string{"Authentication"}
 
-func (ec *executionContext) _Authentication(ctx context.Context, sel ast.SelectionSet, obj *model.Authentication) graphql.Marshaler {
+func (ec *executionContext) _Authentication(ctx context.Context, sel ast.SelectionSet, obj *model1.Authentication) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, authenticationImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -3901,7 +4006,7 @@ func (ec *executionContext) _Authentication(ctx context.Context, sel ast.Selecti
 
 var endpointImplementors = []string{"Endpoint"}
 
-func (ec *executionContext) _Endpoint(ctx context.Context, sel ast.SelectionSet, obj *model.Endpoint) graphql.Marshaler {
+func (ec *executionContext) _Endpoint(ctx context.Context, sel ast.SelectionSet, obj *model1.Endpoint) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, endpointImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -4062,7 +4167,7 @@ func (ec *executionContext) _Endpoint(ctx context.Context, sel ast.SelectionSet,
 
 var metaImplementors = []string{"Meta"}
 
-func (ec *executionContext) _Meta(ctx context.Context, sel ast.SelectionSet, obj *model1.Meta) graphql.Marshaler {
+func (ec *executionContext) _Meta(ctx context.Context, sel ast.SelectionSet, obj *model.Meta) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, metaImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -4077,6 +4182,9 @@ func (ec *executionContext) _Meta(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = innerFunc(ctx)
 
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4180,7 +4288,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 var sourceImplementors = []string{"Source"}
 
-func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, obj *model.Source) graphql.Marshaler {
+func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, obj *model1.Source) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, sourceImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -4834,7 +4942,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNApplication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v []*model.Application) graphql.Marshaler {
+func (ec *executionContext) marshalNApplication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v []*model1.Application) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4872,7 +4980,7 @@ func (ec *executionContext) marshalNApplication2ᚕᚖgithubᚗcomᚋRedHatInsig
 	return ret
 }
 
-func (ec *executionContext) marshalNAuthentication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx context.Context, sel ast.SelectionSet, v []*model.Authentication) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthentication2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx context.Context, sel ast.SelectionSet, v []*model1.Authentication) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4925,7 +5033,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNEndpoint2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐEndpoint(ctx context.Context, sel ast.SelectionSet, v []*model.Endpoint) graphql.Marshaler {
+func (ec *executionContext) marshalNEndpoint2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐEndpoint(ctx context.Context, sel ast.SelectionSet, v []*model1.Endpoint) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4978,11 +5086,26 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNMeta2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v model1.Meta) graphql.Marshaler {
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) marshalNMeta2githubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v model.Meta) graphql.Marshaler {
 	return ec._Meta(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMeta2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v *model1.Meta) graphql.Marshaler {
+func (ec *executionContext) marshalNMeta2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐMeta(ctx context.Context, sel ast.SelectionSet, v *model.Meta) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -4992,7 +5115,7 @@ func (ec *executionContext) marshalNMeta2ᚖgithubᚗcomᚋRedHatInsightsᚋsour
 	return ec._Meta(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Source) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -5036,7 +5159,7 @@ func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsights�
 	return ret
 }
 
-func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model1.Source) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -5345,14 +5468,14 @@ func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalOApplication2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v *model.Application) graphql.Marshaler {
+func (ec *executionContext) marshalOApplication2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplication(ctx context.Context, sel ast.SelectionSet, v *model1.Application) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Application(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOAuthentication2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx context.Context, sel ast.SelectionSet, v *model.Authentication) graphql.Marshaler {
+func (ec *executionContext) marshalOAuthentication2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx context.Context, sel ast.SelectionSet, v *model1.Authentication) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -5385,11 +5508,55 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOEndpoint2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐEndpoint(ctx context.Context, sel ast.SelectionSet, v *model.Endpoint) graphql.Marshaler {
+func (ec *executionContext) unmarshalODirection2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐDirection(ctx context.Context, v interface{}) (*model.Direction, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.Direction)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalODirection2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐDirection(ctx context.Context, sel ast.SelectionSet, v *model.Direction) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalOEndpoint2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐEndpoint(ctx context.Context, sel ast.SelectionSet, v *model1.Endpoint) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Endpoint(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐFilter(ctx context.Context, v interface{}) ([]*model.Filter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.Filter, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOFilter2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐFilter(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐFilter(ctx context.Context, v interface{}) (*model.Filter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
@@ -5406,6 +5573,34 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) ([]*model.SortBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.SortBy, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOSortBy2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐSortBy(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐSortBy(ctx context.Context, v interface{}) (*model.SortBy, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputSortBy(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

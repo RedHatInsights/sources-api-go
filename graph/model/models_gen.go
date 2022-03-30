@@ -2,6 +2,64 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type Filter struct {
+	Name      string  `json:"name"`
+	Operation *string `json:"operation"`
+	Value     string  `json:"value"`
+}
+
 type Meta struct {
-	Count *int `json:"count"`
+	Count int `json:"count"`
+}
+
+type SortBy struct {
+	Field     string     `json:"field"`
+	Direction *Direction `json:"direction"`
+}
+
+type Direction string
+
+const (
+	DirectionAsc  Direction = "asc"
+	DirectionDesc Direction = "desc"
+)
+
+var AllDirection = []Direction{
+	DirectionAsc,
+	DirectionDesc,
+}
+
+func (e Direction) IsValid() bool {
+	switch e {
+	case DirectionAsc, DirectionDesc:
+		return true
+	}
+	return false
+}
+
+func (e Direction) String() string {
+	return string(e)
+}
+
+func (e *Direction) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Direction(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Direction", str)
+	}
+	return nil
+}
+
+func (e Direction) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

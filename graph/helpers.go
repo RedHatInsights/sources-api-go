@@ -2,8 +2,6 @@ package graph
 
 import (
 	"context"
-
-	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 // fetches the request data from the context
@@ -29,13 +27,4 @@ func sendCount(ctx context.Context, count int64) {
 // gets the source count value from the ctx's channel
 func getCount(ctx context.Context) int {
 	return <-getRequestData(ctx).CountChan
-}
-
-func getFilters(sort_by *string) []util.Filter {
-	f := make([]util.Filter, 0)
-	if sort_by != nil {
-		f = append(f, util.Filter{Operation: "sort_by", Value: []string{*sort_by}})
-	}
-
-	return f
 }

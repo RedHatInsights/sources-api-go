@@ -100,15 +100,15 @@ func setupRoutes(e *echo.Echo) {
 		r.PATCH("/rhc_connections/:id", RhcConnectionUpdate, permissionMiddleware...)
 		r.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
 		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
-	}
 
-	// GraphQL
-	v3.POST("/graphql", GraphQLQuery, middleware.Tenancy)
+		// GraphQL
+		r.POST("/graphql", GraphQLQuery, middleware.Tenancy)
 
-	// run the graphQL playground if running locally or in ephemeral. really handy for development!
-	// https://github.com/graphql/graphiql
-	if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
-		v3.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
+		// run the graphQL playground if running locally or in ephemeral. really handy for development!
+		// https://github.com/graphql/graphiql
+		if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
+			r.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
+		}
 	}
 
 	/**            **\

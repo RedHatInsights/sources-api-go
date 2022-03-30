@@ -91,7 +91,8 @@ func (r *endpointResolver) TenantID(ctx context.Context, obj *model.Endpoint) (s
 	return strconv.Itoa(int(*tenantIdFromContext(ctx))), nil
 }
 
-func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, sortBy *string) ([]*model.Source, error) {
+func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, sortBy []*generated_model.SortBy, filter []*generated_model.Filter) ([]*model.Source, error) {
+	// default limit and offset
 	if limit == nil {
 		limit = new(int)
 		*limit = 100
@@ -101,7 +102,10 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 		*offset = 0
 	}
 
-	f := getFilters(sortBy)
+	// parse any filters passed along the request
+	f := parseArgs(sortBy, filter)
+
+	// list the sources with filters en tote!
 	srces, count, err := dao.GetSourceDao(tenantIdFromContext(ctx)).List(*limit, *offset, f)
 	sendCount(ctx, count)
 
@@ -113,8 +117,7 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 }
 
 func (r *queryResolver) Meta(ctx context.Context) (*generated_model.Meta, error) {
-	count := getCount(ctx)
-	return &generated_model.Meta{Count: &count}, nil
+	return &generated_model.Meta{Count: getCount(ctx)}, nil
 }
 
 func (r *sourceResolver) ID(ctx context.Context, obj *model.Source) (string, error) {

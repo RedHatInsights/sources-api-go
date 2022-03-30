@@ -6,14 +6,37 @@
 # 3. Open up `graph/schema.resolvers.go` and implement the resolver (if required)
 # 4. PR it in!
 
-scalar Time
-scalar Any
+scalar Time # builtin to handle times for us
+scalar Any  # shortcut to allow `interface{}` to be returned
 
+# Filter object, where:
+# 1. name is the column and can include subresources, e.g. `source_type.vendor`
+# 2. operation is a filter operation, matching our query params. "" is eq
+# 3. value is the value to filter on
+input Filter {
+  name: String!
+  operation: String
+  value: String!
+}
+
+# validation on the direction for SortBy
+enum Direction {
+  asc, desc
+}
+
+# SortBy Object with just a field (which is required) and a direction asc/desc
+input SortBy{
+  field: String!
+  direction: Direction
+}
+
+# Base Query Object, which returns the array of sources with metadata
 type Query {
   sources(
     limit: Int,
     offset: Int,
-    sort_by: String
+    sort_by: [SortBy]
+    filter: [Filter]
     ): [Source!]!
 
   meta: Meta!
@@ -83,5 +106,5 @@ type Authentication {
 }
 
 type Meta {
-  count: Int
+  count: Int!
 }
