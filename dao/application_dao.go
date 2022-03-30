@@ -77,7 +77,7 @@ func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 
 func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
-	result := DB.First(&app)
+	result := DB.Debug().First(&app)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("application")
 	}
@@ -100,13 +100,13 @@ func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (
 
 func (a *applicationDaoImpl) Create(app *m.Application) error {
 	app.TenantID = *a.TenantID
-	result := DB.Create(app)
+	result := DB.Debug().Create(app)
 
 	return result.Error
 }
 
 func (a *applicationDaoImpl) Update(app *m.Application) error {
-	result := DB.Updates(app)
+	result := DB.Debug().Updates(app)
 	return result.Error
 }
 
@@ -154,7 +154,7 @@ func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 
 func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	application := &m.Application{ID: resource.ResourceID}
-	result := DB.Preload("Source").Find(&application)
+	result := DB.Debug().Preload("Source").Find(&application)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -168,7 +168,7 @@ func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 }
 
 func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
-	result := DB.Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := DB.Debug().Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("application not found %v", resource)
 	}
@@ -178,7 +178,7 @@ func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttr
 
 func (a *applicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
-	result := DB.Preload("Tenant").Find(&app)
+	result := DB.Debug().Preload("Tenant").Find(&app)
 
 	return app, result.Error
 }

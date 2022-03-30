@@ -69,7 +69,7 @@ func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([
 
 func (md *metaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
 	metaData := &m.MetaData{ID: *id}
-	result := DB.First(&metaData)
+	result := DB.Debug().First(&metaData)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("metadata")
 	}

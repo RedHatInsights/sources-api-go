@@ -79,7 +79,7 @@ func (a *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 
 func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 	app := &m.Endpoint{ID: *id}
-	result := DB.First(&app)
+	result := DB.Debug().First(&app)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("endpoint")
 	}
@@ -90,7 +90,7 @@ func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 func (a *endpointDaoImpl) Create(app *m.Endpoint) error {
 	app.TenantID = *a.TenantID
 
-	result := DB.Create(app)
+	result := DB.Debug().Create(app)
 	return result.Error
 }
 
@@ -128,13 +128,13 @@ func (a *endpointDaoImpl) CanEndpointBeSetAsDefaultForSource(sourceId int64) boo
 	endpoint := &m.Endpoint{}
 
 	// add double quotes to the "default" column to avoid any clashes with postgres' "default" keyword
-	result := DB.Where(`"default" = true AND source_id = ?`, sourceId).First(&endpoint)
+	result := DB.Debug().Where(`"default" = true AND source_id = ?`, sourceId).First(&endpoint)
 	return result.Error != nil
 }
 
 func (a *endpointDaoImpl) IsRoleUniqueForSource(role string, sourceId int64) bool {
 	endpoint := &m.Endpoint{}
-	result := DB.Where("role = ? AND source_id = ?", role, sourceId).First(&endpoint)
+	result := DB.Debug().Where("role = ? AND source_id = ?", role, sourceId).First(&endpoint)
 
 	// If the record doesn't exist "result.Error" will have a "record not found" error
 	return result.Error != nil
@@ -143,14 +143,14 @@ func (a *endpointDaoImpl) IsRoleUniqueForSource(role string, sourceId int64) boo
 func (a *endpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
 	endpoint := &m.Endpoint{}
 
-	result := DB.Where("source_id = ?", sourceId).First(&endpoint)
+	result := DB.Debug().Where("source_id = ?", sourceId).First(&endpoint)
 
 	return result.Error == nil
 }
 
 func (a *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	endpoint := &m.Endpoint{ID: resource.ResourceID}
-	result := DB.Preload("Source").Find(&endpoint)
+	result := DB.Debug().Preload("Source").Find(&endpoint)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -161,7 +161,7 @@ func (a *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interf
 }
 
 func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
-	result := DB.Model(&m.Endpoint{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := DB.Debug().Model(&m.Endpoint{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("endpoint not found %v", resource)
 	}
@@ -171,7 +171,7 @@ func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribu
 
 func (a *endpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
 	endpoint := &m.Endpoint{ID: *id}
-	result := DB.Preload("Tenant").Find(&endpoint)
+	result := DB.Debug().Preload("Tenant").Find(&endpoint)
 
 	return endpoint, result.Error
 }
