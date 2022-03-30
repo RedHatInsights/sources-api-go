@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"sync"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -46,9 +47,16 @@ func GraphQLQuery(c echo.Context) error {
 			c.Request().Context(),
 			graph.RequestData{},
 			&graph.RequestData{
+				// the current tenant
 				TenantID: tenant,
-				// using a buffered channel so it does not block whens ending if the count wasn't requested. it will be GC'd when the request is done.
+				// using a buffered channel so it does not block whens ending if
+				// the count wasn't requested. it will be GC'd when the request
+				// is done.
 				CountChan: make(chan int, 1),
+				// mutexes to ensure we load up all the source subresources _one
+				// time_
+				ApplicationMutex: &sync.Mutex{},
+				EndpointMutex:    &sync.Mutex{},
 			},
 		)),
 	)
