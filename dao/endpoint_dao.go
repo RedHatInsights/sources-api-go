@@ -31,12 +31,12 @@ type endpointDaoImpl struct {
 
 func (a *endpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
-	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
-	query := sourceType.HasMany(&m.Endpoint{}, DB.Debug())
+	query := relationObject.HasMany(&m.Endpoint{}, DB.Debug())
 	query = query.Where("endpoints.tenant_id = ?", a.TenantID)
 
 	query, err = applyFilters(query, filters)

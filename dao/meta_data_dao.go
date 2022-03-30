@@ -25,12 +25,12 @@ type metaDataDaoImpl struct{}
 
 func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metadatas := make([]m.MetaData, 0, limit)
-	collection, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("application type")
 	}
 
-	query := collection.HasMany(&m.MetaData{}, DB.Debug())
+	query := relationObject.HasMany(&m.MetaData{}, DB.Debug())
 	query = query.Where("meta_data.type = ?", m.APP_META_DATA)
 
 	query, err = applyFilters(query, filters)

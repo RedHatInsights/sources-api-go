@@ -32,12 +32,12 @@ type applicationDaoImpl struct {
 
 func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
-	sourceType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
-	query := sourceType.HasMany(&m.Application{}, DB.Debug())
+	query := relationObject.HasMany(&m.Application{}, DB.Debug())
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
