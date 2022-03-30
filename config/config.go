@@ -45,6 +45,7 @@ type SourcesApiConfig struct {
 	MigrationsSetup           bool
 	MigrationsReset           bool
 	SecretStore               string
+	TenantTranslatorUrl       string
 }
 
 // Get - returns the config parsed from runtime vars
@@ -121,6 +122,7 @@ func Get() *SourcesApiConfig {
 		secretStore = "database"
 	}
 	options.SetDefault("SecretStore", secretStore)
+	options.SetDefault("TenantTranslatorUrl", os.Getenv("TENANT_TRANSLATOR_URL"))
 
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
 	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
@@ -184,6 +186,7 @@ func Get() *SourcesApiConfig {
 		MigrationsSetup:           options.GetBool("MigrationsSetup"),
 		MigrationsReset:           options.GetBool("MigrationsReset"),
 		SecretStore:               options.GetString("SecretStore"),
+		TenantTranslatorUrl:       options.GetString("TenantTranslatorUrl"),
 	}
 
 	return parsedConfig

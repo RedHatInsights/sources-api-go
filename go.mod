@@ -5,13 +5,14 @@ go 1.16
 require (
 	github.com/99designs/gqlgen v0.17.2
 	github.com/RedHatInsights/rbac-client-go v1.0.0
+	github.com/RedHatInsights/tenant-utils v0.0.0-20220322192943-150a1a665a5f
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/aws/aws-sdk-go v1.42.22
 	github.com/gertd/go-pluralize v0.1.7
 	github.com/go-gormigrate/gormigrate/v2 v2.0.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-migrate/migrate/v4 v4.15.1
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/iancoleman/strcase v0.2.0
@@ -21,7 +22,7 @@ require (
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/labstack/gommon v0.3.1
 	github.com/neko-neko/echo-logrus/v2 v2.0.1
-	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_golang v1.12.1
 	github.com/redhatinsights/app-common-go v1.6.0
 	github.com/redhatinsights/platform-go-middlewares v0.10.0
 	github.com/redhatinsights/sources-superkey-worker v0.0.0-20220110114734-d076299a7d68
