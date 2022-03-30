@@ -107,9 +107,8 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// Check if sourceID exists
-	src := &m.Source{ID: sourceID}
-	result := DB.First(src)
-	if result.Error != nil {
+	_, err := GetSourceDao(a.TenantID).GetById(&sourceID)
+	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
@@ -135,6 +134,12 @@ func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util
 }
 
 func (a *authenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	// checking if application exists first
+	_, err := GetApplicationDao(a.TenantID).GetById(&applicationID)
+	if err != nil {
+		return nil, 0, util.NewErrNotFound("application")
+	}
+
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
@@ -175,6 +180,11 @@ func (a *authenticationDaoImpl) ListForApplicationAuthentication(appauthID int64
 }
 
 func (a *authenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	_, err := GetEndpointDao(a.TenantID).GetById(&endpointID)
+	if err != nil {
+		return nil, 0, util.NewErrNotFound("endpoint")
+	}
+
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
