@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
@@ -61,7 +62,7 @@ func TestAuthenticationList(t *testing.T) {
 		t.Error("model did not deserialize as a source")
 	}
 
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		if auth1["id"] != fixtures.TestAuthenticationData[0].ID {
 			t.Errorf(`wrong authentication list fetched. Want authentications from the fixtures, got: %s`, auth1)
 		}
@@ -88,12 +89,12 @@ func TestAuthenticationGet(t *testing.T) {
 	var id string
 
 	// If we're running integration tests without Vault...
-	if parser.RunningIntegrationTests && !conf.VaultOn {
+	if parser.RunningIntegrationTests && !config.IsVaultOn() {
 		id = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
 	} else {
-		// If we're either running unit tests, or integration tests with Vault, we force the "VaultOn" configuration to
-		// be true, since there are multiple places where this "if conf.VaultOn" check is run.
-		conf.VaultOn = true
+		// If we're either running unit tests, or integration tests with Vault, we force the secret store to be "vault"
+		// since there are multiple places where this "if config.IsVaultOn()" check is run.
+		conf.SecretStore = "vault"
 		id = fixtures.TestAuthenticationData[0].ID
 	}
 
@@ -124,7 +125,7 @@ func TestAuthenticationGet(t *testing.T) {
 		t.Error("Failed unmarshaling output")
 	}
 
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		if outAuthentication.ID != id {
 			t.Error("ghosts infected the return")
 		}
@@ -271,7 +272,7 @@ func TestAuthenticationUpdate(t *testing.T) {
 	)
 
 	c.SetParamNames("uid")
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
 	} else {
 		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
@@ -379,7 +380,7 @@ func TestAuthenticationDelete(t *testing.T) {
 
 	c.SetParamNames("uid")
 
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
 	} else {
 		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)

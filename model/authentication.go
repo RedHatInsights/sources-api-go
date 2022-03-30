@@ -167,7 +167,7 @@ func (auth *Authentication) Path() string {
 func mapIdExtraFields(auth *Authentication) (string, map[string]interface{}) {
 	var id string
 	var extra map[string]interface{}
-	if config.Get().VaultOn {
+	if config.IsVaultOn() {
 		id = auth.ID
 		extra = auth.Extra
 	} else {

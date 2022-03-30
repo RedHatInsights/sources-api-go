@@ -79,7 +79,7 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 	}
 
 	if update.Extra != nil {
-		if config.Get().VaultOn {
+		if config.IsVaultOn() {
 			auth.Extra = *update.Extra
 		} else {
 			var err error

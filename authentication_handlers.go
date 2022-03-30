@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -86,7 +87,7 @@ func AuthenticationCreate(c echo.Context) error {
 	var extra map[string]interface{}
 	var extraDb datatypes.JSON
 
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		extra = createRequest.Extra
 	} else {
 		extraDb, err = json.Marshal(createRequest.Extra)

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -28,7 +29,7 @@ func TestSourceListAuthentications(t *testing.T) {
 	tenantId := fixtures.TestTenantData[0].Id
 
 	// If we're running integration tests without Vault...
-	if parser.RunningIntegrationTests && !conf.VaultOn {
+	if parser.RunningIntegrationTests && !config.IsVaultOn() {
 		// Create one authentication for the database tests, to make sure that we at least have one we can fetch.
 		authsDao := dao.GetAuthenticationDao(&tenantId)
 		err := authsDao.Create(&fixtures.TestAuthenticationData[0])
@@ -36,9 +37,9 @@ func TestSourceListAuthentications(t *testing.T) {
 			t.Errorf(`could not create the authentication fixture for the test`)
 		}
 	} else {
-		// If we're either running unit tests, or integration tests with Vault, we force the "VaultOn" configuration to
-		// be true, since there are multiple places where this "if conf.VaultOn" check is run.
-		conf.VaultOn = true
+		// If we're either running unit tests, or integration tests with Vault, we force the secret store to be "vault"
+		// since there are multiple places where this "if config.IsVaultOn()" check is run.
+		conf.SecretStore = "vault"
 	}
 
 	c, rec := request.CreateTestContext(
@@ -84,7 +85,7 @@ func TestSourceListAuthentications(t *testing.T) {
 		t.Error("model did not deserialize as a source")
 	}
 
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		want := fixtures.TestAuthenticationData[0].ID
 		got := auth1["id"]
 

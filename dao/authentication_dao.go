@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -24,7 +25,7 @@ var GetAuthenticationDao func(*int64) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultAuthenticationDao(tenantId *int64) AuthenticationDao {
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		return &authenticationDaoImpl{
 			TenantID: tenantId,
 		}
@@ -621,7 +622,7 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 		}
 	}
 
-	if conf.VaultOn {
+	if config.IsVaultOn() {
 		if auth.Extra == nil {
 			auth.Extra = make(map[string]interface{})
 		}

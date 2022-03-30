@@ -127,7 +127,7 @@ func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
 // returns the token on the "extra" field.
 func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 	// We need to simulate that the Vault is online.
-	conf.VaultOn = true
+	conf.SecretStore = "vault"
 
 	// For this test we need to simulate that there is a cache hit, so the token cacher must return a proper fake
 	// bearer token
@@ -457,7 +457,7 @@ func TestAuthFromVault(t *testing.T) {
 // previous content.
 func TestAuthFromDbExtraNoContent(t *testing.T) {
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
-	conf.VaultOn = false
+	conf.SecretStore = "database"
 
 	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
 	// both miss the cache and be able to cache the provided token.
@@ -504,7 +504,7 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 // content.
 func TestAuthFromDbExtraPreviousContent(t *testing.T) {
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
-	conf.VaultOn = false
+	conf.SecretStore = "database"
 
 	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
 	// both miss the cache and be able to cache the provided token.
