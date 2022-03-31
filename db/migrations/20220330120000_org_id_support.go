@@ -105,52 +105,8 @@ func OrgIdSupport() *gormigrate.Migration {
 			return nil
 		},
 		Rollback: func(db *gorm.DB) error {
-			// Get all the EBS account numbers from the database.
-			var orgIds []string
-			err := db.
-				Debug().
-				Model(&Tenant{}).
-				Where("org_id IS NOT NULL").
-				Pluck("org_id", &orgIds).
-				Error
-
-			if err != nil {
-				return err
-			}
-
-			// Revert all OrgIds to EANs.
-			translator := tenantid.NewTranslator(config.Get().TenantTranslatorUrl)
-			results, err := translator.OrgIDsToEANs(context.Background(), orgIds)
-			if err != nil {
-				return err
-			}
-
-			// Revert the "OrgId"s back to "EAN"s.
-			for _, result := range results {
-				if result.Err != nil {
-					logging.Log.Errorf(`[org_id: %s] could not translate to "EAN": %s`, result.OrgID, err)
-				}
-
-				dbResult := db.
-					Debug().
-					Model(&Tenant{}).
-					Where("org_id = ?", result.OrgID).
-					Updates(map[string]interface{}{
-						"external_tenant": *result.EAN,
-						"org_id":          nil,
-					})
-
-				if dbResult.RowsAffected == 0 {
-					logging.Log.Errorf(`[org_id: %s] could not translate to "EAN", org id not found`, result.OrgID)
-				}
-
-				if err != nil {
-					logging.Log.Errorf(`[org_id: %s][external_tenant: %s] could no translate to "EAN": %s`, result.OrgID, *result.EAN, err)
-				}
-			}
-
 			// Remove the "org_id" column and remove the comment from the "external_tenant" column.
-			err = db.Transaction(func(tx *gorm.DB) error {
+			err := db.Transaction(func(tx *gorm.DB) error {
 				err := tx.
 					Debug().
 					Migrator().
