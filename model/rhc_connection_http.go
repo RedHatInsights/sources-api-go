@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/datatypes"
 	"time"
+
+	"gorm.io/datatypes"
 )
 
 // RhcConnectionCreateRequest represents a request coming from the outside to create a Red Hat Connector connection.
