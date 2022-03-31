@@ -77,13 +77,13 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 				return err
 			}
 
-			if strings.ToLower(output.Authentications[i].ResourceType) == "Application" {
+			if strings.ToLower(output.Authentications[i].ResourceType) == "application" {
 				output.ApplicationAuthentications = append(output.ApplicationAuthentications, m.ApplicationAuthentication{
 					// TODO: After vault migration.
 					// VaultPath:         output.Authentications[i].Path(),
-					ApplicationID:     output.Authentications[i].ResourceID,
-					AuthenticationUID: output.Authentications[i].ID,
-					TenantID:          *tenantID,
+					ApplicationID:    output.Authentications[i].ResourceID,
+					AuthenticationID: output.Authentications[i].DbID,
+					TenantID:         *tenantID,
 				})
 			}
 		}

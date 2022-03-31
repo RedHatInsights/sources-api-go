@@ -15,7 +15,7 @@ import (
 type Authentication struct {
 	DbID      int64     `gorm:"primaryKey; column:id" json:"-"`
 	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"created_at" gorm:"-"`
 
 	Name     string                 `json:"name,omitempty"`
 	AuthType string                 `gorm:"column:authtype" json:"authtype"`
@@ -23,7 +23,7 @@ type Authentication struct {
 	Password string                 `json:"password"`
 	Extra    map[string]interface{} `gorm:"-" json:"extra,omitempty"`
 	ExtraDb  datatypes.JSON         `gorm:"column:extra"`
-	Version  string                 `json:"version"`
+	Version  string                 `json:"version" gorm:"-"`
 
 	AvailabilityStatus      string     `json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
@@ -176,9 +176,11 @@ func mapIdExtraFields(auth *Authentication) (string, map[string]interface{}) {
 	} else {
 		id = strconv.FormatInt(auth.DbID, 10)
 
-		err := json.Unmarshal(auth.ExtraDb, &extra)
-		if err != nil {
-			logger.Log.Errorf(`could not unmarshal "extra" field from authentication with ID "%s"`, id)
+		if auth.ExtraDb != nil {
+			err := json.Unmarshal(auth.ExtraDb, &extra)
+			if err != nil {
+				logger.Log.Errorf(`could not unmarshal "extra" field from authentication with ID "%s"`, id)
+			}
 		}
 	}
 
