@@ -17,7 +17,7 @@ func parseSortBy(sortBy []*generated_model.SortBy) []util.Filter {
 
 	// parse the sortBy struct - including using an enum for asc/desc
 	for i, sby := range sortBy {
-		filter := util.Filter{Operation: "sort_by", Value: []string{sby.Field}}
+		filter := util.Filter{Operation: "sort_by", Value: []string{sby.Name}}
 
 		// ascending is default - so we only need to set it to desc if specified
 		if sby.Direction != nil && sby.Direction.IsValid() && sby.Direction.String() == "desc" {

@@ -26,7 +26,7 @@ enum Direction {
 
 # SortBy Object with just a field (which is required) and a direction asc/desc
 input SortBy{
-  field: String!
+  name: String!
   direction: Direction
 }
 

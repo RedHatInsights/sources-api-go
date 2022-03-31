@@ -19,7 +19,7 @@ type Meta struct {
 }
 
 type SortBy struct {
-	Field     string     `json:"field"`
+	Name      string     `json:"name"`
 	Direction *Direction `json:"direction"`
 }
 

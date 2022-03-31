@@ -589,7 +589,7 @@ enum Direction {
 
 # SortBy Object with just a field (which is required) and a direction asc/desc
 input SortBy{
-  field: String!
+  name: String!
   direction: Direction
 }
 
@@ -3700,11 +3700,11 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj interf
 
 	for k, v := range asMap {
 		switch k {
-		case "field":
+		case "name":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
-			it.Field, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
