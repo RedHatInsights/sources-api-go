@@ -36,11 +36,11 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 	// 0, size of limit (since we will not be returning more than that)
 	sources := make([]m.Source, 0, limit)
 
-	sourceType, err := m.NewRelationObject(primaryCollection, *s.TenantID, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, *s.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, util.NewErrNotFound(sourceType.StringBaseObject())
+		return nil, 0, util.NewErrNotFound(relationObject.StringBaseObject())
 	}
-	query := sourceType.HasMany(&m.Source{}, DB.Debug())
+	query := relationObject.HasMany(&m.Source{}, DB.Debug())
 
 	query = query.Where("sources.tenant_id = ?", s.TenantID)
 

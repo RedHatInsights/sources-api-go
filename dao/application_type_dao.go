@@ -32,12 +32,12 @@ func (a *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 	// 0, size of limit (since we will not be returning more than that)
 	applicationTypes := make([]m.ApplicationType, 0, limit)
 
-	applicationType, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
-	query := applicationType.HasMany(&m.ApplicationType{}, DB.Debug())
+	query := relationObject.HasMany(&m.ApplicationType{}, DB.Debug())
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
