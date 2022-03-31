@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -13,6 +14,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -22,6 +24,7 @@ import (
 )
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {
+	sourceID := 1
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/applications",
@@ -35,7 +38,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceID))
 
 	err := SourceListApplications(c)
 	if err != nil {
@@ -66,12 +69,23 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 
 	SortByStringValueOnKey("id", out.Data)
 
+	var wantData []m.Application
+	for _, app := range fixtures.TestApplicationData {
+		if app.SourceID == int64(sourceID) {
+			wantData = append(wantData, app)
+		}
+	}
+
+	if len(wantData) != len(out.Data) {
+		t.Errorf("not enough objects passed back from DB, want %d, got %d", len(wantData), len(out.Data))
+	}
+
 	a1, ok := out.Data[0].(map[string]interface{})
 	if !ok {
 		t.Error("model did not deserialize as a source")
 	}
 
-	if a1["id"] != "1" {
+	if a1["id"] != fmt.Sprintf("%d", wantData[0].ID) {
 		t.Error("ghosts infected the return")
 	}
 
@@ -80,7 +94,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 		t.Error("model did not deserialize as a source")
 	}
 
-	if a2["id"] != "2" {
+	if a2["id"] != fmt.Sprintf("%d", wantData[1].ID) {
 		t.Error("ghosts infected the return")
 	}
 
@@ -206,7 +220,7 @@ func TestApplicationList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestApplicationData) {
 		t.Error("not enough objects passed back from DB")
 	}
 

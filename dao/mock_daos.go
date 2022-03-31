@@ -84,10 +84,21 @@ func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit
 			return nil, 0, util.NewErrNotFound("application type")
 		}
 
-		// Application type exists = return sources subcollection
-		for index, source := range src.Sources {
-			if source.ID == object.Id {
-				sources = append(sources, src.Sources[index])
+		// Application type exists = find applications with given app type
+		// and save list of related source IDs
+		var sourceIDs []int64
+		for _, app := range fixtures.TestApplicationData {
+			if app.ApplicationTypeID == object.Id {
+				sourceIDs = append(sourceIDs, app.SourceID)
+			}
+		}
+
+		// For each source ID find source
+		for _, sourceID := range sourceIDs {
+			for _, s := range src.Sources {
+				if s.ID == sourceID {
+					sources = append(sources, s)
+				}
 			}
 		}
 
@@ -274,24 +285,44 @@ func (a *MockApplicationTypeDao) Delete(id *int64) error {
 }
 
 func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
-	var appTypes []m.ApplicationType
+	var appTypesOut []m.ApplicationType
 
-	for index, i := range a.ApplicationTypes {
-		switch object := primaryCollection.(type) {
-		case m.Source:
-			if i.Id == object.ID {
-				appTypes = append(appTypes, a.ApplicationTypes[index])
+	switch object := primaryCollection.(type) {
+	case m.Source:
+		var sourceExists bool
+		for _, src := range fixtures.TestSourceData {
+			if src.ID == object.ID {
+				sourceExists = true
 			}
-		default:
-			return nil, 0, fmt.Errorf("unexpected primary collection type")
 		}
-	}
-	count := int64(len(appTypes))
-	if count == 0 {
-		return nil, count, util.NewErrNotFound("application type")
+
+		if !sourceExists {
+			return nil, 0, util.NewErrNotFound("source")
+		}
+
+		var appTypeIdList []int
+		for _, app := range fixtures.TestApplicationData {
+			if app.SourceID == object.ID {
+				appTypeIdList = append(appTypeIdList, int(app.ApplicationTypeID))
+			}
+		}
+
+		for _, appType := range a.ApplicationTypes {
+			for _, id := range appTypeIdList {
+				if appType.Id == int64(id) {
+					appTypesOut = append(appTypesOut, appType)
+					break
+				}
+			}
+		}
+
+	default:
+		return nil, 0, fmt.Errorf("unexpected primary collection type")
 	}
 
-	return appTypes, count, nil
+	count := int64(len(appTypesOut))
+
+	return appTypesOut, count, nil
 }
 
 func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64) error {

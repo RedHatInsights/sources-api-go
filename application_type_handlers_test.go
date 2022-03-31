@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -50,7 +51,7 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != 2 {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -60,7 +61,7 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 			t.Error("model did not deserialize as a source")
 		}
 
-		if s["display_name"] != "test app type" {
+		if s["id"] == 1 && s["display_name"] != "test app type" {
 			t.Error("ghosts infected the return")
 		}
 	}
@@ -182,7 +183,7 @@ func TestApplicationTypeList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != len(fixtures.TestApplicationTypeData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -192,7 +193,7 @@ func TestApplicationTypeList(t *testing.T) {
 			t.Error("model did not deserialize as a application type response")
 		}
 
-		if s["display_name"] != "test app type" {
+		if s["id"] == 1 && s["display_name"] != "test app type" {
 			t.Error("ghosts infected the return")
 		}
 	}

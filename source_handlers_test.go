@@ -16,6 +16,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/kafka"
@@ -62,7 +63,7 @@ func TestSourceListAuthentications(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -376,7 +377,95 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 	testutils.BadRequestTest(t, rec)
 }
 
+func TestSourceTypeSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	// How many sources with given source type is in fixtures
+	// (adding new fixtures will not affect the test)
+	sourceTypeId := fixtures.TestSourceTypeData[0].Id
+	var wantSourcesCount int
+	for _, i := range fixtures.TestSourceData {
+		if i.SourceTypeID == sourceTypeId {
+			wantSourcesCount++
+		}
+	}
+
+	for _, i := range testData {
+
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			fmt.Sprintf("/api/sources/v3.1/source_types/%d/sources", sourceTypeId),
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		c.SetParamNames("source_type_id")
+		c.SetParamValues(fmt.Sprintf("%d", sourceTypeId))
+
+		err := SourceTypeListSource(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != wantSourcesCount {
+			t.Errorf("count not set correctly")
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := wantSourcesCount - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
+}
+
 func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
+	appTypeId := int64(1)
+	wantSourcesCount := helpers.GetSourcesCountWithAppType(appTypeId)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/1/sources",
@@ -390,14 +479,14 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 	)
 
 	c.SetParamNames("application_type_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", appTypeId))
 
 	err := ApplicationTypeListSource(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -415,7 +504,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != wantSourcesCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -425,7 +514,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 			t.Error("model did not deserialize as a source")
 		}
 
-		if s["name"] != "Source1" {
+		if s["id"] == 1 && s["name"] != "Source1" {
 			t.Error("ghosts infected the return")
 		}
 	}
@@ -512,6 +601,87 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *tes
 	testutils.BadRequestTest(t, rec)
 }
 
+func TestApplicationTypeListSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	// How many sources with given application type is in fixtures
+	// => check applications with given app type and for matched apps
+	// find sources
+	// (adding new fixtures will not affect the test)
+	appTypeId := int64(1)
+	wantSourcesCount := helpers.GetSourcesCountWithAppType(appTypeId)
+
+	for _, i := range testData {
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			fmt.Sprintf("/api/sources/v3.1/application_types/%d/sources", appTypeId),
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		c.SetParamNames("application_type_id")
+		c.SetParamValues(fmt.Sprintf("%d", appTypeId))
+
+		err := ApplicationTypeListSource(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != wantSourcesCount {
+			t.Errorf("count not set correctly, got %d, want %d", out.Meta.Count, wantSourcesCount)
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := wantSourcesCount - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
+}
+
 func TestSourceList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -529,7 +699,7 @@ func TestSourceList(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -545,6 +715,10 @@ func TestSourceList(t *testing.T) {
 
 	if out.Meta.Offset != 0 {
 		t.Error("offset not set correctly")
+	}
+
+	if out.Meta.Count != len(fixtures.TestSourceData) {
+		t.Errorf("count not set correctly")
 	}
 
 	if len(out.Data) != len(fixtures.TestSourceData) {
@@ -574,6 +748,76 @@ func TestSourceList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestSourceListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	for _, i := range testData {
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/sources",
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			})
+
+		err := SourceList(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != len(fixtures.TestSourceData) {
+			t.Errorf("count not set correctly")
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := len(fixtures.TestSourceData) - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
+}
+
 func TestSourceListSatellite(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
@@ -595,7 +839,7 @@ func TestSourceListSatellite(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -662,7 +906,7 @@ func TestSourceGet(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 

@@ -7,4 +7,8 @@ var TestApplicationTypeData = []m.ApplicationType{
 		Id:          1,
 		DisplayName: "test app type",
 	},
+	{
+		Id:          2,
+		DisplayName: "test app type 2",
+	},
 }
