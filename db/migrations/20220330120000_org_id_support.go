@@ -27,8 +27,8 @@ func OrgIdSupport() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "20220330120000",
 		Migrate: func(db *gorm.DB) error {
-			logging.Log.Info(`Migration "20220330120000" started`)
-			defer logging.Log.Info(`Migration "20220330120000" ended`)
+			logging.Log.Info(`Migration "external tenants to org ids" started`)
+			defer logging.Log.Info(`Migration "external tenants to org ids" ended`)
 
 			// Perform the table migration.
 			err := db.Transaction(func(tx *gorm.DB) error {
