@@ -77,7 +77,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 				return err
 			}
 
-			if strings.ToLower(output.Authentications[i].ResourceType) == "application" {
+			if strings.ToLower(output.Authentications[i].ResourceType) == "Application" {
 				output.ApplicationAuthentications = append(output.ApplicationAuthentications, m.ApplicationAuthentication{
 					// TODO: After vault migration.
 					// VaultPath:         output.Authentications[i].Path(),
@@ -253,7 +253,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 	for _, auth := range req.Authentications {
 		a := m.Authentication{}
 
-		a.ResourceType = auth.ResourceType
+		a.ResourceType = util.Capitalize(auth.ResourceType)
 		a.AuthType = auth.AuthType
 		a.Username = auth.Username
 		a.Password = auth.Password
