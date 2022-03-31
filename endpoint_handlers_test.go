@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
@@ -159,6 +160,91 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 	testutils.BadRequestTest(t, rec)
 }
 
+func TestSourceEndpointSubcollectionListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	sourceID := int64(1)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	// How many endpoints with given source ID is in fixtures
+	var wantEndpointsCount int
+	for _, e := range fixtures.TestEndpointData {
+		if e.SourceID == sourceID {
+			wantEndpointsCount++
+		}
+	}
+
+	for _, i := range testData {
+
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/sources/1/endpoints",
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		c.SetParamNames("source_id")
+		c.SetParamValues(fmt.Sprintf("%d", sourceID))
+
+		err := SourceListEndpoint(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != wantEndpointsCount {
+			t.Errorf("count not set correctly, got %d, want %d", out.Meta.Count, wantEndpointsCount)
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := wantEndpointsCount - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
+}
+
 func TestEndpointList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -195,7 +281,7 @@ func TestEndpointList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestEndpointData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -246,6 +332,78 @@ func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
 	}
 
 	testutils.BadRequestTest(t, rec)
+}
+
+func TestEndpointListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	for _, i := range testData {
+
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/endpoints",
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		err := EndpointList(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != len(fixtures.TestEndpointData) {
+			t.Errorf("count not set correctly")
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := len(fixtures.TestEndpointData) - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
 }
 
 func TestEndpointGet(t *testing.T) {

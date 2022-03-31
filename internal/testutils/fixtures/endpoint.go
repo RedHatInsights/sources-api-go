@@ -37,4 +37,14 @@ var TestEndpointData = []m.Endpoint{
 		Host:     &host2,
 		Path:     &path2,
 	},
+	{
+		ID:       3,
+		SourceID: 2,
+		TenantID: 1,
+		Port:     &port,
+		Default:  &defaultValueSource2,
+		Scheme:   &scheme2,
+		Host:     &host2,
+		Path:     &path2,
+	},
 }
