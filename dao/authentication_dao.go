@@ -277,6 +277,7 @@ func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 	}
 
 	auth.ID = uuid.New().String()
+	auth.CreatedAt = time.Now()
 	path := fmt.Sprintf("secret/data/%d/%s_%v_%s", *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 
 	data, err := auth.ToVaultMap()
@@ -303,6 +304,7 @@ func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 // source ID is set beforehand.
 func (a *authenticationDaoImpl) BulkCreate(auth *m.Authentication) error {
 	auth.ID = uuid.New().String()
+	auth.CreatedAt = time.Now()
 	path := fmt.Sprintf("secret/data/%d/%s_%v_%s", *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 
 	data, err := auth.ToVaultMap()
