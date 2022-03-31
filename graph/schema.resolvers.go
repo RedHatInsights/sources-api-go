@@ -22,14 +22,6 @@ func (r *applicationResolver) ApplicationTypeID(ctx context.Context, obj *model.
 	return strconv.Itoa(int(obj.ApplicationTypeID)), nil
 }
 
-func (r *applicationResolver) AvailabilityStatus(ctx context.Context, obj *model.Application) (*string, error) {
-	if obj.AvailabilityStatus.AvailabilityStatus == "" {
-		return nil, nil
-	}
-
-	return &obj.AvailabilityStatus.AvailabilityStatus, nil
-}
-
 func (r *applicationResolver) Extra(ctx context.Context, obj *model.Application) (interface{}, error) {
 	if obj.Extra == nil {
 		return nil, nil
@@ -58,14 +50,6 @@ func (r *applicationResolver) TenantID(ctx context.Context, obj *model.Applicati
 	return strconv.Itoa(int(*tenantIdFromCtx(ctx))), nil
 }
 
-func (r *authenticationResolver) AvailabilityStatus(ctx context.Context, obj *model.Authentication) (*string, error) {
-	if obj.AvailabilityStatus.AvailabilityStatus == "" {
-		return nil, nil
-	}
-
-	return &obj.AvailabilityStatus.AvailabilityStatus, nil
-}
-
 func (r *authenticationResolver) ResourceID(ctx context.Context, obj *model.Authentication) (string, error) {
 	return strconv.Itoa(int(obj.ResourceID)), nil
 }
@@ -76,14 +60,6 @@ func (r *authenticationResolver) TenantID(ctx context.Context, obj *model.Authen
 
 func (r *endpointResolver) ID(ctx context.Context, obj *model.Endpoint) (string, error) {
 	return strconv.Itoa(int(obj.ID)), nil
-}
-
-func (r *endpointResolver) AvailabilityStatus(ctx context.Context, obj *model.Endpoint) (*string, error) {
-	if obj.AvailabilityStatus.AvailabilityStatus == "" {
-		return nil, nil
-	}
-
-	return &obj.AvailabilityStatus.AvailabilityStatus, nil
 }
 
 func (r *endpointResolver) Authentications(ctx context.Context, obj *model.Endpoint) ([]*model.Authentication, error) {
@@ -139,14 +115,6 @@ func (r *sourceResolver) ID(ctx context.Context, obj *model.Source) (string, err
 
 func (r *sourceResolver) SourceTypeID(ctx context.Context, obj *model.Source) (string, error) {
 	return strconv.Itoa(int(obj.SourceTypeID)), nil
-}
-
-func (r *sourceResolver) AvailabilityStatus(ctx context.Context, obj *model.Source) (*string, error) {
-	if obj.AvailabilityStatus.AvailabilityStatus == "" {
-		return nil, nil
-	}
-
-	return &obj.AvailabilityStatus.AvailabilityStatus, nil
 }
 
 func (r *sourceResolver) Authentications(ctx context.Context, obj *model.Source) ([]*model.Authentication, error) {

@@ -118,22 +118,17 @@ type ComplexityRoot struct {
 type ApplicationResolver interface {
 	ID(ctx context.Context, obj *model1.Application) (string, error)
 	ApplicationTypeID(ctx context.Context, obj *model1.Application) (string, error)
-	AvailabilityStatus(ctx context.Context, obj *model1.Application) (*string, error)
 
 	Extra(ctx context.Context, obj *model1.Application) (interface{}, error)
 	Authentications(ctx context.Context, obj *model1.Application) ([]*model1.Authentication, error)
 	TenantID(ctx context.Context, obj *model1.Application) (string, error)
 }
 type AuthenticationResolver interface {
-	AvailabilityStatus(ctx context.Context, obj *model1.Authentication) (*string, error)
-
 	ResourceID(ctx context.Context, obj *model1.Authentication) (string, error)
 	TenantID(ctx context.Context, obj *model1.Authentication) (string, error)
 }
 type EndpointResolver interface {
 	ID(ctx context.Context, obj *model1.Endpoint) (string, error)
-
-	AvailabilityStatus(ctx context.Context, obj *model1.Endpoint) (*string, error)
 
 	Authentications(ctx context.Context, obj *model1.Endpoint) ([]*model1.Authentication, error)
 	TenantID(ctx context.Context, obj *model1.Endpoint) (string, error)
@@ -146,8 +141,6 @@ type SourceResolver interface {
 	ID(ctx context.Context, obj *model1.Source) (string, error)
 
 	SourceTypeID(ctx context.Context, obj *model1.Source) (string, error)
-
-	AvailabilityStatus(ctx context.Context, obj *model1.Source) (*string, error)
 
 	Authentications(ctx context.Context, obj *model1.Source) ([]*model1.Authentication, error)
 	Endpoints(ctx context.Context, obj *model1.Source) ([]*model1.Endpoint, error)
@@ -855,14 +848,14 @@ func (ec *executionContext) _Application_availability_status(ctx context.Context
 		Object:     "Application",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Application().AvailabilityStatus(rctx, obj)
+		return obj.AvailabilityStatus, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -871,9 +864,9 @@ func (ec *executionContext) _Application_availability_status(ctx context.Context
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Application_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
@@ -935,9 +928,9 @@ func (ec *executionContext) _Application_paused_at(ctx context.Context, field gr
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Application_extra(ctx context.Context, field graphql.CollectedField, obj *model1.Application) (ret graphql.Marshaler) {
@@ -1158,14 +1151,14 @@ func (ec *executionContext) _Authentication_availability_status(ctx context.Cont
 		Object:     "Authentication",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Authentication().AvailabilityStatus(rctx, obj)
+		return obj.AvailabilityStatus, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1174,9 +1167,9 @@ func (ec *executionContext) _Authentication_availability_status(ctx context.Cont
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Authentication_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
@@ -1618,14 +1611,14 @@ func (ec *executionContext) _Endpoint_availability_status(ctx context.Context, f
 		Object:     "Endpoint",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Endpoint().AvailabilityStatus(rctx, obj)
+		return obj.AvailabilityStatus, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1634,9 +1627,9 @@ func (ec *executionContext) _Endpoint_availability_status(ctx context.Context, f
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Endpoint_availability_status_error(ctx context.Context, field graphql.CollectedField, obj *model1.Endpoint) (ret graphql.Marshaler) {
@@ -2142,14 +2135,14 @@ func (ec *executionContext) _Source_availability_status(ctx context.Context, fie
 		Object:     "Source",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Source().AvailabilityStatus(rctx, obj)
+		return obj.AvailabilityStatus, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2158,9 +2151,9 @@ func (ec *executionContext) _Source_availability_status(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_source_ref(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
@@ -2257,9 +2250,9 @@ func (ec *executionContext) _Source_last_checked_at(ctx context.Context, field g
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_last_available_at(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
@@ -2289,9 +2282,9 @@ func (ec *executionContext) _Source_last_available_at(ctx context.Context, field
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_paused_at(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
@@ -2321,9 +2314,9 @@ func (ec *executionContext) _Source_paused_at(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(*time.Time)
 	fc.Result = res
-	return ec.marshalOTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_authentications(ctx context.Context, field graphql.CollectedField, obj *model1.Source) (ret graphql.Marshaler) {
@@ -3781,22 +3774,12 @@ func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionS
 
 			})
 		case "availability_status":
-			field := field
-
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Application_availability_status(ctx, field, obj)
-				return res
+				return ec._Application_availability_status(ctx, field, obj)
 			}
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
+			out.Values[i] = innerFunc(ctx)
 
-			})
 		case "availability_status_error":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Application_availability_status_error(ctx, field, obj)
@@ -3920,22 +3903,12 @@ func (ec *executionContext) _Authentication(ctx context.Context, sel ast.Selecti
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "availability_status":
-			field := field
-
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Authentication_availability_status(ctx, field, obj)
-				return res
+				return ec._Authentication_availability_status(ctx, field, obj)
 			}
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
+			out.Values[i] = innerFunc(ctx)
 
-			})
 		case "availability_status_error":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Authentication_availability_status_error(ctx, field, obj)
@@ -4091,22 +4064,12 @@ func (ec *executionContext) _Endpoint(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = innerFunc(ctx)
 
 		case "availability_status":
-			field := field
-
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Endpoint_availability_status(ctx, field, obj)
-				return res
+				return ec._Endpoint_availability_status(ctx, field, obj)
 			}
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
+			out.Values[i] = innerFunc(ctx)
 
-			})
 		case "availability_status_error":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Endpoint_availability_status_error(ctx, field, obj)
@@ -4374,22 +4337,12 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = innerFunc(ctx)
 
 		case "availability_status":
-			field := field
-
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Source_availability_status(ctx, field, obj)
-				return res
+				return ec._Source_availability_status(ctx, field, obj)
 			}
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
+			out.Values[i] = innerFunc(ctx)
 
-			})
 		case "source_ref":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Source_source_ref(ctx, field, obj)
@@ -5629,13 +5582,19 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalOTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
 	res, err := graphql.UnmarshalTime(v)
-	return res, graphql.ErrorOnPath(ctx, err)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	res := graphql.MarshalTime(v)
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalTime(*v)
 	return res
 }
 
