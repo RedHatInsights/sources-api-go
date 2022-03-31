@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -59,19 +62,45 @@ func TestAuthenticationList(t *testing.T) {
 		t.Error("model did not deserialize as a source")
 	}
 
-	if auth1["id"] != fixtures.TestAuthenticationData[0].ID {
-		t.Error("ghosts infected the return")
+	if config.IsVaultOn() {
+		if auth1["id"] != fixtures.TestAuthenticationData[0].ID {
+			t.Errorf(`wrong authentication list fetched. Want authentications from the fixtures, got: %s`, auth1)
+		}
+	} else {
+		outIdStr, ok := auth1["id"].(string)
+		if !ok {
+			t.Errorf(`Want "string", got "%s"`, auth1)
+		}
+
+		outId, err := strconv.ParseInt(outIdStr, 10, 64)
+		if err != nil {
+			t.Errorf(`The ID of the payload could not be converted to int64: %s`, err)
+		}
+
+		if fixtures.TestAuthenticationData[0].DbID != outId {
+			t.Errorf(`wrong authentication list fetched. Want authentications from the fixtures, got: %s`, auth1)
+		}
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestAuthenticationGet(t *testing.T) {
-	uid := fixtures.TestAuthenticationData[0].ID
+	var id string
+
+	// If we're running integration tests without Vault...
+	if parser.RunningIntegrationTests && !config.IsVaultOn() {
+		id = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+	} else {
+		// If we're either running unit tests, or integration tests with Vault, we force the secret store to be "vault"
+		// since there are multiple places where this "if config.IsVaultOn()" check is run.
+		conf.SecretStore = "vault"
+		id = fixtures.TestAuthenticationData[0].ID
+	}
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
-		"/api/sources/v3.1/authentications/"+uid,
+		"/api/sources/v3.1/authentications/"+id,
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
@@ -79,7 +108,7 @@ func TestAuthenticationGet(t *testing.T) {
 	)
 
 	c.SetParamNames("uid")
-	c.SetParamValues(uid)
+	c.SetParamValues(id)
 
 	err := AuthenticationGet(c)
 	if err != nil {
@@ -96,8 +125,14 @@ func TestAuthenticationGet(t *testing.T) {
 		t.Error("Failed unmarshaling output")
 	}
 
-	if outAuthentication.ID != uid {
-		t.Error("ghosts infected the return")
+	if config.IsVaultOn() {
+		if outAuthentication.ID != id {
+			t.Error("ghosts infected the return")
+		}
+	} else {
+		if outAuthentication.ID != id {
+			t.Errorf(`wrong authentication fetched. Want "%s", got "%s"`, id, outAuthentication.ID)
+		}
 	}
 }
 
@@ -237,7 +272,12 @@ func TestAuthenticationUpdate(t *testing.T) {
 	)
 
 	c.SetParamNames("uid")
-	c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
+	if config.IsVaultOn() {
+		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
+	} else {
+		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+		c.SetParamValues(id)
+	}
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	err = AuthenticationUpdate(c)
@@ -339,7 +379,13 @@ func TestAuthenticationDelete(t *testing.T) {
 	)
 
 	c.SetParamNames("uid")
-	c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
+
+	if config.IsVaultOn() {
+		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
+	} else {
+		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+		c.SetParamValues(id)
+	}
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	err := AuthenticationDelete(c)

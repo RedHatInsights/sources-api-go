@@ -1,13 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"gorm.io/datatypes"
 )
 
 var getAuthenticationDao func(c echo.Context) (dao.AuthenticationDao, error)
@@ -81,12 +84,26 @@ func AuthenticationCreate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	var extra map[string]interface{}
+	var extraDb datatypes.JSON
+
+	if config.IsVaultOn() {
+		extra = createRequest.Extra
+	} else {
+		extraDb, err = json.Marshal(createRequest.Extra)
+
+		if err != nil {
+			return util.NewErrBadRequest(`invalid JSON given in "extra" field`)
+		}
+	}
+
 	auth := &m.Authentication{
 		Name:         createRequest.Name,
 		AuthType:     createRequest.AuthType,
 		Username:     createRequest.Username,
 		Password:     createRequest.Password,
-		Extra:        createRequest.Extra,
+		Extra:        extra,
+		ExtraDb:      extraDb,
 		ResourceType: createRequest.ResourceType,
 		ResourceID:   createRequest.ResourceID,
 	}
@@ -116,7 +133,11 @@ func AuthenticationUpdate(c echo.Context) error {
 		return err
 	}
 
-	auth.UpdateFromRequest(updateRequest)
+	err = auth.UpdateFromRequest(updateRequest)
+	if err != nil {
+		return util.NewErrBadRequest(`invalid JSON given in "extra" field`)
+	}
+
 	err = authDao.Update(auth)
 	if err != nil {
 		return util.NewErrBadRequest(err)

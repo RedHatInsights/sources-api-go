@@ -391,6 +391,7 @@ type TestData struct {
 
 func TestConsumeStatusMessage(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	config.SecretStore = "vault"
 
 	dao.Vault = &mocks.MockVault{}
 

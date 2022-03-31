@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
@@ -23,6 +26,22 @@ import (
 )
 
 func TestSourceListAuthentications(t *testing.T) {
+	tenantId := fixtures.TestTenantData[0].Id
+
+	// If we're running integration tests without Vault...
+	if parser.RunningIntegrationTests && !config.IsVaultOn() {
+		// Create one authentication for the database tests, to make sure that we at least have one we can fetch.
+		authsDao := dao.GetAuthenticationDao(&tenantId)
+		err := authsDao.Create(&fixtures.TestAuthenticationData[0])
+		if err != nil {
+			t.Errorf(`could not create the authentication fixture for the test`)
+		}
+	} else {
+		// If we're either running unit tests, or integration tests with Vault, we force the secret store to be "vault"
+		// since there are multiple places where this "if config.IsVaultOn()" check is run.
+		conf.SecretStore = "vault"
+	}
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/authentications",
@@ -31,7 +50,7 @@ func TestSourceListAuthentications(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -66,8 +85,29 @@ func TestSourceListAuthentications(t *testing.T) {
 		t.Error("model did not deserialize as a source")
 	}
 
-	if auth1["id"] != fixtures.TestAuthenticationData[0].ID {
-		t.Error("ghosts infected the return")
+	if config.IsVaultOn() {
+		want := fixtures.TestAuthenticationData[0].ID
+		got := auth1["id"]
+
+		if want != got {
+			t.Errorf(`the IDs from the authentication don't match. Want "%s", got "%s"'`, want, got)
+		}
+	} else {
+		want := fixtures.TestAuthenticationData[0].DbID
+
+		outputId, ok := auth1["id"].(string)
+		if !ok {
+			t.Errorf(`invalid ID received from authentication. Want "%s", got "%s"`, "string", reflect.TypeOf(auth1["id"]))
+		}
+
+		got, err := strconv.ParseInt(outputId, 10, 64)
+		if err != nil {
+			t.Errorf(`could not parse ID from authentication: %s`, err)
+		}
+
+		if want != got {
+			t.Errorf(`the IDs from the authentication don't match. Want "%d", got "%d"'`, want, got)
+		}
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)

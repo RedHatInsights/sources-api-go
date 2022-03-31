@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/RedHatInsights/sources-api-go/config"
+)
 
 type AuthenticationResponse struct {
 	ID        string `json:"id"`
@@ -59,7 +64,7 @@ type AuthenticationEditRequest struct {
 	AvailabilityStatusError *string                 `json:"availability_status_error,omitempty"`
 }
 
-func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest) {
+func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest) error {
 	if update.Name != nil {
 		auth.Name = *update.Name
 	}
@@ -72,13 +77,26 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 	if update.Password != nil {
 		auth.Password = *update.Password
 	}
+
 	if update.Extra != nil {
-		auth.Extra = *update.Extra
+		if config.IsVaultOn() {
+			auth.Extra = *update.Extra
+		} else {
+			var err error
+			auth.ExtraDb, err = json.Marshal(*update.Extra)
+
+			if err != nil {
+				return err
+			}
+		}
 	}
+
 	if update.AvailabilityStatus != nil {
 		auth.AvailabilityStatus.AvailabilityStatus = *update.AvailabilityStatus
 	}
 	if update.AvailabilityStatusError != nil {
 		auth.AvailabilityStatusError = *update.AvailabilityStatusError
 	}
+
+	return nil
 }

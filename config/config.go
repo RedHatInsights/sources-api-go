@@ -43,6 +43,7 @@ type SourcesApiConfig struct {
 	StatusListener            bool
 	MigrationsSetup           bool
 	MigrationsReset           bool
+	SecretStore               string
 }
 
 // Get - returns the config parsed from runtime vars
@@ -113,6 +114,12 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
+	// The secret store defaults to the database in case an empty or an incorrect value are provided.
+	secretStore := os.Getenv("SECRET_STORE")
+	if secretStore != "database" && secretStore != "vault" {
+		secretStore = "database"
+	}
+	options.SetDefault("SecretStore", secretStore)
 
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
 	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
@@ -172,6 +179,7 @@ func Get() *SourcesApiConfig {
 		StatusListener:            options.GetBool("StatusListener"),
 		MigrationsSetup:           options.GetBool("MigrationsSetup"),
 		MigrationsReset:           options.GetBool("MigrationsReset"),
+		SecretStore:               options.GetString("SecretStore"),
 	}
 
 	return parsedConfig
@@ -184,4 +192,9 @@ func (sourceConfig *SourcesApiConfig) KafkaTopic(requestedTopic string) string {
 	}
 
 	return topic
+}
+
+// IsVaultOn returns true if the authentications are backed by Vault. False, if they are backed by the database.
+func IsVaultOn() bool {
+	return parsedConfig.SecretStore == "vault"
 }
