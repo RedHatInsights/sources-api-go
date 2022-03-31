@@ -33,8 +33,8 @@ func TestPausingApplication(t *testing.T) {
 	}
 
 	want := time.Now()
-	if !dateTimesAreSimilar(want, application.PausedAt) {
-		t.Errorf(`want now, got "%s"`, application.Pause.PausedAt)
+	if !dateTimesAreSimilar(want, *application.PausedAt) {
+		t.Errorf(`want now, got "%s"`, application.PausedAt)
 	}
 
 	DoneWithFixtures("pause_unpause")
@@ -58,9 +58,9 @@ func TestResumeApplication(t *testing.T) {
 		t.Errorf(`error fetching the application. Want nil error, got "%s"`, err)
 	}
 
-	var want time.Time
+	var want *time.Time
 	if want != application.PausedAt {
-		t.Errorf(`want "%s", got "%s"`, want, application.Pause.PausedAt)
+		t.Errorf(`want "%s", got "%s"`, want, application.PausedAt)
 	}
 
 	DoneWithFixtures("pause_unpause")

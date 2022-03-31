@@ -519,8 +519,8 @@ func TestApplicationEdit(t *testing.T) {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
 	}
 
-	if *app.AvailabilityStatusResponse.AvailabilityStatus != "available" {
-		t.Errorf("Wrong availability status, wanted %v got %v", "available", *app.AvailabilityStatusResponse.AvailabilityStatus)
+	if *app.AvailabilityStatus != "available" {
+		t.Errorf("Wrong availability status, wanted %v got %v", "available", *app.AvailabilityStatus)
 	}
 }
 

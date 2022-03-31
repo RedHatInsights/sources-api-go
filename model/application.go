@@ -10,17 +10,19 @@ import (
 )
 
 type Application struct {
-	AvailabilityStatus
-	Pause
+	ID        int64      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	PausedAt  *time.Time `json:"paused_at"`
 
-	ID        int64     `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
 
-	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
-	Extra                   datatypes.JSON `json:"extra,omitempty"`
-	SuperkeyData            datatypes.JSON `json:"-"`
-	GotSuperkeyUpdate       bool           `json:"-" gorm:"-"`
+	Extra             datatypes.JSON `json:"extra,omitempty"`
+	SuperkeyData      datatypes.JSON `json:"-"`
+	GotSuperkeyUpdate bool           `json:"-" gorm:"-"`
 
 	TenantID int64
 	Tenant   Tenant
@@ -35,18 +37,16 @@ type Application struct {
 }
 
 func (app *Application) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.DateTimeToRecordFormat(app.LastAvailableAt),
-		LastCheckedAt:   util.DateTimeToRecordFormat(app.LastCheckedAt)}
-
 	appEvent := &ApplicationEvent{
-		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(app.PausedAt)},
-		Extra:                   app.Extra,
 		ID:                      app.ID,
+		Extra:                   app.Extra,
 		CreatedAt:               util.DateTimeToRecordFormat(app.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(app.UpdatedAt),
+		PausedAt:                util.DateTimePointerToRecordFormat(app.PausedAt),
 		ApplicationTypeID:       app.ApplicationTypeID,
+		AvailabilityStatus:      util.StringValueOrNil(app.AvailabilityStatus),
+		LastAvailableAt:         util.DateTimePointerToRecordFormat(app.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRecordFormat(app.LastCheckedAt),
 		AvailabilityStatusError: util.StringValueOrNil(app.AvailabilityStatusError),
 		SourceID:                app.SourceID,
 		Tenant:                  &app.Tenant.ExternalTenant,
@@ -59,22 +59,19 @@ func (app *Application) ToResponse() *ApplicationResponse {
 	id := strconv.FormatInt(app.ID, 10)
 	sourceId := strconv.FormatInt(app.SourceID, 10)
 	appTypeId := strconv.FormatInt(app.ApplicationTypeID, 10)
-	asResponse := AvailabilityStatusResponse{
-		AvailabilityStatus: util.StringValueOrNil(app.AvailabilityStatus.AvailabilityStatus),
-		LastCheckedAt:      util.DateTimeToRFC3339(app.LastCheckedAt),
-		LastAvailableAt:    util.DateTimeToRFC3339(app.LastAvailableAt),
-	}
 
 	return &ApplicationResponse{
-		AvailabilityStatusResponse: asResponse,
-		ID:                         id,
-		CreatedAt:                  util.DateTimeToRFC3339(app.CreatedAt),
-		UpdatedAt:                  util.DateTimeToRFC3339(app.UpdatedAt),
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(app.PausedAt)},
-		AvailabilityStatusError:    app.AvailabilityStatusError,
-		Extra:                      app.Extra,
-		SourceID:                   sourceId,
-		ApplicationTypeID:          appTypeId,
+		ID:                      id,
+		CreatedAt:               util.DateTimeToRFC3339(app.CreatedAt),
+		UpdatedAt:               util.DateTimeToRFC3339(app.UpdatedAt),
+		PausedAt:                util.DateTimePointerToRFC3339(app.PausedAt),
+		AvailabilityStatus:      util.StringValueOrNil(app.AvailabilityStatus),
+		LastCheckedAt:           util.DateTimePointerToRFC3339(app.LastCheckedAt),
+		LastAvailableAt:         util.DateTimePointerToRFC3339(app.LastAvailableAt),
+		AvailabilityStatusError: app.AvailabilityStatusError,
+		Extra:                   app.Extra,
+		SourceID:                sourceId,
+		ApplicationTypeID:       appTypeId,
 	}
 }
 
@@ -97,7 +94,7 @@ func (app *Application) UpdateFromRequest(req *ApplicationEditRequest) {
 	}
 
 	if req.AvailabilityStatus != nil {
-		app.AvailabilityStatus = AvailabilityStatus{AvailabilityStatus: *req.AvailabilityStatus}
+		app.AvailabilityStatus = *req.AvailabilityStatus
 	}
 
 	if req.AvailabilityStatusError != nil {

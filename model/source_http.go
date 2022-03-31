@@ -29,12 +29,14 @@ type SourceEditRequest struct {
 // SourceResponse represents what we will always return to the users
 // of the API after a request.
 type SourceResponse struct {
-	AvailabilityStatusResponse
-	PauseResponse
+	AvailabilityStatus *string `json:"availability_status,omitempty"`
+	LastCheckedAt      string  `json:"last_checked_at,omitempty"`
+	LastAvailableAt    string  `json:"last_available_at,omitempty"`
 
 	ID                  string  `json:"id"`
 	CreatedAt           string  `json:"created_at"`
 	UpdatedAt           string  `json:"updated_at"`
+	PausedAt            string  `json:"paused_at,omitempty"`
 	Name                *string `json:"name"`
 	Uid                 *string `json:"uid,omitempty"`
 	Version             *string `json:"version,omitempty"`
@@ -67,8 +69,6 @@ func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
 		src.SourceRef = update.SourceRef
 	}
 	if update.AvailabilityStatus != nil {
-		src.AvailabilityStatus = AvailabilityStatus{
-			AvailabilityStatus: *update.AvailabilityStatus,
-		}
+		src.AvailabilityStatus = *update.AvailabilityStatus
 	}
 }

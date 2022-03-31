@@ -9,11 +9,10 @@ import (
 )
 
 type ApplicationAuthentication struct {
-	Pause
-
-	ID        int64     `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	PausedAt  *time.Time `json:"paused_at"`
 
 	VaultPath string `json:"vault_path"`
 
@@ -31,7 +30,7 @@ type ApplicationAuthentication struct {
 func (aa *ApplicationAuthentication) ToEvent() interface{} {
 	aaEvent := &ApplicationAuthenticationEvent{
 		ID:                aa.ID,
-		PauseEvent:        PauseEvent{PausedAt: util.DateTimeToRecordFormat(aa.PausedAt)},
+		PausedAt:          util.DateTimePointerToRecordFormat(aa.PausedAt),
 		CreatedAt:         util.DateTimeToRecordFormat(aa.CreatedAt),
 		UpdatedAt:         util.DateTimeToRecordFormat(aa.UpdatedAt),
 		ApplicationID:     aa.ApplicationID,

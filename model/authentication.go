@@ -13,20 +13,22 @@ import (
 )
 
 type Authentication struct {
-	AvailabilityStatus
-
 	DbID      int64     `gorm:"primaryKey; column:id" json:"-"`
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 
-	Name                    string                 `json:"name,omitempty"`
-	AuthType                string                 `gorm:"column:authtype" json:"authtype"`
-	Username                string                 `json:"username"`
-	Password                string                 `json:"password"`
-	Extra                   map[string]interface{} `gorm:"-" json:"extra,omitempty"`
-	ExtraDb                 datatypes.JSON         `gorm:"column:extra"`
-	Version                 string                 `json:"version"`
-	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
+	Name     string                 `json:"name,omitempty"`
+	AuthType string                 `gorm:"column:authtype" json:"authtype"`
+	Username string                 `json:"username"`
+	Password string                 `json:"password"`
+	Extra    map[string]interface{} `gorm:"-" json:"extra,omitempty"`
+	ExtraDb  datatypes.JSON         `gorm:"column:extra"`
+	Version  string                 `json:"version"`
+
+	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
+	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
 
 	SourceID int64 `json:"source_id"`
 	Source   Source
@@ -63,7 +65,7 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 		AuthType:                auth.AuthType,
 		Username:                auth.Username,
 		Extra:                   extra,
-		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
+		AvailabilityStatus:      auth.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              resourceID,
@@ -83,7 +85,7 @@ func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse
 		Username:                auth.Username,
 		Password:                auth.Password,
 		Extra:                   extra,
-		AvailabilityStatus:      auth.AvailabilityStatus.AvailabilityStatus,
+		AvailabilityStatus:      auth.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              resourceID,
@@ -103,10 +105,10 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 		"username":                  auth.Username,
 		"password":                  auth.Password,
 		"extra":                     auth.Extra,
-		"availability_status":       auth.AvailabilityStatus.AvailabilityStatus,
+		"availability_status":       auth.AvailabilityStatus,
 		"availability_status_error": auth.AvailabilityStatusError,
-		"last_checked_at":           auth.AvailabilityStatus.LastCheckedAt,
-		"last_available_at":         auth.AvailabilityStatus.LastAvailableAt,
+		"last_checked_at":           auth.LastCheckedAt,
+		"last_available_at":         auth.LastAvailableAt,
 		"resource_type":             auth.ResourceType,
 		"resource_id":               strconv.FormatInt(auth.ResourceID, 10),
 		"source_id":                 strconv.FormatInt(auth.SourceID, 10),
@@ -118,13 +120,8 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 }
 
 func (auth *Authentication) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(auth.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.DateTimeToRecordFormat(auth.LastAvailableAt),
-		LastCheckedAt:   util.DateTimeToRecordFormat(auth.LastCheckedAt)}
-
 	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationEvent{
-		AvailabilityStatusEvent: asEvent,
 		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
 		Name:                    auth.Name,
@@ -132,6 +129,9 @@ func (auth *Authentication) ToEvent() interface{} {
 		Version:                 auth.Version,
 		Username:                auth.Username,
 		Extra:                   extra,
+		AvailabilityStatus:      util.StringValueOrNil(auth.AvailabilityStatus),
+		LastAvailableAt:         util.DateTimePointerToRecordFormat(auth.LastAvailableAt),
+		LastCheckedAt:           util.DateTimePointerToRecordFormat(auth.LastCheckedAt),
 		AvailabilityStatusError: &auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              auth.ResourceID,
@@ -142,11 +142,13 @@ func (auth *Authentication) ToEvent() interface{} {
 
 func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 	if attributes["last_checked_at"] != nil {
-		auth.AvailabilityStatus.LastCheckedAt, _ = time.Parse(time.RFC3339Nano, attributes["last_checked_at"].(string))
+		lastCheckedAt, _ := time.Parse(time.RFC3339Nano, attributes["last_checked_at"].(string))
+		auth.LastCheckedAt = &lastCheckedAt
 	}
 
 	if attributes["last_available_at"] != nil {
-		auth.AvailabilityStatus.LastAvailableAt, _ = time.Parse(time.RFC3339Nano, attributes["last_available_at"].(string))
+		lastAvailableAt, _ := time.Parse(time.RFC3339Nano, attributes["last_available_at"].(string))
+		auth.LastAvailableAt = &lastAvailableAt
 	}
 
 	if attributes["availability_status_error"] != nil {
@@ -154,7 +156,7 @@ func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 	}
 
 	if attributes["availability_status"] != nil {
-		auth.AvailabilityStatus.AvailabilityStatus, _ = attributes["availability_status"].(string)
+		auth.AvailabilityStatus, _ = attributes["availability_status"].(string)
 	}
 
 	return nil

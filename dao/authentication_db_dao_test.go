@@ -664,7 +664,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 
 	{
 		want := now
-		got := dbAuth.AvailabilityStatus.LastCheckedAt
+		got := *dbAuth.LastCheckedAt
 
 		if !dateTimesAreSimilar(want, got) {
 			t.Errorf(`authentication was not updated. Want "last checked at" "%s", got "%s"`, want, got)
@@ -673,7 +673,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 
 	{
 		want := now
-		got := dbAuth.AvailabilityStatus.LastAvailableAt
+		got := *dbAuth.LastAvailableAt
 
 		if !dateTimesAreSimilar(want, got) {
 			t.Errorf(`authentication was not updated. Want "last available at" "%s", got "%s"`, want, got)
@@ -682,7 +682,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 
 	{
 		want := availabilityStatus
-		got := dbAuth.AvailabilityStatus.AvailabilityStatus
+		got := dbAuth.AvailabilityStatus
 
 		if want != got {
 			t.Errorf(`authentication was not updated. Want "availability status" "%s", got "%s"`, want, got)

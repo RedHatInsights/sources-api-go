@@ -16,13 +16,15 @@ const (
 // Source struct that includes all of the fields on the table
 // used internally for business logic
 type Source struct {
-	AvailabilityStatus
-	Pause
+	AvailabilityStatus string     `json:"availability_status,omitempty"`
+	LastCheckedAt      *time.Time `json:"last_checked_at,omitempty"`
+	LastAvailableAt    *time.Time `json:"last_available_at,omitempty"`
 
 	//fields for gorm
-	ID        int64     `gorm:"primarykey" json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int64      `gorm:"primarykey" json:"id"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	PausedAt  *time.Time `json:"paused_at"`
 
 	// standard source fields
 	Name                string  `json:"name"`
@@ -45,24 +47,22 @@ type Source struct {
 }
 
 func (src *Source) ToEvent() interface{} {
-	asEvent := AvailabilityStatusEvent{AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
-		LastAvailableAt: util.DateTimeToRecordFormat(src.LastAvailableAt),
-		LastCheckedAt:   util.DateTimeToRecordFormat(src.LastCheckedAt)}
-
 	sourceEvent := &SourceEvent{
-		AvailabilityStatusEvent: asEvent,
-		PauseEvent:              PauseEvent{PausedAt: util.DateTimeToRecordFormat(src.PausedAt)},
-		ID:                      &src.ID,
-		CreatedAt:               util.DateTimeToRecordFormat(src.CreatedAt),
-		UpdatedAt:               util.DateTimeToRecordFormat(src.UpdatedAt),
-		Name:                    &src.Name,
-		UID:                     src.Uid,
-		Version:                 src.Version,
-		Imported:                src.Imported,
-		SourceRef:               src.SourceRef,
-		AppCreationWorkflow:     &src.AppCreationWorkflow,
-		SourceTypeID:            &src.SourceTypeID,
-		Tenant:                  &src.Tenant.ExternalTenant,
+		ID:                  &src.ID,
+		CreatedAt:           util.DateTimeToRecordFormat(src.CreatedAt),
+		UpdatedAt:           util.DateTimeToRecordFormat(src.UpdatedAt),
+		PausedAt:            util.DateTimePointerToRecordFormat(src.PausedAt),
+		AvailabilityStatus:  util.StringValueOrNil(src.AvailabilityStatus),
+		LastAvailableAt:     util.DateTimePointerToRecordFormat(src.LastAvailableAt),
+		LastCheckedAt:       util.DateTimePointerToRecordFormat(src.LastCheckedAt),
+		Name:                &src.Name,
+		UID:                 src.Uid,
+		Version:             src.Version,
+		Imported:            src.Imported,
+		SourceRef:           src.SourceRef,
+		AppCreationWorkflow: &src.AppCreationWorkflow,
+		SourceTypeID:        &src.SourceTypeID,
+		Tenant:              &src.Tenant.ExternalTenant,
 	}
 
 	return sourceEvent
@@ -71,25 +71,22 @@ func (src *Source) ToEvent() interface{} {
 func (src *Source) ToResponse() *SourceResponse {
 	id := strconv.FormatInt(src.ID, 10)
 	stid := strconv.FormatInt(src.SourceTypeID, 10)
-	asResponse := AvailabilityStatusResponse{
-		AvailabilityStatus: util.StringValueOrNil(src.AvailabilityStatus.AvailabilityStatus),
-		LastCheckedAt:      util.DateTimeToRFC3339(src.LastCheckedAt),
-		LastAvailableAt:    util.DateTimeToRFC3339(src.LastAvailableAt),
-	}
 
 	return &SourceResponse{
-		AvailabilityStatusResponse: asResponse,
-		PauseResponse:              PauseResponse{PausedAt: util.DateTimeToRFC3339(src.PausedAt)},
-		ID:                         id,
-		CreatedAt:                  util.DateTimeToRFC3339(src.CreatedAt),
-		UpdatedAt:                  util.DateTimeToRFC3339(src.UpdatedAt),
-		Name:                       &src.Name,
-		Uid:                        src.Uid,
-		Version:                    src.Version,
-		Imported:                   src.Imported,
-		SourceRef:                  src.SourceRef,
-		AppCreationWorkflow:        &src.AppCreationWorkflow,
-		SourceTypeId:               stid,
+		AvailabilityStatus:  util.StringValueOrNil(src.AvailabilityStatus),
+		LastCheckedAt:       util.DateTimePointerToRFC3339(src.LastCheckedAt),
+		LastAvailableAt:     util.DateTimePointerToRFC3339(src.LastAvailableAt),
+		ID:                  id,
+		CreatedAt:           util.DateTimeToRFC3339(src.CreatedAt),
+		UpdatedAt:           util.DateTimeToRFC3339(src.UpdatedAt),
+		PausedAt:            util.DateTimePointerToRFC3339(src.PausedAt),
+		Name:                &src.Name,
+		Uid:                 src.Uid,
+		Version:             src.Version,
+		Imported:            src.Imported,
+		SourceRef:           src.SourceRef,
+		AppCreationWorkflow: &src.AppCreationWorkflow,
+		SourceTypeId:        stid,
 	}
 }
 
@@ -99,7 +96,7 @@ func (src *Source) ToInternalResponse() *SourceInternalResponse {
 
 	source := &SourceInternalResponse{
 		Id:                 &id,
-		AvailabilityStatus: &src.AvailabilityStatus.AvailabilityStatus,
+		AvailabilityStatus: &src.AvailabilityStatus,
 		ExternalTenant:     &src.Tenant.ExternalTenant,
 	}
 

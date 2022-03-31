@@ -5,13 +5,14 @@ import (
 )
 
 type ApplicationResponse struct {
-	AvailabilityStatusResponse
-	PauseResponse
-
 	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	PausedAt  string `json:"paused_at,omitempty"`
 
+	AvailabilityStatus      *string        `json:"availability_status,omitempty"`
+	LastCheckedAt           string         `json:"last_checked_at,omitempty"`
+	LastAvailableAt         string         `json:"last_available_at,omitempty"`
 	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
 

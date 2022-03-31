@@ -79,12 +79,12 @@ func TestPausingSource(t *testing.T) {
 	}
 
 	want := time.Now()
-	if !dateTimesAreSimilar(want, source.PausedAt) {
-		t.Errorf(`want "%s", got "%s"`, want, source.PausedAt)
+	if !dateTimesAreSimilar(want, *source.PausedAt) {
+		t.Errorf(`want "%s", got "%s"`, want, *source.PausedAt)
 	}
 
 	for _, app := range source.Applications {
-		if !dateTimesAreSimilar(want, app.PausedAt) {
+		if !dateTimesAreSimilar(want, *app.PausedAt) {
 			t.Errorf(`application not properly paused. Want "%s", got "%s"`, want, app.PausedAt)
 		}
 	}
@@ -109,13 +109,13 @@ func TestResumingSource(t *testing.T) {
 		t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
 	}
 
-	var want time.Time
+	var want *time.Time
 	if want != source.PausedAt {
 		t.Errorf(`want "%s", got "%s"`, want, source.PausedAt)
 	}
 
 	for _, app := range source.Applications {
-		if !dateTimesAreSimilar(want, app.PausedAt) {
+		if app.PausedAt != nil {
 			t.Errorf(`application not properly resumed. Want "%s", got "%s"`, want, app.PausedAt)
 		}
 	}

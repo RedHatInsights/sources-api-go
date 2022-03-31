@@ -152,7 +152,7 @@ func EndpointCreate(c echo.Context) error {
 		Path:                 &input.Path,
 		VerifySsl:            input.VerifySsl,
 		CertificateAuthority: input.CertificateAuthority,
-		AvailabilityStatus:   m.AvailabilityStatus{AvailabilityStatus: input.AvailabilityStatus},
+		AvailabilityStatus:   input.AvailabilityStatus,
 		SourceID:             input.SourceID,
 	}
 

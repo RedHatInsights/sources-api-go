@@ -113,10 +113,8 @@ func SourceCreate(c echo.Context) error {
 		Imported:            input.Imported,
 		SourceRef:           input.SourceRef,
 		AppCreationWorkflow: input.AppCreationWorkflow,
-		AvailabilityStatus: m.AvailabilityStatus{
-			AvailabilityStatus: input.AvailabilityStatus,
-		},
-		SourceTypeID: *input.SourceTypeID,
+		AvailabilityStatus:  input.AvailabilityStatus,
+		SourceTypeID:        *input.SourceTypeID,
 	}
 
 	err = sourcesDB.Create(source)

@@ -90,18 +90,18 @@ func PopulateDateFieldsFrom(resource interface{}) DateFields {
 	switch typedResource := resource.(type) {
 	case *m.Source:
 		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = typedResource.LastCheckedAt
+		dateFields.LastAvailableAt = *typedResource.LastAvailableAt
+		dateFields.LastCheckedAt = *typedResource.LastCheckedAt
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.Application:
 		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = typedResource.LastCheckedAt
+		dateFields.LastAvailableAt = *typedResource.LastAvailableAt
+		dateFields.LastCheckedAt = *typedResource.LastCheckedAt
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.Endpoint:
 		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = typedResource.LastCheckedAt
+		dateFields.LastAvailableAt = *typedResource.LastAvailableAt
+		dateFields.LastCheckedAt = *typedResource.LastCheckedAt
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.ApplicationAuthentication:
 		dateFields.CreatedAt = typedResource.CreatedAt
@@ -381,7 +381,11 @@ type ExpectedData struct {
 
 type TestData struct {
 	types.StatusMessage
-	m.AvailabilityStatus
+
+	AvailabilityStatus string
+	LastCheckedAt      time.Time
+	LastAvailableAt    time.Time
+
 	ExpectedData
 
 	MessageHeaders []kafkaGo.Header
