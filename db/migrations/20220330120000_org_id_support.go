@@ -81,6 +81,7 @@ func OrgIdSupport() *gormigrate.Migration {
 			for _, result := range results {
 				if result.Err != nil {
 					logging.Log.Errorf(`[external_tenant: %s] could not translate to "org_id": %s`, *result.EAN, err)
+					continue
 				}
 
 				dbResult := db.
