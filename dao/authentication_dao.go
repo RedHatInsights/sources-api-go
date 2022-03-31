@@ -107,9 +107,8 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// Check if sourceID exists
-	src := &m.Source{ID: sourceID}
-	result := DB.First(src)
-	if result.Error != nil {
+	_, err := GetSourceDao(a.TenantID).GetById(&sourceID)
+	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
@@ -135,19 +134,28 @@ func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util
 }
 
 func (a *authenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
-	app := m.Application{ID: applicationID}
-	result := DB.
-		Where("tenant_id = ?", *a.TenantID).
-		Preload("ApplicationAuthentications").
-		First(&app)
-
-	if result.Error != nil {
+	// checking if application exists first
+	_, err := GetApplicationDao(a.TenantID).GetById(&applicationID)
+	if err != nil {
 		return nil, 0, util.NewErrNotFound("application")
 	}
 
-	auths, err := a.getAuthsForAppAuth(app.ApplicationAuthentications)
+	keys, err := a.listKeys()
 	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err.Error())
+		return nil, 0, err
+	}
+
+	auths := make([]m.Authentication, 0)
+
+	for _, key := range keys {
+		if strings.HasPrefix(key, fmt.Sprintf("Application_%v", applicationID)) {
+			auth, err := a.getKey(key)
+			if err != nil {
+				return nil, 0, err
+			}
+
+			auths = append(auths, *auth)
+		}
 	}
 
 	return auths, int64(len(auths)), nil
@@ -172,6 +180,11 @@ func (a *authenticationDaoImpl) ListForApplicationAuthentication(appauthID int64
 }
 
 func (a *authenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	_, err := GetEndpointDao(a.TenantID).GetById(&endpointID)
+	if err != nil {
+		return nil, 0, util.NewErrNotFound("endpoint")
+	}
+
 	keys, err := a.listKeys()
 	if err != nil {
 		return nil, 0, err
