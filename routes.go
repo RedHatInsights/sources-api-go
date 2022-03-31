@@ -2,7 +2,9 @@ package main
 
 import (
 	"net/http"
+	"os"
 
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/labstack/echo/v4"
 )
@@ -98,6 +100,15 @@ func setupRoutes(e *echo.Echo) {
 		r.PATCH("/rhc_connections/:id", RhcConnectionUpdate, permissionMiddleware...)
 		r.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
 		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
+
+		// GraphQL
+		r.POST("/graphql", GraphQLQuery, middleware.Tenancy)
+
+		// run the graphQL playground if running locally or in ephemeral. really handy for development!
+		// https://github.com/graphql/graphiql
+		if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
+			r.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
+		}
 	}
 
 	/**            **\

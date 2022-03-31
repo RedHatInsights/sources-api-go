@@ -44,6 +44,11 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 			filterName = filter.Name
 		}
 
+		// this can happen sometimes via graphql.
+		if len(filter.Value) == 0 {
+			return nil, fmt.Errorf("bad filter, no value")
+		}
+
 		switch filter.Operation {
 		case "", "eq":
 			query = query.Where(fmt.Sprintf("%v = ?", filterName), filter.Value[0])
@@ -78,7 +83,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 		case "ends_with_i":
 			query = query.Where(fmt.Sprintf("%v ILIKE ?", filterName), fmt.Sprintf("%%%s", filter.Value[0]))
 		case "sort_by":
-			query = query.Order(filter.Value[0])
+			query = query.Order(strings.Join(filter.Value, " "))
 		default:
 			return nil, fmt.Errorf("unsupported operation %v", filter.Operation)
 		}

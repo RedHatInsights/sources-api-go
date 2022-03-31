@@ -1,0 +1,110 @@
+# Sources API GraphQL Schema
+
+# To add a field to this, do these steps:
+# 1. add the field below, with type. Docs here: https://graphql.org/learn/schema/
+# 2. run `make generate` to re-generate the gql handler
+# 3. Open up `graph/schema.resolvers.go` and implement the resolver (if required)
+# 4. PR it in!
+
+scalar Time # builtin to handle times for us
+scalar Any  # shortcut to allow `interface{}` to be returned
+
+# Filter object, where:
+# 1. name is the column and can include subresources, e.g. `source_type.vendor`
+# 2. operation is a filter operation, matching our query params. "" is eq
+# 3. value is the value to filter on
+input Filter {
+  name: String!
+  operation: String
+  value: String!
+}
+
+# validation on the direction for SortBy
+enum Direction {
+  asc, desc
+}
+
+# SortBy Object with just a field (which is required) and a direction asc/desc
+input SortBy{
+  name: String!
+  direction: Direction
+}
+
+# Base Query Object, which returns the array of sources with metadata
+type Query {
+  sources(
+    limit: Int,
+    offset: Int,
+    sort_by: [SortBy]
+    filter: [Filter]
+    ): [Source!]!
+
+  meta: Meta!
+}
+
+type Source {
+  id: ID!
+  created_at: Time!
+  updated_at: Time!
+  source_type_id: String!
+  name: String!
+  imported: String
+  availability_status: String
+  source_ref: String
+  app_creation_workflow: String!
+  last_checked_at: Time
+  last_available_at: Time
+  paused_at: Time
+
+  authentications: [Authentication]!
+  endpoints: [Endpoint]!
+  applications: [Application]!
+  tenant_id: String!
+}
+
+type Endpoint {
+  id: ID!
+
+  scheme: String
+  host: String
+  port: Int
+  path: String
+  receptor_node: String
+  role: String
+  certificate_authority: String
+  verify_ssl: Boolean
+  availability_status: String
+  availability_status_error: String
+
+  authentications: [Authentication]!
+  tenant_id: String!
+}
+
+type Application {
+  id: ID!
+
+  application_type_id: String!
+  availability_status: String
+  availability_status_error: String
+  paused_at: Time
+  extra: Any
+
+  authentications: [Authentication]!
+  tenant_id: String!
+}
+
+type Authentication {
+  id: ID!
+
+  authtype: String!
+  username: String!
+  availability_status: String
+  availability_status_error: String
+  resource_type: String!
+  resource_id: String!
+  tenant_id: String!
+}
+
+type Meta {
+  count: Int!
+}
