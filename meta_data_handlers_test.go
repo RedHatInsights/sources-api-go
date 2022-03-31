@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"net/http"
 	"testing"
 
@@ -156,6 +158,91 @@ func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidFilter(t *test
 	testutils.BadRequestTest(t, rec)
 }
 
+func TestApplicationTypeMetaDataSubcollectionListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	appTypeId := int64(1)
+
+	// How many app meta data for application type id
+	// is in fixtures
+	var wantAppMetaDataCount int
+	for _, appMetaData := range fixtures.TestMetaDataData {
+		if appMetaData.ApplicationTypeID == appTypeId {
+			wantAppMetaDataCount++
+		}
+	}
+
+	for _, i := range testData {
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/application_types/:application_type_id/app_meta_data",
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		c.SetParamNames("application_type_id")
+		c.SetParamValues(fmt.Sprintf("%d", appTypeId))
+
+		err := ApplicationTypeListMetaData(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != wantAppMetaDataCount {
+			t.Errorf("count not set correctly, got %d, want %d", out.Meta.Count, wantAppMetaDataCount)
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := wantAppMetaDataCount - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
+}
+
 func TestMetaDataList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -192,7 +279,7 @@ func TestMetaDataList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestMetaDataData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -230,6 +317,77 @@ func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {
 	}
 
 	testutils.BadRequestTest(t, rec)
+}
+
+func TestMetaDataListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	for _, i := range testData {
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/app_meta_data",
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		err := MetaDataList(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != len(fixtures.TestMetaDataData) {
+			t.Errorf("count not set correctly")
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := len(fixtures.TestMetaDataData) - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
 }
 
 func TestMetaDataGet(t *testing.T) {

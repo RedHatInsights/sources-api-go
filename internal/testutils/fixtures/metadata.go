@@ -13,4 +13,9 @@ var TestMetaDataData = []m.MetaData{
 		ApplicationTypeID: 1,
 		Type:              "AppMetaData",
 	},
+	{
+		ID:                3,
+		ApplicationTypeID: 2,
+		Type:              "AppMetaData",
+	},
 }
