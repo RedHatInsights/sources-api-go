@@ -55,8 +55,9 @@ func GraphQLQuery(c echo.Context) error {
 				CountChan: make(chan int, 1),
 				// mutexes to ensure we load up all the source subresources _one
 				// time_
-				ApplicationMutex: &sync.Mutex{},
-				EndpointMutex:    &sync.Mutex{},
+				ApplicationMutex:    &sync.Mutex{},
+				EndpointMutex:       &sync.Mutex{},
+				AuthenticationMutex: &sync.Mutex{},
 			},
 		)),
 	)

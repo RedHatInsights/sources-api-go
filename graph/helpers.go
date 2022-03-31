@@ -30,6 +30,19 @@ func sourceEndpointsFromCtx(ctx context.Context, id int64) []m.Endpoint {
 	return mp[id]
 }
 
+func authenticationsFromCtx(ctx context.Context, resourceType string, id int64) []m.Authentication {
+	mp := *getRequestDataFromCtx(ctx).authenticationMap
+	out := make([]m.Authentication, 0)
+
+	for _, auth := range mp[resourceType] {
+		if id == auth.ResourceID {
+			out = append(out, auth)
+		}
+	}
+
+	return out
+}
+
 // sends the count into the requests channel, if the count wasn't requested we
 // fetch it anyway since the DAO returns it
 func sendCount(ctx context.Context, count int64) {

@@ -12,7 +12,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
 	generated_model "github.com/RedHatInsights/sources-api-go/graph/model"
 	"github.com/RedHatInsights/sources-api-go/model"
-	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func (r *applicationResolver) ID(ctx context.Context, obj *model.Application) (string, error) {
@@ -32,13 +31,22 @@ func (r *applicationResolver) AvailabilityStatus(ctx context.Context, obj *model
 }
 
 func (r *applicationResolver) Extra(ctx context.Context, obj *model.Application) (interface{}, error) {
+	if obj.Extra == nil {
+		return nil, nil
+	}
+
 	m := make(map[string]interface{})
 	err := json.Unmarshal(obj.Extra, &m)
 	return m, err
 }
 
 func (r *applicationResolver) Authentications(ctx context.Context, obj *model.Application) ([]*model.Authentication, error) {
-	auths, _, err := dao.GetAuthenticationDao(tenantIdFromCtx(ctx)).ListForApplication(obj.ID, 100, 0, []util.Filter{})
+	err := getRequestDataFromCtx(ctx).EnsureAuthenticationsAreLoaded()
+	if err != nil {
+		return nil, err
+	}
+
+	auths := authenticationsFromCtx(ctx, "Application", obj.ID)
 	out := make([]*model.Authentication, len(auths))
 	for i := range auths {
 		out[i] = &auths[i]
@@ -79,7 +87,12 @@ func (r *endpointResolver) AvailabilityStatus(ctx context.Context, obj *model.En
 }
 
 func (r *endpointResolver) Authentications(ctx context.Context, obj *model.Endpoint) ([]*model.Authentication, error) {
-	auths, _, err := dao.GetAuthenticationDao(tenantIdFromCtx(ctx)).ListForEndpoint(obj.ID, 100, 0, []util.Filter{})
+	err := getRequestDataFromCtx(ctx).EnsureAuthenticationsAreLoaded()
+	if err != nil {
+		return nil, err
+	}
+
+	auths := authenticationsFromCtx(ctx, "Endpoint", obj.ID)
 	out := make([]*model.Authentication, len(auths))
 	for i := range auths {
 		out[i] = &auths[i]
@@ -137,7 +150,12 @@ func (r *sourceResolver) AvailabilityStatus(ctx context.Context, obj *model.Sour
 }
 
 func (r *sourceResolver) Authentications(ctx context.Context, obj *model.Source) ([]*model.Authentication, error) {
-	auths, _, err := dao.GetAuthenticationDao(tenantIdFromCtx(ctx)).ListForSource(obj.ID, 100, 0, []util.Filter{})
+	err := getRequestDataFromCtx(ctx).EnsureAuthenticationsAreLoaded()
+	if err != nil {
+		return nil, err
+	}
+
+	auths := authenticationsFromCtx(ctx, "Source", obj.ID)
 	out := make([]*model.Authentication, len(auths))
 	for i := range auths {
 		out[i] = &auths[i]
