@@ -89,7 +89,7 @@ func OrgIdSupport() *gormigrate.Migration {
 					Model(&Tenant{}).
 					Where("external_tenant = ?", result.EAN).
 					Updates(map[string]interface{}{
-						"external_tenant": nil,
+						"external_tenant": *result.EAN,
 						"org_id":          result.OrgID,
 					})
 
