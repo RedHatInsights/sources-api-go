@@ -17,8 +17,8 @@ func InitialSchema() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "20220222110000",
 		Migrate: func(db *gorm.DB) error {
-			logging.Log.Info(`Migration "20220222110000" started`)
-			defer logging.Log.Info(`Migration "20220222110000" ended`)
+			logging.Log.Info(`Migration "migrate initial schema" started`)
+			defer logging.Log.Info(`Migration "migrate initial schema" ended`)
 
 			err := db.Transaction(func(tx *gorm.DB) error {
 				err := tx.Exec(schemaContents).Error
