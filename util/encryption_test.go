@@ -58,6 +58,17 @@ func TestPadding(t *testing.T) {
 	}
 }
 
+func TestPaddingNegativeBlockSize(t *testing.T) {
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Errorf("execution should have panicked but did not")
+		}
+	}()
+
+	padString("boom", -1)
+}
+
 func TestNoKey(t *testing.T) {
 	key = ""
 	keyPresent = false

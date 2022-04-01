@@ -28,7 +28,7 @@ func init() {
 	}
 
 	// the key is base64 encoded in the ENV
-	decoded, err := base64.RawStdEncoding.DecodeString(string(key))
+	decoded, err := base64.RawStdEncoding.DecodeString(key)
 	if err != nil {
 		panic(err)
 	}
@@ -126,6 +126,14 @@ func encode(pw string) (string, error) {
 // e.g. a string length 4 with a blocksize of 8 would return the string with
 // four spaces at the end.
 func padString(text string, blockSize int) string {
+	if blockSize < 0 {
+		panic("negative blocksize")
+	}
+
+	if len(text) == blockSize {
+		return text
+	}
+
 	padLength := blockSize - len(text)%blockSize
 	padding := bytes.Repeat([]byte{byte(0)}, padLength)
 	return text + string(padding)
