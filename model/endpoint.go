@@ -86,3 +86,49 @@ func (endpoint *Endpoint) ToResponse() *EndpointResponse {
 		SourceID:                sourceId,
 	}
 }
+
+func (endpoint *Endpoint) UpdateFromRequest(req *EndpointEditRequest) {
+	if req.Default != nil {
+		endpoint.Default = req.Default
+	}
+
+	if req.ReceptorNode != nil {
+		endpoint.ReceptorNode = req.ReceptorNode
+	}
+
+	if req.Role != nil {
+		endpoint.Role = req.Role
+	}
+
+	if req.Scheme != nil {
+		endpoint.Scheme = req.Scheme
+	}
+
+	if req.Host != nil {
+		endpoint.Host = req.Host
+	}
+
+	if req.Port != nil {
+		endpoint.Port = req.Port
+	}
+
+	if req.Path != nil {
+		endpoint.Path = req.Path
+	}
+
+	if req.VerifySsl != nil {
+		endpoint.VerifySsl = req.VerifySsl
+	}
+
+	if req.CertificateAuthority != nil {
+		endpoint.CertificateAuthority = req.CertificateAuthority
+	}
+
+	if req.AvailabilityStatus != nil {
+		endpoint.AvailabilityStatus = *req.AvailabilityStatus
+	}
+
+	if req.AvailabilityStatus != nil {
+		endpoint.AvailabilityStatus = *req.AvailabilityStatus
+	}
+}

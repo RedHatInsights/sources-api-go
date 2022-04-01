@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 
@@ -390,6 +391,138 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 
 	badRequestEndpointCreate := ErrorHandlingContext(EndpointCreate)
 	err = badRequestEndpointCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.BadRequestTest(t, rec)
+}
+
+func TestEndpointEdit(t *testing.T) {
+	req := m.EndpointEditRequest{
+		ReceptorNode:            request.PointerToString("receptor_node"),
+		Role:                    request.PointerToString("role"),
+		Scheme:                  request.PointerToString("scheme"),
+		Host:                    request.PointerToString("host"),
+		Path:                    request.PointerToString("path"),
+		CertificateAuthority:    request.PointerToString("cert"),
+		AvailabilityStatus:      request.PointerToString("available"),
+		AvailabilityStatusError: request.PointerToString(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/endpoints/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := EndpointEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Errorf("Wrong return code, expected %v got %v", 200, rec.Code)
+	}
+
+	app := m.EndpointResponse{}
+	raw, _ := io.ReadAll(rec.Body)
+	err = json.Unmarshal(raw, &app)
+	if err != nil {
+		t.Errorf("Failed to unmarshal application from response: %v", err)
+	}
+
+	if *app.AvailabilityStatus != "available" {
+		t.Errorf("Wrong availability status, wanted %v got %v", "available", *app.AvailabilityStatus)
+	}
+
+	if *app.ReceptorNode != "receptor_node" {
+		t.Errorf("Wrong receptor node, wanted %v got %v", "available", *app.AvailabilityStatus)
+	}
+
+	if *app.Role != "role" {
+		t.Errorf("Wrong role, wanted %v got %v", "available", *app.AvailabilityStatus)
+	}
+
+	if *app.Scheme != "scheme" {
+		t.Errorf("Wrong scheme, wanted %v got %v", "available", *app.AvailabilityStatus)
+	}
+
+	if *app.Host != "host" {
+		t.Errorf("Wrong host, wanted %v got %v", "available", *app.AvailabilityStatus)
+	}
+
+	if *app.Path != "path" {
+		t.Errorf("Wrong path, wanted %v got %v", "available", *app.AvailabilityStatus)
+	}
+
+	if *app.CertificateAuthority != "cert" {
+		t.Errorf("Wrong certificate authority, wanted %v got %v", "available", *app.AvailabilityStatus)
+	}
+}
+
+func TestEndpointEditNotFound(t *testing.T) {
+	req := m.EndpointEditRequest{
+		AvailabilityStatus:      request.PointerToString("available"),
+		AvailabilityStatusError: request.PointerToString(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/endpoints/9764567834",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("9764567834")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundApplicationEdit := ErrorHandlingContext(EndpointEdit)
+	err := notFoundApplicationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.NotFoundTest(t, rec)
+}
+
+func TestEndpointEditBadRequest(t *testing.T) {
+	req := m.EndpointEditRequest{
+		AvailabilityStatus:      request.PointerToString("available"),
+		AvailabilityStatusError: request.PointerToString(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/endpoints/xxx",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestEndpointEdit := ErrorHandlingContext(EndpointEdit)
+	err := badRequestEndpointEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
