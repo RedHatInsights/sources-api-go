@@ -95,13 +95,21 @@ func PopulateDateFieldsFrom(resource interface{}) DateFields {
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.Application:
 		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = *typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = *typedResource.LastCheckedAt
+		if typedResource.LastAvailableAt != nil {
+			dateFields.LastAvailableAt = *typedResource.LastAvailableAt
+		}
+		if typedResource.LastCheckedAt != nil {
+			dateFields.LastCheckedAt = *typedResource.LastCheckedAt
+		}
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.Endpoint:
 		dateFields.CreatedAt = typedResource.CreatedAt
-		dateFields.LastAvailableAt = *typedResource.LastAvailableAt
-		dateFields.LastCheckedAt = *typedResource.LastCheckedAt
+		if typedResource.LastAvailableAt != nil {
+			dateFields.LastAvailableAt = *typedResource.LastAvailableAt
+		}
+		if typedResource.LastCheckedAt != nil {
+			dateFields.LastCheckedAt = *typedResource.LastCheckedAt
+		}
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.ApplicationAuthentication:
 		dateFields.CreatedAt = typedResource.CreatedAt
