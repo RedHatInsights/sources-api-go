@@ -4,6 +4,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/hashicorp/vault/api"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 type SourceDao interface {
@@ -162,6 +163,8 @@ type RhcConnectionDao interface {
 }
 
 type TenantDao interface {
-	GetOrCreateTenantID(accountNumber string) (*int64, error)
+	// GetOrCreateTenantID returns the ID of the tenant associated with the provided identity. It tries to fetch the
+	// tenant by its OrgId, and if it is not present, by its EBS account number.
+	GetOrCreateTenantID(identity *identity.Identity) (int64, error)
 	TenantByAccountNumber(accountNumber string) (*m.Tenant, error)
 }

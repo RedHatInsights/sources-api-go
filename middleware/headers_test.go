@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -24,7 +25,6 @@ func TestParseAll(t *testing.T) {
 
 	c.Request().Header.Set("x-rh-identity", xrhid)
 	c.Request().Header.Set("x-rh-sources-psk", "1234")
-	c.Request().Header.Set("x-rh-sources-account-number", "9876")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -39,10 +39,42 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was set as psk instead of %v", c.Get("psk").(string), "1234")
 	}
 
-	id, _ := c.Get("identity").(identity.XRHID)
+	// Gets set from the xrhid's account number.
+	if c.Get("psk-account").(string) != "12345" {
+		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
+	}
+
+	id, ok := c.Get("identity").(identity.XRHID)
+	if !ok {
+		t.Errorf(`unexpected type of identity received. Want "*identity.XRHID", got "%s"`, reflect.TypeOf(c.Get("identity")))
+	}
 
 	if id.Identity.AccountNumber != "12345" {
 		t.Errorf("%v was set as identity account-number instead of %v", id.Identity.AccountNumber, "12345")
+	}
+}
+
+func TestParseAccountNumber(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/",
+		nil,
+		map[string]interface{}{},
+	)
+
+	c.Request().Header.Set("x-rh-sources-account-number", "9876")
+
+	err := parseOrElse204(c)
+	if err != nil {
+		t.Errorf("caught an error when there should not have been one: %v", err)
+	}
+
+	if rec.Code != 204 {
+		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	}
+
+	if c.Get("psk-account").(string) != "9876" {
+		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
 	}
 }
 
@@ -61,8 +93,9 @@ func TestBadIdentityBase64(t *testing.T) {
 		t.Errorf("there was no error when there should have been one")
 	}
 
-	if !strings.HasPrefix(err.Error(), "error decoding Identity: illegal base64") {
-		t.Errorf("incorrect error message: %v", err)
+	want := "error decoding Identity: illegal base64"
+	if !strings.Contains(err.Error(), want) {
+		t.Errorf(`unexpected error message. Want "%s", got "%s"`, want, err)
 	}
 
 	if rec.Code != 200 {
@@ -86,8 +119,9 @@ func TestBadIdentityJson(t *testing.T) {
 		t.Errorf("there was no error when there should have been one")
 	}
 
-	if err.Error() != "x-rh-identity header does not contain valid JSON" {
-		t.Errorf("incorrect error message: %v", err)
+	want := "x-rh-identity header does not contain valid JSON"
+	if !strings.Contains(err.Error(), want) {
+		t.Errorf(`unexpected error message. Want "%s", got "%s"`, want, err)
 	}
 
 	if rec.Code != 200 {

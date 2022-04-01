@@ -36,33 +36,35 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
 
 			tenantDao := dao.GetTenantDao()
-			t, err := tenantDao.GetOrCreateTenantID(accountNumber)
+			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity{AccountNumber: accountNumber})
 			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request")
+				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("tenantID", *t)
 			c.Set("accountNumber", accountNumber)
+			c.Set("tenantID", tenantId)
+
 		case c.Get("identity") != nil:
 			identity, ok := c.Get("identity").(identity.XRHID)
 			if !ok {
-				return fmt.Errorf("failed to cast account-number to string")
+				return fmt.Errorf("invalid identity structure received")
 			}
 
-			if identity.Identity.AccountNumber == "" {
-				return fmt.Errorf("account number not present in x-rh-identity")
+			if identity.Identity.AccountNumber == "" && identity.Identity.OrgID == "" {
+				return fmt.Errorf("account number or OrgId not present in x-rh-identity")
 			}
 
-			c.Logger().Debugf("Looking up Tenant ID for account number %v", identity.Identity.AccountNumber)
+			c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", identity.Identity.OrgID, identity.Identity.AccountNumber)
 
 			tenantDao := dao.GetTenantDao()
-			t, err := tenantDao.GetOrCreateTenantID(identity.Identity.AccountNumber)
+			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity)
 			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request: %v", err)
+				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("tenantID", *t)
 			c.Set("accountNumber", identity.Identity.AccountNumber)
+			c.Set("tenantID", tenantId)
+
 		default:
 			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}

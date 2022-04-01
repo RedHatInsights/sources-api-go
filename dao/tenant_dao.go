@@ -2,6 +2,7 @@ package dao
 
 import (
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 // GetTenantDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -20,12 +21,26 @@ func init() {
 
 type tenantDaoImpl struct{}
 
-func (t *tenantDaoImpl) GetOrCreateTenantID(accountNumber string) (*int64, error) {
-	tenant := m.Tenant{ExternalTenant: accountNumber}
+func (t *tenantDaoImpl) GetOrCreateTenantID(identity *identity.Identity) (int64, error) {
+	// Start setting up the query.
+	query := DB.
+		Debug().
+		Model(&m.Tenant{})
+
+	// Query by OrgId or EBS account number.
+	var tenant m.Tenant
+	if identity.OrgID != "" {
+		tenant.OrgID = identity.OrgID
+
+		query.Where("org_id = ?", tenant.OrgID)
+	} else {
+		tenant.ExternalTenant = identity.AccountNumber
+
+		query.Where("external_tenant = ?", tenant.ExternalTenant)
+	}
 
 	// Find the tenant, scanning into the struct above
-	result := DB.Debug().
-		Where("external_tenant = ?", accountNumber).
+	result := query.
 		First(&tenant)
 
 	// Looks like we didn't find it, create it and return the ID.
@@ -33,7 +48,7 @@ func (t *tenantDaoImpl) GetOrCreateTenantID(accountNumber string) (*int64, error
 		result = DB.Create(&tenant)
 	}
 
-	return &tenant.Id, result.Error
+	return tenant.Id, result.Error
 }
 
 func (t *tenantDaoImpl) TenantByAccountNumber(accountNumber string) (*m.Tenant, error) {
