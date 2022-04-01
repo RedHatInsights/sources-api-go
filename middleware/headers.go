@@ -1,13 +1,10 @@
 package middleware
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 /*
@@ -41,24 +38,18 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			// store it raw first.
 			c.Set("x-rh-identity", c.Request().Header.Get("x-rh-identity"))
 
-			idRaw, err := base64.StdEncoding.DecodeString(c.Request().Header.Get("x-rh-identity"))
+			xRhIdentity, err := util.ParseXRHIDHeader(c.Request().Header.Get("x-rh-identity"))
 			if err != nil {
-				return fmt.Errorf("error decoding Identity: %v", err)
-			}
-
-			var id identity.XRHID
-			err = json.Unmarshal(idRaw, &id)
-			if err != nil {
-				return fmt.Errorf("x-rh-identity header does not contain valid JSON")
+				return fmt.Errorf("could not extract identity from header: %s", err)
 			}
 
 			// store the parsed header for later usage.
-			c.Set("identity", id)
+			c.Set("identity", xRhIdentity)
 			// store the psk to pass along in headers
-			c.Set("psk-account", id.Identity.AccountNumber)
+			c.Set("psk-account", xRhIdentity.Identity.AccountNumber)
 
 			// store whether or not this a cert-auth based request
-			if id.Identity.System != nil && id.Identity.System["cn"] != nil {
+			if xRhIdentity.Identity.System != nil && xRhIdentity.Identity.System["cn"] != nil {
 				c.Set("cert-auth", true)
 			}
 		} else {

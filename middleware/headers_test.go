@@ -44,7 +44,7 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
 	}
 
-	id, ok := c.Get("identity").(identity.XRHID)
+	id, ok := c.Get("identity").(*identity.XRHID)
 	if !ok {
 		t.Errorf(`unexpected type of identity received. Want "*identity.XRHID", got "%s"`, reflect.TypeOf(c.Get("identity")))
 	}
