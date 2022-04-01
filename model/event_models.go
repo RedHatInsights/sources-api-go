@@ -49,12 +49,14 @@ type ApplicationAuthenticationEvent struct {
 	UpdatedAt *string `json:"updated_at"`
 	PausedAt  *string `json:"paused_at"`
 
-	ApplicationID     int64  `json:"application_id"`
-	AuthenticationID  int64  `json:"authentication_id"`
-	AuthenticationUID string `json:"authentication_uid"`
+	ApplicationID    int64 `json:"application_id"`
+	AuthenticationID int64 `json:"authentication_id"`
+	// TODO: maybe add back in if we get vault
+	AuthenticationUID string `json:"-"`
 
-	Tenant    *string `json:"tenant"`
-	VaultPath string  `json:"vault_path"`
+	Tenant *string `json:"tenant"`
+	// TODO: add back in if we get vault
+	VaultPath string `json:"-"`
 }
 
 type EndpointEvent struct {

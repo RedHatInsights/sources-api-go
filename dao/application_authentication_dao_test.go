@@ -43,15 +43,6 @@ func TestDeleteApplicationAuthentication(t *testing.T) {
 		}
 	}
 
-	{
-		want := applicationAuthentication.AuthenticationUID
-		got := deletedApplicationAuthentication.AuthenticationUID
-
-		if want != got {
-			t.Errorf(`incorrect applicationAuthentication deleted. Want "%s" in the authenticationUid field, got "%s"`, want, got)
-		}
-	}
-
 	DoneWithFixtures("delete")
 }
 

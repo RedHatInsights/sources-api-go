@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -67,8 +68,8 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	authID := fixtures.TestAuthenticationData[0].ID
-	if appAuth["authentication_uid"] != authID {
+	authID := strconv.Itoa(int(fixtures.TestAuthenticationData[0].DbID))
+	if appAuth["authentication_id"].(string) != authID {
 		t.Error("ghosts infected the return")
 	}
 
@@ -128,8 +129,8 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 	if err != nil {
 		t.Error("Failed unmarshaling output")
 	}
-	authID := fixtures.TestAuthenticationData[0].ID
-	if out.AuthenticationUID != authID {
+	authID := strconv.Itoa(int(fixtures.TestAuthenticationData[0].DbID))
+	if out.AuthenticationID != authID {
 		t.Error("ghosts infected the return")
 	}
 
