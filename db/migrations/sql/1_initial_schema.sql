@@ -313,6 +313,68 @@ END
 $$;
 
 --
+-- rhc_connections
+--
+
+DO
+$$
+BEGIN
+    IF NOT "table_exists"('rhc_connections') THEN
+        CREATE TABLE public."rhc_connections" (
+            "id" BIGINT NOT NULL,
+            "rhc_id" CHARACTER VARYING,
+            "extra" JSONB DEFAULT '{}'::JSONB,
+            "availability_status" CHARACTER VARYING,
+            "availability_status_error" CHARACTER VARYING,
+            "last_checked_at" TIMESTAMP WITHOUT TIME ZONE,
+            "last_available_at" TIMESTAMP WITHOUT TIME ZONE,
+            "created_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+            "updated_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL
+        );
+
+        CREATE SEQUENCE public."rhc_connections_id_seq"
+            START WITH 1
+            INCREMENT BY 1
+            NO MINVALUE
+            NO MAXVALUE
+            CACHE 1;
+
+        ALTER SEQUENCE public."rhc_connections_id_seq" OWNED BY public."rhc_connections"."id";
+
+        ALTER TABLE ONLY public."rhc_connections" ALTER COLUMN "id" SET DEFAULT nextval('public.rhc_connections_id_seq'::REGCLASS);
+
+        ALTER TABLE ONLY public."rhc_connections"
+            ADD CONSTRAINT "rhc_connections_pkey" PRIMARY KEY ("id");
+
+        CREATE UNIQUE INDEX "index_rhc_connections_on_rhc_id" ON public."rhc_connections" USING btree ("rhc_id");
+
+        RAISE NOTICE '"rhc_connections": table, sequences and indexes created.';
+    END IF;
+END
+$$;
+
+--
+-- source_rhc_connections
+--
+
+DO
+$$
+    BEGIN
+        IF NOT "table_exists"('source_rhc_connections') THEN
+            CREATE TABLE public."source_rhc_connections" (
+                "source_id" INTEGER,
+                "rhc_connection_id" INTEGER,
+                "tenant_id" BIGINT
+            );
+
+            CREATE UNIQUE INDEX "index_source_rhc_connections_on_source_id_and_rhc_connection_id" ON public."source_rhc_connections" USING btree ("source_id", "rhc_connection_id");
+
+            RAISE NOTICE '"source_rhc_connections": table and index created.';
+        END IF;
+    END
+$$;
+
+--
 -- source_types
 --
 
@@ -520,6 +582,26 @@ BEGIN
             ADD CONSTRAINT "fk_rails_67ee0f0d63" FOREIGN KEY ("source_id") REFERENCES public."sources"("id") ON DELETE CASCADE;
 
         RAISE NOTICE '"endpoints": foreign keys created.';
+    END IF;
+END
+$$;
+
+--
+-- source_rhc_connections
+--
+
+DO
+$$
+BEGIN
+    IF NOT "fk_exists"('fk_rhc_connection_id', 'source_rhc_connections') THEN
+        ALTER TABLE ONLY public."source_rhc_connections"
+            ADD CONSTRAINT "fk_rhc_connection_id" FOREIGN KEY ("rhc_connection_id") REFERENCES public."rhc_connections"("id") ON DELETE CASCADE;
+
+        ALTER TABLE ONLY public."source_rhc_connections"
+            ADD CONSTRAINT "fk_source_id" FOREIGN KEY ("source_id") REFERENCES public."sources"("id") ON DELETE CASCADE;
+
+        ALTER TABLE ONLY public."source_rhc_connections"
+            ADD CONSTRAINT "fk_tenant_id" FOREIGN KEY ("tenant_id") REFERENCES public."tenants"("id");
     END IF;
 END
 $$;
