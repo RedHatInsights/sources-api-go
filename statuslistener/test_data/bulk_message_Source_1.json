@@ -3,13 +3,11 @@
     {
       "application_id": 1,
       "authentication_id": 1,
-      "authentication_uid": "611a8a38-f434-4e62-bda0-78cd45ffae5b",
       "created_at": "2022-01-19 11:57:23 CET",
       "id": 1,
       "paused_at": null,
       "tenant": "12345",
-      "updated_at": "2022-01-19 11:57:23 CET",
-      "vault_path": "Application_1_611a8a38-f434-4e62-bda0-78cd45ffae5b"
+      "updated_at": "2022-01-19 11:57:23 CET"
     }
   ],
   "applications": [

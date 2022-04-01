@@ -23,7 +23,7 @@ type ApplicationAuthentication struct {
 	ApplicationID int64 `json:"application_id"`
 	Application   Application
 	// TODO: fix correctly PR#40
-	AuthenticationID int64 `json:"authentication_id"`
+	AuthenticationID int64 `json:"-"`
 
 	AuthenticationUID string `json:"-" gorm:"-"`
 }
