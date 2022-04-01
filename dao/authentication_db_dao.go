@@ -3,9 +3,11 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 )
 
 type authenticationDaoDbImpl struct {
@@ -366,6 +368,39 @@ func (add *authenticationDaoDbImpl) Delete(id string) (*m.Authentication, error)
 
 func (add *authenticationDaoDbImpl) Tenant() *int64 {
 	return add.TenantID
+}
+
+func (add *authenticationDaoDbImpl) Cleanup(resourceType string, resourceID int64) error {
+	var a m.Authentication
+	var result *gorm.DB
+
+	switch strings.ToLower(resourceType) {
+	case "source":
+		result = DB.Debug().
+			Model(&a).
+			Where("tenant_id = ?", add.TenantID).
+			Where("source_id = ?", resourceID).
+			Delete(&a)
+	case "application", "endpoint":
+		result = DB.Debug().
+			Model(&a).
+			Where("tenant_id = ?", add.TenantID).
+			Where("resource_type", resourceType).
+			Where("resource_id", resourceID).
+			Delete(&a)
+	default:
+		return fmt.Errorf("invalid resourceType for cleanup %v", resourceType)
+	}
+
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("no authentications found for %v %v", resourceType, resourceID)
+	}
+
+	if result.Error != nil {
+		return fmt.Errorf("error cleaning up authentications for %v %v: %v", resourceType, resourceID, result.Error)
+	}
+
+	return nil
 }
 
 func (add *authenticationDaoDbImpl) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
