@@ -382,19 +382,12 @@ func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, 
 	return err
 }
 
-type ExpectedData struct {
-	BulkMessage  []byte
-	ResourceJSON []byte
-}
-
 type TestData struct {
 	types.StatusMessage
 
 	AvailabilityStatus string
 	LastCheckedAt      time.Time
 	LastAvailableAt    time.Time
-
-	ExpectedData
 
 	MessageHeaders []kafkaGo.Header
 
