@@ -68,6 +68,78 @@ func TestRhcConnectionList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestRhcConnectionListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	for _, i := range testData {
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/rhc_connections",
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		err := RhcConnectionList(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshalling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != len(fixtures.TestRhcConnectionData) {
+			t.Errorf("count not set correctly, want %d, got %d", len(fixtures.TestRhcConnectionData), out.Meta.Count)
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := len(fixtures.TestRhcConnectionData) - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+
+	}
+}
+
 func TestRhcConnectionGetById(t *testing.T) {
 	id := strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10)
 

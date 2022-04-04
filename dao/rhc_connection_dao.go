@@ -38,17 +38,19 @@ func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 		Select(`"rhc_connections".*, STRING_AGG(CAST ("jt"."source_id" AS TEXT), ',') AS "source_ids"`).
 		Joins(`INNER JOIN "source_rhc_connections" AS "jt" ON "rhc_connections"."id" = "jt"."rhc_connection_id"`).
 		Where(`"jt"."tenant_id" = ?`, s.TenantID).
-		Group(`"rhc_connections"."id"`).
-		Limit(limit).
-		Offset(offset)
+		Group(`"rhc_connections"."id"`)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
 		return nil, 0, err
 	}
 
+	// Getting the total count (filters included) for pagination.
+	count := int64(0)
+	query.Count(&count)
+
 	// Run the actual query.
-	result, err := query.Rows()
+	result, err := query.Limit(limit).Offset(offset).Rows()
 	if err != nil {
 		return nil, 0, err
 	}
@@ -57,7 +59,7 @@ func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 	// map[string]interface{}, "ScanRows" will already scan every row into that array, thus freeing us from calling
 	// result.Next() again.
 	if !result.Next() {
-		return []m.RhcConnection{}, 0, nil
+		return []m.RhcConnection{}, count, nil
 	}
 
 	// Loop through the rows to map both the connection and its related sources.
@@ -81,10 +83,6 @@ func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 	if err != nil {
 		return nil, 0, err
 	}
-
-	// Getting the total count (filters included) for pagination.
-	count := int64(0)
-	query.Count(&count)
 
 	return rhcConnections, count, nil
 }
@@ -244,9 +242,7 @@ func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int,
 		Model(&m.RhcConnection{}).
 		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "rhc_connections"."id" = "sr"."rhc_connection_id"`).
 		Where(`"sr"."source_id" = ?`, sourceId).
-		Where(`"sr"."tenant_id" = ?`, s.TenantID).
-		Limit(limit).
-		Offset(offset)
+		Where(`"sr"."tenant_id" = ?`, s.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -258,7 +254,7 @@ func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int,
 	query.Count(&count)
 
 	// Run the actual query.
-	err = query.Find(&rhcConnections).Error
+	err = query.Limit(limit).Offset(offset).Find(&rhcConnections).Error
 
 	if err != nil {
 		return nil, 0, util.NewErrBadRequest(err)

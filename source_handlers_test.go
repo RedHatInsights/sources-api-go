@@ -1464,6 +1464,92 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T
 	testutils.BadRequestTest(t, rec)
 }
 
+func TestSourcesGetRelatedRhcConnectionsTestWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 2},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	sourceId := int64(1)
+
+	// Getting count of rhc_connections with given source id
+	var wantRhdConnectionCount int
+	for _, i := range fixtures.TestSourceRhcConnectionData {
+		if i.SourceId == sourceId {
+			wantRhdConnectionCount++
+		}
+	}
+
+	for _, i := range testData {
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			fmt.Sprintf("/api/sources/v3.1/sources/%d/rhc_connections", sourceId),
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		c.SetParamNames("source_id")
+		c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+		err := SourcesRhcConnectionList(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshalling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != wantRhdConnectionCount {
+			t.Errorf("count not set correctly")
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := wantRhdConnectionCount - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+
+	}
+}
+
 // TestPauseSourceAndItsApplications tests that the "pause source" endpoint sets all the applications and the source
 // itself as paused, by modifying their "paused_at" column.
 func TestPauseSourceAndItsApplications(t *testing.T) {
