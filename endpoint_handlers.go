@@ -165,6 +165,38 @@ func EndpointCreate(c echo.Context) error {
 	return c.JSON(http.StatusCreated, endpoint.ToResponse())
 }
 
+func EndpointEdit(c echo.Context) error {
+	endpointDao, err := getEndpointDao(c)
+	if err != nil {
+		return err
+	}
+
+	input := &m.EndpointEditRequest{}
+	if err := c.Bind(input); err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	endpoint, err := endpointDao.GetById(&id)
+	if err != nil {
+		return err
+	}
+
+	endpoint.UpdateFromRequest(input)
+	err = endpointDao.Update(endpoint)
+	if err != nil {
+		return err
+	}
+
+	setEventStreamResource(c, endpoint)
+
+	return c.JSON(http.StatusOK, endpoint.ToResponse())
+}
+
 func EndpointDelete(c echo.Context) error {
 	endpointDao, err := getEndpointDao(c)
 	if err != nil {

@@ -480,8 +480,12 @@ func (a *MockEndpointDao) Create(src *m.Endpoint) error {
 	return nil
 }
 
-func (a *MockEndpointDao) Update(src *m.Endpoint) error {
-	panic("not implemented") // TODO: Implement
+func (a *MockEndpointDao) Update(endpoint *m.Endpoint) error {
+	if endpoint.ID == fixtures.TestEndpointData[0].ID {
+		return nil
+	}
+
+	return util.NewErrNotFound("endpoint")
 }
 
 func (a *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {

@@ -73,6 +73,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
 		r.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
 		r.POST("/endpoints", EndpointCreate, permissionMiddleware...)
+		r.PATCH("/endpoints/:id", EndpointEdit, permissionMiddleware...)
 		r.DELETE("/endpoints/:id", EndpointDelete, permissionMiddleware...)
 		r.GET("/endpoints/:endpoint_id/authentications", EndpointListAuthentications, tenancyWithListMiddleware...)
 
