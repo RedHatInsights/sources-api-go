@@ -168,7 +168,6 @@ func TestAuthenticationCreate(t *testing.T) {
 		Password:      "123456",
 		ResourceType:  "Application",
 		ResourceIDRaw: 1,
-		SourceID:      1,
 	}
 
 	body, err := json.Marshal(requestBody)
@@ -223,7 +222,6 @@ func TestAuthenticationCreateBadRequest(t *testing.T) {
 		Password:     "123456",
 		ResourceType: "InvalidType",
 		ResourceID:   1,
-		SourceID:     1,
 	}
 
 	body, err := json.Marshal(requestBody)

@@ -50,8 +50,7 @@ type AuthenticationCreateRequest struct {
 
 	ResourceType  string      `json:"resource_type"`
 	ResourceIDRaw interface{} `json:"resource_id"`
-	ResourceID    int64
-	SourceID      int64 `json:"source_id"`
+	ResourceID    int64       `json:"-"`
 }
 
 type AuthenticationEditRequest struct {
