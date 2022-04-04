@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// OrgIdSupport creates a new "org_id" column with an index in the "tenants" table and attempts to translate the
+// AddOrgIdToTenants creates a new "org_id" column with an index in the "tenants" table and attempts to translate the
 // current EBS account numbers to "org_id"s.
 //
 // If the translation is not possible, it doesn't fail the migration: it simply logs an error. This is due to the
@@ -19,7 +19,7 @@ import (
 // translation for an EBS account number is acceptable.
 //
 // It also adds a comment to the "external_tenant" column, clarifying that it refers to "EBS account numbers".
-func OrgIdSupport() *gormigrate.Migration {
+func AddOrgIdToTenants() *gormigrate.Migration {
 	type Tenant struct {
 		OrgId string `gorm:"index; comment:Tenant identifier"`
 	}
