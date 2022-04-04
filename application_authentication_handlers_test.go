@@ -33,7 +33,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -51,7 +51,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != len(fixtures.TestApplicationAuthenticationData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -100,6 +100,77 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 	}
 
 	testutils.BadRequestTest(t, rec)
+}
+
+func TestApplicationAuthenticationListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	testData := []map[string]int{
+		{"limit": 10, "offset": 0},
+		{"limit": 10, "offset": 1},
+		{"limit": 10, "offset": 100},
+		{"limit": 1, "offset": 0},
+		{"limit": 1, "offset": 1},
+		{"limit": 1, "offset": 100},
+	}
+
+	for _, i := range testData {
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/application_authentications",
+			nil,
+			map[string]interface{}{
+				"limit":    i["limit"],
+				"offset":   i["offset"],
+				"filters":  []util.Filter{},
+				"tenantID": int64(1),
+			},
+		)
+
+		err := ApplicationAuthenticationList(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var out util.Collection
+		err = json.Unmarshal(rec.Body.Bytes(), &out)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if out.Meta.Limit != i["limit"] {
+			t.Error("limit not set correctly")
+		}
+
+		if out.Meta.Offset != i["offset"] {
+			t.Error("offset not set correctly")
+		}
+
+		if out.Meta.Count != len(fixtures.TestApplicationAuthenticationData) {
+			t.Errorf("count not set correctly")
+		}
+
+		// Check if count of returned objects is equal to test data
+		// taking into account offset and limit.
+		got := len(out.Data)
+		want := len(fixtures.TestApplicationAuthenticationData) - i["offset"]
+		if want < 0 {
+			want = 0
+		}
+
+		if want > i["limit"] {
+			want = i["limit"]
+		}
+		if got != want {
+			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
+		}
+
+		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+	}
 }
 
 func TestApplicationAuthenticationGet(t *testing.T) {
