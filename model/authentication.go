@@ -75,6 +75,11 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 
+	decrypted, err := util.Decrypt(auth.Password)
+	if err != nil {
+		logger.Log.Errorf("failed to decrypt password: %v", err)
+	}
+
 	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationInternalResponse{
 		ID:                      id,
@@ -83,7 +88,7 @@ func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
 		Username:                auth.Username,
-		Password:                auth.Password,
+		Password:                decrypted,
 		Extra:                   extra,
 		AvailabilityStatus:      auth.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,
