@@ -104,14 +104,14 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
-	accountNumber, err := util.AccountNumberFromHeaders(headers)
+	id, err := util.IdentityFromKafkaHeaders(headers)
 	if err != nil {
 		l.Log.Error(err)
 		return
 	}
 
 	tenantDao := dao.GetTenantDao()
-	tenant, err := tenantDao.TenantByAccountNumber(accountNumber)
+	tenant, err := tenantDao.TenantByIdentity(id)
 	if err != nil {
 		l.Log.Error(err)
 		return

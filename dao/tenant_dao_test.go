@@ -1,11 +1,14 @@
 package dao
 
 import (
+	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -162,4 +165,76 @@ func TestGetOrCreateTenantIDOrgIdFind(t *testing.T) {
 	}
 
 	DropSchema("tenant_tests")
+}
+
+// TestTenantByIdentity tests that the function is able to fetch by either EBS account number or OrgId.
+func TestTenantByIdentity(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("tenant_tests")
+
+	tenantDao := GetTenantDao()
+
+	// Call the function under test by fetching by EBS account number.
+	tenant, err := tenantDao.TenantByIdentity(&identity.Identity{
+		AccountNumber: fixtures.TestTenantData[0].ExternalTenant,
+	})
+	if err != nil {
+		t.Errorf(`unexpected error when fetching tenant: %s`, err)
+	}
+
+	{
+		want := fixtures.TestTenantData[0].ExternalTenant
+		got := tenant.ExternalTenant
+
+		if want != got {
+			t.Errorf(`incorrect tenant fetched. Want external tenant "%s", got "%s"`, want, got)
+		}
+	}
+
+	// Call the function under test by fetching by orgId.
+	tenant, err = tenantDao.TenantByIdentity(&identity.Identity{
+		OrgID: fixtures.TestTenantData[0].OrgID,
+	})
+	if err != nil {
+		t.Errorf(`unexpected error when fetching tenant: %s`, err)
+	}
+
+	{
+		want := fixtures.TestTenantData[0].OrgID
+		got := tenant.OrgID
+
+		if want != got {
+			t.Errorf(`incorrect tenant fetched. Want external tenant "%s", got "%s"`, want, got)
+		}
+	}
+
+	DoneWithFixtures("tenant_tests")
+}
+
+// TestTenantByIdentityNotFound tests that a "not found" error is returned when the tenant is not found.
+func TestTenantByIdentityNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("tenant_tests")
+
+	tenantDao := GetTenantDao()
+
+	// Call the function under test by providing it an invalid account number.
+	_, err := tenantDao.TenantByIdentity(&identity.Identity{
+		AccountNumber: "invalid",
+	})
+
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf(`unexpected error recevied. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	}
+
+	// Call the function under test by providing it an invalid orgId.
+	_, err = tenantDao.TenantByIdentity(&identity.Identity{
+		OrgID: "invalid",
+	})
+
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf(`unexpected error recevied. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	}
+
+	DoneWithFixtures("tenant_tests")
 }
