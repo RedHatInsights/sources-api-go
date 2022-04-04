@@ -20,3 +20,15 @@ func GetSourcesCountWithAppType(appTypeId int64) int {
 	}
 	return sourcesCount
 }
+
+func GetAppTypeCountWithSourceId(sourceId int64) int {
+	var appTypeList []int64
+
+	for _, app := range fixtures.TestApplicationData {
+		if app.SourceID == sourceId {
+			appTypeList = append(appTypeList, app.ApplicationTypeID)
+		}
+	}
+
+	return len(appTypeList)
+}
