@@ -495,9 +495,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 	}
 	if data["password"] != nil {
-		if auth.Password, ok = data["password"].(string); !ok {
+		password, ok := data["password"].(string)
+		if !ok {
 			return nil
 		}
+		auth.Password = util.StringRef(password)
 	}
 	if data["resource_type"] != nil {
 		if auth.ResourceType, ok = data["resource_type"].(string); !ok {
@@ -624,11 +626,11 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 	// of auth
 	if err != nil {
 		// The Api key must be present to be able to send the request to the marketplace
-		if auth.Password == "" {
+		if auth.Password == nil {
 			return errors.New("API key not present for the marketplace authentication")
 		}
 
-		marketplaceTokenProvider = GetMarketplaceTokenProvider(auth.Password)
+		marketplaceTokenProvider = GetMarketplaceTokenProvider(*auth.Password)
 
 		token, err = marketplaceTokenProvider.RequestToken()
 		if err != nil {

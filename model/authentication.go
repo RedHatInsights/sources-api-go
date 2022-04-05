@@ -17,13 +17,14 @@ type Authentication struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at" gorm:"-"`
 
-	Name     string                 `json:"name,omitempty"`
-	AuthType string                 `gorm:"column:authtype" json:"authtype"`
-	Username string                 `json:"username"`
-	Password string                 `json:"password"`
-	Extra    map[string]interface{} `gorm:"-" json:"extra,omitempty"`
-	ExtraDb  datatypes.JSON         `gorm:"column:extra"`
-	Version  string                 `json:"version" gorm:"-"`
+	Name        string                 `json:"name,omitempty"`
+	AuthType    string                 `gorm:"column:authtype" json:"authtype"`
+	Username    string                 `json:"username"`
+	Password    *string                `json:"password_hash"`
+	MiqPassword *string                `json:"password"`
+	Extra       map[string]interface{} `gorm:"-" json:"extra,omitempty"`
+	ExtraDb     datatypes.JSON         `gorm:"column:extra"`
+	Version     string                 `json:"version" gorm:"-"`
 
 	AvailabilityStatus      string     `json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
@@ -74,10 +75,15 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
-
-	decrypted, err := util.Decrypt(auth.Password)
-	if err != nil {
-		logger.Log.Errorf("failed to decrypt password: %v", err)
+	var pass string
+	if auth.Password == nil {
+		pass = ""
+	} else {
+		decrypted, err := util.Decrypt(pass)
+		if err != nil {
+			logger.Log.Errorf("failed to decrypt password: %v", err)
+		}
+		pass = decrypted
 	}
 
 	id, extra := mapIdExtraFields(auth)
@@ -88,7 +94,7 @@ func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
 		Username:                auth.Username,
-		Password:                decrypted,
+		Password:                pass,
 		Extra:                   extra,
 		AvailabilityStatus:      auth.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,

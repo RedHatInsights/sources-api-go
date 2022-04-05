@@ -167,7 +167,7 @@ func TestAuthenticationCreate(t *testing.T) {
 		Name:          "TestRequest",
 		AuthType:      "test",
 		Username:      "testUser",
-		Password:      "123456",
+		Password:      util.StringRef("123456"),
 		ResourceType:  "Application",
 		ResourceIDRaw: 1,
 	}
@@ -221,7 +221,7 @@ func TestAuthenticationCreateBadRequest(t *testing.T) {
 		Name:         "TestRequest",
 		AuthType:     "test",
 		Username:     "testUser",
-		Password:     "123456",
+		Password:     util.StringRef("123456"),
 		ResourceType: "InvalidType",
 		ResourceID:   1,
 	}

@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -15,9 +14,6 @@ var (
 	// "the key" to encrypt/decrypt passwords with
 	key        = os.Getenv("ENCRYPTION_KEY")
 	keyPresent = false
-
-	// regex to pull the actual secret out of the miq-password style column
-	xtractRe = regexp.MustCompile(`v2:{(.+)}`)
 )
 
 // init for this file basically just decodes the ENCRYPTION_KEY env var to the
@@ -36,7 +32,7 @@ func init() {
 	keyPresent = true
 }
 
-// Encrypts str into a miq-compatible password format using the encryption key
+// Encrypts str into a password_hash using the encryption key
 // in the environment
 func Encrypt(str string) (string, error) {
 	if !keyPresent {
@@ -49,24 +45,17 @@ func Encrypt(str string) (string, error) {
 	}
 
 	// base64 encode the encrypted secret for text-storage
-	return "v2:{" + base64.RawStdEncoding.EncodeToString([]byte(encoded)) + "}", nil
+	return base64.RawStdEncoding.EncodeToString([]byte(encoded)), nil
 }
 
-// Decrypts a miq-compatible password into a string
+// Decrypts a password into a string
 func Decrypt(str string) (string, error) {
 	if !keyPresent {
 		return "", fmt.Errorf("no encryption key present")
 	}
 
-	if !xtractRe.Match([]byte(str)) {
-		return "", fmt.Errorf("string does not match format")
-	}
-
-	// extract the password from between the brackets
-	matches := xtractRe.FindAllStringSubmatch(str, 1)
-
 	// the password is base64 encoded
-	rawPass, err := base64.RawStdEncoding.DecodeString(matches[0][1])
+	rawPass, err := base64.RawStdEncoding.DecodeString(str)
 	if err != nil {
 		return "", err
 	}
