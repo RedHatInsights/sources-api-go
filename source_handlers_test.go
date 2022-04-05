@@ -819,8 +819,8 @@ func TestSourceCreate(t *testing.T) {
 func TestSourceEdit(t *testing.T) {
 	newSourceName := "New source name"
 	req := m.SourceEditRequest{
-		Name:               request.PointerToString(newSourceName),
-		AvailabilityStatus: request.PointerToString("available"),
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
 	}
 
 	body, _ := json.Marshal(req)
@@ -866,8 +866,8 @@ func TestSourceEdit(t *testing.T) {
 func TestSourceEditNotFound(t *testing.T) {
 	newSourceName := "New source name"
 	req := m.SourceEditRequest{
-		Name:               request.PointerToString(newSourceName),
-		AvailabilityStatus: request.PointerToString("available"),
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
 	}
 
 	body, _ := json.Marshal(req)
@@ -897,8 +897,8 @@ func TestSourceEditNotFound(t *testing.T) {
 func TestSourceEditBadRequest(t *testing.T) {
 	newSourceName := "New source name"
 	req := m.SourceEditRequest{
-		Name:               request.PointerToString(newSourceName),
-		AvailabilityStatus: request.PointerToString("available"),
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
 	}
 
 	body, _ := json.Marshal(req)
