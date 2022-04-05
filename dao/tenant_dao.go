@@ -23,55 +23,42 @@ func init() {
 type tenantDaoImpl struct{}
 
 func (t *tenantDaoImpl) GetOrCreateTenantID(identity *identity.Identity) (int64, error) {
-	// Start setting up the query.
-	query := DB.
-		Debug().
-		Model(&m.Tenant{})
-
-	// Query by OrgId or EBS account number.
+	// Try to find the tenant.
 	var tenant m.Tenant
-	if identity.OrgID != "" {
-		tenant.OrgID = identity.OrgID
-
-		query.Where("org_id = ?", tenant.OrgID)
-	} else {
-		tenant.ExternalTenant = identity.AccountNumber
-
-		query.Where("external_tenant = ?", tenant.ExternalTenant)
-	}
-
-	// Find the tenant, scanning into the struct above
-	result := query.
-		First(&tenant)
+	err := DB.
+		Debug().
+		Model(&m.Tenant{}).
+		Where("org_id = ? AND org_id != ''", identity.OrgID).
+		Or("external_tenant = ? AND external_tenant != ''", identity.AccountNumber).
+		First(&tenant).
+		Error
 
 	// Looks like we didn't find it, create it and return the ID.
-	if result.Error != nil {
-		result = DB.Create(&tenant)
+	if err != nil {
+		tenant.ExternalTenant = identity.AccountNumber
+		tenant.OrgID = identity.OrgID
+
+		err := DB.
+			Debug().
+			Create(&tenant).
+			Error
+
+		if err != nil {
+			return 0, err
+		}
 	}
 
-	return tenant.Id, result.Error
+	return tenant.Id, nil
 }
 
 func (t *tenantDaoImpl) TenantByIdentity(id *identity.Identity) (*m.Tenant, error) {
-	// Start setting up the query.
-	query := DB.
-		Debug().
-		Model(&m.Tenant{})
-
-	// Query by OrgId or EBS account number.
 	var tenant m.Tenant
-	if id.OrgID != "" {
-		tenant.OrgID = id.OrgID
 
-		query.Where("org_id = ?", tenant.OrgID)
-	} else {
-		tenant.ExternalTenant = id.AccountNumber
-
-		query.Where("external_tenant = ?", tenant.ExternalTenant)
-	}
-
-	// Find the tenant, scanning into the struct above
-	err := query.
+	err := DB.
+		Debug().
+		Model(&m.Tenant{}).
+		Where("org_id = ? AND org_id != ''", id.OrgID).
+		Or("external_tenant = ? AND external_tenant != ''", id.AccountNumber).
 		First(&tenant).
 		Error
 
