@@ -25,6 +25,7 @@ func TestParseAll(t *testing.T) {
 
 	c.Request().Header.Set("x-rh-identity", xrhid)
 	c.Request().Header.Set("x-rh-sources-psk", "1234")
+	c.Request().Header.Set("x-rh-sources-org-id", "abcde")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -42,6 +43,10 @@ func TestParseAll(t *testing.T) {
 	// Gets set from the xrhid's account number.
 	if c.Get("psk-account").(string) != "12345" {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
+	}
+
+	if c.Get("psk-org-id").(string) != "abcde" {
+		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get("x-rh-sources-org-id").(string))
 	}
 
 	id, ok := c.Get("identity").(*identity.XRHID)

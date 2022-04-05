@@ -33,6 +33,10 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set("psk-account", c.Request().Header.Get("x-rh-sources-account-number"))
 		}
 
+		if c.Request().Header.Get("x-rh-sources-org-id") != "" {
+			c.Set("psk-org-id", c.Request().Header.Get("x-rh-sources-org-id"))
+		}
+
 		// parsing the base64-encoded identity header if present
 		if c.Request().Header.Get("x-rh-identity") != "" {
 			// store it raw first.

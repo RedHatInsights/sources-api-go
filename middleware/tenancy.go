@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -42,6 +43,22 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			c.Set("accountNumber", accountNumber)
+			c.Set("tenantID", tenantId)
+
+		case c.Get("psk-org-id") != nil:
+			orgId, ok := c.Get("psk-org-id").(string)
+			if !ok {
+				return errors.New("failed to cast orgId to string")
+			}
+
+			c.Logger().Debugf(`[org_id: %s] Looking up Tenant ID`, orgId)
+
+			tenantDao := dao.GetTenantDao()
+			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity{OrgID: orgId})
+			if err != nil {
+				return fmt.Errorf("failed to get or create tenant for request: %s", err)
+			}
+
 			c.Set("tenantID", tenantId)
 
 		case c.Get("identity") != nil:

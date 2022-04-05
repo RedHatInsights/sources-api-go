@@ -170,7 +170,7 @@ func TestGetOrCreateTenantIDOrgIdFind(t *testing.T) {
 // TestTenantByIdentity tests that the function is able to fetch by either EBS account number or OrgId.
 func TestTenantByIdentity(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("tenant_tests")
+	SwitchSchema("tenant_tests")
 
 	tenantDao := GetTenantDao()
 
@@ -208,13 +208,13 @@ func TestTenantByIdentity(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("tenant_tests")
+	DropSchema("tenant_tests")
 }
 
 // TestTenantByIdentityNotFound tests that a "not found" error is returned when the tenant is not found.
 func TestTenantByIdentityNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("tenant_tests")
+	SwitchSchema("tenant_tests")
 
 	tenantDao := GetTenantDao()
 
@@ -236,5 +236,5 @@ func TestTenantByIdentityNotFound(t *testing.T) {
 		t.Errorf(`unexpected error recevied. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("tenant_tests")
+	DropSchema("tenant_tests")
 }
