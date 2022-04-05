@@ -20,8 +20,8 @@ type Authentication struct {
 	Name        string                 `json:"name,omitempty"`
 	AuthType    string                 `gorm:"column:authtype" json:"authtype"`
 	Username    string                 `json:"username"`
-	Password    *string                `json:"password_hash"`
-	MiqPassword *string                `json:"password"`
+	Password    *string                `json:"password_hash" gorm:"column:password_hash"`
+	MiqPassword *string                `json:"password" gorm:"column:password"`
 	Extra       map[string]interface{} `gorm:"-" json:"extra,omitempty"`
 	ExtraDb     datatypes.JSON         `gorm:"column:extra"`
 	Version     string                 `json:"version" gorm:"-"`
@@ -74,19 +74,18 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 }
 
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
+	id, extra := mapIdExtraFields(auth)
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
+
 	var pass string
-	if auth.Password == nil {
-		pass = ""
-	} else {
-		decrypted, err := util.Decrypt(pass)
+	if auth.Password != nil {
+		decrypted, err := util.Decrypt(*auth.Password)
 		if err != nil {
-			logger.Log.Errorf("failed to decrypt password: %v", err)
+			logger.Log.Errorf("failed to decrypt password id %v: %v", id, err)
 		}
 		pass = decrypted
 	}
 
-	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationInternalResponse{
 		ID:                      id,
 		CreatedAt:               auth.CreatedAt,

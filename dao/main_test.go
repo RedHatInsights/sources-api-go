@@ -116,7 +116,8 @@ func MigrateSchema() {
 		Name                    string         `gorm:"column:name"`
 		AuthType                string         `gorm:"column:authtype"`
 		Username                string         `gorm:"column:username"`
-		Password                string         `gorm:"column:password"`
+		MiqPassword             string         `gorm:"column:password"`
+		Password                string         `gorm:"column:password_hash"`
 		Extra                   datatypes.JSON `gorm:"column:extra"`
 		Version                 string         `gorm:"column:version"`
 		AvailabilityStatus      string         `gorm:"column:availability_status"`
