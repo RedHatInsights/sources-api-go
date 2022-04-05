@@ -94,6 +94,9 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 	} else {
 		end = limit
 	}
+	if offset > limit {
+		return nil, int64(len(keys)), nil
+	}
 
 	// Initialize the marketplace token cacher as it will be used in the underlying "authFromVault" function, inside
 	// ".getKey"
@@ -107,7 +110,7 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 		out = append(out, *secret)
 	}
-	count := int64(len(out))
+	count := int64(len(keys))
 
 	return out, count, nil
 }
@@ -186,7 +189,7 @@ func (a *authenticationDaoImpl) ListForApplicationAuthentication(appauthID int64
 	return auths, int64(len(auths)), nil
 }
 
-func (a *authenticationDaoImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+func (a *authenticationDaoImpl) ListForEndpoint(endpointID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	_, err := GetEndpointDao(a.TenantID).GetById(&endpointID)
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("endpoint")
