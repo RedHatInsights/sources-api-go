@@ -121,7 +121,7 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidSyntax(t *testin
 }
 
 func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -150,7 +150,7 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testin
 }
 
 func TestSourceApplicationTypeSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -284,7 +284,7 @@ func TestApplicationTypeList(t *testing.T) {
 }
 
 func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -309,7 +309,7 @@ func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestApplicationTypeListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},

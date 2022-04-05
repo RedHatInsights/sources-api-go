@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"reflect"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -42,7 +42,7 @@ func createAuthenticationFixture(t *testing.T) {
 // TestAuthenticationDbCreate tests that the "create" function does not present any problems at creating new entities
 // if the minimum data is provided for an authentication.
 func TestAuthenticationDbCreate(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
@@ -59,7 +59,7 @@ func TestAuthenticationDbCreate(t *testing.T) {
 // TestAuthenticationDbBulkCreate tests that the "BulkCreate" function does not present any problems at creating new
 // entities if the minimum data is provided for an authentication.
 func TestAuthenticationDbBulkCreate(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
@@ -75,7 +75,7 @@ func TestAuthenticationDbBulkCreate(t *testing.T) {
 
 // TestAuthenticationDbList tests that the "list" operation returns the expected number of authentications.
 func TestAuthenticationDbList(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
@@ -111,7 +111,7 @@ func TestAuthenticationDbList(t *testing.T) {
 
 // TestAuthenticationDbGet tests that the "get" operation is able to fetch the expected authentication.
 func TestAuthenticationDbGetById(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -141,7 +141,7 @@ func TestAuthenticationDbGetById(t *testing.T) {
 
 // TestAuthenticationDbUpdate tests that the "update" operation is able to properly update the authentication.
 func TestAuthenticationDbUpdate(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -181,7 +181,7 @@ func TestAuthenticationDbUpdate(t *testing.T) {
 
 // TestAuthenticationDbGet tests that the "delete" operation is able to delete the expected authentication.
 func TestAuthenticationDbDelete(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -219,7 +219,7 @@ func TestAuthenticationDbDelete(t *testing.T) {
 // TestAuthenticationDbGet tests the "delete" operation returns a "not found" error when trying to delete a
 // non-existing authentication.
 func TestAuthenticationDbDeleteNotFound(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
@@ -246,7 +246,7 @@ func TestTenantId(t *testing.T) {
 
 // TestListForSource tests if "list for source" only lists the authentications of the related source, and no more.
 func TestListForSource(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -305,7 +305,7 @@ func TestListForSource(t *testing.T) {
 // TestListForSourceNotFound tests if a not found error is returned when a nonexistent source is given to the function
 // under test.
 func TestListForSourceNotFound(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -327,7 +327,7 @@ func TestListForSourceNotFound(t *testing.T) {
 // TestListForApplication tests if "list for Application" only lists the authentications of the related application, and no
 // more.
 func TestListForApplication(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -398,7 +398,7 @@ func TestListForApplication(t *testing.T) {
 // TestListForApplicationNotFound tests if a not found error is returned when a nonexistent application is given to the
 // function under test.
 func TestListForApplicationNotFound(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -420,7 +420,7 @@ func TestListForApplicationNotFound(t *testing.T) {
 // TestListForApplicationAuthentication tests if "list for ApplicationAuthentication" only lists the authentications of
 // the related ApplicationAuthentication, and no more.
 func TestListForApplicationAuthentication(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -506,7 +506,7 @@ func TestListForApplicationAuthentication(t *testing.T) {
 // TestListForApplicationAuthenticationNotFound tests if a not found error is returned when a nonexistent application
 // authentication is given to the function under test.
 func TestListForApplicationAuthenticationNotFound(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -527,7 +527,7 @@ func TestListForApplicationAuthenticationNotFound(t *testing.T) {
 
 // TestListForEndpoint tests if "list for Endpoint" only lists the authentications of the related endpoint, and no more.
 func TestListForEndpoint(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -597,7 +597,7 @@ func TestListForEndpoint(t *testing.T) {
 // TestListForEndpointNotFound tests if a not found error is returned when a nonexistent endpoint is given to the
 // function under test.
 func TestListForEndpointNotFound(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -618,7 +618,7 @@ func TestListForEndpointNotFound(t *testing.T) {
 
 // TestFetchAndUpdateBy tests if "FetchAndUpdateBy" updates the timestamps as expected.
 func TestFetchAndUpdateBy(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -703,7 +703,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 
 // TestToEventJSON tests if "FetchAndUpdateBy" returns the expected output for the given resource.
 func TestToEventJSON(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -749,7 +749,7 @@ func TestToEventJSON(t *testing.T) {
 // function under test and "BulkMessageFromSource", and then compares outputs, since it's not the aim of this test to
 // test also "BulkMessageFromSource".
 func TestBulkMessage(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.

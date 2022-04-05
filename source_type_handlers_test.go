@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -67,7 +68,7 @@ func TestSourceTypeList(t *testing.T) {
 }
 
 func TestSourceTypeListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -92,7 +93,7 @@ func TestSourceTypeListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestSourceTypeListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},

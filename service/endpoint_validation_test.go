@@ -2,11 +2,11 @@ package service
 
 import (
 	"fmt"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"strconv"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/model"
 )
 
@@ -36,7 +36,7 @@ func setUpEndpointCreateRequest() model.EndpointCreateRequest {
 // TestValidateEndpointCreateRequest tests that when a proper EndpointCreateRequest is given, the validator doesn't
 // complain.
 func TestValidateEndpointCreateRequest(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 
@@ -84,7 +84,7 @@ func TestInvalidSourceId(t *testing.T) {
 // TestDefaultEndpointAlreadyExists tests if an error is returned when the provided endpoint is marked as default when
 // the also provided source already has a default one.
 func TestDefaultEndpointAlreadyExists(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 	ecr.Default = true
@@ -103,7 +103,7 @@ func TestDefaultEndpointAlreadyExists(t *testing.T) {
 // TestDefaultIsSetBecauseSourceHasNoEndpoints tests if the endpoint is defaulted when the provided source  has no
 // endpoints.
 func TestDefaultIsSetBecauseSourceHasNoEndpoints(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 	ecr.SourceIDRaw = "12345"
@@ -120,7 +120,7 @@ func TestDefaultIsSetBecauseSourceHasNoEndpoints(t *testing.T) {
 
 // TestNonUniqueRole tests if an error is returned when a role already exists for a source.
 func TestNonUniqueRole(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	role := "myRole"
 	newEndpoint := fixtures.TestEndpointData[0]
@@ -148,7 +148,7 @@ func TestNonUniqueRole(t *testing.T) {
 
 // TestSchemeGetsDefaulted tests if the scheme gets properly defaulted when an invalid or missing scheme is provided.
 func TestSchemeGetsDefaulted(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 
@@ -180,7 +180,7 @@ func TestSchemeGetsDefaulted(t *testing.T) {
 
 // TestEmptyHost tests if no error is returned even when an empty host is given.
 func TestEmptyHost(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 	ecr.Host = ""
@@ -193,7 +193,7 @@ func TestEmptyHost(t *testing.T) {
 
 // TestHostFqdnTooLong tests if an error is returned when a host which is too long is given.
 func TestHostFqdnTooLong(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 
@@ -219,7 +219,7 @@ func TestHostFqdnTooLong(t *testing.T) {
 
 // TestValidHosts tests if the validation succeeds when valid hosts are given.
 func TestValidHosts(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testValues := []string{
 		"redhat.com",
@@ -246,7 +246,7 @@ func TestValidHosts(t *testing.T) {
 
 // TestInvalidHosts tests if an error is returned on invalid hosts.
 func TestInvalidHosts(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testValues := []string{
 		"-example.com",
@@ -270,7 +270,7 @@ func TestInvalidHosts(t *testing.T) {
 
 // TestLabelNamesTooLong tests if an error is returned when the provided labels are longer than permitted.
 func TestLabelNamesTooLong(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 
@@ -291,7 +291,7 @@ func TestLabelNamesTooLong(t *testing.T) {
 // TestDefaultingPortWhenMissingOrLessThanZero test if the port is given a default value if it's missing or it has been
 // given a value equal or lower than zero.
 func TestDefaultingPortWhenMissingOrLessThanZero(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 
@@ -320,7 +320,7 @@ func TestDefaultingPortWhenMissingOrLessThanZero(t *testing.T) {
 
 // TestPortLargeValue tests if an error is returned when a port that is greater than the maximum allowed port is given.
 func TestPortLargeValue(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 	largePort := 999999
@@ -340,7 +340,7 @@ func TestPortLargeValue(t *testing.T) {
 
 // TestDefaultVerifySsl tests if the default value is set when no "VerifySSL" value is provided.
 func TestDefaultVerifySsl(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 	ecr.VerifySsl = nil
@@ -358,7 +358,7 @@ func TestDefaultVerifySsl(t *testing.T) {
 // TestEmptyCertificateAuthority tests if an error is returned when ssl verification is turned on but no certificate
 // authority is given.
 func TestEmptyCertificateAuthority(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 
@@ -384,7 +384,7 @@ func TestEmptyCertificateAuthority(t *testing.T) {
 
 // TestValidAvailabilityStatuses tests if no error is returned when valid availability statuses are given.
 func TestValidAvailabilityStatuses(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 
@@ -401,7 +401,7 @@ func TestValidAvailabilityStatuses(t *testing.T) {
 
 // TestInvalidAvailabilityStatuses tests if an error is returned when passing invalid availability statuses.
 func TestInvalidAvailabilityStatuses(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	ecr := setUpEndpointCreateRequest()
 

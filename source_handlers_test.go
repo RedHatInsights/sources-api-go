@@ -349,7 +349,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) 
 }
 
 func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -378,7 +378,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 }
 
 func TestSourceTypeSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -573,7 +573,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *tes
 }
 
 func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -602,7 +602,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *tes
 }
 
 func TestApplicationTypeListSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -749,7 +749,7 @@ func TestSourceList(t *testing.T) {
 }
 
 func TestSourceListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -819,7 +819,7 @@ func TestSourceListWithOffsetAndLimit(t *testing.T) {
 }
 
 func TestSourceListSatellite(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -865,7 +865,7 @@ func TestSourceListSatellite(t *testing.T) {
 }
 
 func TestSourceListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -1436,7 +1436,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T
 }
 
 func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -1465,7 +1465,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T
 }
 
 func TestSourcesGetRelatedRhcConnectionsTestWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -1553,7 +1553,7 @@ func TestSourcesGetRelatedRhcConnectionsTestWithOffsetAndLimit(t *testing.T) {
 // TestPauseSourceAndItsApplications tests that the "pause source" endpoint sets all the applications and the source
 // itself as paused, by modifying their "paused_at" column.
 func TestPauseSourceAndItsApplications(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -1580,7 +1580,7 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 // TestResumeSourceAndItsApplications tests that the "unpause source" endpoint sets all the applications and the source
 // itself as resumed, by setting their "paused_at" column as "NULL".
 func TestResumeSourceAndItsApplications(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -1619,7 +1619,7 @@ func (p MockSender) RaiseEvent(eventType string, payload []byte, headers []kafka
 
 // TestSourcePauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
 func TestSourcePauseRaiseEventCheck(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -1696,7 +1696,7 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 
 // TestSourceUnpauseRaiseEventCheck tests that a proper "raise event" is raised when a source is unpaused.
 func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,

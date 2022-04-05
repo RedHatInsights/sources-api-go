@@ -1,12 +1,12 @@
 package service
 
 import (
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"math"
 	"regexp"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/model"
 )
 
@@ -65,7 +65,7 @@ func TestInvalidName(t *testing.T) {
 // fixture that is inserted in the main function. The reason is that it is easier to control this new fixture here
 // than having to track the name of the previously inserted fixture, or exporting it to variable or whatever.
 func TestInvalidDuplicatedNameInTenant(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	sourceName := "Source350"
 	newSource := model.Source{ID: 350, Name: sourceName, SourceTypeID: 1, TenantID: 1}

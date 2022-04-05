@@ -14,6 +14,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
@@ -156,7 +157,7 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidSyntax(t *testing.T)
 }
 
 func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -185,7 +186,7 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 }
 
 func TestSourceApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	sourceID := int64(1)
 
@@ -341,7 +342,7 @@ func TestApplicationList(t *testing.T) {
 }
 
 func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	var c, rec = request.CreateTestContext(
 		http.MethodGet,
@@ -366,7 +367,7 @@ func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestApplicationListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -802,7 +803,7 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 
 // TestPauseApplication tests that an application gets successfully paused.
 func TestPauseApplication(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -828,7 +829,7 @@ func TestPauseApplication(t *testing.T) {
 
 // TestResumeApplication tests that an application gets successfully resumed.
 func TestResumeApplication(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -854,7 +855,7 @@ func TestResumeApplication(t *testing.T) {
 
 // TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
 func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -908,7 +909,7 @@ func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
 
 // TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is unpaused.
 func TestPauseApplicationUnpauseRaiseEventCheck(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,

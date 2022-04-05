@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
@@ -77,7 +78,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 }
 
 func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -103,7 +104,7 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestApplicationAuthenticationListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},

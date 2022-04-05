@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -130,7 +131,7 @@ func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidSyntax(t *test
 }
 
 func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -159,7 +160,7 @@ func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidFilter(t *test
 }
 
 func TestApplicationTypeMetaDataSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -294,7 +295,7 @@ func TestMetaDataList(t *testing.T) {
 }
 
 func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -320,7 +321,7 @@ func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestMetaDataListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},

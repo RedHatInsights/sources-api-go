@@ -2,17 +2,17 @@ package dao
 
 import (
 	"errors"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"reflect"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 // TestDeleteApplicationAuthentication tests that an applicationAuthentication gets correctly deleted, and its data returned.
 func TestDeleteApplicationAuthentication(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestSourceData[0].TenantID)
@@ -49,7 +49,7 @@ func TestDeleteApplicationAuthentication(t *testing.T) {
 // TestDeleteApplicationAuthenticationNotExists tests that when an applicationAuthentication that doesn't exist is tried to be deleted, an error is
 // returned.
 func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestSourceData[0].TenantID)

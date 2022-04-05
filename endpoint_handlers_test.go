@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -132,7 +133,7 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
 }
 
 func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -161,7 +162,7 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestSourceEndpointSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	sourceID := int64(1)
 
@@ -309,7 +310,7 @@ func TestEndpointList(t *testing.T) {
 }
 
 func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -335,7 +336,7 @@ func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestEndpointListWithOffsetAndLimit(t *testing.T) {
-	templates.SkipIfNotRunningIntegrationTests(t)
+	helpers.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
