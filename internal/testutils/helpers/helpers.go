@@ -1,8 +1,10 @@
 package helpers
 
 import (
+	"fmt"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"testing"
 )
 
@@ -42,5 +44,17 @@ func GetAppTypeCountWithSourceId(sourceId int64) int {
 func SkipIfNotRunningIntegrationTests(t *testing.T) {
 	if !parser.RunningIntegrationTests {
 		t.Skip("Skipping integration test")
+	}
+}
+
+func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset int) {
+	expectedFirstLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, offset)
+	expectedLastLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, limit+offset)
+	if links.First != expectedFirstLink {
+		t.Error("first link is not correct for " + path)
+	}
+
+	if links.Last != expectedLastLink {
+		t.Error("last link is not correct for " + path)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"net/http"
 	"strconv"
 	"testing"
@@ -65,20 +66,13 @@ func TestRhcConnectionList(t *testing.T) {
 
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestRhcConnectionListWithOffsetAndLimit(t *testing.T) {
 	helpers.SkipIfNotRunningIntegrationTests(t)
-
-	testData := []map[string]int{
-		{"limit": 10, "offset": 0},
-		{"limit": 10, "offset": 1},
-		{"limit": 10, "offset": 100},
-		{"limit": 1, "offset": 0},
-		{"limit": 1, "offset": 1},
-		{"limit": 1, "offset": 100},
-	}
+	testData := templates.TestDataForOffsetLimitTest
+	wantRhcConnectionsCount := len(fixtures.TestRhcConnectionData)
 
 	for _, i := range testData {
 		c, rec := request.CreateTestContext(
@@ -98,45 +92,8 @@ func TestRhcConnectionListWithOffsetAndLimit(t *testing.T) {
 			t.Error(err)
 		}
 
-		if rec.Code != http.StatusOK {
-			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
-		}
-
-		var out util.Collection
-		err = json.Unmarshal(rec.Body.Bytes(), &out)
-		if err != nil {
-			t.Error("Failed unmarshalling output")
-		}
-
-		if out.Meta.Limit != i["limit"] {
-			t.Error("limit not set correctly")
-		}
-
-		if out.Meta.Offset != i["offset"] {
-			t.Error("offset not set correctly")
-		}
-
-		if out.Meta.Count != len(fixtures.TestRhcConnectionData) {
-			t.Errorf("count not set correctly, want %d, got %d", len(fixtures.TestRhcConnectionData), out.Meta.Count)
-		}
-
-		// Check if count of returned objects is equal to test data
-		// taking into account offset and limit.
-		got := len(out.Data)
-		want := len(fixtures.TestRhcConnectionData) - i["offset"]
-		if want < 0 {
-			want = 0
-		}
-
-		if want > i["limit"] {
-			want = i["limit"]
-		}
-		if got != want {
-			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
-		}
-
-		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
-
+		path := c.Request().RequestURI
+		templates.WithOffsetAndLimitTest(t, path, rec, wantRhcConnectionsCount, i["limit"], i["offset"])
 	}
 }
 
@@ -484,20 +441,10 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 
 func TestRhcConnectionSourcesListWithOffsetAndLimit(t *testing.T) {
 	helpers.SkipIfNotRunningIntegrationTests(t)
-
-	testData := []map[string]int{
-		{"limit": 10, "offset": 0},
-		{"limit": 10, "offset": 1},
-		{"limit": 10, "offset": 2},
-		{"limit": 10, "offset": 100},
-		{"limit": 1, "offset": 0},
-		{"limit": 1, "offset": 1},
-		{"limit": 1, "offset": 100},
-	}
-
-	rhcConnectionId := fixtures.TestRhcConnectionData[0].ID
+	testData := templates.TestDataForOffsetLimitTest
 
 	// Getting count of sources with given rhc connection id
+	rhcConnectionId := fixtures.TestRhcConnectionData[0].ID
 	var wantSourcesCount int
 	for _, i := range fixtures.TestSourceRhcConnectionData {
 		if i.RhcConnectionId == rhcConnectionId {
@@ -526,43 +473,7 @@ func TestRhcConnectionSourcesListWithOffsetAndLimit(t *testing.T) {
 			t.Error(err)
 		}
 
-		if rec.Code != http.StatusOK {
-			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
-		}
-
-		var out util.Collection
-		err = json.Unmarshal(rec.Body.Bytes(), &out)
-		if err != nil {
-			t.Error("Failed unmarshaling output")
-		}
-
-		if out.Meta.Limit != i["limit"] {
-			t.Error("limit not set correctly")
-		}
-
-		if out.Meta.Offset != i["offset"] {
-			t.Error("offset not set correctly")
-		}
-
-		if out.Meta.Count != wantSourcesCount {
-			t.Errorf("count not set correctly")
-		}
-
-		// Check if count of returned objects is equal to test data
-		// taking into account offset and limit.
-		got := len(out.Data)
-		want := wantSourcesCount - i["offset"]
-		if want < 0 {
-			want = 0
-		}
-
-		if want > i["limit"] {
-			want = i["limit"]
-		}
-		if got != want {
-			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
-		}
-
-		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+		path := c.Request().RequestURI
+		templates.WithOffsetAndLimitTest(t, path, rec, wantSourcesCount, i["limit"], i["offset"])
 	}
 }

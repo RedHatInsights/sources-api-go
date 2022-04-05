@@ -81,20 +81,13 @@ func TestSourceListInternal(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListInternalWithOffsetAndLimit(t *testing.T) {
 	helpers.SkipIfNotRunningIntegrationTests(t)
-
-	testData := []map[string]int{
-		{"limit": 10, "offset": 0},
-		{"limit": 10, "offset": 1},
-		{"limit": 10, "offset": 100},
-		{"limit": 1, "offset": 0},
-		{"limit": 1, "offset": 1},
-		{"limit": 1, "offset": 100},
-	}
+	testData := templates.TestDataForOffsetLimitTest
+	wantSourcesCount := len(fixtures.TestSourceData)
 
 	for _, i := range testData {
 		c, rec := request.CreateTestContext(
@@ -112,44 +105,8 @@ func TestSourceListInternalWithOffsetAndLimit(t *testing.T) {
 			t.Error(err)
 		}
 
-		if rec.Code != http.StatusOK {
-			t.Error("Did not return 200")
-		}
-
-		var out util.Collection
-		err = json.Unmarshal(rec.Body.Bytes(), &out)
-		if err != nil {
-			t.Error("Failed unmarshaling output")
-		}
-
-		if out.Meta.Limit != i["limit"] {
-			t.Error("limit not set correctly")
-		}
-
-		if out.Meta.Offset != i["offset"] {
-			t.Error("offset not set correctly")
-		}
-
-		if out.Meta.Count != len(fixtures.TestSourceData) {
-			t.Errorf("count not set correctly")
-		}
-
-		// Check if count of returned objects is equal to test data
-		// taking into account offset and limit.
-		got := len(out.Data)
-		want := len(fixtures.TestSourceData) - i["offset"]
-		if want < 0 {
-			want = 0
-		}
-
-		if want > i["limit"] {
-			want = i["limit"]
-		}
-		if got != want {
-			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
-		}
-
-		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+		path := c.Request().RequestURI
+		templates.WithOffsetAndLimitTest(t, path, rec, wantSourcesCount, i["limit"], i["offset"])
 	}
 }
 

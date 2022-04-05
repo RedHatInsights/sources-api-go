@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"sort"
 	"testing"
@@ -13,7 +12,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/middleware"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -91,18 +89,6 @@ func TestMain(t *testing.M) {
 	}
 
 	os.Exit(code)
-}
-
-func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset int) {
-	expectedFirstLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, offset)
-	expectedLastLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, limit+offset)
-	if links.First != expectedFirstLink {
-		t.Error("first link is not correct for " + path)
-	}
-
-	if links.Last != expectedLastLink {
-		t.Error("last link is not correct for " + path)
-	}
 }
 
 func SortByStringValueOnKey(field string, data []interface{}) {

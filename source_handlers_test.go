@@ -111,7 +111,7 @@ func TestSourceListAuthentications(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListAuthenticationsNotFound(t *testing.T) {
@@ -227,7 +227,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 // Existing source type + not existing source with this source type
@@ -295,7 +295,7 @@ func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
 
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
@@ -379,15 +379,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 
 func TestSourceTypeSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	helpers.SkipIfNotRunningIntegrationTests(t)
-
-	testData := []map[string]int{
-		{"limit": 10, "offset": 0},
-		{"limit": 10, "offset": 1},
-		{"limit": 10, "offset": 100},
-		{"limit": 1, "offset": 0},
-		{"limit": 1, "offset": 1},
-		{"limit": 1, "offset": 100},
-	}
+	testData := templates.TestDataForOffsetLimitTest
 
 	// How many sources with given source type is in fixtures
 	// (adding new fixtures will not affect the test)
@@ -421,44 +413,8 @@ func TestSourceTypeSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 			t.Error(err)
 		}
 
-		if rec.Code != http.StatusOK {
-			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
-		}
-
-		var out util.Collection
-		err = json.Unmarshal(rec.Body.Bytes(), &out)
-		if err != nil {
-			t.Error("Failed unmarshaling output")
-		}
-
-		if out.Meta.Limit != i["limit"] {
-			t.Error("limit not set correctly")
-		}
-
-		if out.Meta.Offset != i["offset"] {
-			t.Error("offset not set correctly")
-		}
-
-		if out.Meta.Count != wantSourcesCount {
-			t.Errorf("count not set correctly")
-		}
-
-		// Check if count of returned objects is equal to test data
-		// taking into account offset and limit.
-		got := len(out.Data)
-		want := wantSourcesCount - i["offset"]
-		if want < 0 {
-			want = 0
-		}
-
-		if want > i["limit"] {
-			want = i["limit"]
-		}
-		if got != want {
-			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
-		}
-
-		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+		path := c.Request().RequestURI
+		templates.WithOffsetAndLimitTest(t, path, rec, wantSourcesCount, i["limit"], i["offset"])
 	}
 }
 
@@ -519,7 +475,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
@@ -603,15 +559,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *tes
 
 func TestApplicationTypeListSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	helpers.SkipIfNotRunningIntegrationTests(t)
-
-	testData := []map[string]int{
-		{"limit": 10, "offset": 0},
-		{"limit": 10, "offset": 1},
-		{"limit": 10, "offset": 100},
-		{"limit": 1, "offset": 0},
-		{"limit": 1, "offset": 1},
-		{"limit": 1, "offset": 100},
-	}
+	testData := templates.TestDataForOffsetLimitTest
 
 	// How many sources with given application type is in fixtures
 	// => check applications with given app type and for matched apps
@@ -641,44 +589,8 @@ func TestApplicationTypeListSourceSubcollectionListWithOffsetAndLimit(t *testing
 			t.Error(err)
 		}
 
-		if rec.Code != http.StatusOK {
-			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
-		}
-
-		var out util.Collection
-		err = json.Unmarshal(rec.Body.Bytes(), &out)
-		if err != nil {
-			t.Error("Failed unmarshaling output")
-		}
-
-		if out.Meta.Limit != i["limit"] {
-			t.Error("limit not set correctly")
-		}
-
-		if out.Meta.Offset != i["offset"] {
-			t.Error("offset not set correctly")
-		}
-
-		if out.Meta.Count != wantSourcesCount {
-			t.Errorf("count not set correctly, got %d, want %d", out.Meta.Count, wantSourcesCount)
-		}
-
-		// Check if count of returned objects is equal to test data
-		// taking into account offset and limit.
-		got := len(out.Data)
-		want := wantSourcesCount - i["offset"]
-		if want < 0 {
-			want = 0
-		}
-
-		if want > i["limit"] {
-			want = i["limit"]
-		}
-		if got != want {
-			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
-		}
-
-		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+		path := c.Request().RequestURI
+		templates.WithOffsetAndLimitTest(t, path, rec, wantSourcesCount, i["limit"], i["offset"])
 	}
 }
 
@@ -745,20 +657,13 @@ func TestSourceList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListWithOffsetAndLimit(t *testing.T) {
 	helpers.SkipIfNotRunningIntegrationTests(t)
-
-	testData := []map[string]int{
-		{"limit": 10, "offset": 0},
-		{"limit": 10, "offset": 1},
-		{"limit": 10, "offset": 100},
-		{"limit": 1, "offset": 0},
-		{"limit": 1, "offset": 1},
-		{"limit": 1, "offset": 100},
-	}
+	testData := templates.TestDataForOffsetLimitTest
+	wantSourcesCount := len(fixtures.TestSourceData)
 
 	for _, i := range testData {
 		c, rec := request.CreateTestContext(
@@ -777,44 +682,8 @@ func TestSourceListWithOffsetAndLimit(t *testing.T) {
 			t.Error(err)
 		}
 
-		if rec.Code != http.StatusOK {
-			t.Error("Did not return 200")
-		}
-
-		var out util.Collection
-		err = json.Unmarshal(rec.Body.Bytes(), &out)
-		if err != nil {
-			t.Error("Failed unmarshaling output")
-		}
-
-		if out.Meta.Limit != i["limit"] {
-			t.Error("limit not set correctly")
-		}
-
-		if out.Meta.Offset != i["offset"] {
-			t.Error("offset not set correctly")
-		}
-
-		if out.Meta.Count != len(fixtures.TestSourceData) {
-			t.Errorf("count not set correctly")
-		}
-
-		// Check if count of returned objects is equal to test data
-		// taking into account offset and limit.
-		got := len(out.Data)
-		want := len(fixtures.TestSourceData) - i["offset"]
-		if want < 0 {
-			want = 0
-		}
-
-		if want > i["limit"] {
-			want = i["limit"]
-		}
-		if got != want {
-			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
-		}
-
-		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
+		path := c.Request().RequestURI
+		templates.WithOffsetAndLimitTest(t, path, rec, wantSourcesCount, i["limit"], i["offset"])
 	}
 }
 
@@ -861,7 +730,7 @@ func TestSourceListSatellite(t *testing.T) {
 		t.Error("Objects were not filtered out of request")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	helpers.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListBadRequestInvalidFilter(t *testing.T) {
@@ -1466,20 +1335,10 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T
 
 func TestSourcesGetRelatedRhcConnectionsTestWithOffsetAndLimit(t *testing.T) {
 	helpers.SkipIfNotRunningIntegrationTests(t)
-
-	testData := []map[string]int{
-		{"limit": 10, "offset": 0},
-		{"limit": 10, "offset": 1},
-		{"limit": 10, "offset": 2},
-		{"limit": 10, "offset": 100},
-		{"limit": 1, "offset": 0},
-		{"limit": 1, "offset": 1},
-		{"limit": 1, "offset": 100},
-	}
-
-	sourceId := int64(1)
+	testData := templates.TestDataForOffsetLimitTest
 
 	// Getting count of rhc_connections with given source id
+	sourceId := int64(1)
 	var wantRhdConnectionCount int
 	for _, i := range fixtures.TestSourceRhcConnectionData {
 		if i.SourceId == sourceId {
@@ -1508,45 +1367,8 @@ func TestSourcesGetRelatedRhcConnectionsTestWithOffsetAndLimit(t *testing.T) {
 			t.Error(err)
 		}
 
-		if rec.Code != http.StatusOK {
-			t.Errorf("want %d, got %d", http.StatusOK, rec.Code)
-		}
-
-		var out util.Collection
-		err = json.Unmarshal(rec.Body.Bytes(), &out)
-		if err != nil {
-			t.Error("Failed unmarshalling output")
-		}
-
-		if out.Meta.Limit != i["limit"] {
-			t.Error("limit not set correctly")
-		}
-
-		if out.Meta.Offset != i["offset"] {
-			t.Error("offset not set correctly")
-		}
-
-		if out.Meta.Count != wantRhdConnectionCount {
-			t.Errorf("count not set correctly")
-		}
-
-		// Check if count of returned objects is equal to test data
-		// taking into account offset and limit.
-		got := len(out.Data)
-		want := wantRhdConnectionCount - i["offset"]
-		if want < 0 {
-			want = 0
-		}
-
-		if want > i["limit"] {
-			want = i["limit"]
-		}
-		if got != want {
-			t.Errorf("objects passed back from DB: want'%v', got '%v'", want, got)
-		}
-
-		AssertLinks(t, c.Request().RequestURI, out.Links, i["limit"], i["offset"])
-
+		path := c.Request().RequestURI
+		templates.WithOffsetAndLimitTest(t, path, rec, wantRhdConnectionCount, i["limit"], i["offset"])
 	}
 }
 
