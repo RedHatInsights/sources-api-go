@@ -40,7 +40,7 @@ jobs:
           version: latest
           only-new-issues: true
           skip-go-installation: true
-          args: --enable gci,bodyclose,forcetypeassert,misspell
+          args: --enable gci,bodyclose,forcetypeassert,misspell --timeout=5m
 
   gotest:
     name: go test

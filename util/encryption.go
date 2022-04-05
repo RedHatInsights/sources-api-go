@@ -138,3 +138,8 @@ func padString(text string, blockSize int) string {
 	padding := bytes.Repeat([]byte{byte(0)}, padLength)
 	return text + string(padding)
 }
+
+func OverrideEncryptionKey(k string) {
+	key = k
+	keyPresent = true
+}
