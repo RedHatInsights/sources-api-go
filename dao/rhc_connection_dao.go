@@ -207,7 +207,11 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 }
 
 func (s *rhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
-	err := DB.Debug().
+	err := DB.
+		Debug().
+		// We need to use the "Omit" clause since otherwise Gorm tries to create the associate source for the
+		// connection as well.
+		Omit(clause.Associations).
 		Updates(rhcConnection).
 		Error
 	return err

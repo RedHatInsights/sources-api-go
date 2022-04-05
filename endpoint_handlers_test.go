@@ -22,6 +22,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -578,12 +579,19 @@ func TestEndpointDelete(t *testing.T) {
 	tenantID := fixtures.TestTenantData[0].Id
 	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantID})
 
+	uid, err := uuid.NewUUID()
+	if err != nil {
+		t.Errorf(`could not create UUID fro the fixture source: %s`, err)
+	}
+
+	uidStr := uid.String()
 	src := m.Source{
 		Name:         "Source for TestApplicationDelete()",
 		SourceTypeID: 1,
+		Uid:          &uidStr,
 	}
 
-	err := sourceDao.Create(&src)
+	err = sourceDao.Create(&src)
 	if err != nil {
 		t.Errorf("source not created correctly: %s", err)
 	}
