@@ -3,11 +3,11 @@ package dao
 import (
 	"bytes"
 	"errors"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -17,7 +17,7 @@ var testApplication = fixtures.TestApplicationData[0]
 
 // TestPausingApplication tests that an application gets correctly paused when using the method from the DAO.
 func TestPausingApplication(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	CreateFixtures("pause_unpause")
 
@@ -42,7 +42,7 @@ func TestPausingApplication(t *testing.T) {
 
 // TestResumeApplication tests that the application is properly resumed when using the method from the DAO.
 func TestResumeApplication(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	CreateFixtures("pause_unpause")
 
@@ -68,7 +68,7 @@ func TestResumeApplication(t *testing.T) {
 
 // TestDeleteApplication tests that an application gets correctly deleted, and its data returned.
 func TestDeleteApplication(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
@@ -114,7 +114,7 @@ func TestDeleteApplication(t *testing.T) {
 // TestDeleteApplicationNotExists tests that when an application that doesn't exist is tried to be deleted, an error is
 // returned.
 func TestDeleteApplicationNotExists(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)

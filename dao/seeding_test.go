@@ -1,11 +1,11 @@
 package dao
 
 import (
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"sigs.k8s.io/yaml"
 )
@@ -20,7 +20,7 @@ func getSeedFilesystemDir() string {
 }
 
 func TestSeedingSourceTypes(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -51,7 +51,7 @@ func TestSeedingSourceTypes(t *testing.T) {
 }
 
 func TestSeedingApplicationTypes(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -82,7 +82,7 @@ func TestSeedingApplicationTypes(t *testing.T) {
 }
 
 func TestSeedingSuperkeyMetadata(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -122,7 +122,7 @@ func TestSeedingSuperkeyMetadata(t *testing.T) {
 }
 
 func TestSeedingApplicationMetadata(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")

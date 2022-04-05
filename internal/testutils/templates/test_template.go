@@ -1,4 +1,4 @@
-package testutils
+package templates
 
 import (
 	"encoding/json"

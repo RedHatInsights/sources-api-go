@@ -2,11 +2,11 @@ package dao
 
 import (
 	"errors"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -17,7 +17,7 @@ var sourceDao = sourceDaoImpl{
 
 // TestSourcesListForRhcConnections tests whether the correct sources are fetched from the related connection or not.
 func TestSourcesListForRhcConnections(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures(RHC_CONNECTION_SCHEMA)
 
 	rhcConnectionId := int64(1)
@@ -64,7 +64,7 @@ var testSource = fixtures.TestSourceData[0]
 
 // TestPausingSource checks whether the "paused_at" column gets successfully modified when pausing a source.
 func TestPausingSource(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("pause_unpause")
 
 	sourceDao := GetSourceDao(&testSource.TenantID)
@@ -94,7 +94,7 @@ func TestPausingSource(t *testing.T) {
 
 // TestResumingSource checks whether the "paused_at" column gets set as "NULL" when resuming a source.
 func TestResumingSource(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	CreateFixtures("pause_unpause")
 
@@ -125,7 +125,7 @@ func TestResumingSource(t *testing.T) {
 
 // TestDeleteSource tests that a source gets correctly deleted, and its data returned.
 func TestDeleteSource(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)
@@ -170,7 +170,7 @@ func TestDeleteSource(t *testing.T) {
 
 // TestDeleteSourceNotExists tests that when a source that doesn't exist is tried to be deleted, an error is returned.
 func TestDeleteSourceNotExists(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)

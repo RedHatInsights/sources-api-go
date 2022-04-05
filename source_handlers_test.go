@@ -14,11 +14,11 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -136,7 +136,7 @@ func TestSourceListAuthenticationsNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceListAuthenticationsBadRequest(t *testing.T) {
@@ -161,7 +161,7 @@ func TestSourceListAuthenticationsBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
@@ -320,7 +320,7 @@ func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceTypeSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -345,11 +345,11 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) 
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -374,11 +374,11 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceTypeSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -544,7 +544,7 @@ func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -569,11 +569,11 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *tes
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -598,11 +598,11 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *tes
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationTypeListSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -749,7 +749,7 @@ func TestSourceList(t *testing.T) {
 }
 
 func TestSourceListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -819,7 +819,7 @@ func TestSourceListWithOffsetAndLimit(t *testing.T) {
 }
 
 func TestSourceListSatellite(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -865,7 +865,7 @@ func TestSourceListSatellite(t *testing.T) {
 }
 
 func TestSourceListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -885,7 +885,7 @@ func TestSourceListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceGet(t *testing.T) {
@@ -940,7 +940,7 @@ func TestSourceGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceGetBadRequest(t *testing.T) {
@@ -962,7 +962,7 @@ func TestSourceGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // TestSourceCreateBadRequest tests that the handler responds with an 400 when an invalid JSON is received
@@ -993,7 +993,7 @@ func TestSourceCreateBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // TestSourceCreate tests that a 201 is received when a proper JSON message is received
@@ -1135,7 +1135,7 @@ func TestSourceEditNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceEditBadRequest(t *testing.T) {
@@ -1166,7 +1166,7 @@ func TestSourceEditBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceDelete(t *testing.T) {
@@ -1211,7 +1211,7 @@ func TestSourceDelete(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceDeleteNotFound(t *testing.T) {
@@ -1233,7 +1233,7 @@ func TestSourceDeleteNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceDeleteBadRequest(t *testing.T) {
@@ -1255,7 +1255,7 @@ func TestSourceDeleteBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestAvailabilityStatusCheck(t *testing.T) {
@@ -1300,7 +1300,7 @@ func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
@@ -1322,7 +1322,7 @@ func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
@@ -1407,7 +1407,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T) {
@@ -1432,11 +1432,11 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -1461,11 +1461,11 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourcesGetRelatedRhcConnectionsTestWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -1553,7 +1553,7 @@ func TestSourcesGetRelatedRhcConnectionsTestWithOffsetAndLimit(t *testing.T) {
 // TestPauseSourceAndItsApplications tests that the "pause source" endpoint sets all the applications and the source
 // itself as paused, by modifying their "paused_at" column.
 func TestPauseSourceAndItsApplications(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -1580,7 +1580,7 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 // TestResumeSourceAndItsApplications tests that the "unpause source" endpoint sets all the applications and the source
 // itself as resumed, by setting their "paused_at" column as "NULL".
 func TestResumeSourceAndItsApplications(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -1619,7 +1619,7 @@ func (p MockSender) RaiseEvent(eventType string, payload []byte, headers []kafka
 
 // TestSourcePauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
 func TestSourcePauseRaiseEventCheck(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -1696,7 +1696,7 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 
 // TestSourceUnpauseRaiseEventCheck tests that a proper "raise event" is raised when a source is unpaused.
 func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,

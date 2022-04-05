@@ -13,9 +13,9 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -123,7 +123,7 @@ func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceApplicationSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -151,12 +151,12 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidSyntax(t *testing.T)
 			t.Error(err)
 		}
 
-		testutils.BadRequestTest(t, rec)
+		templates.BadRequestTest(t, rec)
 	}
 }
 
 func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -181,11 +181,11 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	sourceID := int64(1)
 
@@ -341,7 +341,7 @@ func TestApplicationList(t *testing.T) {
 }
 
 func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	var c, rec = request.CreateTestContext(
 		http.MethodGet,
@@ -362,11 +362,11 @@ func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -488,7 +488,7 @@ func TestApplicationGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationGetBadRequest(t *testing.T) {
@@ -510,7 +510,7 @@ func TestApplicationGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationCreateGood(t *testing.T) {
@@ -587,7 +587,7 @@ func TestApplicationCreateMissingSourceId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
@@ -617,7 +617,7 @@ func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationCreateIncompatible(t *testing.T) {
@@ -648,7 +648,7 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationEdit(t *testing.T) {
@@ -722,7 +722,7 @@ func TestApplicationEditNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationEditBadRequest(t *testing.T) {
@@ -753,7 +753,7 @@ func TestApplicationEditBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationDeleteNotFound(t *testing.T) {
@@ -775,7 +775,7 @@ func TestApplicationDeleteNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationDeleteBadRequest(t *testing.T) {
@@ -797,12 +797,12 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // TestPauseApplication tests that an application gets successfully paused.
 func TestPauseApplication(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -828,7 +828,7 @@ func TestPauseApplication(t *testing.T) {
 
 // TestResumeApplication tests that an application gets successfully resumed.
 func TestResumeApplication(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -854,7 +854,7 @@ func TestResumeApplication(t *testing.T) {
 
 // TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
 func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -908,7 +908,7 @@ func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
 
 // TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is unpaused.
 func TestPauseApplicationUnpauseRaiseEventCheck(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,

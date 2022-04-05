@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -77,7 +77,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 }
 
 func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -99,11 +99,11 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -229,7 +229,7 @@ func TestApplicationAuthenticationGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
@@ -251,7 +251,7 @@ func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationCreate(t *testing.T) {
@@ -310,7 +310,7 @@ func TestApplicationAuthenticationCreateBadAppId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
@@ -337,7 +337,7 @@ func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
@@ -357,6 +357,5 @@ func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }

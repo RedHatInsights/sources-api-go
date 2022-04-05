@@ -3,6 +3,7 @@ package statuslistener
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"os"
 	"reflect"
 	"testing"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
@@ -395,7 +395,7 @@ type TestData struct {
 }
 
 func TestConsumeStatusMessage(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	config.SecretStore = "vault"
 
 	dao.Vault = &mocks.MockVault{}

@@ -2,17 +2,17 @@ package dao
 
 import (
 	"errors"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"reflect"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 // TestDeleteEndpoint tests that an endpoint gets correctly deleted, and its data returned.
 func TestDeleteEndpoint(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	endpointDao := GetEndpointDao(&fixtures.TestSourceData[0].TenantID)
@@ -59,7 +59,7 @@ func TestDeleteEndpoint(t *testing.T) {
 // TestDeleteEndpointNotExists tests that when an endpoint that doesn't exist is tried to be deleted, an error is
 // returned.
 func TestDeleteEndpointNotExists(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 	CreateFixtures("delete")
 
 	endpointDao := GetEndpointDao(&fixtures.TestSourceData[0].TenantID)

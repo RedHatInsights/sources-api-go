@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"net/http"
 	"strconv"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
@@ -69,7 +69,7 @@ func TestRhcConnectionList(t *testing.T) {
 }
 
 func TestRhcConnectionListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -483,7 +483,7 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 }
 
 func TestRhcConnectionSourcesListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},

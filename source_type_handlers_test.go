@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -67,7 +67,7 @@ func TestSourceTypeList(t *testing.T) {
 }
 
 func TestSourceTypeListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -88,11 +88,11 @@ func TestSourceTypeListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceTypeListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -213,7 +213,7 @@ func TestSourceTypeGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceTypeGetBadRequest(t *testing.T) {
@@ -235,5 +235,5 @@ func TestSourceTypeGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }

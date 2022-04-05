@@ -2,17 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestSourceListInternal(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -84,7 +84,7 @@ func TestSourceListInternal(t *testing.T) {
 }
 
 func TestSourceListInternalWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -153,7 +153,7 @@ func TestSourceListInternalWithOffsetAndLimit(t *testing.T) {
 }
 
 func TestSourceListInternalBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -174,5 +174,5 @@ func TestSourceListInternalBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }

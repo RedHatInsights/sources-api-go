@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/helpers"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -92,7 +92,7 @@ func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceApplicationTypeSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -117,11 +117,11 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidSyntax(t *testin
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -146,11 +146,11 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testin
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceApplicationTypeSubcollectionListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -284,7 +284,7 @@ func TestApplicationTypeList(t *testing.T) {
 }
 
 func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -305,11 +305,11 @@ func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationTypeListWithOffsetAndLimit(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+	templates.SkipIfNotRunningIntegrationTests(t)
 
 	testData := []map[string]int{
 		{"limit": 10, "offset": 0},
@@ -426,7 +426,7 @@ func TestApplicationTypeGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationTypeGetBadRequest(t *testing.T) {
@@ -446,5 +446,5 @@ func TestApplicationTypeGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
