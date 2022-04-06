@@ -17,19 +17,19 @@ type Authentication struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at" gorm:"-"`
 
-	Name        string                 `json:"name,omitempty"`
+	Name        *string                `json:"name,omitempty"`
 	AuthType    string                 `gorm:"column:authtype" json:"authtype"`
-	Username    string                 `json:"username"`
+	Username    *string                `json:"username"`
 	Password    *string                `json:"password_hash" gorm:"column:password_hash"`
 	MiqPassword *string                `json:"password" gorm:"column:password"`
 	Extra       map[string]interface{} `gorm:"-" json:"extra,omitempty"`
 	ExtraDb     datatypes.JSON         `gorm:"column:extra"`
 	Version     string                 `json:"version" gorm:"-"`
 
-	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	AvailabilityStatus      *string    `json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
 	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
-	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
+	AvailabilityStatusError *string    `json:"availability_status_error,omitempty"`
 
 	SourceID int64 `json:"source_id"`
 	Source   Source
@@ -61,13 +61,13 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	return &AuthenticationResponse{
 		ID:                      id,
 		CreatedAt:               util.DateTimeToRFC3339(auth.CreatedAt),
-		Name:                    auth.Name,
+		Name:                    util.ValueOrBlank(auth.Name),
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
-		Username:                auth.Username,
+		Username:                util.ValueOrBlank(auth.Username),
 		Extra:                   extra,
-		AvailabilityStatus:      auth.AvailabilityStatus,
-		AvailabilityStatusError: auth.AvailabilityStatusError,
+		AvailabilityStatus:      util.ValueOrBlank(auth.AvailabilityStatus),
+		AvailabilityStatusError: util.ValueOrBlank(auth.AvailabilityStatusError),
 		ResourceType:            auth.ResourceType,
 		ResourceID:              resourceID,
 	}
@@ -89,14 +89,14 @@ func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse
 	return &AuthenticationInternalResponse{
 		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
-		Name:                    auth.Name,
+		Name:                    util.ValueOrBlank(auth.Name),
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
-		Username:                auth.Username,
+		Username:                util.ValueOrBlank(auth.Username),
 		Password:                pass,
 		Extra:                   extra,
-		AvailabilityStatus:      auth.AvailabilityStatus,
-		AvailabilityStatusError: auth.AvailabilityStatusError,
+		AvailabilityStatus:      util.ValueOrBlank(auth.AvailabilityStatus),
+		AvailabilityStatusError: util.ValueOrBlank(auth.AvailabilityStatusError),
 		ResourceType:            auth.ResourceType,
 		ResourceID:              resourceID,
 	}
@@ -134,15 +134,15 @@ func (auth *Authentication) ToEvent() interface{} {
 	return &AuthenticationEvent{
 		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
-		Name:                    auth.Name,
+		Name:                    util.ValueOrBlank(auth.Name),
 		AuthType:                auth.AuthType,
 		Version:                 auth.Version,
-		Username:                auth.Username,
+		Username:                util.ValueOrBlank(auth.Username),
 		Extra:                   extra,
 		AvailabilityStatus:      util.StringValueOrNil(auth.AvailabilityStatus),
 		LastAvailableAt:         util.DateTimePointerToRecordFormat(auth.LastAvailableAt),
 		LastCheckedAt:           util.DateTimePointerToRecordFormat(auth.LastCheckedAt),
-		AvailabilityStatusError: &auth.AvailabilityStatusError,
+		AvailabilityStatusError: auth.AvailabilityStatusError,
 		ResourceType:            auth.ResourceType,
 		ResourceID:              auth.ResourceID,
 		Tenant:                  &auth.Tenant.ExternalTenant,
@@ -162,11 +162,13 @@ func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 	}
 
 	if attributes["availability_status_error"] != nil {
-		auth.AvailabilityStatusError, _ = attributes["availability_status_error"].(string)
+		availabilityStatusError, _ := attributes["availability_status_error"].(string)
+		auth.AvailabilityStatusError = &availabilityStatusError
 	}
 
 	if attributes["availability_status"] != nil {
-		auth.AvailabilityStatus, _ = attributes["availability_status"].(string)
+		availabilityStatus, _ := attributes["availability_status"].(string)
+		auth.AvailabilityStatus = &availabilityStatus
 	}
 
 	return nil

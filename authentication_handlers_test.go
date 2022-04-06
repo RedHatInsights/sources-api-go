@@ -164,9 +164,9 @@ func TestAuthenticationGetNotFound(t *testing.T) {
 func TestAuthenticationCreate(t *testing.T) {
 	util.OverrideEncryptionKey(strings.Repeat("test", 8))
 	requestBody := m.AuthenticationCreateRequest{
-		Name:          "TestRequest",
+		Name:          util.StringRef("TestRequest"),
 		AuthType:      "test",
-		Username:      "testUser",
+		Username:      util.StringRef("testUser"),
 		Password:      util.StringRef("123456"),
 		ResourceType:  "Application",
 		ResourceIDRaw: 1,
@@ -218,9 +218,9 @@ func TestAuthenticationCreate(t *testing.T) {
 
 func TestAuthenticationCreateBadRequest(t *testing.T) {
 	requestBody := m.AuthenticationCreateRequest{
-		Name:         "TestRequest",
+		Name:         util.StringRef("TestRequest"),
 		AuthType:     "test",
-		Username:     "testUser",
+		Username:     util.StringRef("testUser"),
 		Password:     util.StringRef("123456"),
 		ResourceType: "InvalidType",
 		ResourceID:   1,

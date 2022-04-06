@@ -318,19 +318,15 @@ func TestAuthFromVault(t *testing.T) {
 	createdAt := now.Add(time.Duration(-2) * time.Hour)
 
 	authentication := m.Authentication{
-		Name:                    "test-vault-auth",
-		AuthType:                "test-authtype",
-		Username:                "my-username",
-		Extra:                   nil,
-		AvailabilityStatus:      m.Available,
-		LastAvailableAt:         &lastAvailableCheckedAt,
-		LastCheckedAt:           &lastAvailableCheckedAt,
-		AvailabilityStatusError: "there was an error, wow",
-		ResourceType:            "source",
-		ResourceID:              123,
-		SourceID:                25,
-		CreatedAt:               createdAt,
-		Version:                 "500",
+		AuthType:        "test-authtype",
+		Extra:           nil,
+		LastAvailableAt: &lastAvailableCheckedAt,
+		LastCheckedAt:   &lastAvailableCheckedAt,
+		ResourceType:    "source",
+		ResourceID:      123,
+		SourceID:        25,
+		CreatedAt:       createdAt,
+		Version:         "500",
 	}
 
 	// Use the "ToVaultMap" function to simulate what Vault would store as an authentication.
@@ -352,6 +348,10 @@ func TestAuthFromVault(t *testing.T) {
 	// setting the password manually due to the fact that it can be null therefore not in the db. and if it _were_ in
 	// the vault db it would come back as a regular string and not a pointer.
 	data["password"] = "my-password"
+	data["name"] = "test-vault-auth"
+	data["username"] = "my-username"
+	data["availability_status"] = m.Available
+	data["availability_status_error"] = "there was an error, wow"
 
 	// We also want to test if the metadata gets correctly unmarshalled.
 	version := json.Number(authentication.Version)
@@ -373,10 +373,10 @@ func TestAuthFromVault(t *testing.T) {
 		t.Errorf(`authFromVault didn't correctly parse the secret. Got a nil authentication`)
 	} else {
 		{
-			want := authentication.Name
-			got := resultingAuth.Name
+			want := data["name"]
+			got := *resultingAuth.Name
 			if want != got {
-				t.Errorf(`authentication names are different. Want "%s", got "%s"`, want, got)
+				t.Errorf(`authentication names are different. Want "%v", got "%v"`, want, got)
 			}
 		}
 
@@ -389,15 +389,15 @@ func TestAuthFromVault(t *testing.T) {
 		}
 
 		{
-			want := authentication.Username
-			got := resultingAuth.Username
+			want := data["username"]
+			got := *resultingAuth.Username
 			if want != got {
-				t.Errorf(`authentication usernames are different. Want "%s", got "%s"`, want, got)
+				t.Errorf(`authentication usernames are different. Want "%v", got "%v"`, want, got)
 			}
 		}
 
 		{
-			want := "my-password"
+			want := data["password"]
 			got := *resultingAuth.Password
 			if want != got {
 				t.Errorf(`authentication passwords are different. Want "%v", got "%v"`, want, got)
@@ -429,10 +429,10 @@ func TestAuthFromVault(t *testing.T) {
 		}
 
 		{
-			want := authentication.AvailabilityStatus
-			got := resultingAuth.AvailabilityStatus
+			want := data["availability_status"]
+			got := *resultingAuth.AvailabilityStatus
 			if want != got {
-				t.Errorf(`authentication availability statuses are different. Want "%s", got "%s"`, want, got)
+				t.Errorf(`authentication availability statuses are different. Want "%v", got "%v"`, want, got)
 			}
 		}
 

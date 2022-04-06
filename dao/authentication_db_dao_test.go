@@ -682,7 +682,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 
 	{
 		want := availabilityStatus
-		got := dbAuth.AvailabilityStatus
+		got := *dbAuth.AvailabilityStatus
 
 		if want != got {
 			t.Errorf(`authentication was not updated. Want "availability status" "%s", got "%s"`, want, got)
@@ -691,7 +691,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 
 	{
 		want := availabilityStatusError
-		got := dbAuth.AvailabilityStatusError
+		got := *dbAuth.AvailabilityStatusError
 
 		if want != got {
 			t.Errorf(`authentication was not updated. Want "availability status error" "%s", got "%s"`, want, got)
