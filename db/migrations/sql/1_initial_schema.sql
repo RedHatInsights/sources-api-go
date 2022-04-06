@@ -194,7 +194,8 @@ BEGIN
             "last_checked_at" TIMESTAMP WITHOUT TIME ZONE,
             "last_available_at" TIMESTAMP WITHOUT TIME ZONE,
             "source_id" BIGINT,
-            "paused_at" TIMESTAMP WITHOUT TIME ZONE
+            "paused_at" TIMESTAMP WITHOUT TIME ZONE,
+            "password_hash" CHARACTER VARYING
         );
 
         CREATE SEQUENCE public."authentications_id_seq"
