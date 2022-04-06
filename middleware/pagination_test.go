@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"encoding/json"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 

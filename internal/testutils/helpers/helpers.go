@@ -2,10 +2,11 @@ package helpers
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"testing"
 )
 
 func GetSourcesCountWithAppType(appTypeId int64) int {
