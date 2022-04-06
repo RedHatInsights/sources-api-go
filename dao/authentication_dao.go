@@ -536,31 +536,29 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	}
 
 	if data["last_available_at"] != nil {
-		if lastAvailableAt, ok := data["last_available_at"]; ok {
-			if lastAvailableAt, ok = lastAvailableAt.(string); !ok {
-				return nil
-			}
-
-			parsedLastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
-			if err != nil {
-				return nil
-			}
-			auth.LastAvailableAt = &parsedLastAvailableAt
+		var lastAvailableAt string
+		if lastAvailableAt, ok = data["last_available_at"].(string); !ok {
+			return nil
 		}
+
+		parsedLastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAt)
+		if err != nil {
+			return nil
+		}
+		auth.LastAvailableAt = &parsedLastAvailableAt
 	}
 
 	if data["last_checked_at"] != nil {
-		if lastCheckedAt, ok := data["last_checked_at"]; ok {
-			if lastCheckedAt, ok = lastCheckedAt.(string); !ok {
-				return nil
-			}
-
-			parsedLastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
-			if err != nil {
-				return nil
-			}
-			auth.LastCheckedAt = &parsedLastCheckedAt
+		var lastCheckedAt string
+		if lastCheckedAt, ok = data["last_checked_at"].(string); !ok {
+			return nil
 		}
+
+		parsedLastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAt)
+		if err != nil {
+			return nil
+		}
+		auth.LastCheckedAt = &parsedLastCheckedAt
 	}
 
 	return auth

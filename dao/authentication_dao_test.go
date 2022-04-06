@@ -348,6 +348,7 @@ func TestAuthFromVault(t *testing.T) {
 		t.Errorf(`wrong type for the secret's data object. Want "map[string]interface{}", got "%s"'`, reflect.TypeOf(vaultData["data"]))
 	}
 	data["last_available_at"] = authentication.LastAvailableAt.Format(time.RFC3339Nano)
+	data["last_checked_at"] = authentication.LastCheckedAt.Format(time.RFC3339Nano)
 	// setting the password manually due to the fact that it can be null therefore not in the db. and if it _were_ in
 	// the vault db it would come back as a regular string and not a pointer.
 	data["password"] = "my-password"
