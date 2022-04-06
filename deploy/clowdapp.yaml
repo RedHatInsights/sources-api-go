@@ -114,6 +114,9 @@ objects:
     - topicName: platform.topological-inventory.operations-satellite
       partitions: 3
       replicas: 3
+    - topicName: platform.notifications.ingress
+      partitions: 3
+      replicas: 3
     inMemoryDb: true
     featureFlags: true
     dependencies:
