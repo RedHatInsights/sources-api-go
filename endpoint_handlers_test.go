@@ -400,14 +400,14 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 
 func TestEndpointEdit(t *testing.T) {
 	req := m.EndpointEditRequest{
-		ReceptorNode:            request.PointerToString("receptor_node"),
-		Role:                    request.PointerToString("role"),
-		Scheme:                  request.PointerToString("scheme"),
-		Host:                    request.PointerToString("host"),
-		Path:                    request.PointerToString("path"),
-		CertificateAuthority:    request.PointerToString("cert"),
-		AvailabilityStatus:      request.PointerToString("available"),
-		AvailabilityStatusError: request.PointerToString(""),
+		ReceptorNode:            util.StringRef("receptor_node"),
+		Role:                    util.StringRef("role"),
+		Scheme:                  util.StringRef("scheme"),
+		Host:                    util.StringRef("host"),
+		Path:                    util.StringRef("path"),
+		CertificateAuthority:    util.StringRef("cert"),
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
 	}
 
 	body, _ := json.Marshal(req)
@@ -472,8 +472,8 @@ func TestEndpointEdit(t *testing.T) {
 
 func TestEndpointEditNotFound(t *testing.T) {
 	req := m.EndpointEditRequest{
-		AvailabilityStatus:      request.PointerToString("available"),
-		AvailabilityStatusError: request.PointerToString(""),
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
 	}
 
 	body, _ := json.Marshal(req)
@@ -502,8 +502,8 @@ func TestEndpointEditNotFound(t *testing.T) {
 
 func TestEndpointEditBadRequest(t *testing.T) {
 	req := m.EndpointEditRequest{
-		AvailabilityStatus:      request.PointerToString("available"),
-		AvailabilityStatusError: request.PointerToString(""),
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
 	}
 
 	body, _ := json.Marshal(req)

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type AuthenticationResponse struct {
@@ -44,7 +45,7 @@ type AuthenticationCreateRequest struct {
 	Name                    string                 `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`
 	Username                string                 `json:"username"`
-	Password                string                 `json:"password,omitempty"`
+	Password                *string                `json:"password,omitempty"`
 	Extra                   map[string]interface{} `json:"extra,omitempty"`
 	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
 
@@ -74,7 +75,11 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 		auth.Username = *update.Username
 	}
 	if update.Password != nil {
-		auth.Password = *update.Password
+		encrypted, err := util.Encrypt(*update.Password)
+		if err != nil {
+			return err
+		}
+		auth.Password = &encrypted
 	}
 
 	if update.Extra != nil {

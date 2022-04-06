@@ -15,8 +15,8 @@ func TestEncrypt(t *testing.T) {
 		t.Error(err)
 	}
 
-	if out != "v2:{f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU}" {
-		t.Errorf("encryption failed, got %v expected %v", out, "v2:{f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU}")
+	if out != "f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU" {
+		t.Errorf("encryption failed, got %v expected %v", out, "f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU")
 	}
 }
 
@@ -25,7 +25,7 @@ func TestDecrypt(t *testing.T) {
 	key = string(bin)
 	keyPresent = true
 
-	out, err := Decrypt("v2:{f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU}")
+	out, err := Decrypt("f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU")
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,9 +44,9 @@ func TestBadFormat(t *testing.T) {
 		t.Errorf("'a bad thing': expected an err but none was returned")
 	}
 
-	_, err = Decrypt("v2{}")
+	_, err = Decrypt("this is not a real string")
 	if err == nil {
-		t.Errorf("v2{}: expected an err but none was returned")
+		t.Errorf("expected an err but none was returned")
 	}
 }
 

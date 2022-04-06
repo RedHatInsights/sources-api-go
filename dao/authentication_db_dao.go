@@ -318,6 +318,14 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 
 func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) error {
 	authentication.TenantID = *add.TenantID // the TenantID gets injected in the middleware
+	if authentication.Password != nil {
+		encryptedValue, err := util.Encrypt(*authentication.Password)
+		if err != nil {
+			return err
+		}
+
+		authentication.Password = &encryptedValue
+	}
 
 	return DB.
 		Debug().

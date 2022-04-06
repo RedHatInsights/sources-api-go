@@ -13,6 +13,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
 )
@@ -30,7 +31,7 @@ func setUpBearerToken() *marketplace.BearerToken {
 
 // setUpValidMarketplaceAuth sets up a valid authentication which is of the "marketplace" type.
 func setUpValidMarketplaceAuth() *m.Authentication {
-	return &m.Authentication{AuthType: "marketplace-token", Password: "apiKey"}
+	return &m.Authentication{AuthType: "marketplace-token", Password: util.StringRef("apiKey")}
 }
 
 // -----------------------------
@@ -199,7 +200,7 @@ func TestAuthFromVaultMarketplaceProviderEmptyPassword(t *testing.T) {
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 
 	auth := setUpValidMarketplaceAuth()
-	auth.Password = "" // set up the empty password to simulate a missing API key
+	auth.Password = nil // set up the empty password to simulate a missing API key
 
 	// Call the function under test
 	err := setMarketplaceTokenAuthExtraField(auth)
@@ -320,7 +321,6 @@ func TestAuthFromVault(t *testing.T) {
 		Name:                    "test-vault-auth",
 		AuthType:                "test-authtype",
 		Username:                "my-username",
-		Password:                "my-password",
 		Extra:                   nil,
 		AvailabilityStatus:      m.Available,
 		LastAvailableAt:         &lastAvailableCheckedAt,
@@ -348,6 +348,10 @@ func TestAuthFromVault(t *testing.T) {
 		t.Errorf(`wrong type for the secret's data object. Want "map[string]interface{}", got "%s"'`, reflect.TypeOf(vaultData["data"]))
 	}
 	data["last_available_at"] = authentication.LastAvailableAt.Format(time.RFC3339Nano)
+	data["last_checked_at"] = authentication.LastCheckedAt.Format(time.RFC3339Nano)
+	// setting the password manually due to the fact that it can be null therefore not in the db. and if it _were_ in
+	// the vault db it would come back as a regular string and not a pointer.
+	data["password"] = "my-password"
 
 	// We also want to test if the metadata gets correctly unmarshalled.
 	version := json.Number(authentication.Version)
@@ -393,10 +397,10 @@ func TestAuthFromVault(t *testing.T) {
 		}
 
 		{
-			want := authentication.Password
-			got := resultingAuth.Password
+			want := "my-password"
+			got := *resultingAuth.Password
 			if want != got {
-				t.Errorf(`authentication passwords are different. Want "%s", got "%s"`, want, got)
+				t.Errorf(`authentication passwords are different. Want "%v", got "%v"`, want, got)
 			}
 		}
 

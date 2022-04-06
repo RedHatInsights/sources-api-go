@@ -17,13 +17,14 @@ type Authentication struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at" gorm:"-"`
 
-	Name     string                 `json:"name,omitempty"`
-	AuthType string                 `gorm:"column:authtype" json:"authtype"`
-	Username string                 `json:"username"`
-	Password string                 `json:"password"`
-	Extra    map[string]interface{} `gorm:"-" json:"extra,omitempty"`
-	ExtraDb  datatypes.JSON         `gorm:"column:extra"`
-	Version  string                 `json:"version" gorm:"-"`
+	Name        string                 `json:"name,omitempty"`
+	AuthType    string                 `gorm:"column:authtype" json:"authtype"`
+	Username    string                 `json:"username"`
+	Password    *string                `json:"password_hash" gorm:"column:password_hash"`
+	MiqPassword *string                `json:"password" gorm:"column:password"`
+	Extra       map[string]interface{} `gorm:"-" json:"extra,omitempty"`
+	ExtraDb     datatypes.JSON         `gorm:"column:extra"`
+	Version     string                 `json:"version" gorm:"-"`
 
 	AvailabilityStatus      string     `json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
@@ -73,9 +74,18 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 }
 
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
+	id, extra := mapIdExtraFields(auth)
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 
-	id, extra := mapIdExtraFields(auth)
+	var pass string
+	if auth.Password != nil {
+		decrypted, err := util.Decrypt(*auth.Password)
+		if err != nil {
+			logger.Log.Errorf("failed to decrypt password id %v: %v", id, err)
+		}
+		pass = decrypted
+	}
+
 	return &AuthenticationInternalResponse{
 		ID:                      id,
 		CreatedAt:               auth.CreatedAt,
@@ -83,7 +93,7 @@ func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
 		Username:                auth.Username,
-		Password:                auth.Password,
+		Password:                pass,
 		Extra:                   extra,
 		AvailabilityStatus:      auth.AvailabilityStatus,
 		AvailabilityStatusError: auth.AvailabilityStatusError,

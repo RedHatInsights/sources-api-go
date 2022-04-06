@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/config"
@@ -161,11 +162,12 @@ func TestAuthenticationGetNotFound(t *testing.T) {
 }
 
 func TestAuthenticationCreate(t *testing.T) {
+	util.OverrideEncryptionKey(strings.Repeat("test", 8))
 	requestBody := m.AuthenticationCreateRequest{
 		Name:          "TestRequest",
 		AuthType:      "test",
 		Username:      "testUser",
-		Password:      "123456",
+		Password:      util.StringRef("123456"),
 		ResourceType:  "Application",
 		ResourceIDRaw: 1,
 	}
@@ -219,7 +221,7 @@ func TestAuthenticationCreateBadRequest(t *testing.T) {
 		Name:         "TestRequest",
 		AuthType:     "test",
 		Username:     "testUser",
-		Password:     "123456",
+		Password:     util.StringRef("123456"),
 		ResourceType: "InvalidType",
 		ResourceID:   1,
 	}

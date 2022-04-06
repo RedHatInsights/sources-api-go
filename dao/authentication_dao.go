@@ -495,9 +495,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 	}
 	if data["password"] != nil {
-		if auth.Password, ok = data["password"].(string); !ok {
+		password, ok := data["password"].(string)
+		if !ok {
 			return nil
 		}
+		auth.Password = util.StringRef(password)
 	}
 	if data["resource_type"] != nil {
 		if auth.ResourceType, ok = data["resource_type"].(string); !ok {
@@ -533,24 +535,26 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 	}
 
-	if lastAvailableAt, ok := data["last_available_at"]; ok {
-		if lastAvailableAt, ok = lastAvailableAt.(string); !ok {
+	if data["last_available_at"] != nil {
+		var lastAvailableAt string
+		if lastAvailableAt, ok = data["last_available_at"].(string); !ok {
 			return nil
 		}
 
-		parsedLastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAt.(string))
+		parsedLastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAt)
 		if err != nil {
 			return nil
 		}
 		auth.LastAvailableAt = &parsedLastAvailableAt
 	}
 
-	if lastCheckedAt, ok := data["last_available_at"]; ok {
-		if lastCheckedAt, ok = lastCheckedAt.(string); !ok {
+	if data["last_checked_at"] != nil {
+		var lastCheckedAt string
+		if lastCheckedAt, ok = data["last_checked_at"].(string); !ok {
 			return nil
 		}
 
-		parsedLastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAt.(string))
+		parsedLastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAt)
 		if err != nil {
 			return nil
 		}
@@ -620,11 +624,11 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 	// of auth
 	if err != nil {
 		// The Api key must be present to be able to send the request to the marketplace
-		if auth.Password == "" {
+		if auth.Password == nil {
 			return errors.New("API key not present for the marketplace authentication")
 		}
 
-		marketplaceTokenProvider = GetMarketplaceTokenProvider(auth.Password)
+		marketplaceTokenProvider = GetMarketplaceTokenProvider(*auth.Password)
 
 		token, err = marketplaceTokenProvider.RequestToken()
 		if err != nil {

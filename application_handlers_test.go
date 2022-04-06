@@ -484,8 +484,8 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 func TestApplicationEdit(t *testing.T) {
 	req := m.ApplicationEditRequest{
 		Extra:                   map[string]interface{}{"thing": true},
-		AvailabilityStatus:      request.PointerToString("available"),
-		AvailabilityStatusError: request.PointerToString(""),
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
 	}
 
 	body, _ := json.Marshal(req)
@@ -527,8 +527,8 @@ func TestApplicationEdit(t *testing.T) {
 func TestApplicationEditNotFound(t *testing.T) {
 	req := m.ApplicationEditRequest{
 		Extra:                   map[string]interface{}{"thing": true},
-		AvailabilityStatus:      request.PointerToString("available"),
-		AvailabilityStatusError: request.PointerToString(""),
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
 	}
 
 	body, _ := json.Marshal(req)
@@ -558,8 +558,8 @@ func TestApplicationEditNotFound(t *testing.T) {
 func TestApplicationEditBadRequest(t *testing.T) {
 	req := m.ApplicationEditRequest{
 		Extra:                   map[string]interface{}{"thing": true},
-		AvailabilityStatus:      request.PointerToString("available"),
-		AvailabilityStatusError: request.PointerToString(""),
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
 	}
 
 	body, _ := json.Marshal(req)
