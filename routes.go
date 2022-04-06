@@ -103,12 +103,17 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
 
 		// GraphQL
-		r.POST("/graphql", GraphQLQuery, middleware.Tenancy)
+		// TODO: remove this once we get the crazy filtering going on the gqlgen graphql
+		if os.Getenv("PROXY_GRAPHQL") == "true" {
+			r.POST("/graphql", ProxyGraphqlToLegacySources, middleware.Tenancy)
+		} else {
+			r.POST("/graphql", GraphQLQuery, middleware.Tenancy)
 
-		// run the graphQL playground if running locally or in ephemeral. really handy for development!
-		// https://github.com/graphql/graphiql
-		if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
-			r.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
+			// run the graphQL playground if running locally or in ephemeral. really handy for development!
+			// https://github.com/graphql/graphiql
+			if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
+				r.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
+			}
 		}
 	}
 
