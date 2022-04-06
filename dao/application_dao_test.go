@@ -3,12 +3,14 @@ package dao
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -127,4 +129,175 @@ func TestDeleteApplicationNotExists(t *testing.T) {
 	}
 
 	DoneWithFixtures("delete")
+}
+
+func TestApplicationDeleteCascade(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("delete")
+
+	// Create a new application on the database to cleanly test the function under test.
+	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	fixtureApp := model.Application{
+		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
+		SourceID:          fixtures.TestSourceData[0].ID,
+		TenantID:          fixtures.TestTenantData[0].Id,
+	}
+
+	err := applicationDao.Create(&fixtureApp)
+	if err != nil {
+		t.Errorf(`could not create the fixture application: %s`, err)
+	}
+
+	// Create the authentications and the application authentications. The former are needed to avoid the foreign key
+	// constraints.
+	authenticationDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	// Set the maximum amount of authentications we will create.
+	maxAuthenticationsCreated := 5
+
+	// Store the application authentications to perform checks later.
+	var createdAppAuths []model.ApplicationAuthentication
+	for i := 0; i < maxAuthenticationsCreated; i++ {
+		// Create the authentication.
+		authentication := setUpValidAuthentication()
+		authentication.ResourceType = "Application"
+		authentication.ResourceID = fixtureApp.ID
+
+		err := authenticationDao.Create(authentication)
+		if err != nil {
+			t.Errorf(`could not create the fixture authentication: %s`, err)
+		}
+
+		// Create the association between the application and its authentication.
+		appAuth := model.ApplicationAuthentication{
+			TenantID:          fixtures.TestTenantData[0].Id,
+			ApplicationID:     fixtureApp.ID,
+			AuthenticationID:  authentication.DbID,
+			AuthenticationUID: fmt.Sprintf("%d", i),
+		}
+
+		err = applicationAuthenticationDao.Create(&appAuth)
+		if err != nil {
+			t.Errorf(`could not create the fixture application authentication: %s`, err)
+		}
+
+		createdAppAuths = append(createdAppAuths, appAuth)
+	}
+
+	deletedApplicationAuthentications, deletedApplication, err := applicationDao.DeleteCascade(fixtureApp.ID)
+	if err != nil {
+		t.Errorf(`could not delete cascade the application: %s`, err)
+	}
+
+	// Count the application authentications from the given application, to check that they were deleted.
+	var appAuthCount int64
+	err = DB.
+		Debug().
+		Model(model.ApplicationAuthentication{}).
+		Where("application_id = ?", fixtureApp.ID).
+		Where("tenant_id = ?", fixtures.TestTenantData[0].Id).
+		Count(&appAuthCount).
+		Error
+
+	if err != nil {
+		t.Errorf(`error counting the application authentications related to the application: %s`, err)
+	}
+
+	// Check if the application authentications were deleted or not.
+	{
+		want := int64(0)
+		got := appAuthCount
+		if want != got {
+			t.Errorf(`the application authentications were not deleted. Want a count of "%d", got "%d"`, want, got)
+		}
+	}
+
+	// Check that we deleted the correct number of application authentications, and no more.
+	{
+		want := len(createdAppAuths)
+		got := len(deletedApplicationAuthentications)
+
+		if want != got {
+			t.Errorf(`unexpected number of application authentications deleted. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	// Check that we deleted the application authentications we expected to delete.
+	for i := 0; i < maxAuthenticationsCreated; i++ {
+		{
+			want := createdAppAuths[i].ID
+			got := deletedApplicationAuthentications[i].ID
+
+			if want != got {
+				t.Errorf(`unexpected application authentication deleted. Want application authentication with ID "%d", got ID "%d"`, want, got)
+			}
+		}
+	}
+
+	// Try to fetch the deleted application.
+	var deletedApplicationCheck *model.Application
+	err = DB.
+		Debug().
+		Model(model.Application{}).
+		Where(`id = ?`, fixtureApp.ID).
+		Where(`tenant_id = ?`, fixtures.TestTenantData[0].Id).
+		Find(&deletedApplicationCheck).
+		Error
+
+	if err != nil {
+		t.Errorf(`unexpected error: %s`, err)
+	}
+
+	// Check that the expected application was deleted.
+	if deletedApplicationCheck.ID != 0 {
+		t.Errorf(`unexpected application fetched. It should be deleted, but this application was fetched: %v`, deletedApplicationCheck)
+	}
+
+	{
+		want := fixtureApp.ID
+		got := deletedApplication.ID
+
+		if want != got {
+			t.Errorf(`unexpected application deleted. Want application with id "%d", got "%d"`, want, got)
+		}
+	}
+
+	DoneWithFixtures("delete")
+}
+
+// TestApplicationExists tests whether the function exists returns true when the given application exists.
+func TestApplicationExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("exists")
+	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+
+	got, err := applicationDao.Exists(fixtures.TestApplicationData[0].ID)
+	if err != nil {
+		t.Errorf(`unexpected error when checking that the application exists: %s`, err)
+	}
+
+	if !got {
+		t.Errorf(`the application does exist but the "Exist" function returns otherwise. Want "true", got "%t"`, got)
+	}
+
+	DoneWithFixtures("exists")
+}
+
+// TestApplicationNotExists tests whether the function exists returns false when the given application does not exist.
+func TestApplicationNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("exists")
+	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+
+	got, err := applicationDao.Exists(12345)
+	if err != nil {
+		t.Errorf(`unexpected error when checking that the application exists: %s`, err)
+	}
+
+	if got {
+		t.Errorf(`the application doesn't exist but the "Exist" function returns otherwise. Want "false", got "%t"`, got)
+	}
+
+	DoneWithFixtures("exists")
 }

@@ -168,14 +168,25 @@ func SourceDelete(c echo.Context) (err error) {
 		return util.NewErrBadRequest(err)
 	}
 
-	c.Logger().Infof("Deleting Source Id %v", id)
-
-	src, err := sourcesDB.Delete(&id)
+	// Check if the source exists before proceeding.
+	sourceExists, err := sourcesDB.Exists(id)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
-	setEventStreamResource(c, src)
+	if !sourceExists {
+		return util.NewErrNotFound("source")
+	}
+
+	c.Logger().Infof("Deleting Source Id %v", id)
+
+	// Cascade delete the source.
+	headers := service.ForwadableHeaders(c)
+	err = service.DeleteCascade(sourcesDB.Tenant(), "Source", id, headers)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
 	return c.NoContent(http.StatusNoContent)
 }
 

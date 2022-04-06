@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -815,6 +816,226 @@ func TestBulkMessage(t *testing.T) {
 
 	if !bytes.Equal(want, got) {
 		t.Errorf(`"BulkMessage" didn't return the expected result. Want "%s", got "%s"'`, want, got)
+	}
+
+	DoneWithFixtures("authentications_db")
+}
+
+// TestListIdsForResource tests that the function under test is able to fetch the authentications belonging to a
+// resource type and a resource id.
+func TestListIdsForResource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("authentications_db")
+
+	// In this test we want a clean "authentications" table.
+	err := DB.
+		Debug().
+		Model(model.Authentication{}).
+		Delete(fixtures.TestAuthenticationData).
+		Error
+	if err != nil {
+		t.Errorf(`could not delete the previously inserted fixtures`)
+	}
+
+	// Specify the resources we will be creating the authentications for.
+	resources := []struct {
+		ResourceType string
+		// We need a valid resource ID so that we are able to create a valid authentication, since there is a foreign
+		// key which prevents creating authentications with random resource ids.
+		ValidResourceId int64
+	}{
+		{
+			ResourceType:    "Source",
+			ValidResourceId: fixtures.TestSourceData[0].ID,
+		},
+		{
+			ResourceType:    "Application",
+			ValidResourceId: fixtures.TestApplicationData[0].ID,
+		},
+		{
+			ResourceType:    "Endpoint",
+			ValidResourceId: fixtures.TestEndpointData[0].ID,
+		},
+	}
+
+	// How many authentications will we be creating per resource?
+	maxAuthenticationsPerResource := 5
+
+	authsDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	// Create the authentications.
+	for _, resource := range resources {
+		var createdAuthentications = make([]model.Authentication, 0, maxAuthenticationsPerResource)
+		var resourceIds = make([]int64, 0, maxAuthenticationsPerResource)
+		for i := 0; i < maxAuthenticationsPerResource; i++ {
+			authFixture := setUpValidAuthentication()
+			authFixture.ResourceID = resource.ValidResourceId
+			authFixture.ResourceType = resource.ResourceType
+			// The fake username is used to make sure we are fetching the right authentication.
+			fakeUsername := fmt.Sprintf("%s-%d", resource.ResourceType, i)
+			authFixture.Username = &fakeUsername
+
+			err := authsDao.Create(authFixture)
+			if err != nil {
+				t.Errorf(`error creating the authentication: %s`, err)
+			}
+
+			resourceIds = append(resourceIds, authFixture.ResourceID)
+			createdAuthentications = append(createdAuthentications, *authFixture)
+		}
+
+		// Fetch the freshly created authentications.
+		fetchedAuthentications, err := authsDao.ListIdsForResource(resource.ResourceType, resourceIds)
+		if err != nil {
+			t.Errorf(`[resource_type: %s][resource_ids: %v] Error fetching the authentications: %s`, resource.ResourceType, resourceIds, err)
+		}
+
+		// We shouldn't have fetched more authentications than the ones we have inserted.
+		{
+			want := len(createdAuthentications)
+			got := len(fetchedAuthentications)
+			if want != got {
+				t.Errorf(`incorrect number of authentications fetched. Want "%d", got "%d"`, want, got)
+			}
+		}
+
+		// Perform some more checks to be sure that we fetched the correct authentications.
+		for i := 0; i < len(createdAuthentications); i++ {
+			{
+				want := createdAuthentications[i].DbID
+				got := fetchedAuthentications[i].DbID
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with id "%d", got "%d"`, want, got)
+				}
+			}
+			{
+				want := createdAuthentications[i].ResourceID
+				got := fetchedAuthentications[i].ResourceID
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with resource id "%d", got "%d"`, want, got)
+				}
+			}
+			{
+				want := createdAuthentications[i].ResourceType
+				got := fetchedAuthentications[i].ResourceType
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with resource type "%s", got "%s"`, want, got)
+				}
+			}
+			{
+				want := *createdAuthentications[i].Username
+				got := *fetchedAuthentications[i].Username
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with username "%s", got "%s"`, want, got)
+				}
+			}
+		}
+	}
+
+	DoneWithFixtures("authentications_db")
+}
+
+// TestBulkDelete tests that the BulkDelete function only deletes the authentications that were passed. N
+// authentications are created for multiple resource types and the function tries to bulk delete them all.
+func TestBulkDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("authentications_db")
+
+	// Specify the resources we will be creating the authentications for.
+	resources := []struct {
+		ResourceType string
+		// We need a valid resource ID so that we are able to create a valid authentication, since there is a foreign
+		// key which prevents creating authentications with random resource ids.
+		ValidResourceId int64
+	}{
+		{
+			ResourceType:    "Source",
+			ValidResourceId: fixtures.TestSourceData[0].ID,
+		},
+		{
+			ResourceType:    "Application",
+			ValidResourceId: fixtures.TestApplicationData[0].ID,
+		},
+		{
+			ResourceType:    "Endpoint",
+			ValidResourceId: fixtures.TestEndpointData[0].ID,
+		},
+	}
+
+	// How many authentications will we be creating per resource?
+	maxAuthenticationsPerResource := 5
+
+	authsDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	// Store the authentications for later.
+	var createdAuthentications = make([]model.Authentication, 0, len(resources)*maxAuthenticationsPerResource)
+
+	// Create the authentications.
+	for _, resource := range resources {
+		for i := 0; i < maxAuthenticationsPerResource; i++ {
+			authFixture := setUpValidAuthentication()
+			authFixture.ResourceID = resource.ValidResourceId
+			authFixture.ResourceType = resource.ResourceType
+			// The fake username is used to make sure we are fetching the right authentication.
+			fakeUsername := fmt.Sprintf("%s-%d", resource.ResourceType, i)
+			authFixture.Username = &fakeUsername
+
+			err := authsDao.Create(authFixture)
+			if err != nil {
+				t.Errorf(`error creating the authentication: %s`, err)
+			}
+
+			createdAuthentications = append(createdAuthentications, *authFixture)
+		}
+	}
+
+	// Even though there are already other fixture authentications, we create another one to be perfectly sure that
+	// there are more authentications on the database, other than the ones we are going to delete.
+	authFixture := setUpValidAuthentication()
+	authFixture.ResourceID = fixtures.TestSourceData[1].ID
+	authFixture.ResourceType = "Source"
+
+	err := authsDao.Create(authFixture)
+	if err != nil {
+		t.Errorf(`error creating the authentication: %s`, err)
+	}
+
+	// Call the function under test.
+	deletedAuths, err := authsDao.BulkDelete(createdAuthentications)
+	if err != nil {
+		t.Errorf(`unexpected error when bulk deleting the authentications: %s`, err)
+	}
+
+	// Make sure that we haven't deleted more authentications than expected.
+	{
+		want := len(createdAuthentications)
+		got := len(deletedAuths)
+		if want != got {
+			t.Errorf(`the deleted authentications don't match the created ones. Want "%d" auths deleted, got "%d"`, want, got)
+		}
+	}
+
+	{
+		for i := 0; i < len(createdAuthentications); i++ {
+			{
+				want := createdAuthentications[i].DbID
+				got := deletedAuths[i].DbID
+				if want != got {
+					t.Errorf(`wrong authentication deleted. Want ID "%d", got ID "%d"`, want, got)
+				}
+			}
+			{
+				want := *createdAuthentications[i].Username
+				got := *deletedAuths[i].Username
+				if want != got {
+					t.Errorf(`wrong authentication deleted. Want username "%s", got username "%s"`, want, got)
+				}
+			}
+		}
 	}
 
 	DoneWithFixtures("authentications_db")

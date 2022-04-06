@@ -7,6 +7,7 @@ import (
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -210,4 +211,60 @@ func (a *applicationDaoImpl) Unpause(id int64) error {
 		Error
 
 	return err
+}
+
+func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
+	var applicationAuthentications []m.ApplicationAuthentication
+	var application m.Application
+
+	err := DB.
+		Debug().
+		Transaction(func(tx *gorm.DB) error {
+			// Delete the associated application authentications.
+			err := tx.
+				Model(m.ApplicationAuthentication{}).
+				Clauses(clause.Returning{}).
+				Where("application_id = ?", applicationId).
+				Where("tenant_id = ?", a.TenantID).
+				Delete(&applicationAuthentications).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			// Delete the application itself.
+			err = tx.
+				Model(m.Application{}).
+				Clauses(clause.Returning{}).
+				Where("id = ?", applicationId).
+				Where("tenant_id = ?", a.TenantID).
+				Delete(&application).
+				Error
+
+			return err
+		})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return applicationAuthentications, &application, err
+}
+
+func (a *applicationDaoImpl) Exists(applicationId int64) (bool, error) {
+	var applicationExists bool
+
+	err := DB.Model(&m.Application{}).
+		Select("1").
+		Where("id = ?", applicationId).
+		Where("tenant_id = ?", a.TenantID).
+		Scan(&applicationExists).
+		Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return applicationExists, nil
 }

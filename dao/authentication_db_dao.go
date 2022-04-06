@@ -7,6 +7,7 @@ import (
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm/clause"
 )
 
 type authenticationDaoDbImpl struct {
@@ -475,4 +476,44 @@ func (add *authenticationDaoDbImpl) ToEventJSON(resource util.Resource) ([]byte,
 	}
 
 	return data, nil
+}
+
+func (add *authenticationDaoDbImpl) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
+	var authentications []m.Authentication
+
+	err := DB.
+		Debug().
+		Model(m.Authentication{}).
+		Where("resource_type = ?", resourceType).
+		Where("resource_id IN ?", resourceIds).
+		Find(&authentications).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return authentications, err
+}
+
+func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
+	var authIds = make([]int64, len(authentications))
+	for i, auth := range authentications {
+		authIds[i] = auth.DbID
+	}
+
+	var deletedAuthentications []m.Authentication
+	err := DB.
+		Debug().
+		Model(m.Authentication{}).
+		Clauses(clause.Returning{}).
+		Where("id IN ?", authIds).
+		Delete(&deletedAuthentications).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deletedAuthentications, nil
 }

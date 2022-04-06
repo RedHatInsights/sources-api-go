@@ -29,6 +29,11 @@ type SourceDao interface {
 	// Unpause resumes the given source and all its dependant applications.
 	Unpause(id int64) error
 	IsSuperkey(id int64) bool
+	// DeleteCascade deletes the source along with all its related sub resources. It returns all the deleted
+	// sub resources and the source itself.
+	DeleteCascade(sourceId int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error)
+	// Exists returns true if the source exists.
+	Exists(sourceId int64) (bool, error)
 }
 
 type ApplicationDao interface {
@@ -48,6 +53,10 @@ type ApplicationDao interface {
 	Unpause(id int64) error
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error)
 	IsSuperkey(id int64) bool
+	// DeleteCascade deletes the application along with all its related application authentications.
+	DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error)
+	// Exists returns true if the application exists.
+	Exists(applicationId int64) (bool, error)
 }
 
 type AuthenticationDao interface {
@@ -66,6 +75,11 @@ type AuthenticationDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
 	ToEventJSON(resource util.Resource) ([]byte, error)
+	// ListIdsForResource fetches all the authentication IDs for the given resource. The rest of the fields will be
+	// either nil or default values.
+	ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error)
+	// BulkDelete deletes all the authentications given as a list, and returns the ones that were deleted.
+	BulkDelete(authentications []m.Authentication) ([]m.Authentication, error)
 }
 
 type ApplicationAuthenticationDao interface {

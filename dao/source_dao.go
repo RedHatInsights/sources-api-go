@@ -313,3 +313,127 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 
 	return err
 }
+
+func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error) {
+	var applicationAuthentications []m.ApplicationAuthentication
+	var applications []m.Application
+	var endpoints []m.Endpoint
+	var rhcConnections []m.RhcConnection
+	var source *m.Source
+
+	err := DB.
+		Debug().
+		Transaction(func(tx *gorm.DB) error {
+			// The "application_authentications" table does not have a foreign key with a "cascade delete" constraint,
+			// so we must take care of the application authentications manually. The query has to be manually written
+			// because Gorm doesn't seem to have anything  that works with "DELETE" and allows using "USING" for the
+			// query.
+			deleteAppAuthsQuery := `
+				DELETE FROM
+					"application_authentications" AS "appAuths"
+				USING
+					"applications" AS "apps"
+				WHERE
+					"appAuths"."application_id" = "apps"."id"
+				AND
+					"apps"."source_id" = ?
+				AND
+					"apps"."tenant_id" = ?
+				RETURNING "appAuths".*
+			`
+			// Delete the associated application authentications.
+			err := tx.
+				Raw(deleteAppAuthsQuery, sourceId, s.TenantID).
+				Scan(&applicationAuthentications).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			// Delete the associated applications.
+			err = tx.
+				Model(m.Application{}).
+				Clauses(clause.Returning{}).
+				Where("source_id = ?", sourceId).
+				Where("tenant_id = ?", s.TenantID).
+				Delete(&applications).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			// Delete the associated endpoints.
+			err = tx.
+				Model(m.Endpoint{}).
+				Clauses(clause.Returning{}).
+				Where("source_id = ?", sourceId).
+				Where("tenant_id = ?", s.TenantID).
+				Delete(&endpoints).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			// The foreign key and the "cascade on delete" in the join table takes care of deleting the related
+			// "source_rhc_connection" row. The query has to be manually written because Gorm doesn't seem to have anything
+			// that works with "DELETE" and allows using "USING" for the query.
+			query := `
+				DELETE FROM
+					"rhc_connections" AS "connections"
+				USING
+					"source_rhc_connections" AS "srcRhcConnections"
+				WHERE
+					"connections"."id" = "srcRhcConnections"."rhc_connection_id"
+				AND
+					"srcRhcConnections"."source_id" = ?
+				AND
+					"srcRhcConnections"."tenant_id" = ?
+				RETURNING "connections".*
+			`
+
+			err = tx.
+				Raw(query, sourceId, s.TenantID).
+				Scan(&rhcConnections).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			// Delete the source itself.
+			err = tx.
+				Clauses(clause.Returning{}).
+				Where("id = ?", sourceId).
+				Where("tenant_id = ?", s.TenantID).
+				Delete(&source).
+				Error
+
+			return err
+		})
+
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	return applicationAuthentications, applications, endpoints, rhcConnections, source, nil
+}
+
+func (s *sourceDaoImpl) Exists(sourceId int64) (bool, error) {
+	var sourceExists bool
+
+	err := DB.Model(&m.Source{}).
+		Select("1").
+		Where("id = ?", sourceId).
+		Where("tenant_id = ?", s.TenantID).
+		Scan(&sourceExists).
+		Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return sourceExists, nil
+}

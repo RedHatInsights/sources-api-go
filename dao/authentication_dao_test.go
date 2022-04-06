@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -551,5 +552,96 @@ func TestAuthFromDbExtraPreviousContent(t *testing.T) {
 
 	if !bytes.Equal(want, auth.ExtraDb) {
 		t.Errorf(`want "%s", got "%s"`, want, auth.ExtraDb)
+	}
+}
+
+// TestSecretPathDidntChange is a flag test which tells us when the path of the Vault secrets changed. This potentially
+// affects "BulkDelete" "keysToMap" and "searchKeys" functions.
+func TestSecretPathDidntChange(t *testing.T) {
+	tenantId := 5
+	resourceType := "Source"
+	resourceId := 10
+	resourceUuid := "abcd-efgh"
+
+	got := fmt.Sprintf(vaultSecretPathFormat, tenantId, resourceType, resourceId, resourceUuid)
+
+	want := "secret/data/5/Source_10_abcd-efgh"
+	if want != got {
+		t.Errorf(`the Vault secrets' path changed. Want "%s", got "%s"`, want, got)
+	}
+}
+
+// TestFindKeysByResourceTypeAndId tests that the function under test returns the expected keys when trying to find
+// them by resource type and resource id.
+func TestFindKeysByResourceTypeAndId(t *testing.T) {
+	testData := []struct {
+		// The map of keys we will be receiving as an argument.
+		Keys []string
+		// The resource type we will tell the search function to search for.
+		ResourceType string
+		// The resource IDs it will have to try to find.
+		ResourceIds []int64
+		// The result we expect coming from the function under test.
+		ExpectedResult []string
+	}{
+		{
+			Keys: []string{
+				"Source_1_uuid",
+				"Source_2_uuid",
+			},
+			ResourceType:   "Source",
+			ResourceIds:    []int64{1},
+			ExpectedResult: []string{"Source_1_uuid"},
+		},
+		{
+			Keys: []string{
+				"Application_1_uuid",
+				"Application_2_uuid",
+				"Application_31_uuid",
+				"Application_255_uuid",
+				"Application_412_uuid",
+			},
+			ResourceType:   "Application",
+			ResourceIds:    []int64{1, 100, 255},
+			ExpectedResult: []string{"Application_1_uuid", "Application_255_uuid"},
+		},
+		{
+			Keys: []string{
+				"Endpoint_31_uuid",
+				"Endpoint_412_uuid",
+				"Endpoint_500_uuid",
+			},
+			ResourceType:   "Endpoint",
+			ResourceIds:    []int64{1, 31, 500},
+			ExpectedResult: []string{"Endpoint_31_uuid", "Endpoint_500_uuid"},
+		},
+	}
+
+	// We use a RAW impl without the "GetAuthenticationDao" function since we want to access the unexported function.
+	implDao := authenticationDaoImpl{TenantID: &fixtures.TestTenantData[0].Id}
+	for _, tt := range testData {
+		// Call the function under test.
+		foundKeys, err := implDao.findKeysByResourceTypeAndId(tt.Keys, tt.ResourceType, tt.ResourceIds)
+		if err != nil {
+			t.Errorf(`unexpected error when compiling the regular expression for the "findKeysByResourceTypeAndId" function: %s`, err)
+		}
+
+		{
+			want := len(tt.ExpectedResult)
+			got := len(foundKeys)
+
+			if want != got {
+				t.Errorf(`the "findKeysByResourceTypeAndId" function found the incorrect amount of keys. Want "%d", got "%d"`, want, got)
+			}
+		}
+
+		for i := 0; i < len(tt.ExpectedResult); i++ {
+			want := tt.ExpectedResult[i]
+			got := foundKeys[i]
+
+			if want != got {
+				t.Errorf(`the "findKeysByResourceTypeAndId" function found the incorrect key. Want "%s", got "%s"`, want, got)
+			}
+		}
 	}
 }

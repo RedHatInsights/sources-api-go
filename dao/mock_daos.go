@@ -144,6 +144,16 @@ func (src *MockSourceDao) Tenant() *int64 {
 	return &tenant
 }
 
+func (src *MockSourceDao) Exists(sourceId int64) (bool, error) {
+	for _, source := range src.Sources {
+		if source.ID == sourceId {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // NameExistsInCurrentTenant returns always false because it's the safe default in case the request gets validated
 // in the tests.
 func (src *MockSourceDao) NameExistsInCurrentTenant(name string) bool {
@@ -168,6 +178,21 @@ func (m *MockSourceDao) ListForRhcConnection(id *int64, limit, offset int, filte
 	count := int64(len(m.RelatedSources))
 
 	return m.RelatedSources, count, nil
+}
+
+func (msd *MockSourceDao) DeleteCascade(id int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error) {
+	var source *m.Source
+	for _, src := range fixtures.TestSourceData {
+		if src.ID == id {
+			source = &src
+		}
+	}
+
+	if source == nil {
+		return nil, nil, nil, nil, nil, util.NewErrNotFound("source")
+	}
+
+	return fixtures.TestApplicationAuthenticationData, fixtures.TestApplicationData, fixtures.TestEndpointData, fixtures.TestRhcConnectionData, source, nil
 }
 
 func (m *MockSourceDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
@@ -414,6 +439,31 @@ func (a *MockApplicationDao) Delete(id *int64) (*m.Application, error) {
 func (a *MockApplicationDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
+}
+
+func (a *MockApplicationDao) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
+	var application *m.Application
+	for _, app := range fixtures.TestApplicationData {
+		if app.ID == applicationId {
+			application = &app
+		}
+	}
+
+	if application == nil {
+		return nil, nil, util.NewErrNotFound("application")
+	}
+
+	return fixtures.TestApplicationAuthenticationData, application, nil
+}
+
+func (a *MockApplicationDao) Exists(applicationId int64) (bool, error) {
+	for _, application := range a.Applications {
+		if application.ID == applicationId {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func (m *MockApplicationDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
@@ -718,4 +768,26 @@ func (m MockAuthenticationDao) ToEventJSON(resource util.Resource) ([]byte, erro
 
 func (m MockAuthenticationDao) BulkCreate(auth *m.Authentication) error {
 	panic("AAA")
+}
+
+func (mad MockAuthenticationDao) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
+	var authsList []m.Authentication
+	for _, auth := range fixtures.TestAuthenticationData {
+		for _, rid := range resourceIds {
+			if auth.ResourceType == resourceType && auth.ResourceID == rid {
+				authsList = append(authsList, auth)
+			}
+		}
+	}
+
+	if authsList == nil {
+		return nil, nil
+	} else {
+		return authsList, nil
+	}
+}
+
+// BulkDelete deletes all the authentications given as a list, and returns the ones that were deleted.
+func (m MockAuthenticationDao) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
+	return authentications, nil
 }
