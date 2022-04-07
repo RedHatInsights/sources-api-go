@@ -480,9 +480,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	}
 
 	if data["name"] != nil {
-		if auth.Name, ok = data["name"].(string); !ok {
+		var name string
+		if name, ok = data["name"].(string); !ok {
 			return nil
 		}
+		auth.Name = &name
 	}
 	if data["authtype"] != nil {
 		if auth.AuthType, ok = data["authtype"].(string); !ok {
@@ -490,9 +492,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 	}
 	if data["username"] != nil {
-		if auth.Username, ok = data["username"].(string); !ok {
+		var username string
+		if username, ok = data["username"].(string); !ok {
 			return nil
 		}
+		auth.Username = &username
 	}
 	if data["password"] != nil {
 		password, ok := data["password"].(string)
@@ -530,9 +534,11 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	}
 
 	if data["availability_status"] != nil {
-		if auth.AvailabilityStatus, ok = data["availability_status"].(string); !ok {
+		var availabilityStatus string
+		if availabilityStatus, ok = data["availability_status"].(string); !ok {
 			return nil
 		}
+		auth.AvailabilityStatus = &availabilityStatus
 	}
 
 	if data["last_available_at"] != nil {

@@ -255,7 +255,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 
 		a.ResourceType = util.Capitalize(auth.ResourceType)
 		a.AuthType = auth.AuthType
-		a.Username = auth.Username
+		a.Username = util.StringValueOrNil(auth.Username)
 		a.Password = auth.Password
 		a.Extra = auth.Extra
 		a.Name = auth.Name

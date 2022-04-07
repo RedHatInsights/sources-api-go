@@ -42,12 +42,12 @@ type AuthenticationInternalResponse struct {
 }
 
 type AuthenticationCreateRequest struct {
-	Name                    string                 `json:"name,omitempty"`
+	Name                    *string                `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`
-	Username                string                 `json:"username"`
+	Username                *string                `json:"username"`
 	Password                *string                `json:"password,omitempty"`
 	Extra                   map[string]interface{} `json:"extra,omitempty"`
-	AvailabilityStatusError string                 `json:"availability_status_error,omitempty"`
+	AvailabilityStatusError *string                `json:"availability_status_error,omitempty"`
 
 	ResourceType  string      `json:"resource_type"`
 	ResourceIDRaw interface{} `json:"resource_id"`
@@ -66,13 +66,13 @@ type AuthenticationEditRequest struct {
 
 func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest) error {
 	if update.Name != nil {
-		auth.Name = *update.Name
+		auth.Name = update.Name
 	}
 	if update.AuthType != nil {
 		auth.AuthType = *update.AuthType
 	}
 	if update.Username != nil {
-		auth.Username = *update.Username
+		auth.Username = update.Username
 	}
 	if update.Password != nil {
 		encrypted, err := util.Encrypt(*update.Password)
@@ -96,10 +96,10 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 	}
 
 	if update.AvailabilityStatus != nil {
-		auth.AvailabilityStatus = *update.AvailabilityStatus
+		auth.AvailabilityStatus = update.AvailabilityStatus
 	}
 	if update.AvailabilityStatusError != nil {
-		auth.AvailabilityStatusError = *update.AvailabilityStatusError
+		auth.AvailabilityStatusError = update.AvailabilityStatusError
 	}
 
 	return nil

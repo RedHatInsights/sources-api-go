@@ -3,6 +3,7 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -317,6 +318,31 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 }
 
 func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) error {
+	query := DB.Debug().Select("source_id").Where("tenant_id = ?", *add.TenantID)
+
+	switch strings.ToLower(authentication.ResourceType) {
+	case "application":
+		app := m.Application{ID: authentication.ResourceID}
+		result := query.Model(&app).First(&app)
+		if result.Error != nil {
+			return fmt.Errorf("resource not found with type [%v], id [%v]", authentication.ResourceType, authentication.ResourceID)
+		}
+
+		authentication.SourceID = app.SourceID
+	case "endpoint":
+		endpoint := m.Endpoint{ID: authentication.ResourceID}
+		result := query.Model(&endpoint).First(&endpoint)
+		if result.Error != nil {
+			return fmt.Errorf("resource not found with type [%v], id [%v]", authentication.ResourceType, authentication.ResourceID)
+		}
+
+		authentication.SourceID = endpoint.SourceID
+	case "source":
+		authentication.SourceID = authentication.ResourceID
+	default:
+		return fmt.Errorf("bad resource type, supported types are [Application, Endpoint, Source]")
+	}
+
 	authentication.TenantID = *add.TenantID // the TenantID gets injected in the middleware
 	if authentication.Password != nil {
 		encryptedValue, err := util.Encrypt(*authentication.Password)
@@ -336,7 +362,17 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 // BulkCreate method _without_ checking if the resource exists. Basically since this is the bulk-create method the
 // resource doesn't exist yet and we know the source ID is set beforehand.
 func (add *authenticationDaoDbImpl) BulkCreate(auth *m.Authentication) error {
-	return add.Create(auth)
+	auth.TenantID = *add.TenantID // the TenantID gets injected in the middleware
+	if auth.Password != nil {
+		encryptedValue, err := util.Encrypt(*auth.Password)
+		if err != nil {
+			return err
+		}
+
+		auth.Password = &encryptedValue
+	}
+
+	return DB.Debug().Create(auth).Error
 }
 
 func (add *authenticationDaoDbImpl) Update(authentication *m.Authentication) error {
