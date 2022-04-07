@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -110,4 +111,81 @@ func TestEndpointNotExists(t *testing.T) {
 	}
 
 	DropSchema("exists")
+}
+
+// TestEndpointListOffsetAndLimit tests that List() in endpoint dao returns correct count value
+// and correct count of returned objects
+func TestEndpointListOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("offset_limit")
+
+	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
+	wantCount := int64(len(fixtures.TestEndpointData))
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		endpoints, gotCount, err := endpointDao.List(d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the endpoints: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of endpoints, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(endpoints)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}
+
+// TestEndpointSubCollectionListOffsetAndLimit tests that SubCollectionList() in endpoint dao returns
+//  correct count value and correct count of returned objects
+func TestEndpointSubCollectionListOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("offset_limit")
+
+	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
+	sourceId := int64(1)
+
+	var wantCount int64
+	for _, e := range fixtures.TestEndpointData {
+		if e.SourceID == sourceId {
+			wantCount++
+		}
+	}
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		endpoints, gotCount, err := endpointDao.SubCollectionList(m.Source{ID: sourceId}, d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the endpoints: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of endpoints, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(endpoints)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
 }
