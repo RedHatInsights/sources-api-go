@@ -33,7 +33,7 @@ func createAuthenticationFixture(t *testing.T) {
 
 	auth := setUpValidAuthentication()
 
-	err := dao.Create(auth)
+	err := dao.BulkCreate(auth)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
@@ -48,7 +48,8 @@ func TestAuthenticationDbCreate(t *testing.T) {
 
 	auth := setUpValidAuthentication()
 
-	err := dao.Create(auth)
+	// Using bulk create so we don't check to see if the resource is there first
+	err := dao.BulkCreate(auth)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
@@ -118,7 +119,8 @@ func TestAuthenticationDbGetById(t *testing.T) {
 	authFixture := setUpValidAuthentication()
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
-	err := dao.Create(authFixture)
+	// Using bulk create so we don't check to see if the resource is there first
+	err := dao.BulkCreate(authFixture)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
@@ -148,7 +150,8 @@ func TestAuthenticationDbUpdate(t *testing.T) {
 	authFixture := setUpValidAuthentication()
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
-	err := dao.Create(authFixture)
+	// Using bulk create so we don't check to see if the resource is there first
+	err := dao.BulkCreate(authFixture)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
@@ -188,7 +191,8 @@ func TestAuthenticationDbDelete(t *testing.T) {
 	authFixture := setUpValidAuthentication()
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
-	err := dao.Create(authFixture)
+	// Using bulk create so we don't check to see if the resource is there first
+	err := dao.BulkCreate(authFixture)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
@@ -274,7 +278,8 @@ func TestListForSource(t *testing.T) {
 			TenantID:     fixtures.TestTenantData[1].Id,
 		}
 
-		if err = dao.Create(auth); err != nil {
+		// Using bulk create so we don't check to see if the resource is there first
+		if err = dao.BulkCreate(auth); err != nil {
 			t.Errorf(`error creating authentication: %s`, err)
 		}
 
@@ -367,7 +372,8 @@ func TestListForApplication(t *testing.T) {
 			TenantID:     fixtures.TestTenantData[1].Id,
 		}
 
-		if err = dao.Create(auth); err != nil {
+		// Using bulk create so we don't check to see if the resource is there first
+		if err = dao.BulkCreate(auth); err != nil {
 			t.Errorf(`error creating authentication: %s`, err)
 		}
 
@@ -458,7 +464,8 @@ func TestListForApplicationAuthentication(t *testing.T) {
 		TenantID:     fixtures.TestTenantData[1].Id,
 	}
 
-	if err = dao.Create(auth); err != nil {
+	// Using bulk create so we don't check to see if the resource is there first
+	if err = dao.BulkCreate(auth); err != nil {
 		t.Errorf(`error creating authentication: %s`, err)
 	}
 
@@ -566,7 +573,8 @@ func TestListForEndpoint(t *testing.T) {
 			TenantID:     fixtures.TestTenantData[1].Id,
 		}
 
-		if err = dao.Create(auth); err != nil {
+		// Using bulk create so we don't check to see if the resource is there first
+		if err = dao.BulkCreate(auth); err != nil {
 			t.Errorf(`error creating authentication: %s`, err)
 		}
 
@@ -625,7 +633,8 @@ func TestFetchAndUpdateBy(t *testing.T) {
 	authFixture := setUpValidAuthentication()
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
-	err := dao.Create(authFixture)
+	// Using bulk create so we don't check to see if the resource is there first
+	err := dao.BulkCreate(authFixture)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
@@ -710,7 +719,8 @@ func TestToEventJSON(t *testing.T) {
 	authFixture := setUpValidAuthentication()
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
-	err := dao.Create(authFixture)
+	// Using bulk create so we don't check to see if the resource is there first
+	err := dao.BulkCreate(authFixture)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
@@ -758,7 +768,7 @@ func TestBulkMessage(t *testing.T) {
 	authFixture.ResourceType = "Source"
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
-	err := dao.Create(authFixture)
+	err := dao.BulkCreate(authFixture)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}

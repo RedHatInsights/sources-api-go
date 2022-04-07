@@ -318,7 +318,7 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 }
 
 func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) error {
-	query := DB.Select("source_id").Where("tenant_id = ?", *add.TenantID)
+	query := DB.Debug().Select("source_id").Where("tenant_id = ?", *add.TenantID)
 
 	switch strings.ToLower(authentication.ResourceType) {
 	case "application":
@@ -362,7 +362,17 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 // BulkCreate method _without_ checking if the resource exists. Basically since this is the bulk-create method the
 // resource doesn't exist yet and we know the source ID is set beforehand.
 func (add *authenticationDaoDbImpl) BulkCreate(auth *m.Authentication) error {
-	return add.Create(auth)
+	auth.TenantID = *add.TenantID // the TenantID gets injected in the middleware
+	if auth.Password != nil {
+		encryptedValue, err := util.Encrypt(*auth.Password)
+		if err != nil {
+			return err
+		}
+
+		auth.Password = &encryptedValue
+	}
+
+	return DB.Debug().Create(auth).Error
 }
 
 func (add *authenticationDaoDbImpl) Update(authentication *m.Authentication) error {
