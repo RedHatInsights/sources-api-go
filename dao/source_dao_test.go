@@ -21,7 +21,7 @@ var sourceDao = sourceDaoImpl{
 // TestSourcesListForRhcConnections tests whether the correct sources are fetched from the related connection or not.
 func TestSourcesListForRhcConnections(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	rhcConnectionId := int64(1)
 
@@ -58,7 +58,7 @@ func TestSourcesListForRhcConnections(t *testing.T) {
 
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // testSource holds the test source that will be used through tests. It is saved in a variable to avoid having to write
@@ -68,7 +68,7 @@ var testSource = fixtures.TestSourceData[0]
 // TestPausingSource checks whether the "paused_at" column gets successfully modified when pausing a source.
 func TestPausingSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("pause_unpause")
+	SwitchSchema("pause_unpause")
 
 	sourceDao := GetSourceDao(&testSource.TenantID)
 	err := sourceDao.Pause(testSource.ID)
@@ -92,14 +92,13 @@ func TestPausingSource(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("pause_unpause")
+	DropSchema("pause_unpause")
 }
 
 // TestResumingSource checks whether the "paused_at" column gets set as "NULL" when resuming a source.
 func TestResumingSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-
-	CreateFixtures("pause_unpause")
+	SwitchSchema("pause_unpause")
 
 	sourceDao := GetSourceDao(&testSource.TenantID)
 	err := sourceDao.Unpause(fixtures.TestSourceData[0].ID)
@@ -123,13 +122,13 @@ func TestResumingSource(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("pause_unpause")
+	DropSchema("pause_unpause")
 }
 
 // TestDeleteSource tests that a source gets correctly deleted, and its data returned.
 func TestDeleteSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -168,13 +167,13 @@ func TestDeleteSource(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestDeleteSourceNotExists tests that when a source that doesn't exist is tried to be deleted, an error is returned.
 func TestDeleteSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -185,7 +184,7 @@ func TestDeleteSourceNotExists(t *testing.T) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestDeleteCascade is a long test function, but very simple in essence. Essentially what it does is:
@@ -196,7 +195,7 @@ func TestDeleteSourceNotExists(t *testing.T) {
 // - Checks that the deleted subresources and source are the ones that have been created in this very same test.
 func TestDeleteCascade(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
 	fixtureSource := model.Source{
@@ -593,13 +592,14 @@ func TestDeleteCascade(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestSourceExists tests whether the function exists returns true when the given source exists.
 func TestSourceExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("exists")
+	SwitchSchema("exists")
+
 	sourceDao := GetSourceDao(&fixtures.TestTenantData[0].Id)
 
 	got, err := sourceDao.Exists(fixtures.TestSourceData[0].ID)
@@ -611,13 +611,14 @@ func TestSourceExists(t *testing.T) {
 		t.Errorf(`the source does exist but the "Exist" function returns otherwise. Want "true", got "%t"`, got)
 	}
 
-	DoneWithFixtures("exists")
+	DropSchema("exists")
 }
 
 // TestSourceNotExists tests whether the function exists returns false when the given source does not exist.
 func TestSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("exists")
+	SwitchSchema("exists")
+
 	sourceDao := GetSourceDao(&fixtures.TestTenantData[0].Id)
 
 	got, err := sourceDao.Exists(12345)
@@ -629,5 +630,5 @@ func TestSourceNotExists(t *testing.T) {
 		t.Errorf(`the source doesn't exist but the "Exist" function returns otherwise. Want "false", got "%t"`, got)
 	}
 
-	DoneWithFixtures("exists")
+	DropSchema("exists")
 }

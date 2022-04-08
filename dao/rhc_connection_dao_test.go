@@ -38,7 +38,7 @@ func setUpValidRhcConnection() *model.RhcConnection {
 // associated row in the "rhc_connections" and "source_rhc_connections" tables.
 func TestRhcConnectionCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	want := setUpValidRhcConnection()
 	got, err := rhcConnectionDao.Create(want)
@@ -86,7 +86,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 		t.Errorf(`want "%d", got "%d"`, got.ID, gotJoinTable.SourceId)
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionCreateExistingSourceDifferentTenant tests that when querying for a source from a tenant that is not
@@ -94,7 +94,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 // able to link connections to sources from other tenants.
 func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	rhcConnection := setUpValidRhcConnection()
 
@@ -111,7 +111,7 @@ func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 
 	// Set the tenant back to its original value
 	rhcConnectionDao.TenantID = &tenantId
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionCreateExisting tests that when an already existing "RhcConnection" is given to the "Create"
@@ -119,7 +119,7 @@ func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 // an error.
 func TestRhcConnectionCreateExisting(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	want := setUpValidRhcConnection()
 	want.RhcId = fixtures.TestRhcConnectionData[2].RhcId
@@ -180,14 +180,14 @@ func TestRhcConnectionCreateExisting(t *testing.T) {
 		t.Errorf(`want to find "%d" in "%v", but it was not found`, want.Sources[0].ID, gotJoinTable)
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionCreateSourceNotExists tests that a proper error is returned when a non-existing related source is
 // given.
 func TestRhcConnectionCreateSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	// Modify the valid object to make it point to a non-existing source.
 	rhcConnection := setUpValidRhcConnection()
@@ -203,14 +203,14 @@ func TestRhcConnectionCreateSourceNotExists(t *testing.T) {
 		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionCreateAlreadyExistingAssociation tests that when an error is returned when an already existing
 // association between the source and the rhcConnection exists in the join table.
 func TestRhcConnectionCreateAlreadyExistingAssociation(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	rhcConnection := setUpValidRhcConnection()
 
@@ -226,14 +226,14 @@ func TestRhcConnectionCreateAlreadyExistingAssociation(t *testing.T) {
 		t.Errorf(`want "%s", got "%s"`, want, err)
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionDelete tests that when an rhcConnection is deleted, its associations in the join table are also
 // deleted.
 func TestRhcConnectionDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	_, err := rhcConnectionDao.Delete(&fixtures.TestRhcConnectionData[0].ID)
 	if err != nil {
@@ -256,14 +256,14 @@ func TestRhcConnectionDelete(t *testing.T) {
 		t.Errorf(`want "rhcConnection" deleted, data found`)
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionDeleteNotFound tests that when a non-existent ID is given to the delete function, a "not found"
 // error is returned.
 func TestRhcConnectionDeleteNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	nonExistentId := int64(12345)
 
@@ -277,13 +277,13 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionListForSources tests whether the correct connections are fetched from the related source or not.
 func TestRhcConnectionListForSources(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	sourceId := int64(1)
 
@@ -320,7 +320,7 @@ func TestRhcConnectionListForSources(t *testing.T) {
 
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestRhcConnectionRowsClosed is a regression test for https://issues.redhat.com/browse/RHCLOUD-18192. It tests that
@@ -328,7 +328,7 @@ func TestRhcConnectionListForSources(t *testing.T) {
 // error.
 func TestRhcConnectionRowsClosed(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RHC_CONNECTION_SCHEMA)
 
 	// Find all the connections that we will remove from the DB.
 	dbRhcConnections := make([]model.RhcConnection, 0)
@@ -365,13 +365,13 @@ func TestRhcConnectionRowsClosed(t *testing.T) {
 		t.Errorf(`want "%d" connections from the database, got "%d"`, want, got)
 	}
 
-	DoneWithFixtures(RHC_CONNECTION_SCHEMA)
+	DropSchema(RHC_CONNECTION_SCHEMA)
 }
 
 // TestDeleteRhcConnection tests that an rhcConnection gets correctly deleted, and its data returned.
 func TestDeleteRhcConnection(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	rhcConnection := fixtures.TestRhcConnectionData[0]
 	// Set the ID to 0 to let GORM know it should insert a new rhcConnection and not update an existing one.
@@ -410,14 +410,14 @@ func TestDeleteRhcConnection(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestDeleteRhcConnectionNotExists tests that when an rhcConnection that doesn't exist is tried to be deleted, an
 // error is returned.
 func TestDeleteRhcConnectionNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	RhcConnectionDao := GetRhcConnectionDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -428,5 +428,5 @@ func TestDeleteRhcConnectionNotExists(t *testing.T) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }

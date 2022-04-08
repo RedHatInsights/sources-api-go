@@ -13,7 +13,7 @@ import (
 // TestDeleteEndpoint tests that an endpoint gets correctly deleted, and its data returned.
 func TestDeleteEndpoint(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	endpointDao := GetEndpointDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -53,14 +53,14 @@ func TestDeleteEndpoint(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestDeleteEndpointNotExists tests that when an endpoint that doesn't exist is tried to be deleted, an error is
 // returned.
 func TestDeleteEndpointNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	endpointDao := GetEndpointDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -71,5 +71,5 @@ func TestDeleteEndpointNotExists(t *testing.T) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }

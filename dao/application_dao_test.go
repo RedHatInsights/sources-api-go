@@ -20,8 +20,7 @@ var testApplication = fixtures.TestApplicationData[0]
 // TestPausingApplication tests that an application gets correctly paused when using the method from the DAO.
 func TestPausingApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-
-	CreateFixtures("pause_unpause")
+	SwitchSchema("pause_unpause")
 
 	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
 	err := applicationDao.Pause(testApplication.ID)
@@ -39,14 +38,13 @@ func TestPausingApplication(t *testing.T) {
 		t.Errorf(`want now, got "%s"`, application.PausedAt)
 	}
 
-	DoneWithFixtures("pause_unpause")
+	DropSchema("pause_unpause")
 }
 
 // TestResumeApplication tests that the application is properly resumed when using the method from the DAO.
 func TestResumeApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-
-	CreateFixtures("pause_unpause")
+	SwitchSchema("pause_unpause")
 
 	applicationDao := GetApplicationDao(&testApplication.TenantID)
 	err := applicationDao.Unpause(testApplication.ID)
@@ -65,13 +63,13 @@ func TestResumeApplication(t *testing.T) {
 		t.Errorf(`want "%s", got "%s"`, want, application.PausedAt)
 	}
 
-	DoneWithFixtures("pause_unpause")
+	DropSchema("pause_unpause")
 }
 
 // TestDeleteApplication tests that an application gets correctly deleted, and its data returned.
 func TestDeleteApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -110,14 +108,14 @@ func TestDeleteApplication(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestDeleteApplicationNotExists tests that when an application that doesn't exist is tried to be deleted, an error is
 // returned.
 func TestDeleteApplicationNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -128,12 +126,12 @@ func TestDeleteApplicationNotExists(t *testing.T) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 func TestApplicationDeleteCascade(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	// Create a new application on the database to cleanly test the function under test.
 	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
@@ -263,13 +261,14 @@ func TestApplicationDeleteCascade(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestApplicationExists tests whether the function exists returns true when the given application exists.
 func TestApplicationExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("exists")
+	SwitchSchema("exists")
+
 	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
 
 	got, err := applicationDao.Exists(fixtures.TestApplicationData[0].ID)
@@ -281,13 +280,14 @@ func TestApplicationExists(t *testing.T) {
 		t.Errorf(`the application does exist but the "Exist" function returns otherwise. Want "true", got "%t"`, got)
 	}
 
-	DoneWithFixtures("exists")
+	DropSchema("exists")
 }
 
 // TestApplicationNotExists tests whether the function exists returns false when the given application does not exist.
 func TestApplicationNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("exists")
+	SwitchSchema("exists")
+
 	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
 
 	got, err := applicationDao.Exists(12345)
@@ -299,5 +299,5 @@ func TestApplicationNotExists(t *testing.T) {
 		t.Errorf(`the application doesn't exist but the "Exist" function returns otherwise. Want "false", got "%t"`, got)
 	}
 
-	DoneWithFixtures("exists")
+	DropSchema("exists")
 }
