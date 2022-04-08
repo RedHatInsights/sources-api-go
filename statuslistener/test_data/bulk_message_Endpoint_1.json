@@ -3,7 +3,7 @@
   ],
   "applications": [
     {
-      "application_type_id": 1,
+      "application_type_id": 2,
       "availability_status": null,
       "availability_status_error": null,
       "created_at": "2021-12-06 19:58:14 CET",
