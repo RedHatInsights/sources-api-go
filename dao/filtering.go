@@ -35,6 +35,13 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 
 				query = query.Joins("ApplicationType")
 				filterName = fmt.Sprintf("%v.%v", `"ApplicationType"`, filter.Name)
+			case "application":
+				if query.Statement.Table != "sources" {
+					return nil, fmt.Errorf("cannot filter based on applications subresource for table %q", query.Statement.Table)
+				}
+
+				query = query.Joins(`Applications`)
+				filterName = fmt.Sprintf("%v.%v", `"Applications"`, filter.Name)
 			default:
 				return nil, fmt.Errorf("invalid subresource type [%v]", filter.Subresource)
 			}
@@ -51,7 +58,13 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 
 		switch filter.Operation {
 		case "", "eq":
-			query = query.Where(fmt.Sprintf("%v = ?", filterName), filter.Value[0])
+			if len(filter.Value) > 1 {
+				query = query.Where(fmt.Sprintf("%v IN ?", filterName), filter.Value)
+				// distinct since IN apparently can return multiple copies.
+				query = query.Distinct()
+			} else {
+				query = query.Where(fmt.Sprintf("%v = ?", filterName), filter.Value[0])
+			}
 		case "not_eq":
 			query = query.Where(fmt.Sprintf("%v != ?", filterName), filter.Value[0])
 		case "gt":
