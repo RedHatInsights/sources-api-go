@@ -16,7 +16,7 @@ scalar Any  # shortcut to allow `interface{}` to be returned
 input Filter {
   name: String!
   operation: String
-  value: String!
+  value: [String!]!
 }
 
 # validation on the direction for SortBy
