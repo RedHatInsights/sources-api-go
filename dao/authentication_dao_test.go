@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -644,4 +646,46 @@ func TestFindKeysByResourceTypeAndId(t *testing.T) {
 			}
 		}
 	}
+}
+// TestAuthenticationListOffsetAndLimit tests that List() in authentication dao returns correct count value
+// and correct count of returned objects
+func TestAuthenticationListOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	CreateFixtures("offset_limit")
+
+	wantCount := int64(len(fixtures.TestAuthenticationData))
+	Vault = &mocks.MockVault{}
+
+	// Test is running for both options we potentially have => Vault x Database
+	// and for each combination of offset and limit in fixtures
+	for _, secretStore := range []string{"vault", "database"} {
+		conf.SecretStore = secretStore
+		authenticationDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+		for _, d := range fixtures.TestDataOffsetLimit {
+			fmt.Println(secretStore, d.Limit, d.Offset)
+			authentications, gotCount, err := authenticationDao.List(d.Limit, d.Offset, []util.Filter{})
+			if err != nil {
+				t.Errorf(`unexpected error when listing the authentications: %s`, err)
+			}
+
+			if wantCount != gotCount {
+				t.Errorf(`incorrect count of authentications, want "%d", got "%d"`, wantCount, gotCount)
+			}
+
+			got := len(authentications)
+			want := int(wantCount) - d.Offset
+			if want < 0 {
+				want = 0
+			}
+
+			if want > d.Limit {
+				want = d.Limit
+			}
+			if got != want {
+				t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+			}
+		}
+	}
+	DropSchema("offset_limit")
 }

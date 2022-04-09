@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"net/http"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
