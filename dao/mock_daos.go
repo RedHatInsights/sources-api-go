@@ -84,10 +84,22 @@ func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit
 			return nil, 0, util.NewErrNotFound("application type")
 		}
 
-		// Application type exists = return sources subcollection
-		for index, source := range src.Sources {
-			if source.ID == object.Id {
-				sources = append(sources, src.Sources[index])
+		// Application type exists = find applications with given app type
+		// and save list of related source IDs
+		var sourceIDs []int64
+		for _, app := range fixtures.TestApplicationData {
+			if app.ApplicationTypeID == object.Id {
+				sourceIDs = append(sourceIDs, app.SourceID)
+			}
+		}
+
+		// For each source ID find source
+		for _, sourceID := range sourceIDs {
+			for _, s := range src.Sources {
+				if s.ID == sourceID {
+					sources = append(sources, s)
+				}
+
 			}
 		}
 
@@ -333,7 +345,6 @@ func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}
 	}
 
 	count := int64(len(appTypesOut))
-
 	return appTypesOut, count, nil
 }
 
