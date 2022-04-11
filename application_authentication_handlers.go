@@ -40,14 +40,14 @@ func ApplicationAuthenticationList(c echo.Context) error {
 		return err
 	}
 
-	applications, count, err := appAuthDB.List(limit, offset, filters)
+	appAuths, count, err := appAuthDB.List(limit, offset, filters)
 	if err != nil {
 		return err
 	}
 	c.Logger().Infof("tenant: %v", *appAuthDB.Tenant())
 
-	out := make([]interface{}, len(applications))
-	for i, a := range applications {
+	out := make([]interface{}, len(appAuths))
+	for i, a := range appAuths {
 		out[i] = *a.ToResponse()
 	}
 
@@ -67,12 +67,12 @@ func ApplicationAuthenticationGet(c echo.Context) error {
 
 	c.Logger().Infof("Getting ApplicationAuthentication ID %v", id)
 
-	app, err := appAuthDB.GetById(&id)
+	appAuth, err := appAuthDB.GetById(&id)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, app.ToResponse())
+	return c.JSON(http.StatusOK, appAuth.ToResponse())
 }
 
 func ApplicationAuthenticationCreate(c echo.Context) error {
