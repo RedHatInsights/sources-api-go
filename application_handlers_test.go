@@ -14,6 +14,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -109,7 +110,7 @@ func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceApplicationSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -137,7 +138,7 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidSyntax(t *testing.T)
 			t.Error(err)
 		}
 
-		testutils.BadRequestTest(t, rec)
+		templates.BadRequestTest(t, rec)
 	}
 }
 
@@ -167,7 +168,7 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationList(t *testing.T) {
@@ -263,7 +264,7 @@ func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationGet(t *testing.T) {
@@ -318,7 +319,7 @@ func TestApplicationGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationGetBadRequest(t *testing.T) {
@@ -340,7 +341,7 @@ func TestApplicationGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationCreateGood(t *testing.T) {
@@ -417,7 +418,7 @@ func TestApplicationCreateMissingSourceId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
@@ -447,7 +448,7 @@ func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationCreateIncompatible(t *testing.T) {
@@ -478,7 +479,7 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationEdit(t *testing.T) {
@@ -552,7 +553,7 @@ func TestApplicationEditNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationEditBadRequest(t *testing.T) {
@@ -583,7 +584,7 @@ func TestApplicationEditBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationDeleteNotFound(t *testing.T) {
@@ -605,7 +606,7 @@ func TestApplicationDeleteNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationDeleteBadRequest(t *testing.T) {
@@ -627,7 +628,7 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // TestPauseApplication tests that an application gets successfully paused.

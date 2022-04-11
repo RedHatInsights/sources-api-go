@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -99,7 +100,7 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationGet(t *testing.T) {
@@ -158,7 +159,7 @@ func TestApplicationAuthenticationGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
@@ -180,7 +181,7 @@ func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationCreate(t *testing.T) {
@@ -239,7 +240,7 @@ func TestApplicationAuthenticationCreateBadAppId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
@@ -266,7 +267,7 @@ func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
@@ -287,5 +288,5 @@ func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
