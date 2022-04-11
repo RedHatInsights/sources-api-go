@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"strconv"
 	"strings"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -23,31 +24,6 @@ func init() {
 
 type metaDataDaoImpl struct{}
 
-func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
-	metadatas := make([]m.MetaData, 0, limit)
-	relationObject, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
-	if err != nil {
-		return nil, 0, util.NewErrNotFound("application type")
-	}
-
-	query := relationObject.HasMany(&m.MetaData{}, DB.Debug())
-	query = query.Where("meta_data.type = ?", m.APP_META_DATA)
-
-	query, err = applyFilters(query, filters)
-	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	count := int64(0)
-	query.Model(&m.MetaData{}).Count(&count)
-
-	result := query.Limit(limit).Offset(offset).Find(&metadatas)
-	if result.Error != nil {
-		return nil, 0, util.NewErrBadRequest(result.Error)
-	}
-	return metadatas, count, result.Error
-}
-
 func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
 	query := DB.Debug().Model(&m.MetaData{}).Where("type = ?", m.APP_META_DATA)
@@ -65,6 +41,15 @@ func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
 	return metaData, count, nil
+}
+
+func (md *metaDataDaoImpl) ListForApplicationType(applicationTypeId *int64, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
+	exists, err := GetApplicationTypeDao(new(int64)).Exists(applicationTypeId)
+	if !exists || err != nil {
+		return nil, 0, util.NewErrNotFound("application_type")
+	}
+
+	return md.List(limit, offset, append(filters, util.Filter{Name: "application_type_id", Value: []string{strconv.FormatInt(*applicationTypeId, 10)}}))
 }
 
 func (md *metaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {

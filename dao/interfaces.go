@@ -7,11 +7,13 @@ import (
 )
 
 type SourceDao interface {
+	Exists(id *int64) (bool, error)
 	// List lists all the sources from a given tenant, which should be specified in the request.
 	List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	ListForSourceType(sourceTypeId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	ListForApplicationType(applicationTypeId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	// ListInternal lists all the existing sources.
 	ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error
 	Update(src *m.Source) error
@@ -32,8 +34,9 @@ type SourceDao interface {
 }
 
 type ApplicationDao interface {
+	Exists(id *int64) (bool, error)
 	List(limit, offset int, filters []util.Filter) ([]m.Application, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Application, int64, error)
+	ListForSource(sourceID *int64, limit, offset int, filters []util.Filter) ([]m.Application, int64, error)
 	GetById(id *int64) (*m.Application, error)
 	Create(src *m.Application) error
 	Update(src *m.Application) error
@@ -79,8 +82,9 @@ type ApplicationAuthenticationDao interface {
 }
 
 type ApplicationTypeDao interface {
+	Exists(id *int64) (bool, error)
 	List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error)
+	ListForSource(sourceID *int64, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error)
 	GetById(id *int64) (*m.ApplicationType, error)
 	Create(src *m.ApplicationType) error
 	Update(src *m.ApplicationType) error
@@ -92,8 +96,9 @@ type ApplicationTypeDao interface {
 }
 
 type EndpointDao interface {
+	Exists(id *int64) (bool, error)
 	List(limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error)
+	ListForSource(sourceID *int64, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error)
 	GetById(id *int64) (*m.Endpoint, error)
 	Create(src *m.Endpoint) error
 	Update(src *m.Endpoint) error
@@ -113,13 +118,14 @@ type EndpointDao interface {
 
 type MetaDataDao interface {
 	List(limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
-	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
+	ListForApplicationType(applicationTypeId *int64, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error)
 	GetById(id *int64) (*m.MetaData, error)
 	GetSuperKeySteps(applicationTypeId int64) ([]m.MetaData, error)
 	GetSuperKeyAccountNumber(applicationTypeId int64) (string, error)
 }
 
 type SourceTypeDao interface {
+	Exists(id *int64) (bool, error)
 	List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error)
 	GetById(id *int64) (*m.SourceType, error)
 	Create(src *m.SourceType) error

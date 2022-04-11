@@ -3,6 +3,7 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -31,35 +32,15 @@ type sourceDaoImpl struct {
 	TenantID *int64
 }
 
-func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	// allocating a slice of source types, initial length of
-	// 0, size of limit (since we will not be returning more than that)
-	sources := make([]m.Source, 0, limit)
+func (a *sourceDaoImpl) Exists(id *int64) (bool, error) {
+	var exists bool
+	result := DB.Debug().
+		Select("1").
+		Model(&m.Source{ID: *id}).
+		Where("tenant_id =  ?", a.TenantID).
+		First(&exists)
 
-	relationObject, err := m.NewRelationObject(primaryCollection, *s.TenantID, DB.Debug())
-	if err != nil {
-		return nil, 0, util.NewErrNotFound(relationObject.StringBaseObject())
-	}
-	query := relationObject.HasMany(&m.Source{}, DB.Debug())
-
-	query = query.Where("sources.tenant_id = ?", s.TenantID)
-
-	query, err = applyFilters(query, filters)
-	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	// getting the total count (filters included) for pagination
-	count := int64(0)
-	query.Model(&m.Source{}).Count(&count)
-
-	// limiting + running the actual query.
-	result := query.Limit(limit).Offset(offset).Find(&sources)
-	if result.Error != nil {
-		return nil, 0, util.NewErrBadRequest(result.Error)
-	}
-
-	return sources, count, nil
+	return exists, result.Error
 }
 
 func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
@@ -84,6 +65,50 @@ func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 	}
 
 	return sources, count, nil
+}
+
+func (s *sourceDaoImpl) ListForSourceType(sourceTypeId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+	exists, err := GetSourceTypeDao().Exists(sourceTypeId)
+	if !exists || err != nil {
+		return nil, 0, util.NewErrNotFound("source_type")
+	}
+
+	return s.List(limit, offset, append(filters, util.Filter{Name: "source_type_id", Value: []string{strconv.FormatInt(*sourceTypeId, 10)}}))
+}
+
+// this one breaks the pattern as well - takes a bit of fancy sql. it ends up
+// with 2 queries but is easier to understand.
+func (s *sourceDaoImpl) ListForApplicationType(applicationTypeId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+	exists, err := GetApplicationTypeDao(s.TenantID).Exists(applicationTypeId)
+	if !exists || err != nil {
+		return nil, 0, util.NewErrNotFound("application_type")
+	}
+
+	// yoink the source_ids from the applications that are the type requested,
+	// basically using applications as a join table
+	sourceIds := make([]int64, 0)
+	result := DB.Debug().
+		Select("source_id").
+		Model(&m.Application{}).
+		Where("tenant_id = ?", s.TenantID).
+		Where("application_type_id = ?", applicationTypeId).
+		Find(&sourceIds)
+
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+	// there were none found
+	if len(sourceIds) == 0 {
+		return []m.Source{}, 0, nil
+	}
+
+	// convert the id's to strings for the filtering.
+	stringIds := make([]string, len(sourceIds))
+	for i, id := range sourceIds {
+		stringIds[i] = strconv.FormatInt(id, 10)
+	}
+
+	return s.List(limit, offset, append(filters, util.Filter{Name: "id", Value: stringIds}))
 }
 
 func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {

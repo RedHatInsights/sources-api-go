@@ -78,7 +78,7 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 		count     int64
 	)
 
-	metaDatas, count, err = metaDataDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
+	metaDatas, count, err = metaDataDB.ListForApplicationType(&id, limit, offset, filters)
 
 	if err != nil {
 		return err

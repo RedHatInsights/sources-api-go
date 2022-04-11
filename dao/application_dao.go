@@ -3,8 +3,10 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm/clause"
@@ -30,28 +32,26 @@ type applicationDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
-	applications := make([]m.Application, 0, limit)
-	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
-	if err != nil {
+func (a *applicationDaoImpl) Exists(id *int64) (bool, error) {
+	var exists bool
+
+	result := DB.Debug().
+		Select("1").
+		Model(&m.Application{ID: *id}).
+		Where("tenant_id =  ?", a.TenantID).
+		First(&exists)
+
+	return exists, result.Error
+}
+
+func (a *applicationDaoImpl) ListForSource(sourceID *int64, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
+	exists, err := GetSourceDao(a.TenantID).Exists(sourceID)
+	if !exists || err != nil {
+		l.Log.Infof("Source not found %v", sourceID)
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
-	query := relationObject.HasMany(&m.Application{}, DB.Debug())
-
-	query, err = applyFilters(query, filters)
-	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	count := int64(0)
-	query.Model(&m.Application{}).Count(&count)
-
-	result := query.Limit(limit).Offset(offset).Find(&applications)
-	if result.Error != nil {
-		return nil, 0, util.NewErrBadRequest(result.Error)
-	}
-	return applications, count, nil
+	return a.List(limit, offset, append(filters, util.Filter{Name: "source_id", Value: []string{strconv.FormatInt(*sourceID, 10)}}))
 }
 
 func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {

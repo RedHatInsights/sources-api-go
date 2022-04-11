@@ -229,7 +229,7 @@ func SourceTypeListSource(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
+	sources, count, err = sourcesDB.ListForSourceType(&id, limit, offset, filters)
 
 	if err != nil {
 		return err
@@ -271,7 +271,7 @@ func ApplicationTypeListSource(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
+	sources, count, err = sourcesDB.ListForApplicationType(&id, limit, offset, filters)
 
 	if err != nil {
 		return err

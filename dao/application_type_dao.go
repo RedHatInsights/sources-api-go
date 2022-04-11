@@ -2,6 +2,7 @@ package dao
 
 import (
 	"fmt"
+	"strconv"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -27,34 +28,15 @@ type applicationTypeDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
-	// allocating a slice of application types, initial length of
-	// 0, size of limit (since we will not be returning more than that)
-	applicationTypes := make([]m.ApplicationType, 0, limit)
+func (a *applicationTypeDaoImpl) Exists(id *int64) (bool, error) {
+	var exists bool
 
-	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
-	if err != nil {
-		return nil, 0, util.NewErrNotFound("source")
-	}
+	result := DB.Debug().
+		Select("1").
+		Model(&m.ApplicationType{Id: *id}).
+		First(&exists)
 
-	query := relationObject.HasMany(&m.ApplicationType{}, DB.Debug())
-
-	query, err = applyFilters(query, filters)
-	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err.Error())
-	}
-
-	// getting the total count (filters included) for pagination
-	count := int64(0)
-	query.Model(&m.ApplicationType{}).Count(&count)
-
-	// limiting + running the actual query.
-	result := query.Limit(limit).Offset(offset).Find(&applicationTypes)
-	if result.Error != nil {
-		return nil, 0, util.NewErrBadRequest(result.Error)
-	}
-
-	return applicationTypes, count, nil
+	return exists, result.Error
 }
 
 func (a *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
@@ -79,6 +61,30 @@ func (a *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) 
 	}
 
 	return appTypes, count, nil
+}
+
+// this one breaks the pattern of just appending a single filter.
+// it results in 2 queries instead of one but arguably is easier to understand.
+func (a *applicationTypeDaoImpl) ListForSource(sourceID *int64, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
+	exists, err := GetSourceDao(a.TenantID).Exists(sourceID)
+	if !exists || err != nil {
+		return nil, 0, util.NewErrNotFound("source")
+	}
+
+	// pull the applications for the source
+	applications, _, err := GetApplicationDao(a.TenantID).ListForSource(sourceID, 100, 0, []util.Filter{})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// convert the int foreign keys to strings
+	applicationTypeIds := make([]string, len(applications))
+	for i, app := range applications {
+		applicationTypeIds[i] = strconv.FormatInt(app.ApplicationTypeID, 10)
+	}
+
+	// list with the filter
+	return a.List(limit, offset, append(filters, util.Filter{Name: "id", Value: applicationTypeIds}))
 }
 
 func (a *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {

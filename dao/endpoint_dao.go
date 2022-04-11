@@ -3,6 +3,7 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -29,37 +30,23 @@ type endpointDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *endpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
-	endpoints := make([]m.Endpoint, 0, limit)
-	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
-	if err != nil {
-		return nil, 0, util.NewErrNotFound("source")
-	}
+func (e *endpointDaoImpl) Exists(id *int64) (bool, error) {
+	var exists bool
 
-	query := relationObject.HasMany(&m.Endpoint{}, DB.Debug())
-	query = query.Where("endpoints.tenant_id = ?", a.TenantID)
+	result := DB.Debug().
+		Select("1").
+		Model(&m.Endpoint{ID: *id}).
+		Where("tenant_id = ?", e.TenantID).
+		First(&exists)
 
-	query, err = applyFilters(query, filters)
-	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	count := int64(0)
-	query.Model(&m.Endpoint{}).Count(&count)
-
-	result := query.Limit(limit).Offset(offset).Find(&endpoints)
-	if result.Error != nil {
-		return nil, 0, util.NewErrBadRequest(result.Error)
-	}
-
-	return endpoints, count, nil
+	return exists, result.Error
 }
 
-func (a *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
+func (e *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
 	query := DB.Debug().Model(&m.Endpoint{}).
 		Offset(offset).
-		Where("tenant_id = ?", a.TenantID)
+		Where("tenant_id = ?", e.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -77,7 +64,16 @@ func (a *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 	return endpoints, count, nil
 }
 
-func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
+func (e *endpointDaoImpl) ListForSource(sourceID *int64, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
+	exists, err := GetSourceDao(e.TenantID).Exists(sourceID)
+	if !exists || err != nil {
+		return nil, 0, util.NewErrNotFound("source")
+	}
+
+	return e.List(limit, offset, append(filters, util.Filter{Name: "source_id", Value: []string{strconv.FormatInt(*sourceID, 10)}}))
+}
+
+func (e *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 	app := &m.Endpoint{ID: *id}
 	result := DB.Debug().First(&app)
 	if result.Error != nil {
@@ -87,26 +83,26 @@ func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 	return app, nil
 }
 
-func (a *endpointDaoImpl) Create(app *m.Endpoint) error {
-	app.TenantID = *a.TenantID
+func (e *endpointDaoImpl) Create(app *m.Endpoint) error {
+	app.TenantID = *e.TenantID
 
 	result := DB.Debug().Create(app)
 	return result.Error
 }
 
-func (a *endpointDaoImpl) Update(app *m.Endpoint) error {
+func (e *endpointDaoImpl) Update(app *m.Endpoint) error {
 	result := DB.Updates(app)
 	return result.Error
 }
 
-func (a *endpointDaoImpl) Delete(id *int64) (*m.Endpoint, error) {
+func (e *endpointDaoImpl) Delete(id *int64) (*m.Endpoint, error) {
 	var endpoint m.Endpoint
 
 	result := DB.
 		Debug().
 		Clauses(clause.Returning{}).
 		Where("id = ?", id).
-		Where("tenant_id = ?", a.TenantID).
+		Where("tenant_id = ?", e.TenantID).
 		Delete(&endpoint)
 
 	if result.Error != nil {
@@ -124,7 +120,7 @@ func (a *endpointDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
-func (a *endpointDaoImpl) CanEndpointBeSetAsDefaultForSource(sourceId int64) bool {
+func (e *endpointDaoImpl) CanEndpointBeSetAsDefaultForSource(sourceId int64) bool {
 	endpoint := &m.Endpoint{}
 
 	// add double quotes to the "default" column to avoid any clashes with postgres' "default" keyword
@@ -132,7 +128,7 @@ func (a *endpointDaoImpl) CanEndpointBeSetAsDefaultForSource(sourceId int64) boo
 	return result.Error != nil
 }
 
-func (a *endpointDaoImpl) IsRoleUniqueForSource(role string, sourceId int64) bool {
+func (e *endpointDaoImpl) IsRoleUniqueForSource(role string, sourceId int64) bool {
 	endpoint := &m.Endpoint{}
 	result := DB.Debug().Where("role = ? AND source_id = ?", role, sourceId).First(&endpoint)
 
@@ -140,7 +136,7 @@ func (a *endpointDaoImpl) IsRoleUniqueForSource(role string, sourceId int64) boo
 	return result.Error != nil
 }
 
-func (a *endpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
+func (e *endpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
 	endpoint := &m.Endpoint{}
 
 	result := DB.Debug().Where("source_id = ?", sourceId).First(&endpoint)
@@ -148,7 +144,7 @@ func (a *endpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
 	return result.Error == nil
 }
 
-func (a *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+func (e *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	endpoint := &m.Endpoint{ID: resource.ResourceID}
 	result := DB.Debug().Preload("Source").Find(&endpoint)
 
@@ -160,7 +156,7 @@ func (a *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interf
 	return BulkMessageFromSource(&endpoint.Source, authentication)
 }
 
-func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+func (e *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
 	result := DB.Debug().Model(&m.Endpoint{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("endpoint not found %v", resource)
@@ -169,15 +165,15 @@ func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribu
 	return nil
 }
 
-func (a *endpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
+func (e *endpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
 	endpoint := &m.Endpoint{ID: *id}
 	result := DB.Debug().Preload("Tenant").Find(&endpoint)
 
 	return endpoint, result.Error
 }
 
-func (a *endpointDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
-	endpoint, err := a.FindWithTenant(&resource.ResourceID)
+func (e *endpointDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
+	endpoint, err := e.FindWithTenant(&resource.ResourceID)
 	data, _ := json.Marshal(endpoint.ToEvent())
 
 	return data, err

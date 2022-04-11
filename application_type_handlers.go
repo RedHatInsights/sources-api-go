@@ -53,7 +53,7 @@ func SourceListApplicationTypes(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	apptypes, count, err = applicationTypeDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+	apptypes, count, err = applicationTypeDB.ListForSource(&id, limit, offset, filters)
 
 	if err != nil {
 		return err

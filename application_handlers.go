@@ -247,7 +247,7 @@ func SourceListApplications(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+	applications, count, err = applicationDB.ListForSource(&id, limit, offset, filters)
 	if err != nil {
 		return err
 	}

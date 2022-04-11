@@ -22,6 +22,16 @@ func init() {
 type sourceTypeDaoImpl struct {
 }
 
+func (st *sourceTypeDaoImpl) Exists(id *int64) (bool, error) {
+	var exists bool
+	result := DB.Debug().
+		Select("1").
+		Model(&m.SourceType{Id: *id}).
+		First(&exists)
+
+	return exists, result.Error
+}
+
 func (st *sourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)

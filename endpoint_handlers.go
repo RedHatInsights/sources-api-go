@@ -51,7 +51,7 @@ func SourceListEndpoint(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	endpoints, count, err = endpointDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+	endpoints, count, err = endpointDB.ListForSource(&id, limit, offset, filters)
 
 	if err != nil {
 		return err

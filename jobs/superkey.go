@@ -56,7 +56,7 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 
 	a := dao.GetApplicationDao(&sk.Tenant)
 
-	apps, _, err := a.SubCollectionList(&m.Source{ID: id}, 100, 0, make([]util.Filter, 0))
+	apps, _, err := a.ListForSource(&id, 100, 0, []util.Filter{})
 	if err != nil {
 		return fmt.Errorf("failed to list applications for source: %v", err)
 	}
