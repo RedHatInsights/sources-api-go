@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -99,7 +100,7 @@ func TestApplicationTypeMetaDataSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -124,7 +125,7 @@ func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidSyntax(t *test
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidFilter(t *testing.T) {
@@ -153,7 +154,7 @@ func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidFilter(t *test
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestMetaDataList(t *testing.T) {
@@ -229,7 +230,7 @@ func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestMetaDataGet(t *testing.T) {
@@ -280,7 +281,7 @@ func TestMetaDataGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestMetaDataGetBadRequest(t *testing.T) {
@@ -302,5 +303,5 @@ func TestMetaDataGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }

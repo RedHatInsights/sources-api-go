@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -90,7 +91,7 @@ func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceApplicationTypeSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -115,7 +116,7 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidSyntax(t *testin
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testing.T) {
@@ -144,7 +145,7 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testin
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationTypeList(t *testing.T) {
@@ -222,7 +223,7 @@ func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicationTypeGet(t *testing.T) {
@@ -273,7 +274,7 @@ func TestApplicationTypeGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationTypeGetBadRequest(t *testing.T) {
@@ -293,5 +294,5 @@ func TestApplicationTypeGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -78,7 +78,7 @@ func TestParsePaginationBadRequestInvalidLimit(t *testing.T) {
 		t.Error("something went very wrong - error parsing pagination.")
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 
 	var resp util.ErrorDocument
 	err = json.Unmarshal(rec.Body.Bytes(), &resp)
@@ -102,7 +102,7 @@ func TestParsePaginationBadRequestInvalidOffset(t *testing.T) {
 		t.Error("something went very wrong - error parsing pagination.")
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 
 	var resp util.ErrorDocument
 	err = json.Unmarshal(rec.Body.Bytes(), &resp)

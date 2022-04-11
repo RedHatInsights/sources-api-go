@@ -18,6 +18,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -135,7 +136,7 @@ func TestSourceListAuthenticationsNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceListAuthenticationsBadRequest(t *testing.T) {
@@ -160,7 +161,7 @@ func TestSourceListAuthenticationsBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
@@ -319,7 +320,7 @@ func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceTypeSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -344,7 +345,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) 
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
@@ -373,7 +374,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
@@ -455,7 +456,7 @@ func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -480,7 +481,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *tes
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
@@ -509,7 +510,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *tes
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceList(t *testing.T) {
@@ -641,7 +642,7 @@ func TestSourceListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceGet(t *testing.T) {
@@ -696,7 +697,7 @@ func TestSourceGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceGetBadRequest(t *testing.T) {
@@ -718,7 +719,7 @@ func TestSourceGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // TestSourceCreateBadRequest tests that the handler responds with an 400 when an invalid JSON is received
@@ -749,7 +750,7 @@ func TestSourceCreateBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // TestSourceCreate tests that a 201 is received when a proper JSON message is received
@@ -891,7 +892,7 @@ func TestSourceEditNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceEditBadRequest(t *testing.T) {
@@ -922,7 +923,7 @@ func TestSourceEditBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceDelete(t *testing.T) {
@@ -967,7 +968,7 @@ func TestSourceDelete(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceDeleteNotFound(t *testing.T) {
@@ -989,7 +990,7 @@ func TestSourceDeleteNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceDeleteBadRequest(t *testing.T) {
@@ -1011,7 +1012,7 @@ func TestSourceDeleteBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestAvailabilityStatusCheck(t *testing.T) {
@@ -1056,7 +1057,7 @@ func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
@@ -1078,7 +1079,7 @@ func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
@@ -1163,7 +1164,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T) {
@@ -1188,7 +1189,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T) {
@@ -1217,7 +1218,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // TestPauseSourceAndItsApplications tests that the "pause source" endpoint sets all the applications and the source

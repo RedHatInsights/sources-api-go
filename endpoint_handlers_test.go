@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -102,7 +103,7 @@ func TestSourceEndpointSubcollectionListNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceEndpointSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
@@ -127,7 +128,7 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
@@ -156,7 +157,7 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestEndpointList(t *testing.T) {
@@ -245,7 +246,7 @@ func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestEndpointGet(t *testing.T) {
@@ -296,7 +297,7 @@ func TestEndpointGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestEndpointGetBadRequest(t *testing.T) {
@@ -318,7 +319,7 @@ func TestEndpointGetBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 // Tests that the endpoint is properly creating "endpoints" and returning a 201 code.
@@ -395,7 +396,7 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestEndpointEdit(t *testing.T) {
@@ -497,7 +498,7 @@ func TestEndpointEditNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestEndpointEditBadRequest(t *testing.T) {
@@ -527,7 +528,7 @@ func TestEndpointEditBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestEndpointDeleteBadRequest(t *testing.T) {
@@ -549,5 +550,5 @@ func TestEndpointDeleteBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }

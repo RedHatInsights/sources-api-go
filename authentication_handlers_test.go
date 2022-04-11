@@ -10,10 +10,10 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/config"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -158,7 +158,7 @@ func TestAuthenticationGetNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestAuthenticationCreate(t *testing.T) {
@@ -247,7 +247,7 @@ func TestAuthenticationCreateBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestAuthenticationUpdate(t *testing.T) {
@@ -332,7 +332,7 @@ func TestAuthenticationUpdateNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
 
 func TestAuthenticationUpdateBadRequest(t *testing.T) {
@@ -365,7 +365,7 @@ func TestAuthenticationUpdateBadRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.BadRequestTest(t, rec)
+	templates.BadRequestTest(t, rec)
 }
 
 func TestAuthenticationDelete(t *testing.T) {
@@ -422,5 +422,5 @@ func TestAuthenticationDeleteNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	testutils.NotFoundTest(t, rec)
+	templates.NotFoundTest(t, rec)
 }
