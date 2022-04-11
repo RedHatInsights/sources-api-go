@@ -3,29 +3,17 @@ package middleware
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/internal/events"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
-	"github.com/RedHatInsights/sources-api-go/kafka"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
 var raiseMiddleware = RaiseEvent
-
-type mockSender struct {
-	hit     int
-	headers []kafka.Header
-	body    string
-}
-
-func (m *mockSender) RaiseEvent(_ string, b []byte, headers []kafka.Header) error {
-	m.headers = headers
-	m.body = string(b)
-	m.hit++
-	return nil
-}
 
 type fakeEvent struct {
 	raised bool
@@ -40,7 +28,7 @@ func (f *fakeEvent) ToEvent() interface{} {
 }
 
 func TestRaiseEvent(t *testing.T) {
-	s := mockSender{}
+	s := mocks.MockSender{}
 	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
@@ -59,13 +47,16 @@ func TestRaiseEvent(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", 204, rec.Code)
 	}
 
-	if s.hit != 1 {
-		t.Errorf("Wrong number of hits to raise event, got %v expected %v", s.hit, 1)
+	// sleep in order for goroutine to run
+	time.Sleep(50 * time.Millisecond)
+
+	if s.Hit != 1 {
+		t.Errorf("Wrong number of Hits to raise event, got %v expected %v", s.Hit, 1)
 	}
 }
 
 func TestRaiseEventWithHeaders(t *testing.T) {
-	s := mockSender{}
+	s := mocks.MockSender{}
 	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
 		"psk-account":   "1234",
@@ -83,20 +74,23 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 		t.Errorf("Got an error when none would have been expected: %v", err)
 	}
 
+	// sleep in order for goroutine to run
+	time.Sleep(50 * time.Millisecond)
+
 	if rec.Code != 204 {
 		t.Errorf("Wrong return code, expected %v got %v", 204, rec.Code)
 	}
 
-	if s.hit != 1 {
-		t.Errorf("Wrong number of hits to raise event, got %v expected %v", s.hit, 1)
+	if s.Hit != 1 {
+		t.Errorf("Wrong number of Hits to raise event, got %v expected %v", s.Hit, 1)
 	}
 
-	if len(s.headers) != 3 {
+	if len(s.Headers) != 3 {
 		t.Errorf("Headers not set properly from RaiseEvent")
 	}
 
 	expected := []string{"event_type", "x-rh-identity", "x-rh-sources-account-number"}
-	for _, h := range s.headers {
+	for _, h := range s.Headers {
 		if !util.SliceContainsString(expected, h.Key) {
 			t.Errorf("Got bad header: [%v: %v]", h.Key, h.Value)
 		}
@@ -104,7 +98,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 }
 
 func TestRaiseEventBody(t *testing.T) {
-	s := mockSender{}
+	s := mocks.MockSender{}
 	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
@@ -123,17 +117,20 @@ func TestRaiseEventBody(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", 204, rec.Code)
 	}
 
-	if s.hit != 1 {
-		t.Errorf("Wrong number of hits to raise event, got %v expected %v", s.hit, 1)
+	// sleep in order for goroutine to run
+	time.Sleep(50 * time.Millisecond)
+
+	if s.Hit != 1 {
+		t.Errorf("Wrong number of Hits to raise event, got %v expected %v", s.Hit, 1)
 	}
 
-	if s.body != `{"raised":true}` {
-		t.Errorf("Raised bad body %v", s.body)
+	if s.Body != `{"raised":true}` {
+		t.Errorf("Raised bad Body %v", s.Body)
 	}
 }
 
 func TestNoRaiseEvent(t *testing.T) {
-	s := mockSender{}
+	s := mocks.MockSender{}
 	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
@@ -150,13 +147,16 @@ func TestNoRaiseEvent(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", 204, rec.Code)
 	}
 
-	if s.hit != 0 {
-		t.Errorf("Wrong number of hits to raise event, got %v expected %v", s.hit, 0)
+	// sleep in order for goroutine to run
+	time.Sleep(50 * time.Millisecond)
+
+	if s.Hit != 0 {
+		t.Errorf("Wrong number of Hits to raise event, got %v expected %v", s.Hit, 0)
 	}
 }
 
 func TestSkipOnContext(t *testing.T) {
-	s := mockSender{}
+	s := mocks.MockSender{}
 	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.EmptyTestContext()
 
@@ -174,7 +174,10 @@ func TestSkipOnContext(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", 204, rec.Code)
 	}
 
-	if s.hit != 0 {
-		t.Errorf("Wrong number of hits to raise event, got %v expected %v", s.hit, 0)
+	// sleep in order for goroutine to run
+	time.Sleep(50 * time.Millisecond)
+
+	if s.Hit != 0 {
+		t.Errorf("Wrong number of Hits to raise event, got %v expected %v", s.Hit, 0)
 	}
 }

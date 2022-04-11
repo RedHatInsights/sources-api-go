@@ -2,10 +2,10 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/kafka"
-	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -18,16 +18,13 @@ var Producer = events.EventStreamProducer{Sender: &events.EventStreamSender{}}
 func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) error {
 	msg, err := json.Marshal(resource.ToEvent())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal %+v as event: %v", resource, err)
 	}
 
-	// TODO: make this async? Run this in a goroutine that way the
-	// request isn't effectively blocked by kafka .
 	headers = append(headers, kafka.Header{Key: "event_type", Value: []byte(eventType)})
 	err = Producer.RaiseEvent(eventType, msg, headers)
 	if err != nil {
-		l.Log.Warnf("failed to raise event to kafka: %v", err)
-		return nil
+		return fmt.Errorf("failed to raise event to kafka: %v", err)
 	}
 
 	return nil

@@ -4,10 +4,13 @@ import (
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/config"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 var Client *redis.Client
+
+// error used for checking if the error coming back from redis is nil or not
+const Nil = redis.Nil
 
 func Init() {
 	cfg := config.Get()

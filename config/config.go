@@ -41,6 +41,7 @@ type SourcesApiConfig struct {
 	Psks                      []string
 	BypassRbac                bool
 	StatusListener            bool
+	BackgroundWorker          bool
 	MigrationsSetup           bool
 	MigrationsReset           bool
 	SecretStore               string
@@ -124,6 +125,7 @@ func Get() *SourcesApiConfig {
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
 	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
 	availabilityListener := fs.Bool("listener", false, "run availability status listener")
+	backgroundWorker := fs.Bool("background-worker", false, "run background worker")
 	setUpDatabase := fs.Bool("setup", false, "create the database and exit")
 	resetDatabase := fs.Bool("reset", false, "drop the database, recreate it and exit")
 
@@ -133,6 +135,7 @@ func Get() *SourcesApiConfig {
 	}
 
 	options.SetDefault("StatusListener", *availabilityListener)
+	options.SetDefault("BackgroundWorker", *backgroundWorker)
 	options.SetDefault("MigrationsSetup", *setUpDatabase)
 	options.SetDefault("MigrationsReset", *resetDatabase)
 
@@ -177,6 +180,7 @@ func Get() *SourcesApiConfig {
 		Psks:                      options.GetStringSlice("psks"),
 		BypassRbac:                options.GetBool("BypassRbac"),
 		StatusListener:            options.GetBool("StatusListener"),
+		BackgroundWorker:          options.GetBool("BackgroundWorker"),
 		MigrationsSetup:           options.GetBool("MigrationsSetup"),
 		MigrationsReset:           options.GetBool("MigrationsReset"),
 		SecretStore:               options.GetString("SecretStore"),

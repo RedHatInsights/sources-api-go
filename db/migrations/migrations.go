@@ -1,6 +1,7 @@
 package migrations
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 var migrationsCollection = []*gormigrate.Migration{
 	InitialSchema(),
 }
+
+var ctx = context.Background()
 
 // redisLockKey is the key which will be used for the Redis lock when performing the migrations.
 const redisLockKey = "sources-api-go-redis-lock"
@@ -33,7 +36,7 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	// Before doing anything, check for the existence of the lock.
-	exists, err := redis.Client.Exists(redisLockKey).Result()
+	exists, err := redis.Client.Exists(ctx, redisLockKey).Result()
 	if err != nil {
 		return err
 	}
@@ -43,7 +46,7 @@ func Migrate(db *gorm.DB) error {
 	for lockExists {
 		time.Sleep(redisSleepTime)
 
-		exists, err = redis.Client.Exists(redisLockKey).Result()
+		exists, err = redis.Client.Exists(ctx, redisLockKey).Result()
 		if err != nil {
 			return err
 		}
@@ -52,7 +55,7 @@ func Migrate(db *gorm.DB) error {
 	}
 
 	// Set the migrations lock.
-	err = redis.Client.Set(redisLockKey, uuid.String(), redisLockExpirationTime).Err()
+	err = redis.Client.Set(ctx, redisLockKey, uuid.String(), redisLockExpirationTime).Err()
 	if err != nil {
 		return err
 	}
@@ -62,14 +65,14 @@ func Migrate(db *gorm.DB) error {
 	migrationErr := migrateTool.Migrate()
 
 	// Once the migrations have finished, get the lock's value to attempt to release it.
-	value, err := redis.Client.Get(redisLockKey).Result()
+	value, err := redis.Client.Get(ctx, redisLockKey).Result()
 	if err != nil {
 		return err
 	}
 
 	// The lock's value should coincide with the one we set above. If it doesn't something very wrong happened.
 	if value == uuid.String() {
-		err = redis.Client.Del(redisLockKey).Err()
+		err = redis.Client.Del(ctx, redisLockKey).Err()
 		if err != nil {
 			return err
 		}
