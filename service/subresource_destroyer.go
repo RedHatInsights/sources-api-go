@@ -45,9 +45,9 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 
 		// Raise an event for the deleted application authentications.
 		for _, appAuth := range applicationAuthentications {
-			err = RaiseEvent("ApplicationAuthentication.delete", &appAuth, headers)
+			err = RaiseEvent("ApplicationAuthentication.destroy", &appAuth, headers)
 			if err != nil {
-				logging.Log.Errorf(`Event "ApplicationAuthentication.delete" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
+				logging.Log.Errorf(`Event "ApplicationAuthentication.destroy" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
 			}
 		}
 
@@ -55,9 +55,9 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 		var appIds []int64
 		for _, app := range applications {
 			appIds = append(appIds, app.ID)
-			err := RaiseEvent("Application.delete", &app, headers)
+			err := RaiseEvent("Application.destroy", &app, headers)
 			if err != nil {
-				logging.Log.Errorf(`Event "Application.delete" could not be raised for application %v: %s`, app.ToEvent(), err)
+				logging.Log.Errorf(`Event "Application.destroy" could not be raised for application %v: %s`, app.ToEvent(), err)
 			}
 		}
 
@@ -65,24 +65,24 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 		var endpointIds []int64
 		for _, endpoint := range endpoints {
 			endpointIds = append(endpointIds, endpoint.ID)
-			err := RaiseEvent("Endpoint.delete", &endpoint, headers)
+			err := RaiseEvent("Endpoint.destroy", &endpoint, headers)
 			if err != nil {
-				logging.Log.Errorf(`Event "Endpoint.delete" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
+				logging.Log.Errorf(`Event "Endpoint.destroy" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
 			}
 		}
 
 		// Raise events for the deleted connections.
 		for _, connection := range rhcConnections {
-			err := RaiseEvent("RhcConnection.delete", &connection, headers)
+			err := RaiseEvent("RhcConnection.destroy", &connection, headers)
 			if err != nil {
-				logging.Log.Errorf(`Event "RhcConnection.delete" could not be raised for rhcConnection %v: %s`, connection.ToEvent(), err)
+				logging.Log.Errorf(`Event "RhcConnection.destroy" could not be raised for rhcConnection %v: %s`, connection.ToEvent(), err)
 			}
 		}
 
 		// Raise an event for the source itself.
-		err = RaiseEvent("Source.delete", source, headers)
+		err = RaiseEvent("Source.destroy", source, headers)
 		if err != nil {
-			logging.Log.Errorf(`Event "Source.delete" could not be raised for source %v: %s`, source.ToEvent(), err)
+			logging.Log.Errorf(`Event "Source.destroy" could not be raised for source %v: %s`, source.ToEvent(), err)
 		}
 
 		// Fetch all the authentications from the resources.
@@ -113,16 +113,16 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 
 		// Raise an event for the deleted application authentications.
 		for _, appAuth := range applicationAuthentications {
-			err = RaiseEvent("ApplicationAuthentication.delete", &appAuth, headers)
+			err = RaiseEvent("ApplicationAuthentication.destroy", &appAuth, headers)
 			if err != nil {
-				logging.Log.Errorf(`Event "ApplicationAuthentication.delete" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
+				logging.Log.Errorf(`Event "ApplicationAuthentication.destroy" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
 			}
 		}
 
 		// Raise an event for the deleted application itself.
-		err = RaiseEvent("Application.delete", application, headers)
+		err = RaiseEvent("Application.destroy", application, headers)
 		if err != nil {
-			logging.Log.Errorf(`Event "Application.delete" could not be raised for application %v: %s`, application.ToEvent(), err)
+			logging.Log.Errorf(`Event "Application.destroy" could not be raised for application %v: %s`, application.ToEvent(), err)
 		}
 
 		// Fetch all the application's authentications.
@@ -141,9 +141,9 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 		}
 
 		// Raise an event for the deleted endpoint.
-		err = RaiseEvent("Endpoint.delete", endpoint, headers)
+		err = RaiseEvent("Endpoint.destroy", endpoint, headers)
 		if err != nil {
-			logging.Log.Errorf(`Event "Endpoint.delete" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
+			logging.Log.Errorf(`Event "Endpoint.destroy" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
 		}
 
 		// Fetch all the endpoint's authentications.
@@ -163,9 +163,9 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 
 	for _, deletedAuth := range deletedAuths {
 		// Raise an event for the deleted authentication.
-		err = RaiseEvent("Authentication.delete", &deletedAuth, headers)
+		err = RaiseEvent("Authentication.destroy", &deletedAuth, headers)
 		if err != nil {
-			logging.Log.Errorf(`Could not raise "Authentication.delete" event for authentication %v`, err)
+			logging.Log.Errorf(`Could not raise "Authentication.destroy" event for authentication %v`, err)
 		}
 	}
 
