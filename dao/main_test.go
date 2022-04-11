@@ -96,6 +96,7 @@ func CreateFixtures(schema string) {
 // the database in the previous schema.
 func DoneWithFixtures(schema string) {
 	DropSchema(schema)
+	CloseTestDbConnection()
 	ConnectToTestDB("dao")
 }
 
@@ -105,7 +106,14 @@ func DropSchema(dbSchema string) {
 	if result.Error != nil {
 		log.Fatalf("Error in drop schema %s %s: ", dbSchema, result.Error.Error())
 	}
+}
 
+func CloseTestDbConnection() {
+	rawDB, err := DB.DB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	rawDB.Close()
 }
 
 // MigrateSchema migrates all the models.
