@@ -9,9 +9,9 @@ import (
 )
 
 type Filter struct {
-	Name      string  `json:"name"`
-	Operation *string `json:"operation"`
-	Value     string  `json:"value"`
+	Name      string   `json:"name"`
+	Operation *string  `json:"operation"`
+	Value     []string `json:"value"`
 }
 
 type Meta struct {

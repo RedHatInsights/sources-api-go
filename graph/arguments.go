@@ -35,7 +35,7 @@ func parseFilters(filters []*generated_model.Filter) []util.Filter {
 
 	// parse the filter struct - including subresource filtering
 	for i, f := range filters {
-		filter := util.Filter{Value: []string{f.Value}}
+		filter := util.Filter{Value: f.Value}
 
 		// operation can be nil (defaults to ""/eq)
 		if f.Operation != nil {
@@ -43,12 +43,12 @@ func parseFilters(filters []*generated_model.Filter) []util.Filter {
 		}
 
 		// handle subresource filtering
-		if strings.HasPrefix(f.Name, "source_type") {
+		if strings.HasPrefix(f.Name, "source_type.") {
 			filter.Name = strings.TrimPrefix(f.Name, "source_type.")
 			filter.Subresource = "source_type"
-		} else if strings.HasPrefix(f.Name, "application_type") {
-			filter.Name = strings.TrimPrefix(f.Name, "application_type.")
-			filter.Subresource = "application_type"
+		} else if strings.HasPrefix(f.Name, "applications.") {
+			filter.Name = strings.TrimPrefix(f.Name, "applications.")
+			filter.Subresource = "application"
 		} else {
 			filter.Name = f.Name
 		}

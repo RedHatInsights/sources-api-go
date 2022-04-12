@@ -66,7 +66,7 @@ func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 	sources := make([]m.Source, 0, limit)
 	query := DB.Debug().Model(&m.Source{}).
 		Offset(offset).
-		Where("tenant_id = ?", s.TenantID)
+		Where("sources.tenant_id = ?", s.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
