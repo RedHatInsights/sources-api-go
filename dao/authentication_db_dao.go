@@ -512,7 +512,8 @@ func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authenticatio
 	err := DB.
 		Debug().
 		Preload("Tenant").
-		Find(&dbAuths, authIds).
+		Where("id IN ?", authIds).
+		Find(&dbAuths).
 		Error
 
 	if err != nil {
