@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/kafka"
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -23,7 +24,8 @@ func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
 
 	err = json.Unmarshal(decodedIdentity, &XRHIdentity)
 	if err != nil {
-		return nil, fmt.Errorf("x-rh-identity header does not contain valid JSON")
+		logging.Log.Debugf("x-rh-identity header does not valid JSON: %s. Payload: %s", err, inputIdentity)
+		return nil, fmt.Errorf("x-rh-identity header does not contain valid JSON: %s", err)
 	}
 
 	return XRHIdentity, nil
