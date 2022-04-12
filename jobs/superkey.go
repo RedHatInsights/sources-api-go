@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -12,6 +13,7 @@ import (
 )
 
 type SuperkeyDestroyJob struct {
+	Headers  []kafka.Header
 	Identity string
 	Tenant   int64
 	Model    string
@@ -76,6 +78,7 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 
 	// destroy the source after waiting 15 seconds
 	Enqueue(&AsyncDestroyJob{
+		Headers:     sk.Headers,
 		Tenant:      sk.Tenant,
 		WaitSeconds: 15,
 		Model:       "source",
@@ -95,6 +98,7 @@ func (sk SuperkeyDestroyJob) sendForApplication(id int64) error {
 
 	// destroy the application after waiting 15 seconds
 	Enqueue(&AsyncDestroyJob{
+		Headers:     sk.Headers,
 		Tenant:      sk.Tenant,
 		WaitSeconds: 15,
 		Model:       "application",

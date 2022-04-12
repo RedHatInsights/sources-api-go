@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
 )
 
@@ -39,6 +40,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
+				Headers:  service.ForwadableHeaders(c),
 				Tenant:   tenantId,
 				Identity: xrhid,
 				Model:    "source",
@@ -73,6 +75,7 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
+				Headers:  service.ForwadableHeaders(c),
 				Tenant:   tenantId,
 				Identity: xrhid,
 				Model:    "application",
