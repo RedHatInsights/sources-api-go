@@ -488,8 +488,15 @@ func (a *MockEndpointDao) Update(endpoint *m.Endpoint) error {
 	return util.NewErrNotFound("endpoint")
 }
 
-func (a *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {
-	panic("not implemented") // TODO: Implement
+func (endpointDao *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {
+	for i, e := range endpointDao.Endpoints {
+		if e.ID == *id {
+			endpointDao.Endpoints = append(endpointDao.Endpoints[:i], endpointDao.Endpoints[i+1:]...)
+
+			return &e, nil
+		}
+	}
+	return nil, util.NewErrNotFound("endpoint")
 }
 
 func (m *MockEndpointDao) Tenant() *int64 {

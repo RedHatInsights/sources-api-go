@@ -531,6 +531,51 @@ func TestEndpointEditBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+func TestEndpointDelete(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/endpoints/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := EndpointDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
+	}
+
+	// Check that endpoint doesn't exist.
+	c, rec = request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+
+	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+	err = notFoundEndpointGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestEndpointDeleteBadRequest(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
@@ -551,4 +596,26 @@ func TestEndpointDeleteBadRequest(t *testing.T) {
 	}
 
 	templates.BadRequestTest(t, rec)
+}
+
+func TestEndpointDeleteNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/endpoints/5789395389375",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("5789395389375")
+
+	notFoundEndpointDelete := ErrorHandlingContext(EndpointDelete)
+	err := notFoundEndpointDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
