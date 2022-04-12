@@ -15,7 +15,7 @@ import (
 type Authentication struct {
 	DbID      int64     `gorm:"primaryKey; column:id" json:"-"`
 	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"created_at" gorm:"-"`
+	CreatedAt time.Time `json:"created_at"`
 
 	Name        *string                `json:"name,omitempty"`
 	AuthType    string                 `gorm:"column:authtype" json:"authtype"`
