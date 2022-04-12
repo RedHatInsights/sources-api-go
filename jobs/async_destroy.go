@@ -5,10 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/kafka"
+	"github.com/RedHatInsights/sources-api-go/service"
 )
 
 type AsyncDestroyJob struct {
+	Headers     []kafka.Header
 	Tenant      int64
 	WaitSeconds int
 	Model       string
@@ -34,16 +36,13 @@ func (ad AsyncDestroyJob) Name() string {
 func (ad AsyncDestroyJob) Run() error {
 	switch strings.ToLower(ad.Model) {
 	case "source":
-		s := dao.GetSourceDao(&ad.Tenant)
-
-		_, err := s.Delete(&ad.Id)
+		err := service.DeleteCascade(&ad.Tenant, "Source", ad.Id, ad.Headers)
 		if err != nil {
 			return err
 		}
 
 	case "application":
-		a := dao.GetApplicationDao(&ad.Tenant)
-		_, err := a.Delete(&ad.Id)
+		err := service.DeleteCascade(&ad.Tenant, "Application", ad.Id, ad.Headers)
 		if err != nil {
 			return err
 		}
