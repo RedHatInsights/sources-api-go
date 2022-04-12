@@ -73,3 +73,41 @@ func TestDeleteEndpointNotExists(t *testing.T) {
 
 	DropSchema("delete")
 }
+
+// TestEndpointExists tests whether the function exists returns true when the given endpoint exists.
+func TestEndpointExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("exists")
+
+	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
+
+	got, err := endpointDao.Exists(fixtures.TestEndpointData[0].ID)
+	if err != nil {
+		t.Errorf(`unexpected error when checking that the endpoint exists: %s`, err)
+	}
+
+	if !got {
+		t.Errorf(`the endpoint does exist but the "Exist" function returns otherwise. Want "true", got "%t"`, got)
+	}
+
+	DropSchema("exists")
+}
+
+// TestEndpointNotExists tests whether the function exists returns false when the given endpoint does not exist.
+func TestEndpointNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("exists")
+
+	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
+
+	got, err := endpointDao.Exists(12345)
+	if err != nil {
+		t.Errorf(`unexpected error when checking that the endpoint exists: %s`, err)
+	}
+
+	if got {
+		t.Errorf(`the endpoint doesn't exist but the "Exist" function returns otherwise. Want "false", got "%t"`, got)
+	}
+
+	DropSchema("exists")
+}

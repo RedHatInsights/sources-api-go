@@ -532,7 +532,7 @@ func TestEndpointEditBadRequest(t *testing.T) {
 }
 
 func TestEndpointDelete(t *testing.T) {
-	t.Skip("TODO: fix the test")
+	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
@@ -601,7 +601,7 @@ func TestEndpointDeleteBadRequest(t *testing.T) {
 }
 
 func TestEndpointDeleteNotFound(t *testing.T) {
-	t.Skip("TODO: fix the test")
+	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,

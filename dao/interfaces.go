@@ -123,6 +123,8 @@ type EndpointDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error
 	ToEventJSON(resource util.Resource) ([]byte, error)
+	// Exists returns true if the endpoint exists.
+	Exists(endpointId int64) (bool, error)
 }
 
 type MetaDataDao interface {
