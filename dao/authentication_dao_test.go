@@ -647,11 +647,12 @@ func TestFindKeysByResourceTypeAndId(t *testing.T) {
 		}
 	}
 }
+
 // TestAuthenticationListOffsetAndLimit tests that List() in authentication dao returns correct count value
 // and correct count of returned objects
 func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	wantCount := int64(len(fixtures.TestAuthenticationData))
 	Vault = &mocks.MockVault{}

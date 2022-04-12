@@ -13,7 +13,7 @@ import (
 // returns correct count value and correct count of returned objects
 func TestMetaDataSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	metaDataDao := GetMetaDataDao()
 
@@ -49,14 +49,14 @@ func TestMetaDataSubcollectionListWithOffsetAndLimit(t *testing.T) {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
-	DoneWithFixtures("offset_limit")
+	DropSchema("offset_limit")
 }
 
 // TestMetaDataListOffsetAndLimit tests that List() in meta data dao returns correct count value
 // and correct count of returned objects
 func TestMetaDataListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	metaDataDao := GetMetaDataDao()
 	wantCount := int64(len(fixtures.TestMetaDataData))
@@ -86,5 +86,5 @@ func TestMetaDataListOffsetAndLimit(t *testing.T) {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
-	DoneWithFixtures("offset_limit")
+	DropSchema("offset_limit")
 }

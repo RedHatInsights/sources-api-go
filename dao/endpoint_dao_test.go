@@ -117,7 +117,7 @@ func TestEndpointNotExists(t *testing.T) {
 // and correct count of returned objects
 func TestEndpointListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
 	wantCount := int64(len(fixtures.TestEndpointData))
@@ -152,7 +152,7 @@ func TestEndpointListOffsetAndLimit(t *testing.T) {
 //  correct count value and correct count of returned objects
 func TestEndpointSubCollectionListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
 	sourceId := int64(1)

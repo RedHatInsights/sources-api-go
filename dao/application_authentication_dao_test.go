@@ -248,7 +248,7 @@ func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
 // and correct count of returned objects
 func TestApplicationAuthenticationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
 	wantCount := int64(len(fixtures.TestApplicationAuthenticationData))

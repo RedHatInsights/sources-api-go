@@ -12,7 +12,7 @@ import (
 // and correct count of returned objects
 func TestSourceTypeListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	sourceTypeDao := GetSourceTypeDao()
 	wantCount := int64(len(fixtures.TestSourceTypeData))
@@ -40,5 +40,5 @@ func TestSourceTypeListOffsetAndLimit(t *testing.T) {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
-	DoneWithFixtures("offset_limit")
+	DropSchema("offset_limit")
 }

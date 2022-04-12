@@ -674,7 +674,7 @@ func TestSourceNotExists(t *testing.T) {
 //  correct count value and correct count of returned objects
 func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	sourceTypeId := fixtures.TestSourceTypeData[0].Id
 
@@ -715,7 +715,7 @@ func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 // and correct count of returned objects
 func TestSourceListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	wantCount := int64(len(fixtures.TestSourceData))
 
@@ -749,7 +749,7 @@ func TestSourceListOffsetAndLimit(t *testing.T) {
 // and correct count of returned objects
 func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	wantCount := int64(len(fixtures.TestSourceData))
 
@@ -783,7 +783,7 @@ func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 //  correct count value and correct count of returned objects
 func TestSourceListForRhcConnectionWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	rhcConnectionId := fixtures.TestRhcConnectionData[0].ID
 

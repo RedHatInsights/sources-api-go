@@ -325,7 +325,7 @@ func TestApplicationNotExists(t *testing.T) {
 //  correct count value and correct count of returned objects
 func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
 	sourceId := fixtures.TestSourceData[0].ID
@@ -367,7 +367,7 @@ func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
 // and correct count of returned objects
 func TestApplicationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
 	wantCount := int64(len(fixtures.TestApplicationData))

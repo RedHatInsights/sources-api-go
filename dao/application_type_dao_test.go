@@ -13,7 +13,7 @@ import (
 //  correct count value and correct count of returned objects
 func TestApplicationTypeSubCollectionListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	appTypeDao := GetApplicationTypeDao(&fixtures.TestTenantData[0].Id)
 	sourceId := int64(1)
@@ -49,14 +49,14 @@ func TestApplicationTypeSubCollectionListOffsetAndLimit(t *testing.T) {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
-	DoneWithFixtures("offset_limit")
+	DropSchema("offset_limit")
 }
 
 // TestApplicationTypeListOffsetAndLimit tests that List() in application type dao returns correct
 // count value and correct count of returned objects
 func TestApplicationTypeListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("offset_limit")
+	SwitchSchema("offset_limit")
 
 	appTypeDao := GetApplicationTypeDao(&fixtures.TestTenantData[0].Id)
 	wantCount := int64(len(fixtures.TestApplicationTypeData))
@@ -84,5 +84,5 @@ func TestApplicationTypeListOffsetAndLimit(t *testing.T) {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
-	DoneWithFixtures("offset_limit")
+	DropSchema("offset_limit")
 }
