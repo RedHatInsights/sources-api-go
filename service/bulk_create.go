@@ -12,6 +12,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 /*
@@ -42,7 +43,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 		if err != nil {
 			return err
 		}
-		err = tx.Create(&output.Sources[0]).Error
+		err = tx.Omit(clause.Associations).Create(&output.Sources[0]).Error
 		if err != nil {
 			return err
 		}
@@ -51,7 +52,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 		if err != nil {
 			return err
 		}
-		err = tx.Create(&output.Applications).Error
+		err = tx.Omit(clause.Associations).Create(&output.Applications).Error
 		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
 			return err
 		}
