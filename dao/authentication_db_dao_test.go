@@ -1041,5 +1041,16 @@ func TestBulkDelete(t *testing.T) {
 		}
 	}
 
+	// Check that the deleted resources come with the related tenant. This is necessary since otherwise the events will
+	// not have the "tenant" key populated.
+	for _, auth := range deletedAuths {
+		want := fixtures.TestTenantData[0].ExternalTenant
+		got := auth.Tenant.ExternalTenant
+
+		if want != got {
+			t.Errorf(`the authentication doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
+		}
+	}
+
 	DropSchema("authentications_db")
 }

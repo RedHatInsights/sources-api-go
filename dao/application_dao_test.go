@@ -261,6 +261,24 @@ func TestApplicationDeleteCascade(t *testing.T) {
 		}
 	}
 
+	// Check that the deleted resources come with the related tenant. This is necessary since otherwise the events will
+	// not have the "tenant" key populated.
+	for _, applicationAuthentication := range deletedApplicationAuthentications {
+		want := fixtures.TestTenantData[0].ExternalTenant
+		got := applicationAuthentication.Tenant.ExternalTenant
+
+		if want != got {
+			t.Errorf(`the application authentication doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
+		}
+	}
+
+	want := fixtures.TestTenantData[0].ExternalTenant
+	got := deletedApplication.Tenant.ExternalTenant
+
+	if want != got {
+		t.Errorf(`the application doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
+	}
+
 	DropSchema("delete")
 }
 

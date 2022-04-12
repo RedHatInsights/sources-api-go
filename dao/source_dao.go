@@ -321,95 +321,125 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 	var rhcConnections []m.RhcConnection
 	var source *m.Source
 
+	// The different items are fetched with the "Tenant" table preloaded, so that all the objects are returned with the
+	// "external_tenant" column populated. This is required to be able to raise events with the "tenant" key populated.
+	//
+	// The "len(objects) != 0" check to delete the resources is necessary to avoid Gorm issuing the "cannot batch
+	// delete without a where condition" error, since there might be times when the resources don't have any related
+	// sub resources.
 	err := DB.
 		Debug().
 		Transaction(func(tx *gorm.DB) error {
-			// The "application_authentications" table does not have a foreign key with a "cascade delete" constraint,
-			// so we must take care of the application authentications manually. The query has to be manually written
-			// because Gorm doesn't seem to have anything  that works with "DELETE" and allows using "USING" for the
-			// query.
-			deleteAppAuthsQuery := `
-				DELETE FROM
-					"application_authentications" AS "appAuths"
-				USING
-					"applications" AS "apps"
-				WHERE
-					"appAuths"."application_id" = "apps"."id"
-				AND
-					"apps"."source_id" = ?
-				AND
-					"apps"."tenant_id" = ?
-				RETURNING "appAuths".*
-			`
-			// Delete the associated application authentications.
+			// Fetch and delete the application authentications.
 			err := tx.
-				Raw(deleteAppAuthsQuery, sourceId, s.TenantID).
-				Scan(&applicationAuthentications).
+				Model(&m.ApplicationAuthentication{}).
+				Preload("Tenant").
+				Joins(`INNER JOIN "applications" ON "application_authentications"."application_id" = "applications"."id"`).
+				Where(`"applications"."source_id" = ?`, sourceId).
+				Where(`"applications"."tenant_id" = ?`, s.TenantID).
+				Find(&applicationAuthentications).
 				Error
 
 			if err != nil {
 				return err
 			}
 
-			// Delete the associated applications.
+			if len(applicationAuthentications) != 0 {
+				err = tx.
+					Delete(&applicationAuthentications).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the applications.
 			err = tx.
-				Model(m.Application{}).
-				Clauses(clause.Returning{}).
+				Model(&m.Application{}).
+				Preload("Tenant").
 				Where("source_id = ?", sourceId).
 				Where("tenant_id = ?", s.TenantID).
-				Delete(&applications).
+				Find(&applications).
 				Error
 
 			if err != nil {
 				return err
 			}
 
-			// Delete the associated endpoints.
+			if len(applications) != 0 {
+				err = tx.
+					Delete(&applications).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the endpoints.
 			err = tx.
 				Model(m.Endpoint{}).
-				Clauses(clause.Returning{}).
+				Preload("Tenant").
 				Where("source_id = ?", sourceId).
 				Where("tenant_id = ?", s.TenantID).
-				Delete(&endpoints).
+				Find(&endpoints).
 				Error
 
 			if err != nil {
 				return err
 			}
 
-			// The foreign key and the "cascade on delete" in the join table takes care of deleting the related
-			// "source_rhc_connection" row. The query has to be manually written because Gorm doesn't seem to have anything
-			// that works with "DELETE" and allows using "USING" for the query.
-			query := `
-				DELETE FROM
-					"rhc_connections" AS "connections"
-				USING
-					"source_rhc_connections" AS "srcRhcConnections"
-				WHERE
-					"connections"."id" = "srcRhcConnections"."rhc_connection_id"
-				AND
-					"srcRhcConnections"."source_id" = ?
-				AND
-					"srcRhcConnections"."tenant_id" = ?
-				RETURNING "connections".*
-			`
+			if len(endpoints) != 0 {
+				err = tx.
+					Delete(&endpoints).
+					Error
 
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the rhcConnections.
 			err = tx.
-				Raw(query, sourceId, s.TenantID).
-				Scan(&rhcConnections).
+				Model(&m.RhcConnection{}).
+				Joins(`INNER JOIN "source_rhc_connections" ON "source_rhc_connections"."rhc_connection_id" = "rhc_connections"."id"`).
+				Where(`"source_rhc_connections"."source_id" = ?`, sourceId).
+				Where(`"source_rhc_connections"."tenant_id" = ?`, s.TenantID).
+				Find(&rhcConnections).
 				Error
 
 			if err != nil {
 				return err
 			}
 
-			// Delete the source itself.
+			if len(rhcConnections) != 0 {
+				err = tx.
+					Delete(&rhcConnections).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the source itself.
 			err = tx.
-				Clauses(clause.Returning{}).
+				Preload("Tenant").
 				Where("id = ?", sourceId).
 				Where("tenant_id = ?", s.TenantID).
-				Delete(&source).
+				Find(&source).
 				Error
+
+			if err != nil {
+				return err
+			}
+
+			if source != nil {
+				err = tx.
+					Delete(&source).
+					Error
+			}
 
 			return err
 		})

@@ -215,32 +215,55 @@ func (a *applicationDaoImpl) Unpause(id int64) error {
 
 func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
 	var applicationAuthentications []m.ApplicationAuthentication
-	var application m.Application
+	var application *m.Application
 
+	// The application authentications are fetched with the "Tenant" table preloaded, so that all the objects are
+	// returned with the "external_tenant" column populated. This is required to be able to raise events with the
+	// "tenant" key populated.
+	//
+	// The "len(objects) != 0" check to delete the resources is necessary to avoid Gorm issuing the "cannot batch
+	// delete without a where condition" error, since there might be times when the applications don't have any related
+	// application authentications.
 	err := DB.
 		Debug().
 		Transaction(func(tx *gorm.DB) error {
-			// Delete the associated application authentications.
+			// Fetch and delete the application authentications.
 			err := tx.
 				Model(m.ApplicationAuthentication{}).
-				Clauses(clause.Returning{}).
+				Preload("Tenant").
 				Where("application_id = ?", applicationId).
 				Where("tenant_id = ?", a.TenantID).
-				Delete(&applicationAuthentications).
+				Find(&applicationAuthentications).
 				Error
 
 			if err != nil {
 				return err
 			}
 
-			// Delete the application itself.
+			if len(applicationAuthentications) != 0 {
+				err = tx.
+					Delete(&applicationAuthentications).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the application itself.
 			err = tx.
 				Model(m.Application{}).
-				Clauses(clause.Returning{}).
+				Preload("Tenant").
 				Where("id = ?", applicationId).
 				Where("tenant_id = ?", a.TenantID).
-				Delete(&application).
+				Find(&application).
 				Error
+
+			if application != nil {
+				err = tx.
+					Delete(&application).
+					Error
+			}
 
 			return err
 		})
@@ -249,7 +272,7 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 		return nil, nil, err
 	}
 
-	return applicationAuthentications, &application, err
+	return applicationAuthentications, application, err
 }
 
 func (a *applicationDaoImpl) Exists(applicationId int64) (bool, error) {
