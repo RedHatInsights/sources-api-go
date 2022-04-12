@@ -82,7 +82,8 @@ func SendSuperKeyDeleteRequest(identity string, application *m.Application) erro
 	// grab the authentication required for hitting the superkey provider
 	superKey, err := getSuperKeyAuthentication(application)
 	if err != nil {
-		return err
+		l.Log.Warnf("SuperKey Authentication was nil - cleaning up incomplete superkey")
+		return nil
 	}
 
 	// parse out the existing data, we need to know the resource names to delete
