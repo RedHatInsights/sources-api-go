@@ -210,12 +210,12 @@ func EndpointDelete(c echo.Context) error {
 
 	c.Logger().Infof("Deleting Endpoint Id %v", id)
 
-	endpt, err := endpointDao.Delete(&id)
+	// Cascade delete the endpoint.
+	headers := service.ForwadableHeaders(c)
+	err = service.DeleteCascade(endpointDao.Tenant(), "Endpoint", id, headers)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
-
-	setEventStreamResource(c, endpt)
 
 	return c.NoContent(http.StatusNoContent)
 }

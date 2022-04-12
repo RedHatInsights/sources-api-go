@@ -476,3 +476,59 @@ func (add *authenticationDaoDbImpl) ToEventJSON(resource util.Resource) ([]byte,
 
 	return data, nil
 }
+
+func (add *authenticationDaoDbImpl) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
+	var authentications []m.Authentication
+
+	err := DB.
+		Debug().
+		Model(m.Authentication{}).
+		Where("resource_type = ?", resourceType).
+		Where("resource_id IN ?", resourceIds).
+		Find(&authentications).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return authentications, err
+}
+
+func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
+	// Collect the ids to be able to find all the authentication objects for them.
+	var authIds = make([]int64, len(authentications))
+	for i, auth := range authentications {
+		authIds[i] = auth.DbID
+	}
+
+	// The authentications are fetched with the "Tenant" table preloaded, so that all the objects are returned with the
+	// "external_tenant" column populated. This is required to be able to raise events with the "tenant" key populated.
+	//
+	// The "len(objects) != 0" check to delete the resources is necessary to avoid Gorm issuing the "cannot batch
+	// delete without a where condition" error. In theory this should not happen, since this function is expected to
+	// be called with a "len(authentications) != 0" slice, but just to be safe...
+	var dbAuths []m.Authentication
+	err := DB.
+		Debug().
+		Preload("Tenant").
+		Find(&dbAuths, authIds).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(dbAuths) != 0 {
+		err = DB.
+			Debug().
+			Delete(&dbAuths).
+			Error
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return dbAuths, nil
+}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -43,7 +44,8 @@ func createAuthenticationFixture(t *testing.T) {
 // if the minimum data is provided for an authentication.
 func TestAuthenticationDbCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
+
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
 	auth := setUpValidAuthentication()
@@ -54,14 +56,15 @@ func TestAuthenticationDbCreate(t *testing.T) {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestAuthenticationDbBulkCreate tests that the "BulkCreate" function does not present any problems at creating new
 // entities if the minimum data is provided for an authentication.
 func TestAuthenticationDbBulkCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
+
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
 	auth := setUpValidAuthentication()
@@ -71,13 +74,14 @@ func TestAuthenticationDbBulkCreate(t *testing.T) {
 		t.Errorf(`error creating the authentication: %s`, err)
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestAuthenticationDbList tests that the "list" operation returns the expected number of authentications.
 func TestAuthenticationDbList(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
+
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
 	// Create another authentication to see if the listing function also brings it back.
@@ -107,13 +111,13 @@ func TestAuthenticationDbList(t *testing.T) {
 		t.Errorf(`the fixture that was inserted did not come in the authentications list. Something went wrong.`)
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestAuthenticationDbGet tests that the "get" operation is able to fetch the expected authentication.
 func TestAuthenticationDbGetById(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
 	authFixture := setUpValidAuthentication()
@@ -138,13 +142,13 @@ func TestAuthenticationDbGetById(t *testing.T) {
 		t.Errorf(`wrong authentication fetched. Want "%s" authtype, got "%s"`, want, got)
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestAuthenticationDbUpdate tests that the "update" operation is able to properly update the authentication.
 func TestAuthenticationDbUpdate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
 	authFixture := setUpValidAuthentication()
@@ -179,13 +183,13 @@ func TestAuthenticationDbUpdate(t *testing.T) {
 		t.Errorf(`deleted the wrong authentication. Want authtype "%s", got "%s"`, want, got)
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestAuthenticationDbGet tests that the "delete" operation is able to delete the expected authentication.
 func TestAuthenticationDbDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
 	authFixture := setUpValidAuthentication()
@@ -217,14 +221,14 @@ func TestAuthenticationDbDelete(t *testing.T) {
 		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestAuthenticationDbGet tests the "delete" operation returns a "not found" error when trying to delete a
 // non-existing authentication.
 func TestAuthenticationDbDeleteNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 	_, err := dao.Delete("12345")
@@ -232,7 +236,7 @@ func TestAuthenticationDbDeleteNotFound(t *testing.T) {
 		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestTenantId is a trivial test which tests that a correct tenant ID is returned in the function.
@@ -251,7 +255,7 @@ func TestTenantId(t *testing.T) {
 // TestListForSource tests if "list for source" only lists the authentications of the related source, and no more.
 func TestListForSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&fixtures.TestTenantData[1].Id)
@@ -304,14 +308,14 @@ func TestListForSource(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestListForSourceNotFound tests if a not found error is returned when a nonexistent source is given to the function
 // under test.
 func TestListForSourceNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
 
@@ -326,14 +330,14 @@ func TestListForSourceNotFound(t *testing.T) {
 		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestListForApplication tests if "list for Application" only lists the authentications of the related application, and no
 // more.
 func TestListForApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&fixtures.TestTenantData[1].Id)
@@ -398,14 +402,14 @@ func TestListForApplication(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestListForApplicationNotFound tests if a not found error is returned when a nonexistent application is given to the
 // function under test.
 func TestListForApplicationNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
 
@@ -420,14 +424,14 @@ func TestListForApplicationNotFound(t *testing.T) {
 		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestListForApplicationAuthentication tests if "list for ApplicationAuthentication" only lists the authentications of
 // the related ApplicationAuthentication, and no more.
 func TestListForApplicationAuthentication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&fixtures.TestTenantData[1].Id)
@@ -507,14 +511,14 @@ func TestListForApplicationAuthentication(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestListForApplicationAuthenticationNotFound tests if a not found error is returned when a nonexistent application
 // authentication is given to the function under test.
 func TestListForApplicationAuthenticationNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
 
@@ -529,13 +533,13 @@ func TestListForApplicationAuthenticationNotFound(t *testing.T) {
 		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestListForEndpoint tests if "list for Endpoint" only lists the authentications of the related endpoint, and no more.
 func TestListForEndpoint(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&fixtures.TestTenantData[1].Id)
@@ -599,14 +603,14 @@ func TestListForEndpoint(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestListForEndpointNotFound tests if a not found error is returned when a nonexistent endpoint is given to the
 // function under test.
 func TestListForEndpointNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
 
@@ -621,13 +625,13 @@ func TestListForEndpointNotFound(t *testing.T) {
 		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestFetchAndUpdateBy tests if "FetchAndUpdateBy" updates the timestamps as expected.
 func TestFetchAndUpdateBy(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
 	authFixture := setUpValidAuthentication()
@@ -707,13 +711,13 @@ func TestFetchAndUpdateBy(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestToEventJSON tests if "FetchAndUpdateBy" returns the expected output for the given resource.
 func TestToEventJSON(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
 	authFixture := setUpValidAuthentication()
@@ -752,7 +756,7 @@ func TestToEventJSON(t *testing.T) {
 		t.Errorf(`"ToEventJSON" didn't return the expected result. Want "%s", got "%s"'`, want, got)
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
 }
 
 // TestBulkMessage tests if "BulkMessage" returns the expected output for the given resource. It simply calls the
@@ -760,7 +764,7 @@ func TestToEventJSON(t *testing.T) {
 // test also "BulkMessageFromSource".
 func TestBulkMessage(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("authentications_db")
+	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
 	authFixture := setUpValidAuthentication()
@@ -817,5 +821,236 @@ func TestBulkMessage(t *testing.T) {
 		t.Errorf(`"BulkMessage" didn't return the expected result. Want "%s", got "%s"'`, want, got)
 	}
 
-	DoneWithFixtures("authentications_db")
+	DropSchema("authentications_db")
+}
+
+// TestListIdsForResource tests that the function under test is able to fetch the authentications belonging to a
+// resource type and a resource id.
+func TestListIdsForResource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("authentications_db")
+
+	// In this test we want a clean "authentications" table.
+	err := DB.
+		Debug().
+		Model(model.Authentication{}).
+		Delete(fixtures.TestAuthenticationData).
+		Error
+	if err != nil {
+		t.Errorf(`could not delete the previously inserted fixtures`)
+	}
+
+	// Specify the resources we will be creating the authentications for.
+	resources := []struct {
+		ResourceType string
+		// We need a valid resource ID so that we are able to create a valid authentication, since there is a foreign
+		// key which prevents creating authentications with random resource ids.
+		ValidResourceId int64
+	}{
+		{
+			ResourceType:    "Source",
+			ValidResourceId: fixtures.TestSourceData[0].ID,
+		},
+		{
+			ResourceType:    "Application",
+			ValidResourceId: fixtures.TestApplicationData[0].ID,
+		},
+		{
+			ResourceType:    "Endpoint",
+			ValidResourceId: fixtures.TestEndpointData[0].ID,
+		},
+	}
+
+	// How many authentications will we be creating per resource?
+	maxAuthenticationsPerResource := 5
+
+	authsDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	// Create the authentications.
+	for _, resource := range resources {
+		var createdAuthentications = make([]model.Authentication, 0, maxAuthenticationsPerResource)
+		var resourceIds = make([]int64, 0, maxAuthenticationsPerResource)
+		for i := 0; i < maxAuthenticationsPerResource; i++ {
+			authFixture := setUpValidAuthentication()
+			authFixture.ResourceID = resource.ValidResourceId
+			authFixture.ResourceType = resource.ResourceType
+			// The fake username is used to make sure we are fetching the right authentication.
+			fakeUsername := fmt.Sprintf("%s-%d", resource.ResourceType, i)
+			authFixture.Username = &fakeUsername
+
+			err := authsDao.Create(authFixture)
+			if err != nil {
+				t.Errorf(`error creating the authentication: %s`, err)
+			}
+
+			resourceIds = append(resourceIds, authFixture.ResourceID)
+			createdAuthentications = append(createdAuthentications, *authFixture)
+		}
+
+		// Fetch the freshly created authentications.
+		fetchedAuthentications, err := authsDao.ListIdsForResource(resource.ResourceType, resourceIds)
+		if err != nil {
+			t.Errorf(`[resource_type: %s][resource_ids: %v] Error fetching the authentications: %s`, resource.ResourceType, resourceIds, err)
+		}
+
+		// We shouldn't have fetched more authentications than the ones we have inserted.
+		{
+			want := len(createdAuthentications)
+			got := len(fetchedAuthentications)
+			if want != got {
+				t.Errorf(`incorrect number of authentications fetched. Want "%d", got "%d"`, want, got)
+			}
+		}
+
+		// Perform some more checks to be sure that we fetched the correct authentications.
+		for i := 0; i < len(createdAuthentications); i++ {
+			{
+				want := createdAuthentications[i].DbID
+				got := fetchedAuthentications[i].DbID
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with id "%d", got "%d"`, want, got)
+				}
+			}
+			{
+				want := createdAuthentications[i].ResourceID
+				got := fetchedAuthentications[i].ResourceID
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with resource id "%d", got "%d"`, want, got)
+				}
+			}
+			{
+				want := createdAuthentications[i].ResourceType
+				got := fetchedAuthentications[i].ResourceType
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with resource type "%s", got "%s"`, want, got)
+				}
+			}
+			{
+				want := *createdAuthentications[i].Username
+				got := *fetchedAuthentications[i].Username
+
+				if want != got {
+					t.Errorf(`unexpected authentication fetched. Want authentication with username "%s", got "%s"`, want, got)
+				}
+			}
+		}
+	}
+
+	DropSchema("authentications_db")
+}
+
+// TestBulkDelete tests that the BulkDelete function only deletes the authentications that were passed. N
+// authentications are created for multiple resource types and the function tries to bulk delete them all.
+func TestBulkDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("authentications_db")
+
+	// Specify the resources we will be creating the authentications for.
+	resources := []struct {
+		ResourceType string
+		// We need a valid resource ID so that we are able to create a valid authentication, since there is a foreign
+		// key which prevents creating authentications with random resource ids.
+		ValidResourceId int64
+	}{
+		{
+			ResourceType:    "Source",
+			ValidResourceId: fixtures.TestSourceData[0].ID,
+		},
+		{
+			ResourceType:    "Application",
+			ValidResourceId: fixtures.TestApplicationData[0].ID,
+		},
+		{
+			ResourceType:    "Endpoint",
+			ValidResourceId: fixtures.TestEndpointData[0].ID,
+		},
+	}
+
+	// How many authentications will we be creating per resource?
+	maxAuthenticationsPerResource := 5
+
+	authsDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	// Store the authentications for later.
+	var createdAuthentications = make([]model.Authentication, 0, len(resources)*maxAuthenticationsPerResource)
+
+	// Create the authentications.
+	for _, resource := range resources {
+		for i := 0; i < maxAuthenticationsPerResource; i++ {
+			authFixture := setUpValidAuthentication()
+			authFixture.ResourceID = resource.ValidResourceId
+			authFixture.ResourceType = resource.ResourceType
+			// The fake username is used to make sure we are fetching the right authentication.
+			fakeUsername := fmt.Sprintf("%s-%d", resource.ResourceType, i)
+			authFixture.Username = &fakeUsername
+
+			err := authsDao.Create(authFixture)
+			if err != nil {
+				t.Errorf(`error creating the authentication: %s`, err)
+			}
+
+			createdAuthentications = append(createdAuthentications, *authFixture)
+		}
+	}
+
+	// Even though there are already other fixture authentications, we create another one to be perfectly sure that
+	// there are more authentications on the database, other than the ones we are going to delete.
+	authFixture := setUpValidAuthentication()
+	authFixture.ResourceID = fixtures.TestSourceData[1].ID
+	authFixture.ResourceType = "Source"
+
+	err := authsDao.Create(authFixture)
+	if err != nil {
+		t.Errorf(`error creating the authentication: %s`, err)
+	}
+
+	// Call the function under test.
+	deletedAuths, err := authsDao.BulkDelete(createdAuthentications)
+	if err != nil {
+		t.Errorf(`unexpected error when bulk deleting the authentications: %s`, err)
+	}
+
+	// Make sure that we haven't deleted more authentications than expected.
+	{
+		want := len(createdAuthentications)
+		got := len(deletedAuths)
+		if want != got {
+			t.Errorf(`the deleted authentications don't match the created ones. Want "%d" auths deleted, got "%d"`, want, got)
+		}
+	}
+
+	{
+		for i := 0; i < len(createdAuthentications); i++ {
+			{
+				want := createdAuthentications[i].DbID
+				got := deletedAuths[i].DbID
+				if want != got {
+					t.Errorf(`wrong authentication deleted. Want ID "%d", got ID "%d"`, want, got)
+				}
+			}
+			{
+				want := *createdAuthentications[i].Username
+				got := *deletedAuths[i].Username
+				if want != got {
+					t.Errorf(`wrong authentication deleted. Want username "%s", got username "%s"`, want, got)
+				}
+			}
+		}
+	}
+
+	// Check that the deleted resources come with the related tenant. This is necessary since otherwise the events will
+	// not have the "tenant" key populated.
+	for _, auth := range deletedAuths {
+		want := fixtures.TestTenantData[0].ExternalTenant
+		got := auth.Tenant.ExternalTenant
+
+		if want != got {
+			t.Errorf(`the authentication doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
+		}
+	}
+
+	DropSchema("authentications_db")
 }

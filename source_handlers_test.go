@@ -927,6 +927,8 @@ func TestSourceEditBadRequest(t *testing.T) {
 }
 
 func TestSourceDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
 		"/api/sources/v3.1/sources/100",

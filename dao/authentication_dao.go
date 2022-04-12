@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,12 @@ import (
 	"github.com/hashicorp/vault/api"
 	"github.com/sirupsen/logrus"
 )
+
+// vaultSecretPathFormat defines the format of the path that the secrets will be created with in Vault. The idea is
+// to have the following format:
+//
+// secret/data/<tenant_id>/<resourceType>_<resourceId>_<resourceUuid>
+const vaultSecretPathFormat = "secret/data/%d/%s_%d_%s"
 
 // GetAuthenticationDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
@@ -285,7 +292,7 @@ func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 
 	auth.ID = uuid.New().String()
 	auth.CreatedAt = time.Now()
-	path := fmt.Sprintf("secret/data/%d/%s_%v_%s", *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
+	path := fmt.Sprintf(vaultSecretPathFormat, *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 
 	data, err := auth.ToVaultMap()
 	if err != nil {
@@ -707,4 +714,69 @@ func (a *authenticationDaoImpl) AuthenticationsByResource(authentication *m.Auth
 	}
 
 	return resourceAuthentications, nil
+}
+
+func (a *authenticationDaoImpl) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
+	keys, err := a.listKeys()
+	if err != nil {
+		return nil, err
+	}
+
+	foundKeys, err := a.findKeysByResourceTypeAndId(keys, resourceType, resourceIds)
+	if err != nil {
+		return nil, err
+	}
+
+	var authentications = make([]m.Authentication, 0, len(foundKeys))
+	for _, key := range foundKeys {
+		auth, err := a.getKey(key)
+		if err != nil {
+			logging.Log.Errorf(`[authentication_id: %s] Authentication could not be fetched: %s`, key, err)
+			continue
+		}
+
+		authentications = append(authentications, *auth)
+	}
+
+	return authentications, nil
+}
+func (a *authenticationDaoImpl) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
+	var deletedAuthentications []m.Authentication
+	for _, auth := range authentications {
+		path := fmt.Sprintf("%s_%d_%s", auth.ResourceType, auth.ResourceID, auth.ID)
+
+		auth, err := a.Delete(path)
+		if err != nil {
+			logging.Log.Errorf(`[authentication_id: %s] Could not delete authentication: %s`, auth.ID, err)
+			continue
+		}
+
+		deletedAuthentications = append(deletedAuthentications, *auth)
+	}
+
+	return deletedAuthentications, nil
+}
+
+// findKeysByResourceTypeAndId returns the list of keys that matched the given resource type and resource ids. An error
+// is returned when the regexp used can't be compiled.
+func (a *authenticationDaoImpl) findKeysByResourceTypeAndId(keys []string, resourceType string, resourceIds []int64) ([]string, error) {
+	var foundKeys []string
+
+	for _, id := range resourceIds {
+		// Try to find "<ResourceType>_<ResourceId>_". The final underscore is important since otherwise if we were
+		// looking for a string that contains "Source_1" we could also match "Source_11".
+		targetRegex := fmt.Sprintf("%s_%d_", resourceType, id)
+		regex, err := regexp.Compile(targetRegex)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, key := range keys {
+			if regex.MatchString(key) {
+				foundKeys = append(foundKeys, key)
+			}
+		}
+	}
+
+	return foundKeys, nil
 }

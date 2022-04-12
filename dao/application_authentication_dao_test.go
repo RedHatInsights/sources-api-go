@@ -13,7 +13,7 @@ import (
 // TestDeleteApplicationAuthentication tests that an applicationAuthentication gets correctly deleted, and its data returned.
 func TestDeleteApplicationAuthentication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -43,14 +43,14 @@ func TestDeleteApplicationAuthentication(t *testing.T) {
 		}
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }
 
 // TestDeleteApplicationAuthenticationNotExists tests that when an applicationAuthentication that doesn't exist is tried to be deleted, an error is
 // returned.
 func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CreateFixtures("delete")
+	SwitchSchema("delete")
 
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestSourceData[0].TenantID)
 
@@ -61,5 +61,5 @@ func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
 	}
 
-	DoneWithFixtures("delete")
+	DropSchema("delete")
 }

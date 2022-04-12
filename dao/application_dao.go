@@ -7,6 +7,7 @@ import (
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -210,4 +211,83 @@ func (a *applicationDaoImpl) Unpause(id int64) error {
 		Error
 
 	return err
+}
+
+func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
+	var applicationAuthentications []m.ApplicationAuthentication
+	var application *m.Application
+
+	// The application authentications are fetched with the "Tenant" table preloaded, so that all the objects are
+	// returned with the "external_tenant" column populated. This is required to be able to raise events with the
+	// "tenant" key populated.
+	//
+	// The "len(objects) != 0" check to delete the resources is necessary to avoid Gorm issuing the "cannot batch
+	// delete without a where condition" error, since there might be times when the applications don't have any related
+	// application authentications.
+	err := DB.
+		Debug().
+		Transaction(func(tx *gorm.DB) error {
+			// Fetch and delete the application authentications.
+			err := tx.
+				Model(m.ApplicationAuthentication{}).
+				Preload("Tenant").
+				Where("application_id = ?", applicationId).
+				Where("tenant_id = ?", a.TenantID).
+				Find(&applicationAuthentications).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			if len(applicationAuthentications) != 0 {
+				err = tx.
+					Delete(&applicationAuthentications).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the application itself.
+			err = tx.
+				Model(m.Application{}).
+				Preload("Tenant").
+				Where("id = ?", applicationId).
+				Where("tenant_id = ?", a.TenantID).
+				Find(&application).
+				Error
+
+			if application != nil {
+				err = tx.
+					Delete(&application).
+					Error
+			}
+
+			return err
+		})
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return applicationAuthentications, application, err
+}
+
+func (a *applicationDaoImpl) Exists(applicationId int64) (bool, error) {
+	var applicationExists bool
+
+	err := DB.Model(&m.Application{}).
+		Select("1").
+		Where("id = ?", applicationId).
+		Where("tenant_id = ?", a.TenantID).
+		Scan(&applicationExists).
+		Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return applicationExists, nil
 }

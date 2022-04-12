@@ -186,14 +186,25 @@ func ApplicationDelete(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	c.Logger().Infof("Deleting Application Id %v", id)
-
-	app, err := applicationDB.Delete(&id)
+	// Check if the application exists before proceeding.
+	applicationExists, err := applicationDB.Exists(id)
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
-	setEventStreamResource(c, app)
+	if !applicationExists {
+		return util.NewErrNotFound("application")
+	}
+
+	c.Logger().Infof("Deleting Application Id %v", id)
+
+	// Cascade delete the application.
+	headers := service.ForwadableHeaders(c)
+	err = service.DeleteCascade(applicationDB.Tenant(), "Application", id, headers)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
 	return c.NoContent(http.StatusNoContent)
 }
 

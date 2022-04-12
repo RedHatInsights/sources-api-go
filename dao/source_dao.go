@@ -313,3 +313,157 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 
 	return err
 }
+
+func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error) {
+	var applicationAuthentications []m.ApplicationAuthentication
+	var applications []m.Application
+	var endpoints []m.Endpoint
+	var rhcConnections []m.RhcConnection
+	var source *m.Source
+
+	// The different items are fetched with the "Tenant" table preloaded, so that all the objects are returned with the
+	// "external_tenant" column populated. This is required to be able to raise events with the "tenant" key populated.
+	//
+	// The "len(objects) != 0" check to delete the resources is necessary to avoid Gorm issuing the "cannot batch
+	// delete without a where condition" error, since there might be times when the resources don't have any related
+	// sub resources.
+	err := DB.
+		Debug().
+		Transaction(func(tx *gorm.DB) error {
+			// Fetch and delete the application authentications.
+			err := tx.
+				Model(&m.ApplicationAuthentication{}).
+				Preload("Tenant").
+				Joins(`INNER JOIN "applications" ON "application_authentications"."application_id" = "applications"."id"`).
+				Where(`"applications"."source_id" = ?`, sourceId).
+				Where(`"applications"."tenant_id" = ?`, s.TenantID).
+				Find(&applicationAuthentications).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			if len(applicationAuthentications) != 0 {
+				err = tx.
+					Delete(&applicationAuthentications).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the applications.
+			err = tx.
+				Model(&m.Application{}).
+				Preload("Tenant").
+				Where("source_id = ?", sourceId).
+				Where("tenant_id = ?", s.TenantID).
+				Find(&applications).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			if len(applications) != 0 {
+				err = tx.
+					Delete(&applications).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the endpoints.
+			err = tx.
+				Model(m.Endpoint{}).
+				Preload("Tenant").
+				Where("source_id = ?", sourceId).
+				Where("tenant_id = ?", s.TenantID).
+				Find(&endpoints).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			if len(endpoints) != 0 {
+				err = tx.
+					Delete(&endpoints).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the rhcConnections.
+			err = tx.
+				Model(&m.RhcConnection{}).
+				Joins(`INNER JOIN "source_rhc_connections" ON "source_rhc_connections"."rhc_connection_id" = "rhc_connections"."id"`).
+				Where(`"source_rhc_connections"."source_id" = ?`, sourceId).
+				Where(`"source_rhc_connections"."tenant_id" = ?`, s.TenantID).
+				Find(&rhcConnections).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			if len(rhcConnections) != 0 {
+				err = tx.
+					Delete(&rhcConnections).
+					Error
+
+				if err != nil {
+					return err
+				}
+			}
+
+			// Fetch and delete the source itself.
+			err = tx.
+				Preload("Tenant").
+				Where("id = ?", sourceId).
+				Where("tenant_id = ?", s.TenantID).
+				Find(&source).
+				Error
+
+			if err != nil {
+				return err
+			}
+
+			if source != nil {
+				err = tx.
+					Delete(&source).
+					Error
+			}
+
+			return err
+		})
+
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+
+	return applicationAuthentications, applications, endpoints, rhcConnections, source, nil
+}
+
+func (s *sourceDaoImpl) Exists(sourceId int64) (bool, error) {
+	var sourceExists bool
+
+	err := DB.Model(&m.Source{}).
+		Select("1").
+		Where("id = ?", sourceId).
+		Where("tenant_id = ?", s.TenantID).
+		Scan(&sourceExists).
+		Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return sourceExists, nil
+}

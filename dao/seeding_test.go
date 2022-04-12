@@ -21,6 +21,9 @@ func getSeedFilesystemDir() string {
 
 func TestSeedingSourceTypes(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	CloseConnection()
+	ConnectToTestDB("seeding")
+	MigrateSchema()
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -157,4 +160,6 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 	if len(appmdata) != count {
 		t.Errorf("Seeding did not match values, got %v expected %v", len(appmdata), count)
 	}
+
+	DropSchema("seeding")
 }
