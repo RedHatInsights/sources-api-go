@@ -258,8 +258,11 @@ func (s *sourceDaoImpl) ListForRhcConnection(rhcConnectionId *int64, limit, offs
 
 	// Run the actual query.
 	err = query.Find(&sources).Error
+	if err != nil {
+		return nil, count, util.NewErrBadRequest(err)
+	}
 
-	return sources, count, err
+	return sources, count, nil
 }
 
 func (s *sourceDaoImpl) Pause(id int64) error {

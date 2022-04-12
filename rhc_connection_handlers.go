@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -27,12 +27,12 @@ func getDefaultRhcConnectionDao(c echo.Context) (dao.RhcConnectionDao, error) {
 func RhcConnectionList(c echo.Context) error {
 	filters, err := getFilters(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	limit, offset, err := getLimitAndOffset(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	rhcConnectionDao, err := getRhcConnectionDao(c)
@@ -58,7 +58,7 @@ func RhcConnectionGetById(c echo.Context) error {
 
 	rhcConnectionId, err := strconv.ParseInt(paramId, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid id provided ", "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	rhcConnectionDao, err := getRhcConnectionDao(c)
@@ -67,12 +67,8 @@ func RhcConnectionGetById(c echo.Context) error {
 	}
 
 	rhcConnection, err := rhcConnectionDao.GetById(&rhcConnectionId)
-
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	return c.JSON(http.StatusOK, rhcConnection.ToResponse())
@@ -86,7 +82,7 @@ func RhcConnectionCreate(c echo.Context) error {
 
 	err := service.ValidateRhcConnectionRequest(input)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %s", err.Error()))
 	}
 
 	rhcConnection := &model.RhcConnection{
@@ -115,7 +111,7 @@ func RhcConnectionUpdate(c echo.Context) error {
 
 	rhcConnectionId, err := strconv.ParseInt(paramId, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid id provided ", "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	input := &model.RhcConnectionUpdateRequest{}
@@ -130,10 +126,7 @@ func RhcConnectionUpdate(c echo.Context) error {
 
 	dbRhcConnection, err := rhcConnectionDao.GetById(&rhcConnectionId)
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	dbRhcConnection.UpdateFromRequest(input)
@@ -152,7 +145,7 @@ func RhcConnectionDelete(c echo.Context) error {
 
 	rhcConnectionId, err := strconv.ParseInt(paramId, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid id provided ", "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	rhcConnectionDao, err := getRhcConnectionDao(c)
@@ -176,17 +169,17 @@ func RhcConnectionSourcesList(c echo.Context) error {
 
 	rhcConnectionId, err := strconv.ParseInt(paramId, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc("invalid id provided ", "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	filters, err := getFilters(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	limit, offset, err := getLimitAndOffset(c)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	// Check if the given rhcConnection exists.
@@ -197,10 +190,7 @@ func RhcConnectionSourcesList(c echo.Context) error {
 
 	_, err = rhcConnectionDao.GetById(&rhcConnectionId)
 	if err != nil {
-		if errors.Is(err, util.ErrNotFoundEmpty) {
-			return err
-		}
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return err
 	}
 
 	sourceDao, err := getSourceDao(c)
