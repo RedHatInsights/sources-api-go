@@ -44,13 +44,13 @@ func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	// Run the actual query.
 	result, err := query.Rows()
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, util.NewErrBadRequest(err)
 	}
 
 	// We call next as otherwise "ScanRows" complains, but since we're going to map the results to an array of
@@ -259,9 +259,9 @@ func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int,
 
 	// Run the actual query.
 	err = query.Find(&rhcConnections).Error
-
 	if err != nil {
 		return nil, 0, util.NewErrBadRequest(err)
 	}
+
 	return rhcConnections, count, nil
 }

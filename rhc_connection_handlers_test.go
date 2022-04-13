@@ -7,9 +7,11 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -66,6 +68,32 @@ func TestRhcConnectionList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestRhcConnectionListInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	badRequestRhcConnectionList := ErrorHandlingContext(RhcConnectionList)
+	err := badRequestRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 func TestRhcConnectionGetById(t *testing.T) {
 	id := strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10)
 
@@ -109,14 +137,33 @@ func TestRhcConnectionGetByIdMissingIdParam(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	err := RhcConnectionGetById(c)
+	badRequestRhcConnectionGetById := ErrorHandlingContext(RhcConnectionGetById)
+	err := badRequestRhcConnectionGetById(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("want %d, got %d", http.StatusBadRequest, rec.Code)
+	templates.BadRequestTest(t, rec)
+}
+
+func TestRhcConnectionGetByIdInvalidParam(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections/xxx",
+		nil,
+		map[string]interface{}{},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestRhcConnectionGetById := ErrorHandlingContext(RhcConnectionGetById)
+	err := badRequestRhcConnectionGetById(c)
+	if err != nil {
+		t.Error(err)
 	}
+
+	templates.BadRequestTest(t, rec)
 }
 
 func TestRhcConnectionGetByIdNotFound(t *testing.T) {
@@ -140,9 +187,7 @@ func TestRhcConnectionGetByIdNotFound(t *testing.T) {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
 
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("want %d, got %d", http.StatusNotFound, rec.Code)
-	}
+	templates.NotFoundTest(t, rec)
 }
 
 func TestRhcConnectionCreate(t *testing.T) {
@@ -199,14 +244,77 @@ func TestRhcConnectionCreateInvalidInput(t *testing.T) {
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err = RhcConnectionCreate(c)
+	badRequestRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+	err = badRequestRhcConnectionCreate(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusBadRequest, rec.Code, rec.Body.String())
+	templates.BadRequestTest(t, rec)
+}
+
+func TestRhcConnectionCreateNotExistingSource(t *testing.T) {
+	requestBody := model.RhcConnectionCreateRequest{
+		Extra:       nil,
+		SourceIdRaw: "7238927389",
+		RhcId:       "67890",
 	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/rhc_connections",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	sourceNotFoundRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+	err = sourceNotFoundRhcConnectionCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestRhcConnectionCreateRelationExists(t *testing.T) {
+	requestBody := model.RhcConnectionCreateRequest{
+		Extra:       nil,
+		SourceIdRaw: fixtures.TestSourceData[0].ID,
+		RhcId:       "a",
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/rhc_connections",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+	err = badRequestRhcConnectionCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
 }
 
 func TestRhcConnectionUpdate(t *testing.T) {
@@ -245,6 +353,31 @@ func TestRhcConnectionUpdate(t *testing.T) {
 	}
 }
 
+func TestRhcConnectionUpdateInvalidParam(t *testing.T) {
+	invalidId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/rhc_connections/"+invalidId,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.SetParamNames("id")
+	c.SetParamValues(invalidId)
+
+	badRequestRhcConnectionUpdate := ErrorHandlingContext(RhcConnectionUpdate)
+	err := badRequestRhcConnectionUpdate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 func TestRhcConnectionUpdateNotFound(t *testing.T) {
 	invalidId := "12345"
 
@@ -267,9 +400,7 @@ func TestRhcConnectionUpdateNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusNotFound, rec.Code, rec.Body.String())
-	}
+	templates.NotFoundTest(t, rec)
 }
 
 func TestRhcConnectionDelete(t *testing.T) {
@@ -299,6 +430,32 @@ func TestRhcConnectionDelete(t *testing.T) {
 	}
 }
 
+func TestRhcConnectionDeleteInvalidParam(t *testing.T) {
+	invalidId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/rhc_connections/"+invalidId,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	c.SetParamNames("id")
+	c.SetParamValues(invalidId)
+
+	badRequestRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+	err := badRequestRhcConnectionDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 func TestRhcConnectionDeleteMissingParam(t *testing.T) {
 	id := strconv.FormatInt(fixtures.TestRhcConnectionData[2].ID, 10)
 
@@ -311,14 +468,13 @@ func TestRhcConnectionDeleteMissingParam(t *testing.T) {
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := RhcConnectionDelete(c)
+	badRequestRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+	err := badRequestRhcConnectionDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusBadRequest, rec.Code, rec.Body.String())
-	}
+	templates.BadRequestTest(t, rec)
 }
 
 func TestRhcConnectionDeleteNotFound(t *testing.T) {
@@ -343,12 +499,10 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusNotFound {
-		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusNotFound, rec.Code, rec.Body.String())
-	}
+	templates.NotFoundTest(t, rec)
 }
 
-func TestRhcConnectionGetRelatedSourcesTest(t *testing.T) {
+func TestRhcConnectionGetRelatedSources(t *testing.T) {
 	rhcConnectionId := "2"
 
 	c, rec := request.CreateTestContext(
@@ -407,4 +561,89 @@ func TestRhcConnectionGetRelatedSourcesTest(t *testing.T) {
 		}
 
 	}
+}
+
+func TestRhcConnectionGetRelatedSourcesInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	rhcConnectionId := "2"
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections/"+rhcConnectionId+"/sources",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(rhcConnectionId)
+
+	badRequestRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+	err := badRequestRhcConnectionSourcesList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestRhcConnectionGetRelatedSourcesInvalidParam(t *testing.T) {
+	rhcConnectionId := "sss"
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections/"+rhcConnectionId+"/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(rhcConnectionId)
+
+	badRequestRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+	err := badRequestRhcConnectionSourcesList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestRhcConnectionGetRelatedSourcesNotFound(t *testing.T) {
+	rhcConnectionId := "789678567"
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections/"+rhcConnectionId+"/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(rhcConnectionId)
+
+	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+	err := notFoundRhcConnectionSourcesList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
