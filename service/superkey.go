@@ -41,12 +41,19 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 		return err
 	}
 
+	var superKeyId string
+	if config.IsVaultOn() {
+		superKeyId = superKey.ID
+	} else {
+		superKeyId = strconv.FormatInt(superKey.DbID, 10)
+	}
+
 	req := superkey.CreateRequest{
 		TenantID:        application.Tenant.ExternalTenant,
 		SourceID:        strconv.FormatInt(application.SourceID, 10),
 		ApplicationID:   strconv.FormatInt(application.ID, 10),
 		ApplicationType: dao.Static.GetApplicationTypeName(application.ApplicationTypeID),
-		SuperKey:        superKey.ID,
+		SuperKey:        superKeyId,
 		Provider:        provider,
 		Extra:           extra,
 		SuperKeySteps:   steps,
@@ -96,9 +103,16 @@ func SendSuperKeyDeleteRequest(identity string, application *m.Application) erro
 		return nil
 	}
 
+	var superKeyId string
+	if config.IsVaultOn() {
+		superKeyId = superKey.ID
+	} else {
+		superKeyId = strconv.FormatInt(superKey.DbID, 10)
+	}
+
 	req := superkey.DestroyRequest{
 		TenantID:       application.Tenant.ExternalTenant,
-		SuperKey:       superKey.ID,
+		SuperKey:       superKeyId,
 		GUID:           skData.GUID,
 		Provider:       skData.Provider,
 		StepsCompleted: skData.StepsCompleted,
