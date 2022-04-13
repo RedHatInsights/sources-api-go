@@ -37,10 +37,14 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 		applicationIDs = append(applicationIDs, value.ID)
 	}
 
-	err := DB.Debug().
+	err := DB.
+		Debug().
 		Preload("Tenant").
 		Where("application_id IN ?", applicationIDs).
-		Find(&applicationAuthentications).Error
+		Where("tenant_id = ?", a.TenantID).
+		Find(&applicationAuthentications).
+		Error
+
 	if err != nil {
 		return nil, err
 	}
