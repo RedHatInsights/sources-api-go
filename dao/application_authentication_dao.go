@@ -3,6 +3,7 @@ package dao
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm/clause"
@@ -50,17 +51,35 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentications(authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
 	var applicationAuthentications []m.ApplicationAuthentication
 
-	authenticationUIDs := make([]string, 0)
-	for _, value := range authentications {
-		authenticationUIDs = append(authenticationUIDs, value.ID)
+	query := DB.
+		Debug().
+		Preload("Tenant")
+
+	if config.IsVaultOn() {
+		authUuids := make([]string, len(authentications))
+
+		for _, value := range authentications {
+			authUuids = append(authUuids, value.ID)
+		}
+
+		query.Where("authentication_uid IN ?", authUuids)
+	} else {
+		authIds := make([]int64, len(authentications))
+
+		for _, value := range authentications {
+			authIds = append(authIds, value.DbID)
+		}
+
+		query.Where("authentication_id IN ?", authIds)
 	}
 
-	result := DB.Debug().
-		Preload("Tenant").
-		Where("authentication_uid IN ?", authenticationUIDs).
-		Find(&applicationAuthentications)
-	if result.Error != nil {
-		return nil, result.Error
+	err := query.
+		Where("tenant_id = ?", a.TenantID).
+		Find(&applicationAuthentications).
+		Error
+
+	if err != nil {
+		return nil, err
 	}
 
 	return applicationAuthentications, nil
