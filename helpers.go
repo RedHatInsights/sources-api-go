@@ -71,7 +71,7 @@ func setEventStreamResource(c echo.Context, model m.Event) {
 	}
 
 	c.Set("event_type", m+event)
-	c.Set("resource", model.ToEvent())
+	c.Set("resource", model)
 }
 
 // getTenantFromEchoContext tries to extract the tenant from the echo context. If the "tenantID" is missing from the

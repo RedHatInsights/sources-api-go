@@ -462,7 +462,7 @@ func TestSetEventStreamResourceForApplication(t *testing.T) {
 			t.Error("ghosts infected the return")
 		}
 
-		if _, ok := c.Get("resource").(*m.ApplicationEvent); !ok {
+		if _, ok := c.Get("resource").(m.Event); !ok {
 			t.Errorf("expected ApplicationEvent type, got %v", reflect.TypeOf(c.Get("resource")))
 		}
 	}
