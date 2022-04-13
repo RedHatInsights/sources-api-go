@@ -14,5 +14,5 @@ type ApplicationAuthenticationResponse struct {
 
 	ApplicationID     string `json:"application_id"`
 	AuthenticationID  string `json:"authentication_id"`
-	AuthenticationUID string `json:"authentication_uid"`
+	AuthenticationUID string `json:"-"`
 }

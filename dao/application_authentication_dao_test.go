@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -62,4 +63,183 @@ func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
 	}
 
 	DropSchema("delete")
+}
+
+// TestApplicationAuthenticationsByApplicationsDatabase tests that when using a database datastore, the function under
+// test only fetches the application authentications related to the given list of applications.
+func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("appauthfind")
+
+	// Get all the DAOs we are going to work with.
+	authDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	appDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	// Maximum of resources to create.
+	maxCreatedResources := 5
+
+	// Store the resources for later.
+	var createdApps = make([]model.Application, 0, maxCreatedResources)
+	var createdAppAuths = make([]model.ApplicationAuthentication, 0, maxCreatedResources)
+	for i := 0; i < maxCreatedResources; i++ {
+		// Create the authentication.
+		auth := setUpValidAuthentication()
+		auth.ResourceID = fixtures.TestApplicationData[0].ID
+		auth.ResourceType = "Application"
+
+		err := authDao.Create(auth)
+		if err != nil {
+			t.Errorf(`could not create fixture authentication: %s`, err)
+		}
+
+		// Create the application.
+		app := model.Application{
+			ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
+			SourceID:          fixtures.TestSourceData[0].ID,
+			TenantID:          fixtures.TestTenantData[0].Id,
+		}
+
+		err = appDao.Create(&app)
+		if err != nil {
+			t.Errorf(`could not create fixture application: %s`, err)
+		}
+
+		createdApps = append(createdApps, app)
+
+		// Create the application authentication.
+		appAuth := model.ApplicationAuthentication{
+			ApplicationID:    app.ID,
+			AuthenticationID: auth.DbID,
+			TenantID:         fixtures.TestTenantData[0].Id,
+		}
+
+		err = appAuthDao.Create(&appAuth)
+		if err != nil {
+			t.Errorf(`could not create fixture application authentication: %s`, err)
+		}
+
+		createdAppAuths = append(createdAppAuths, appAuth)
+	}
+
+	// Call the function under test.
+	dbAppAuths, err := appAuthDao.ApplicationAuthenticationsByResource("Source", createdApps, []model.Authentication{})
+	if err != nil {
+		t.Errorf(`unexpected error when fetching the application authentications: %s`, err)
+	}
+
+	// Check that we fetched the correct amount of application authentications.
+	{
+		want := maxCreatedResources
+		got := len(dbAppAuths)
+
+		if want != got {
+			t.Errorf(`incorrect amount of application authentications fetched. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	// Check that we fetched the correct application authentications.
+	for i := 0; i < maxCreatedResources; i++ {
+		{
+			want := createdAppAuths[i].ID
+			got := dbAppAuths[i].ID
+
+			if want != got {
+				t.Errorf(`incorrect application authentication fetched. Want application authentication with id "%d", got "%d"`, want, got)
+			}
+		}
+		{
+			want := createdApps[i].ID
+			got := dbAppAuths[i].ApplicationID
+
+			if want != got {
+				t.Errorf(`incorrect application authentication fetched. Want application authentication with application id "%d", got "%d"`, want, got)
+			}
+		}
+	}
+
+	DropSchema("appauthfind")
+}
+
+// TestApplicationAuthenticationsByAuthenticationsDatabase tests that when using a database datastore, the function under
+// test only fetches the application authentications related to the given list of authentications.
+func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("appauthfind")
+
+	// Get all the DAOs we are going to work with.
+	authDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	// Maximum of authentications to create.
+	maxCreatedAuths := 5
+
+	// Store both the authentications and the application authentications for later.
+	var createdAuths = make([]model.Authentication, 0, maxCreatedAuths)
+	var createdAppAuths = make([]model.ApplicationAuthentication, 0, maxCreatedAuths)
+	for i := 0; i < maxCreatedAuths; i++ {
+		// Create the authentication.
+		auth := setUpValidAuthentication()
+		auth.ResourceID = fixtures.TestApplicationData[0].ID
+		auth.ResourceType = "Application"
+
+		err := authDao.Create(auth)
+		if err != nil {
+			t.Errorf(`could not create fixture authentication: %s`, err)
+		}
+
+		createdAuths = append(createdAuths, *auth)
+
+		// Create the application authentication.
+		appAuth := model.ApplicationAuthentication{
+			ApplicationID:    fixtures.TestApplicationData[0].ID,
+			AuthenticationID: auth.DbID,
+			TenantID:         fixtures.TestTenantData[0].Id,
+		}
+
+		err = appAuthDao.Create(&appAuth)
+		if err != nil {
+			t.Errorf(`could not create fixture application authentication: %s`, err)
+		}
+
+		createdAppAuths = append(createdAppAuths, appAuth)
+	}
+
+	// Call the function under test.
+	dbAppAuths, err := appAuthDao.ApplicationAuthenticationsByResource("NotASource", []model.Application{}, createdAuths)
+	if err != nil {
+		t.Errorf(`unexpected error when fetching the application authentications: %s`, err)
+	}
+
+	// Check that we fetched the correct amount of application authentications.
+	{
+		want := maxCreatedAuths
+		got := len(dbAppAuths)
+
+		if want != got {
+			t.Errorf(`incorrect amount of application authentications fetched. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	// Check that we fetched the correct application authentications.
+	for i := 0; i < maxCreatedAuths; i++ {
+		{
+			want := createdAppAuths[i].ID
+			got := dbAppAuths[i].ID
+
+			if want != got {
+				t.Errorf(`incorrect application authentication fetched. Want application authentication with id "%d", got "%d"`, want, got)
+			}
+		}
+		{
+			want := createdAuths[i].DbID
+			got := dbAppAuths[i].AuthenticationID
+
+			if want != got {
+				t.Errorf(`incorrect application authentication fetched. Want application authentication with authentication id "%d", got "%d"`, want, got)
+			}
+		}
+	}
+
+	DropSchema("appauthfind")
 }
