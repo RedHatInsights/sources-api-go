@@ -652,8 +652,8 @@ type Application {
 type Authentication {
   id: ID!
 
-  authtype: String!
-  username: String!
+  authtype: String
+  username: String
   availability_status: String
   availability_status_error: String
   resource_type: String!
@@ -1095,14 +1095,11 @@ func (ec *executionContext) _Authentication_authtype(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Authentication_username(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
@@ -1130,14 +1127,11 @@ func (ec *executionContext) _Authentication_username(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Authentication_availability_status(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
@@ -3889,9 +3883,6 @@ func (ec *executionContext) _Authentication(ctx context.Context, sel ast.Selecti
 
 			out.Values[i] = innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "username":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Authentication_username(ctx, field, obj)
@@ -3899,9 +3890,6 @@ func (ec *executionContext) _Authentication(ctx context.Context, sel ast.Selecti
 
 			out.Values[i] = innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "availability_status":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Authentication_availability_status(ctx, field, obj)
@@ -5167,27 +5155,6 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
-}
-
-func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := graphql.MarshalString(*v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {

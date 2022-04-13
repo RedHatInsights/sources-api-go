@@ -96,8 +96,8 @@ type Application {
 type Authentication {
   id: ID!
 
-  authtype: String!
-  username: String!
+  authtype: String
+  username: String
   availability_status: String
   availability_status_error: String
   resource_type: String!
