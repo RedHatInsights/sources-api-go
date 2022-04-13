@@ -12,6 +12,7 @@ import (
 
 var migrationsCollection = []*gormigrate.Migration{
 	InitialSchema(),
+	SourceTypesAddCategoryColumn(),
 }
 
 // redisLockKey is the key which will be used for the Redis lock when performing the migrations.

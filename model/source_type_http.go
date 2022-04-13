@@ -10,6 +10,7 @@ type SourceTypeResponse struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 
+	Category    string         `json:"category"`
 	Name        string         `json:"name"`
 	ProductName string         `json:"product_name"`
 	Vendor      string         `json:"vendor"`
