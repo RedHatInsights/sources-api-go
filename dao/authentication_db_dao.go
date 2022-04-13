@@ -378,6 +378,7 @@ func (add *authenticationDaoDbImpl) BulkCreate(auth *m.Authentication) error {
 func (add *authenticationDaoDbImpl) Update(authentication *m.Authentication) error {
 	return DB.
 		Debug().
+		Where("tenant_id = ?", add.TenantID).
 		Updates(authentication).
 		Error
 }
@@ -398,6 +399,7 @@ func (add *authenticationDaoDbImpl) Delete(id string) (*m.Authentication, error)
 
 	err = DB.
 		Debug().
+		Where("tenant_id = ?", add.TenantID).
 		Delete(authentication).
 		Error
 
@@ -485,6 +487,7 @@ func (add *authenticationDaoDbImpl) ListIdsForResource(resourceType string, reso
 		Model(m.Authentication{}).
 		Where("resource_type = ?", resourceType).
 		Where("resource_id IN ?", resourceIds).
+		Where("tenant_id = ?", add.TenantID).
 		Find(&authentications).
 		Error
 
@@ -512,7 +515,9 @@ func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authenticatio
 	err := DB.
 		Debug().
 		Preload("Tenant").
-		Find(&dbAuths, authIds).
+		Where("id IN ?", authIds).
+		Where("tenant_id = ?", add.TenantID).
+		Find(&dbAuths).
 		Error
 
 	if err != nil {
@@ -522,6 +527,7 @@ func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authenticatio
 	if len(dbAuths) != 0 {
 		err = DB.
 			Debug().
+			Where("tenant_id = ?", add.TenantID).
 			Delete(&dbAuths).
 			Error
 

@@ -208,6 +208,16 @@ func EndpointDelete(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	// Check if the endpoint exists before proceeding.
+	endpointExists, err := endpointDao.Exists(id)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	if !endpointExists {
+		return util.NewErrNotFound("endpoint")
+	}
+
 	c.Logger().Infof("Deleting Endpoint Id %v", id)
 
 	// Cascade delete the endpoint.

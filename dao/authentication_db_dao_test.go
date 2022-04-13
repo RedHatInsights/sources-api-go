@@ -1054,3 +1054,63 @@ func TestBulkDelete(t *testing.T) {
 
 	DropSchema("authentications_db")
 }
+
+// TestBulkDeleteRegression is a regression test for RHCLOUD-18907. Essentially, we were using Gorm's
+// "Find(model, idSlice)" nicety, which automatically adds a "WHERE id IN ?" clause to the query. The gotcha was that
+// if the slice is empty, Gorm just issues a regular "SELECT * FROM" without a "WHERE" clause, making it select the
+// entire table. And since we were selecting the auths to be deleted, that behaviour is an issue.
+//
+// The test checks that in the case of receiving an empty slice, no authentications are deleted.
+func TestBulkDeleteRegression(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("authentications_db")
+
+	// How many authentications will we be creating per resource?
+	maxAuthenticationsPerResource := 5
+
+	authsDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	for i := 0; i < maxAuthenticationsPerResource; i++ {
+		authFixture := setUpValidAuthentication()
+		authFixture.ResourceID = fixtures.TestSourceData[1].ID
+		authFixture.ResourceType = "Source"
+		// The fake username is used to make sure we are fetching the right authentication.
+		fakeUsername := fmt.Sprintf("%s-%d", "Source", i)
+		authFixture.Username = &fakeUsername
+
+		err := authsDao.Create(authFixture)
+		if err != nil {
+			t.Errorf(`error creating the authentication: %s`, err)
+		}
+	}
+
+	// Even though there are already other fixture authentications, we create another one to be perfectly sure that
+	// there are more authentications on the database, other than the ones we are going to delete.
+	authFixture := setUpValidAuthentication()
+	authFixture.ResourceID = fixtures.TestSourceData[2].ID
+	authFixture.ResourceType = "Source"
+
+	err := authsDao.Create(authFixture)
+	if err != nil {
+		t.Errorf(`error creating the authentication: %s`, err)
+	}
+
+	var emptySlice = make([]model.Authentication, 0)
+
+	// Call the function under test.
+	deletedAuths, err := authsDao.BulkDelete(emptySlice)
+	if err != nil {
+		t.Errorf(`unexpected error when bulk deleting the authentications: %s`, err)
+	}
+
+	// Make sure that we haven't deleted more authentications than expected.
+	{
+		want := 0
+		got := len(deletedAuths)
+		if want != got {
+			t.Errorf(`there shouldn't be any deleted authentications. Want "%d" auths deleted, got "%d"`, want, got)
+		}
+	}
+
+	DropSchema("authentications_db")
+}

@@ -566,6 +566,10 @@ func (m *MockEndpointDao) SourceHasEndpoints(sourceId int64) bool {
 	return true
 }
 
+func (m *MockEndpointDao) Exists(endpointId int64) (bool, error) {
+	return true, nil
+}
+
 func (m *MockEndpointDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
 	return nil, nil
 }
