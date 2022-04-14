@@ -31,15 +31,20 @@ var (
 	notificationMessageVersion = "v1.1.0"
 )
 
+// notificationPayload and notificationMetadata are empty and
+// they are used for proper formatting of final
+// notification message JSON
+// this struct could be extended if we need to pass
+// more information to notification message
 type notificationPayload struct {
+}
+
+type notificationMetadata struct {
 }
 
 type notificationEvent struct {
 	Metadata string `json:"metadata"`
 	Payload  string `json:"payload"`
-}
-
-type notificationMetadata struct {
 }
 
 type notificationRecipients struct {
