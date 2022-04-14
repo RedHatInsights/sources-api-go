@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"io"
 	"net/http"
 	"strconv"
@@ -11,12 +10,12 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
-
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"

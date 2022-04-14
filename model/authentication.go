@@ -179,9 +179,14 @@ func (auth *Authentication) Path() string {
 }
 
 func (auth *Authentication) ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo {
+	availabilityStatus := ""
+	if auth.AvailabilityStatus != nil {
+		availabilityStatus = *auth.AvailabilityStatus
+	}
+
 	return &EmailNotificationInfo{
 		ResourceDisplayName:        "Authentication",
-		CurrentAvailabilityStatus:  auth.AvailabilityStatus,
+		CurrentAvailabilityStatus:  availabilityStatus,
 		PreviousAvailabilityStatus: previousStatus,
 		SourceName:                 auth.Source.Name,
 		SourceID:                   strconv.FormatInt(auth.SourceID, 10),

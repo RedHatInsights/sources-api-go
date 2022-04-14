@@ -65,10 +65,10 @@ func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, r
 		return resource.AvailabilityStatus, err
 	case "Authentication":
 		resource, err := GetAuthenticationDao(&tenantID).GetById(resourceID)
-		if err != nil {
+		if err != nil || resource.AvailabilityStatus == nil {
 			return "", err
 		}
-		return resource.AvailabilityStatus, err
+		return *resource.AvailabilityStatus, err
 	default:
 		return "", fmt.Errorf("invalid resource_type (%s) to get DAO instance", resourceType)
 	}

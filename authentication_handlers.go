@@ -139,7 +139,10 @@ func AuthenticationEdit(c echo.Context) error {
 		return err
 	}
 
-	previousStatus := auth.AvailabilityStatus
+	previousStatus := ""
+	if auth.AvailabilityStatus != nil {
+		previousStatus = *auth.AvailabilityStatus
+	}
 	err = auth.UpdateFromRequest(updateRequest)
 	if err != nil {
 		return util.NewErrBadRequest(`invalid JSON given in "extra" field`)

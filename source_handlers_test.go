@@ -830,7 +830,7 @@ func TestSourceEdit(t *testing.T) {
 	newSourceName := "New source name"
 	req := m.SourceEditRequest{
 		Name:               util.StringRef(newSourceName),
-		AvailabilityStatus: util.StringRef("available"),
+		AvailabilityStatus: util.StringRef("unavailable"),
 	}
 
 	body, _ := json.Marshal(req)
