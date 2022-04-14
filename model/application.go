@@ -112,7 +112,7 @@ func (app *Application) UpdateFromRequest(req *ApplicationEditRequest) {
 	}
 }
 
-func (app *Application) ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo {
+func (app *Application) ToEmail(previousStatus string) *EmailNotificationInfo {
 	return &EmailNotificationInfo{
 		SourceID:                   strconv.FormatInt(app.SourceID, 10),
 		SourceName:                 app.Source.Name,

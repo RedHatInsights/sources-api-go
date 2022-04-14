@@ -107,7 +107,7 @@ func (src *Source) IsSuperkey() bool {
 	return src.AppCreationWorkflow == AccountAuth
 }
 
-func (src *Source) ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo {
+func (src *Source) ToEmail(previousStatus string) *EmailNotificationInfo {
 	return &EmailNotificationInfo{
 		SourceName:                 src.Name,
 		SourceID:                   strconv.FormatInt(src.ID, 10),

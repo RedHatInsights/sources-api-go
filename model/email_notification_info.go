@@ -1,7 +1,7 @@
 package model
 
-type EmailNotificationInfoInterface interface {
-	ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo
+type EmailNotification interface {
+	ToEmail(previousStatus string) *EmailNotificationInfo
 }
 
 type EmailNotificationInfo struct {

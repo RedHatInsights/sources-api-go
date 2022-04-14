@@ -178,7 +178,7 @@ func (auth *Authentication) Path() string {
 	return fmt.Sprintf("secret/data/%d/%s_%v_%s", auth.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 }
 
-func (auth *Authentication) ToEmailNotificationInfo(previousStatus string) *EmailNotificationInfo {
+func (auth *Authentication) ToEmail(previousStatus string) *EmailNotificationInfo {
 	availabilityStatus := ""
 	if auth.AvailabilityStatus != nil {
 		availabilityStatus = *auth.AvailabilityStatus

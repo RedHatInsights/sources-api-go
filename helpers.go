@@ -50,8 +50,8 @@ func getLimitAndOffset(c echo.Context) (int, int, error) {
 	return limit, offset, nil
 }
 
-func setNotificationForAvailabilityStatus(c echo.Context, previousStatus string, resource m.EmailNotificationInfoInterface) {
-	c.Set("emailNotificationInfo", resource.ToEmailNotificationInfo(previousStatus))
+func setNotificationForAvailabilityStatus(c echo.Context, previousStatus string, resource m.EmailNotification) {
+	c.Set("emailNotificationInfo", resource.ToEmail(previousStatus))
 }
 
 func setEventStreamResource(c echo.Context, model m.Event) {
