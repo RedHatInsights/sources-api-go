@@ -108,18 +108,3 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(a
 
 	return nil
 }
-
-func EmailNotificationInfoFromResource(resource interface{}, previousStatus string) *m.EmailNotificationInfo {
-	switch record := resource.(type) {
-	case *m.Source:
-		return record.ToEmail(previousStatus)
-	case *m.Application:
-		return record.ToEmail(previousStatus)
-	case *m.Endpoint:
-		return record.ToEmail(previousStatus)
-	case *m.Authentication:
-		return record.ToEmail(previousStatus)
-	default:
-		return nil
-	}
-}

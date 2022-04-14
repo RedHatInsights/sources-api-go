@@ -132,9 +132,14 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}
 
 	if previousStatus != statusMessage.Status {
-		emailInfo := service.EmailNotificationInfoFromResource(resultRecord, previousStatus)
+
+		emailInfo, ok := resultRecord.(m.EmailNotification)
+		if !ok {
+			l.Log.Errorf("error in type assert of %v", resultRecord)
+		}
+
 		if emailInfo != nil {
-			err = service.NotificationProducer.EmitAvailabilityStatusNotification(accountNumber, emailInfo)
+			err = service.NotificationProducer.EmitAvailabilityStatusNotification(accountNumber, emailInfo.ToEmail(previousStatus))
 			if err != nil {
 				l.Log.Errorf("unable to emit notification: %v", err)
 			}
