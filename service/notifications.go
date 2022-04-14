@@ -73,19 +73,19 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(a
 
 	context, err := json.Marshal(emailNotificationInfo)
 	if err != nil {
-		l.Log.Warnf("error in marshalling context ")
+		l.Log.Warnf(`error when marshalling the email notification information: %s`, err)
 		return err
 	}
 
 	payload, err := json.Marshal(&notificationPayload{})
 	if err != nil {
-		l.Log.Warnf("error in marshalling payload ")
+		l.Log.Warnf(`error when marshalling the email notification payload: %s`, err)
 		return err
 	}
 
 	metadata, err := json.Marshal(&notificationMetadata{})
 	if err != nil {
-		l.Log.Warnf("error in marshalling payload ")
+		l.Log.Warnf(`error when marshalling the email notification metadata: %s`, err)
 		return err
 	}
 
@@ -105,7 +105,7 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(a
 	})
 
 	if err != nil {
-		l.Log.Warnf("Failed to add struct value as json to kafka message")
+		l.Log.Warnf("Failed to add struct value as json to kafka message: %s", err.Error())
 		return err
 	}
 
