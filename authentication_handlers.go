@@ -112,6 +112,12 @@ func AuthenticationCreate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	accountNumber, err := getAccountNumberFromEchoContext(c)
+	if err != nil {
+		c.Logger().Warn(err)
+	}
+
+	auth.Tenant = m.Tenant{Id: auth.TenantID, ExternalTenant: accountNumber}
 	setEventStreamResource(c, auth)
 	return c.JSON(http.StatusCreated, auth.ToResponse())
 }

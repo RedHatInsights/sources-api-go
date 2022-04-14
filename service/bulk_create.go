@@ -30,7 +30,7 @@ import (
 	3. Saving the Authentications
 	4. Saving the ApplicationAuthentications if necessary
 */
-func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput, error) {
+func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant) (*m.BulkCreateOutput, error) {
 	// the output from this request.
 	var output m.BulkCreateOutput
 
@@ -39,7 +39,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 		var err error
 
 		// parse the sources, then save them in the transaction.
-		output.Sources, err = parseSources(req.Sources, tenantID)
+		output.Sources, err = parseSources(req.Sources, tenant)
 		if err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 			return err
 		}
 
-		output.Applications, err = parseApplications(req.Applications, &output, tenantID)
+		output.Applications, err = parseApplications(req.Applications, &output, tenant)
 		if err != nil {
 			return err
 		}
@@ -57,7 +57,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 			return err
 		}
 
-		output.Endpoints, err = parseEndpoints(req.Endpoints, &output, tenantID)
+		output.Endpoints, err = parseEndpoints(req.Endpoints, &output, tenant)
 		if err != nil {
 			return err
 		}
@@ -67,13 +67,13 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 		}
 
 		// link up the authentications to their polymorphic relations.
-		output.Authentications, err = linkUpAuthentications(req, &output, tenantID)
+		output.Authentications, err = linkUpAuthentications(req, &output, tenant)
 		if err != nil {
 			return err
 		}
 
 		for i := 0; i < len(output.Authentications); i++ {
-			err = dao.GetAuthenticationDao(tenantID).BulkCreate(&output.Authentications[i])
+			err = dao.GetAuthenticationDao(&tenant.Id).BulkCreate(&output.Authentications[i])
 			if err != nil {
 				return err
 			}
@@ -84,7 +84,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 					// VaultPath:         output.Authentications[i].Path(),
 					ApplicationID:    output.Authentications[i].ResourceID,
 					AuthenticationID: output.Authentications[i].DbID,
-					TenantID:         *tenantID,
+					TenantID:         tenant.Id,
 				})
 			}
 		}
@@ -100,24 +100,42 @@ func BulkAssembly(req m.BulkCreateRequest, tenantID *int64) (*m.BulkCreateOutput
 	return &output, err
 }
 
-func parseSources(reqSources []m.BulkCreateSource, tenantID *int64) ([]m.Source, error) {
+func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant) ([]m.Source, error) {
 	sources := make([]m.Source, len(reqSources))
 
 	for i, source := range reqSources {
 		s := m.Source{}
+		var sourceType *m.SourceType
+		var err error
 
-		// look up the source type dynamically....or set it by ID later
-		sourceType, err := dao.GetSourceTypeDao().GetByName(source.SourceTypeName)
-		if err != nil {
-			return nil, fmt.Errorf("invalid source_type_name for lookup: %v", source.SourceTypeName)
+		switch {
+		case source.SourceTypeIDRaw != nil:
+			// look up by id if an id was specified
+			id, err := util.InterfaceToInt64(source.SourceTypeIDRaw)
+			if err != nil {
+				return nil, err
+			}
+
+			sourceType, err = dao.GetSourceTypeDao().GetById(&id)
+			if err != nil {
+				return nil, err
+			}
+
+		case source.SourceTypeName != "":
+			// look up the source type dynamically....or set it by ID later
+			sourceType, err = dao.GetSourceTypeDao().GetByName(source.SourceTypeName)
+			if err != nil {
+				return nil, fmt.Errorf("invalid source_type_name for lookup: %v", source.SourceTypeName)
+			}
+
+			source.SourceTypeIDRaw = sourceType.Id
 		}
 
 		// set up the source type + id for validation
 		s.SourceType = *sourceType
-		source.SourceCreateRequest.SourceTypeIDRaw = sourceType.Id
 
 		// validate the source request
-		err = ValidateSourceCreationRequest(dao.GetSourceDao(tenantID), &source.SourceCreateRequest)
+		err = ValidateSourceCreationRequest(dao.GetSourceDao(&tenant.Id), &source.SourceCreateRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -131,7 +149,8 @@ func parseSources(reqSources []m.BulkCreateSource, tenantID *int64) ([]m.Source,
 		s.AppCreationWorkflow = source.AppCreationWorkflow
 		s.AvailabilityStatus = source.AvailabilityStatus
 		s.SourceTypeID = *source.SourceTypeID
-		s.TenantID = *tenantID
+		s.Tenant = *tenant
+		s.TenantID = tenant.Id
 
 		// populate the child relation slices
 		s.Endpoints = make([]m.Endpoint, 0)
@@ -145,7 +164,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenantID *int64) ([]m.Source,
 	return sources, nil
 }
 
-func parseApplications(reqApplications []m.BulkCreateApplication, current *m.BulkCreateOutput, tenantID *int64) ([]m.Application, error) {
+func parseApplications(reqApplications []m.BulkCreateApplication, current *m.BulkCreateOutput, tenant *m.Tenant) ([]m.Application, error) {
 	applications := make([]m.Application, 0)
 
 	for _, app := range reqApplications {
@@ -159,7 +178,7 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 				return nil, err
 			}
 
-			apptype, err := dao.GetApplicationTypeDao(tenantID).GetById(&id)
+			apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetById(&id)
 			if err != nil {
 				return nil, err
 			}
@@ -169,7 +188,7 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 
 		case app.ApplicationTypeName != "":
 			// dynamically look up the application type by name if passed
-			apptype, err := dao.GetApplicationTypeDao(tenantID).GetByName(app.ApplicationTypeName)
+			apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetByName(app.ApplicationTypeName)
 			if err != nil {
 				return nil, fmt.Errorf("failed to lookup application_type_name %v", app.ApplicationTypeName)
 			}
@@ -188,7 +207,7 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 			}
 
 			// check compatibility with the source type
-			err := dao.GetApplicationTypeDao(tenantID).ApplicationTypeCompatibleWithSourceType(a.ApplicationType.Id, src.SourceType.Id)
+			err := dao.GetApplicationTypeDao(&tenant.Id).ApplicationTypeCompatibleWithSourceType(a.ApplicationType.Id, src.SourceType.Id)
 			if err != nil {
 				return nil, err
 			}
@@ -196,7 +215,8 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 			// fill out whats left of the application (spoiler: not much)
 			a.Extra = app.Extra
 			a.SourceID = src.ID
-			a.TenantID = *tenantID
+			a.Tenant = *tenant
+			a.TenantID = tenant.Id
 
 			applications = append(applications, a)
 		}
@@ -211,13 +231,13 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 	return applications, nil
 }
 
-func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOutput, tenantID *int64) ([]m.Endpoint, error) {
+func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOutput, tenant *m.Tenant) ([]m.Endpoint, error) {
 	endpoints := make([]m.Endpoint, 0)
 
 	for _, endpt := range reqEndpoints {
 		e := m.Endpoint{}
 
-		err := ValidateEndpointCreateRequest(dao.GetEndpointDao(tenantID), &endpt.EndpointCreateRequest)
+		err := ValidateEndpointCreateRequest(dao.GetEndpointDao(&tenant.Id), &endpt.EndpointCreateRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -227,7 +247,8 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 		e.Path = &endpt.Path
 		e.Port = endpt.Port
 		e.VerifySsl = endpt.VerifySsl
-		e.TenantID = *tenantID
+		e.Tenant = *tenant
+		e.TenantID = tenant.Id
 
 		for _, src := range current.Sources {
 			if src.Name != endpt.SourceName {
@@ -248,7 +269,7 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 	return endpoints, nil
 }
 
-func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput, tenantID *int64) ([]m.Authentication, error) {
+func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput, tenant *m.Tenant) ([]m.Authentication, error) {
 	authentications := make([]m.Authentication, 0)
 
 	for _, auth := range req.Authentications {
@@ -260,7 +281,8 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		a.Password = auth.Password
 		a.Extra = auth.Extra
 		a.Name = auth.Name
-		a.TenantID = *tenantID
+		a.Tenant = *tenant
+		a.TenantID = tenant.Id
 
 		// if an id was passed in we're just adding an authentication to
 		// an already-existing resource.
@@ -269,7 +291,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 			var err error
 			switch strings.ToLower(auth.ResourceType) {
 			case "source":
-				_, err = dao.GetSourceDao(tenantID).GetById(&id)
+				_, err = dao.GetSourceDao(&tenant.Id).GetById(&id)
 				if err == nil {
 					l.Log.Debugf("Found existing Source with id %v, adding to list and continuing", id)
 					a.ResourceID = id
@@ -277,7 +299,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					continue
 				}
 			case "application":
-				_, err = dao.GetApplicationDao(tenantID).GetById(&id)
+				_, err = dao.GetApplicationDao(&tenant.Id).GetById(&id)
 				if err == nil {
 					l.Log.Debugf("Found existing Application with id %v, adding to list and continuing", id)
 					a.ResourceID = id
@@ -285,7 +307,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					continue
 				}
 			case "endpoint":
-				_, err = dao.GetEndpointDao(tenantID).GetById(&id)
+				_, err = dao.GetEndpointDao(&tenant.Id).GetById(&id)
 				if err == nil {
 					l.Log.Debugf("Found existing Endpoint with id %v, adding to list and continuing", id)
 					a.ResourceID = id
@@ -303,7 +325,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 			l.Log.Infof("Source Authentication does not need linked - continuing")
 
 		case "application":
-			id, err := linkupApplication(auth.ResourceName, current.Applications, tenantID)
+			id, err := linkupApplication(auth.ResourceName, current.Applications, &tenant.Id)
 			if err != nil {
 				return nil, err
 			}

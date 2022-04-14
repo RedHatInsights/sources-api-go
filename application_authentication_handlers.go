@@ -101,6 +101,12 @@ func ApplicationAuthenticationCreate(c echo.Context) error {
 		return err
 	}
 
+	accountNumber, err := getAccountNumberFromEchoContext(c)
+	if err != nil {
+		c.Logger().Warn(err)
+	}
+
+	appAuth.Tenant = m.Tenant{Id: appAuth.TenantID, ExternalTenant: accountNumber}
 	setEventStreamResource(c, appAuth)
 
 	return c.JSON(http.StatusCreated, appAuth.ToResponse())
