@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -137,6 +138,10 @@ func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		data["filename"] = fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line)
 	}
 
+	if entry.Data["caller_depth"] != nil {
+		data["filename"] = filenameFromCurrentCaller(entry)
+	}
+
 	for k, v := range entry.Data {
 		switch v := v.(type) {
 		case error:
@@ -158,6 +163,65 @@ func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	b.Write([]byte("\n"))
 
 	return b.Bytes(), nil
+}
+
+// Example 1(without caller_depth or caller_depth == 0 ):
+// one.go
+// 1 func b() {
+// 2  c()
+// 3  a() // this display log message but with filename and line: two:2
+//           and it is not useful
+// 4 }
+// two.gp
+// 1 func a() {
+// 2  Log.Error("error")
+// 3 }
+
+// Example 2(with caller_depth or caller_depth > 0 ):
+// cfile.go
+// 1 func c() {
+// 2  b()
+// 3 }
+// bfile.go
+// 1 func b() {
+// 2  xxx()
+// 3  a() // this display log message but with filename and line: one.go:3 (more useful)
+// 4 }
+// afile.go
+// 1 func a() {
+// 2  Log.WithField("caller_depth", 1).Error("error") // caller_depth == 1 - displays filename and line bfile.go:3
+// 3  Log.WithField("caller_depth", 2).Error("error") // caller_depth == 2 - displays filename and line cile.go:2
+// 4 }
+//
+// caller_depth determines position in caller stack from currently called function, number increases towards
+// outer function
+// This function selected proper filename according this behaviour.
+
+func filenameFromCurrentCaller(entry *logrus.Entry) string {
+	var filenames []string
+
+	startCountFlag := false
+	counterDepth := 0
+
+	pc := make([]uintptr, 1000)
+	n := runtime.Callers(0, pc)
+	frames := runtime.CallersFrames(pc[:n])
+
+	for frame, isNextFrameValid := frames.Next(); isNextFrameValid && entry.Data["caller_depth"] != counterDepth; frame, isNextFrameValid = frames.Next() {
+		if startCountFlag {
+			counterDepth++
+		}
+
+		if startCountFlag {
+			filenames = append(filenames, fmt.Sprintf("%s:%d", frame.File, frame.Line))
+		}
+
+		if frame.File == entry.Caller.File && frame.Line == entry.Caller.Line {
+			startCountFlag = true
+		}
+	}
+
+	return strings.Join(filenames, "; ")
 }
 
 func logLevelToEchoLogLevel(configLogLevel string) echoLog.Lvl {
