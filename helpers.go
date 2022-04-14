@@ -10,6 +10,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 func getFilters(c echo.Context) ([]util.Filter, error) {
@@ -94,4 +95,13 @@ func getTenantFromEchoContext(c echo.Context) (int64, error) {
 	} else {
 		return 0, errors.New("the tenant was provided in an invalid format")
 	}
+}
+
+func getAccountNumberFromEchoContext(c echo.Context) (string, error) {
+	id, ok := c.Get("identity").(identity.XRHID)
+	if !ok {
+		return "", fmt.Errorf("failed to pull identity from context")
+	}
+
+	return id.Identity.AccountNumber, nil
 }

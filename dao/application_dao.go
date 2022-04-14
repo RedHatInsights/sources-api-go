@@ -96,7 +96,11 @@ func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (
 	}
 
 	result := q.First(&app)
-	return app, result.Error
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("application")
+	}
+
+	return app, nil
 }
 
 func (a *applicationDaoImpl) Create(app *m.Application) error {

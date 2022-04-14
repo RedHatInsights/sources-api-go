@@ -110,6 +110,12 @@ func ApplicationCreate(c echo.Context) error {
 		return err
 	}
 
+	accountNumber, err := getAccountNumberFromEchoContext(c)
+	if err != nil {
+		c.Logger().Warn(err)
+	}
+
+	application.Tenant = m.Tenant{Id: application.TenantID, ExternalTenant: accountNumber}
 	setEventStreamResource(c, application)
 
 	// do not raise if it is a superkey application. The worker will post back
@@ -151,7 +157,7 @@ func ApplicationEdit(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	app, err := applicationDB.GetById(&id)
+	app, err := applicationDB.GetByIdWithPreload(&id, "Tenant")
 	if err != nil {
 		return err
 	}

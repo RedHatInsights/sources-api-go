@@ -39,10 +39,6 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was set as psk instead of %v", c.Get("psk").(string), "1234")
 	}
 
-	if c.Get("psk-account").(string) != "9876" {
-		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
-	}
-
 	id, _ := c.Get("identity").(identity.XRHID)
 
 	if id.Identity.AccountNumber != "12345" {
@@ -125,9 +121,5 @@ func TestOnlyPskHeaders(t *testing.T) {
 
 	if c.Get("psk-account").(string) != "9876" {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
-	}
-
-	if c.Get("identity") != nil {
-		t.Errorf("an identity was present when none was specified")
 	}
 }

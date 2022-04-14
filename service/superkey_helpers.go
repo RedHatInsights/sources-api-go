@@ -137,9 +137,17 @@ func parseSuperKeyData(data datatypes.JSON) (*superKeyData, error) {
 		return nil, fmt.Errorf("invalid type for provider %v", superkeyData["provider"])
 	}
 
-	stepsCompleted, ok := superkeyData["steps_completed"].(map[string]map[string]string)
-	if !ok {
-		l.Log.Warnf("invalid type for steps_completed, continuing")
+	var stepsCompleted map[string]map[string]string
+	rawSteps := superkeyData["steps"]
+	l.Log.Debugf("rawSteps: %v", rawSteps)
+
+	if rawSteps != nil {
+		b, _ := json.Marshal(&rawSteps)
+		err := json.Unmarshal(b, &stepsCompleted)
+		if err != nil {
+			l.Log.Warnf("Failed to unmarshal completed steps into map: %v", err)
+		}
+		l.Log.Debugf("Found stepsCompleted: %v", stepsCompleted)
 	}
 
 	return &superKeyData{
