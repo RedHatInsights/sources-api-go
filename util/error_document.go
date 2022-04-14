@@ -9,6 +9,7 @@ import (
 
 var ErrNotFoundEmpty = NewErrNotFound("")
 var ErrBadRequestEmpty = NewErrBadRequest("")
+var callerDepth = 2
 
 type Error struct {
 	Detail string `json:"detail"`
@@ -18,9 +19,17 @@ type ErrorDocument struct {
 	Errors []Error `json:"errors"`
 }
 
-func ErrorDoc(message, status string) *ErrorDocument {
-	l.Log.Error(message)
+func ErrorDocWithoutLogging(message, status string) *ErrorDocument {
+	return ErrorDocRaw(message, status)
+}
 
+func ErrorDoc(message, status string) *ErrorDocument {
+	l.Log.WithField("caller_depth", callerDepth).Error(message)
+
+	return ErrorDocRaw(message, status)
+}
+
+func ErrorDocRaw(message, status string) *ErrorDocument {
 	return &ErrorDocument{
 		[]Error{{
 			Detail: message,
@@ -42,6 +51,10 @@ func (e ErrNotFound) Is(err error) bool {
 }
 
 func NewErrNotFound(t string) error {
+	if l.Log != nil {
+		l.Log.WithField("caller_depth", callerDepth).Error(t)
+	}
+
 	return ErrNotFound{Type: t}
 }
 
@@ -58,12 +71,20 @@ func (e ErrBadRequest) Is(err error) bool {
 }
 
 func NewErrBadRequest(t interface{}) error {
+	errorMessage := ""
+
 	switch t := t.(type) {
 	case string:
-		return ErrBadRequest{Message: t}
+		errorMessage = t
 	case error:
-		return ErrBadRequest{Message: t.Error()}
+		errorMessage = t.Error()
 	default:
 		panic("bad interface type for bad request: " + reflect.ValueOf(t).String())
 	}
+
+	if l.Log != nil {
+		l.Log.WithField("caller_depth", callerDepth).Error(errorMessage)
+	}
+
+	return ErrBadRequest{Message: errorMessage}
 }
