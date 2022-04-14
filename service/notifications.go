@@ -12,6 +12,10 @@ import (
 
 var NotificationProducer Notifier
 
+func init() {
+	NotificationProducer = &AvailabilityStatusNotifier{}
+}
+
 type Notifier interface {
 	EmitAvailabilityStatusNotification(accountNumber string, emailNotificationInfo *m.EmailNotificationInfo) error
 }
@@ -107,4 +111,8 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(a
 	}
 
 	return nil
+}
+
+func EmitAvailabilityStatusNotification(accountNumber string, emailNotificationInfo *m.EmailNotificationInfo) error {
+	return NotificationProducer.EmitAvailabilityStatusNotification(accountNumber, emailNotificationInfo)
 }
