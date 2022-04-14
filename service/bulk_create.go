@@ -85,11 +85,12 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant) (*m.BulkCreateOutpu
 					ApplicationID:    output.Authentications[i].ResourceID,
 					AuthenticationID: output.Authentications[i].DbID,
 					TenantID:         tenant.Id,
+					Tenant:           *tenant,
 				})
 			}
 		}
 
-		err = tx.Create(&output.ApplicationAuthentications).Error
+		err = tx.Omit(clause.Associations).Create(&output.ApplicationAuthentications).Error
 		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
 			return err
 		}
