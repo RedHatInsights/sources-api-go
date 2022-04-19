@@ -72,3 +72,7 @@ models:
     fields:
       authentications:
         resolver: true
+  Authentication:
+    fields:
+      id:
+        resolver: true

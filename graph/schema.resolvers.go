@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
 	generated_model "github.com/RedHatInsights/sources-api-go/graph/model"
@@ -48,6 +49,14 @@ func (r *applicationResolver) Authentications(ctx context.Context, obj *model.Ap
 
 func (r *applicationResolver) TenantID(ctx context.Context, obj *model.Application) (string, error) {
 	return strconv.Itoa(int(*tenantIdFromCtx(ctx))), nil
+}
+
+func (r *authenticationResolver) ID(ctx context.Context, obj *model.Authentication) (string, error) {
+	if config.IsVaultOn() {
+		return obj.ID, nil
+	} else {
+		return strconv.FormatInt(obj.DbID, 10), nil
+	}
 }
 
 func (r *authenticationResolver) ResourceID(ctx context.Context, obj *model.Authentication) (string, error) {
