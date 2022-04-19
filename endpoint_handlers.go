@@ -211,7 +211,7 @@ func EndpointDelete(c echo.Context) error {
 	// Check if the endpoint exists before proceeding.
 	endpointExists, err := endpointDao.Exists(id)
 	if err != nil {
-		return util.NewErrBadRequest(err)
+		return err
 	}
 
 	if !endpointExists {
