@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type EndpointResponse struct {
 	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`
@@ -50,4 +52,8 @@ type EndpointEditRequest struct {
 	CertificateAuthority    *string `json:"certificate_authority"`
 	AvailabilityStatus      *string `json:"availability_status"`
 	AvailabilityStatusError *string `json:"availability_status_error"`
+
+	// TODO: remove these once satellite goes away.
+	LastCheckedAt   *time.Time `json:"last_checked_at"`
+	LastAvailableAt *time.Time `json:"last_available_at"`
 }

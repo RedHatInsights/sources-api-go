@@ -131,4 +131,12 @@ func (endpoint *Endpoint) UpdateFromRequest(req *EndpointEditRequest) {
 	if req.AvailabilityStatus != nil {
 		endpoint.AvailabilityStatus = *req.AvailabilityStatus
 	}
+
+	if req.LastCheckedAt != nil {
+		endpoint.LastCheckedAt = req.LastCheckedAt
+	}
+
+	if req.LastAvailableAt != nil {
+		endpoint.LastAvailableAt = req.LastAvailableAt
+	}
 }
