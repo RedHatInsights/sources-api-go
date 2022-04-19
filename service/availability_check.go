@@ -132,18 +132,20 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 	l.Log.Infof("Requesting Availability Check for Endpoint %v", endpoint.ID)
 
 	msg := &kafka.Message{}
-	err := msg.AddValueAsJSON(&satelliteAvailabilityMessage{
-		SourceID:       strconv.FormatInt(source.ID, 10),
-		SourceUID:      source.Uid,
-		SourceRef:      source.SourceRef,
-		ExternalTenant: source.Tenant.ExternalTenant,
-	})
+	err := msg.AddValueAsJSON(map[string]interface{}{
+		"params": satelliteAvailabilityMessage{
+			SourceID:       strconv.FormatInt(source.ID, 10),
+			SourceUID:      source.Uid,
+			SourceRef:      source.SourceRef,
+			ExternalTenant: source.Tenant.ExternalTenant,
+		}})
 	if err != nil {
 		l.Log.Warnf("Failed to add struct value as json to kafka message")
 		return
 	}
 
 	msg.AddHeaders([]kafka.Header{
+		{Key: "event_type", Value: []byte("Source.availability_check")},
 		{Key: "encoding", Value: []byte("json")},
 		{Key: "x-rh-identity", Value: []byte(util.XRhIdentityWithAccountNumber(endpoint.Tenant.ExternalTenant))},
 		{Key: "x-rh-sources-account-number", Value: []byte(endpoint.Tenant.ExternalTenant)},
