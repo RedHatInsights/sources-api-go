@@ -10,7 +10,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
-	"github.com/RedHatInsights/sources-api-go/model"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -199,7 +198,7 @@ func TestDeleteCascade(t *testing.T) {
 	SwitchSchema("delete")
 
 	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
-	fixtureSource := model.Source{
+	fixtureSource := m.Source{
 		Name:         "fixture-source",
 		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
 		TenantID:     fixtures.TestTenantData[0].Id,
@@ -277,16 +276,16 @@ func TestDeleteCascade(t *testing.T) {
 	maximumSubresourcesToCreate := 5
 
 	// We want the created subresources so that we can compare them later to the deleted ones.
-	var createdApplications []model.Application
-	var createdApplicationAuthentications []model.ApplicationAuthentication
-	var createdEndpoints []model.Endpoint
-	var createdRhcConnections []model.RhcConnection
+	var createdApplications []m.Application
+	var createdApplicationAuthentications []m.ApplicationAuthentication
+	var createdEndpoints []m.Endpoint
+	var createdRhcConnections []m.RhcConnection
 
 	// Create all the subresources.
 	for i := 0; i < maximumSubresourcesToCreate; i++ {
 		// Create the related applications.
 		extra := fmt.Sprintf(`{"idx": "%d"}`, i)
-		app := model.Application{
+		app := m.Application{
 			Extra:             []byte(extra),
 			SourceID:          fixtureSource.ID,
 			TenantID:          fixtureSource.TenantID,
@@ -311,7 +310,7 @@ func TestDeleteCascade(t *testing.T) {
 		}
 
 		// Create the association between the application and its authentication.
-		appAuth := model.ApplicationAuthentication{
+		appAuth := m.ApplicationAuthentication{
 			TenantID:          fixtures.TestTenantData[0].Id,
 			ApplicationID:     app.ID,
 			AuthenticationID:  authentication.DbID,
@@ -326,7 +325,7 @@ func TestDeleteCascade(t *testing.T) {
 
 		// Create the related endpoints.
 		host := fmt.Sprintf(`domain%d.com`, i)
-		endpoint := model.Endpoint{
+		endpoint := m.Endpoint{
 			Host:     &host,
 			SourceID: fixtureSource.ID,
 			TenantID: fixtureSource.TenantID,
@@ -341,9 +340,9 @@ func TestDeleteCascade(t *testing.T) {
 
 		// Create the related rhcConnections.
 		rhcId := fmt.Sprintf(`rhc-id-%d`, i)
-		rhcConnection := model.RhcConnection{
+		rhcConnection := m.RhcConnection{
 			RhcId:   rhcId,
-			Sources: []model.Source{{ID: fixtureSource.ID}},
+			Sources: []m.Source{{ID: fixtureSource.ID}},
 		}
 
 		_, err = rhcConnectionsDao.Create(&rhcConnection)
@@ -364,7 +363,7 @@ func TestDeleteCascade(t *testing.T) {
 	var appAuthsCount int64
 	err = DB.
 		Debug().
-		Model(model.ApplicationAuthentication{}).
+		Model(m.ApplicationAuthentication{}).
 		Joins(`INNER JOIN "applications" ON "application_authentications"."application_id" = "applications"."id"`).
 		Where(`applications.source_id = ?`, fixtureSource.ID).
 		Where(`applications.tenant_id = ?`, fixtures.TestTenantData[0].Id).
@@ -409,7 +408,7 @@ func TestDeleteCascade(t *testing.T) {
 	var appCount int64
 	err = DB.
 		Debug().
-		Model(model.Application{}).
+		Model(m.Application{}).
 		Where("source_id = ?", fixtureSource.ID).
 		Where("tenant_id = ?", fixtures.TestTenantData[0].Id).
 		Count(&appCount).
@@ -453,7 +452,7 @@ func TestDeleteCascade(t *testing.T) {
 	var endpointCount int64
 	err = DB.
 		Debug().
-		Model(model.Endpoint{}).
+		Model(m.Endpoint{}).
 		Where("source_id = ?", fixtureSource.ID).
 		Where("tenant_id = ?", fixtures.TestTenantData[0].Id).
 		Count(&endpointCount).
@@ -506,7 +505,7 @@ func TestDeleteCascade(t *testing.T) {
 	var rhcConnectionsCount int64
 	err = DB.
 		Debug().
-		Model(model.RhcConnection{}).
+		Model(m.RhcConnection{}).
 		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "rhc_connections"."id" = "sr"."rhc_connection_id"`).
 		Where(`"sr"."source_id" = ?`, fixtureSource.ID).
 		Where(`"sr"."tenant_id" = ?`, fixtures.TestTenantData[0].Id).
@@ -557,10 +556,10 @@ func TestDeleteCascade(t *testing.T) {
 	}
 
 	// Try to fetch the deleted source.
-	var deletedSourceCheck *model.Source
+	var deletedSourceCheck *m.Source
 	err = DB.
 		Debug().
-		Model(model.Source{}).
+		Model(m.Source{}).
 		Where(`id = ?`, fixtureSource.ID).
 		Where(`tenant_id = ?`, fixtures.TestTenantData[0].Id).
 		Find(&deletedSourceCheck).

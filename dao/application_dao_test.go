@@ -10,7 +10,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
-	"github.com/RedHatInsights/sources-api-go/model"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -136,7 +135,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 
 	// Create a new application on the database to cleanly test the function under test.
 	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
-	fixtureApp := model.Application{
+	fixtureApp := m.Application{
 		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
 		SourceID:          fixtures.TestSourceData[0].ID,
 		TenantID:          fixtures.TestTenantData[0].Id,
@@ -156,7 +155,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 	maxAuthenticationsCreated := 5
 
 	// Store the application authentications to perform checks later.
-	var createdAppAuths []model.ApplicationAuthentication
+	var createdAppAuths []m.ApplicationAuthentication
 	for i := 0; i < maxAuthenticationsCreated; i++ {
 		// Create the authentication.
 		authentication := setUpValidAuthentication()
@@ -169,7 +168,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 		}
 
 		// Create the association between the application and its authentication.
-		appAuth := model.ApplicationAuthentication{
+		appAuth := m.ApplicationAuthentication{
 			TenantID:          fixtures.TestTenantData[0].Id,
 			ApplicationID:     fixtureApp.ID,
 			AuthenticationID:  authentication.DbID,
@@ -193,7 +192,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 	var appAuthCount int64
 	err = DB.
 		Debug().
-		Model(model.ApplicationAuthentication{}).
+		Model(m.ApplicationAuthentication{}).
 		Where("application_id = ?", fixtureApp.ID).
 		Where("tenant_id = ?", fixtures.TestTenantData[0].Id).
 		Count(&appAuthCount).
@@ -235,10 +234,10 @@ func TestApplicationDeleteCascade(t *testing.T) {
 	}
 
 	// Try to fetch the deleted application.
-	var deletedApplicationCheck *model.Application
+	var deletedApplicationCheck *m.Application
 	err = DB.
 		Debug().
-		Model(model.Application{}).
+		Model(m.Application{}).
 		Where(`id = ?`, fixtureApp.ID).
 		Where(`tenant_id = ?`, fixtures.TestTenantData[0].Id).
 		Find(&deletedApplicationCheck).
