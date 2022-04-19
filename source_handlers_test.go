@@ -379,7 +379,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 
 func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 	appTypeId := int64(1)
-	wantSourcesCount := testutils.GetSourcesCountWithAppType(appTypeId)
+	wantSourcesCount := len(testutils.GetSourcesWithAppType(appTypeId))
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
