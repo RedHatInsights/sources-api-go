@@ -27,7 +27,7 @@ var validAvailabilityStatuses = []string{"", model.Available, model.Unavailable}
 const (
 	defaultScheme    = "https"
 	defaultPort      = 443
-	defaultVerifySsl = true
+	defaultVerifySsl = false
 	maxFqdnLength    = 255 // RFC2181
 	maxLabelLength   = 63  // RFC2181
 	maxPort          = 65535

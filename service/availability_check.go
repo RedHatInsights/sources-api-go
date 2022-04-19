@@ -144,6 +144,7 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 	}
 
 	msg.AddHeaders([]kafka.Header{
+		{Key: "encoding", Value: []byte("json")},
 		{Key: "x-rh-identity", Value: []byte(util.XRhIdentityWithAccountNumber(endpoint.Tenant.ExternalTenant))},
 		{Key: "x-rh-sources-account-number", Value: []byte(endpoint.Tenant.ExternalTenant)},
 	})
