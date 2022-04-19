@@ -186,7 +186,7 @@ func (a *endpointDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
 func (a *endpointDaoImpl) Exists(endpointId int64) (bool, error) {
 	var endpointExists bool
 
-	err := DB.Model(&m.Application{}).
+	err := DB.Model(&m.Endpoint{}).
 		Select("1").
 		Where("id = ?", endpointId).
 		Where("tenant_id = ?", a.TenantID).
