@@ -1,5 +1,11 @@
 package model
 
+import (
+	"time"
+
+	"github.com/RedHatInsights/sources-api-go/util"
+)
+
 // SourceCreateRequest is a struct representing a request coming
 // from the outside to create a struct, this is the way we will be marking
 // fields as write-once. They are accepted on create but not edit.
@@ -24,6 +30,10 @@ type SourceEditRequest struct {
 	Imported           *string `json:"imported,omitempty"`
 	SourceRef          *string `json:"source_ref,omitempty"`
 	AvailabilityStatus *string `json:"availability_status"`
+
+	// TODO: remove these once satellite goes away.
+	LastCheckedAt   *string `json:"last_checked_at"`
+	LastAvailableAt *string `json:"last_available_at"`
 }
 
 // SourceResponse represents what we will always return to the users
@@ -70,5 +80,15 @@ func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
 	}
 	if update.AvailabilityStatus != nil {
 		src.AvailabilityStatus = *update.AvailabilityStatus
+	}
+
+	if update.LastAvailableAt != nil {
+		t, _ := time.Parse(util.RecordDateTimeFormat, *update.LastAvailableAt)
+		src.LastAvailableAt = &t
+	}
+
+	if update.LastCheckedAt != nil {
+		t, _ := time.Parse(util.RecordDateTimeFormat, *update.LastCheckedAt)
+		src.LastCheckedAt = &t
 	}
 }

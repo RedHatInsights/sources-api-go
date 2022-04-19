@@ -100,4 +100,14 @@ func (app *Application) UpdateFromRequest(req *ApplicationEditRequest) {
 	if req.AvailabilityStatusError != nil {
 		app.AvailabilityStatusError = *req.AvailabilityStatusError
 	}
+
+	if req.LastAvailableAt != nil {
+		t, _ := time.Parse(util.RecordDateTimeFormat, *req.LastAvailableAt)
+		app.LastAvailableAt = &t
+	}
+
+	if req.LastCheckedAt != nil {
+		t, _ := time.Parse(util.RecordDateTimeFormat, *req.LastCheckedAt)
+		app.LastCheckedAt = &t
+	}
 }
