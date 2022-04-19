@@ -61,7 +61,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
 		r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
 		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
-		r.PATCH("/authentications/:uid", AuthenticationUpdate, permissionMiddleware...)
+		r.PATCH("/authentications/:uid", AuthenticationEdit, permissionMiddleware...)
 		r.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
 
 		// ApplicationTypes

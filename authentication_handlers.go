@@ -122,7 +122,7 @@ func AuthenticationCreate(c echo.Context) error {
 	return c.JSON(http.StatusCreated, auth.ToResponse())
 }
 
-func AuthenticationUpdate(c echo.Context) error {
+func AuthenticationEdit(c echo.Context) error {
 	authDao, err := getAuthenticationDao(c)
 	if err != nil {
 		return err

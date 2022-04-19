@@ -250,7 +250,7 @@ func TestAuthenticationCreateBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
-func TestAuthenticationUpdate(t *testing.T) {
+func TestAuthenticationEdit(t *testing.T) {
 	newAvailabilityStatus := "new status"
 
 	requestBody := m.AuthenticationEditRequest{
@@ -280,7 +280,7 @@ func TestAuthenticationUpdate(t *testing.T) {
 	}
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err = AuthenticationUpdate(c)
+	err = AuthenticationEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -301,7 +301,7 @@ func TestAuthenticationUpdate(t *testing.T) {
 	}
 }
 
-func TestAuthenticationUpdateNotFound(t *testing.T) {
+func TestAuthenticationEditNotFound(t *testing.T) {
 	newAvailabilityStatus := "new status"
 
 	requestBody := m.AuthenticationEditRequest{
@@ -326,8 +326,8 @@ func TestAuthenticationUpdateNotFound(t *testing.T) {
 	c.SetParamValues("not existing uid")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	notFoundAuthenticationUpdate := ErrorHandlingContext(AuthenticationUpdate)
-	err = notFoundAuthenticationUpdate(c)
+	notFoundAuthenticationEdit := ErrorHandlingContext(AuthenticationEdit)
+	err = notFoundAuthenticationEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -335,7 +335,7 @@ func TestAuthenticationUpdateNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-func TestAuthenticationUpdateBadRequest(t *testing.T) {
+func TestAuthenticationEditBadRequest(t *testing.T) {
 	requestBody :=
 		`{
               "name": 10
@@ -359,8 +359,8 @@ func TestAuthenticationUpdateBadRequest(t *testing.T) {
 	c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	badRequestAuthenticationUpdate := ErrorHandlingContext(AuthenticationUpdate)
-	err = badRequestAuthenticationUpdate(c)
+	badRequestAuthenticationEdit := ErrorHandlingContext(AuthenticationEdit)
+	err = badRequestAuthenticationEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
