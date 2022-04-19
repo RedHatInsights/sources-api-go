@@ -7,6 +7,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var BadQueryParams = []string{"limit", "offset", "sort_by"}
+
 func SortAndFilter(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		filters := parseFilter(c)
@@ -51,7 +53,7 @@ func parseFilter(c echo.Context) []util.Filter {
 			}
 
 			f = append(f, filter)
-		} else if !strings.HasPrefix(key, "sort_by") {
+		} else if !util.SliceContainsString(BadQueryParams, key) {
 			// This is to ensure backward compatibility with the Rails API. Any
 			// query parameters that do not have `filter` or `sort_by` at the
 			// beginning need to be treated as "raw" output filters. e.g. if

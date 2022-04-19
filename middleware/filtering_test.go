@@ -181,3 +181,23 @@ func TestParseFilteringWithoutFilterArg(t *testing.T) {
 		t.Errorf("did not parse value correctly")
 	}
 }
+
+func TestParseFilteringWithoutFilterArgWithLimit(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?name=test&limit=100", nil)
+	c := e.NewContext(req, nil)
+
+	filters := parseFilter(c)
+	f := filters[0]
+
+	if f.Name != "name" {
+		t.Errorf("did not parse name correctly")
+	}
+
+	if f.Value[0] != "test" {
+		t.Errorf("did not parse value correctly")
+	}
+
+	if len(filters) != 1 {
+		t.Errorf("too many filters were parsed - should have been one")
+	}
+}
