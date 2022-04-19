@@ -60,7 +60,7 @@ func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([
 	count := int64(0)
 	query.Count(&count)
 
-	result := query.Limit(limit).Find(&metaData)
+	result := query.Limit(limit).Offset(offset).Find(&metaData)
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}

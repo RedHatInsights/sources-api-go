@@ -430,3 +430,78 @@ func TestDeleteRhcConnectionNotExists(t *testing.T) {
 
 	DropSchema("delete")
 }
+
+// TestRhcConnectionListOffsetAndLimit tests that List() in rhc connection dao returns correct
+// count value and correct count of returned objects
+func TestRhcConnectionListOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	wantCount := int64(len(fixtures.TestRhcConnectionData))
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		rhcConnections, gotCount, err := rhcConnectionDao.List(d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the rhc connections: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of rhc connections, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(rhcConnections)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}
+
+// TestRhcConnectionListForSourceOffsetAndLimit tests that ListForSource() in rhc connection dao
+// returns correct count value and correct count of returned objects
+func TestRhcConnectionListForSourceOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	sourceId := int64(1)
+
+	var wantCount int64
+	for _, i := range fixtures.TestSourceRhcConnectionData {
+		if i.SourceId == sourceId {
+			wantCount++
+		}
+	}
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		rhcConnections, gotCount, err := rhcConnectionDao.ListForSource(&sourceId, d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the rhc connections: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of rhc connections, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(rhcConnections)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}

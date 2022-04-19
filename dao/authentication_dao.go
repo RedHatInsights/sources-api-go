@@ -101,6 +101,9 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 	} else {
 		end = limit
 	}
+	if offset > limit {
+		return nil, int64(len(keys)), nil
+	}
 
 	// Initialize the marketplace token cacher as it will be used in the underlying "authFromVault" function, inside
 	// ".getKey"
@@ -114,7 +117,7 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 		out = append(out, *secret)
 	}
-	count := int64(len(out))
+	count := int64(len(keys))
 
 	return out, count, nil
 }

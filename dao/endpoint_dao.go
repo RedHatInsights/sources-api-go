@@ -58,7 +58,6 @@ func (a *endpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit
 func (a *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
 	query := DB.Debug().Model(&m.Endpoint{}).
-		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)
 
 	query, err := applyFilters(query, filters)
@@ -69,7 +68,7 @@ func (a *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 	count := int64(0)
 	query.Count(&count)
 
-	result := query.Limit(limit).Find(&endpoints)
+	result := query.Limit(limit).Offset(offset).Find(&endpoints)
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -667,4 +668,154 @@ func TestSourceNotExists(t *testing.T) {
 	}
 
 	DropSchema("exists")
+}
+
+// TestSourceSubcollectionListWithOffsetAndLimit tests that SubCollectionList() in source dao returns
+//  correct count value and correct count of returned objects
+func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	sourceTypeId := fixtures.TestSourceTypeData[0].Id
+
+	var wantCount int64
+	for _, i := range fixtures.TestSourceData {
+		if i.SourceTypeID == sourceTypeId {
+			wantCount++
+		}
+	}
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		sources, gotCount, err := sourceDao.SubCollectionList(m.SourceType{Id: sourceTypeId}, d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the sources: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of sources, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(sources)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}
+
+// TestSourceListOffsetAndLimit tests that List() in source dao returns correct count value
+// and correct count of returned objects
+func TestSourceListOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	wantCount := int64(len(fixtures.TestSourceData))
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		sources, gotCount, err := sourceDao.List(d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the sources: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of sources, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(sources)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}
+
+// TestSourceListInternalOffsetAndLimit tests that ListInternal() in source dao returns correct count value
+// and correct count of returned objects
+func TestSourceListInternalOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	wantCount := int64(len(fixtures.TestSourceData))
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		sources, gotCount, err := sourceDao.ListInternal(d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the sources: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of sources, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(sources)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}
+
+// TestSourceListForRhcConnectionWithOffsetAndLimit tests that ListForRhcConnection() in source dao returns
+//  correct count value and correct count of returned objects
+func TestSourceListForRhcConnectionWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	rhcConnectionId := fixtures.TestRhcConnectionData[0].ID
+
+	var wantCount int64
+	for _, i := range fixtures.TestSourceRhcConnectionData {
+		if i.RhcConnectionId == rhcConnectionId {
+			wantCount++
+		}
+	}
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		sources, gotCount, err := sourceDao.ListForRhcConnection(&rhcConnectionId, d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the sources: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of sources, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(sources)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
 }

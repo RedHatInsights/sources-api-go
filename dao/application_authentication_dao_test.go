@@ -243,3 +243,38 @@ func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
 
 	DropSchema("appauthfind")
 }
+
+// TestApplicationAuthenticationListOffsetAndLimit tests that List() in app auth dao returns correct count value
+// and correct count of returned objects
+func TestApplicationAuthenticationListOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	wantCount := int64(len(fixtures.TestApplicationAuthenticationData))
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		appAuths, gotCount, err := appAuthDao.List(d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the application authentications: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of application authentications, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(appAuths)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}

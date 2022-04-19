@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -318,4 +319,81 @@ func TestApplicationNotExists(t *testing.T) {
 	}
 
 	DropSchema("exists")
+}
+
+// TestApplicationSubcollectionListWithOffsetAndLimit tests that SubCollectionList() in application dao returns
+//  correct count value and correct count of returned objects
+func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	sourceId := fixtures.TestSourceData[0].ID
+
+	var wantCount int64
+	for _, i := range fixtures.TestApplicationData {
+		if i.SourceID == sourceId {
+			wantCount++
+		}
+	}
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		applications, gotCount, err := applicationDao.SubCollectionList(m.Source{ID: sourceId}, d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the applications: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of applications, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(applications)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
+}
+
+// TestApplicationListOffsetAndLimit tests that List() in application dao returns correct count value
+// and correct count of returned objects
+func TestApplicationListOffsetAndLimit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("offset_limit")
+
+	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	wantCount := int64(len(fixtures.TestApplicationData))
+
+	for _, d := range fixtures.TestDataOffsetLimit {
+		applications, gotCount, err := applicationDao.List(d.Limit, d.Offset, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error when listing the applications: %s`, err)
+		}
+
+		if wantCount != gotCount {
+			t.Errorf(`incorrect count of applications, want "%d", got "%d"`, wantCount, gotCount)
+		}
+
+		got := len(applications)
+		want := int(wantCount) - d.Offset
+		if want < 0 {
+			want = 0
+		}
+
+		if want > d.Limit {
+			want = d.Limit
+		}
+		if got != want {
+			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
+		}
+	}
+	DropSchema("offset_limit")
 }

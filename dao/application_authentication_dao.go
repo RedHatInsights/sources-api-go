@@ -101,7 +101,6 @@ func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 	appAuths := make([]m.ApplicationAuthentication, 0, limit)
 	query := DB.Debug().
 		Model(&m.ApplicationAuthentication{}).
-		Offset(offset).
 		Where("tenant_id = ?", a.TenantID)
 
 	query, err := applyFilters(query, filters)
@@ -112,7 +111,7 @@ func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 	count := int64(0)
 	query.Count(&count)
 
-	result := query.Limit(limit).Find(&appAuths)
+	result := query.Limit(limit).Offset(offset).Find(&appAuths)
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}

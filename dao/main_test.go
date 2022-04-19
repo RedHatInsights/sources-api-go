@@ -125,6 +125,8 @@ func CreateFixtures(schema string) {
 
 	DB.Create(&fixtures.TestAuthenticationData)
 
+	DB.Create(&fixtures.TestMetaDataData)
+
 	UpdateTablesSequences(schema)
 }
 

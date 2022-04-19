@@ -65,7 +65,6 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
 	query := DB.Debug().Model(&m.Source{}).
-		Offset(offset).
 		Where("sources.tenant_id = ?", s.TenantID)
 
 	query, err := applyFilters(query, filters)
@@ -78,7 +77,7 @@ func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 	query.Count(&count)
 
 	// limiting + running the actual query.
-	result := query.Limit(limit).Find(&sources)
+	result := query.Limit(limit).Offset(offset).Find(&sources)
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
@@ -89,7 +88,6 @@ func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	query := DB.Debug().
 		Model(&m.Source{}).
-		Joins("Tenant").
 		Select(`sources.id, sources.availability_status, "Tenant".external_tenant`)
 
 	query, err := applyFilters(query, filters)
@@ -97,15 +95,15 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 		return nil, 0, util.NewErrBadRequest(err)
 	}
 
-	sources := make([]m.Source, 0, limit)
-	result := query.Offset(offset).Limit(limit).Find(&sources)
-	if result.Error != nil {
-		return nil, 0, util.NewErrBadRequest(result.Error)
-	}
-
 	// Getting the total count (filters included) for pagination
 	count := int64(0)
 	query.Count(&count)
+
+	sources := make([]m.Source, 0, limit)
+	result := query.Joins("Tenant").Limit(limit).Offset(offset).Find(&sources)
+	if result.Error != nil {
+		return nil, 0, util.NewErrBadRequest(result.Error)
+	}
 
 	return sources, count, nil
 }
@@ -243,9 +241,7 @@ func (s *sourceDaoImpl) ListForRhcConnection(rhcConnectionId *int64, limit, offs
 		Model(&m.Source{}).
 		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "sources"."id" = "sr"."source_id"`).
 		Where(`"sr"."rhc_connection_id" = ?`, rhcConnectionId).
-		Where(`"sr"."tenant_id" = ?`, s.TenantID).
-		Limit(limit).
-		Offset(offset)
+		Where(`"sr"."tenant_id" = ?`, s.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -257,7 +253,7 @@ func (s *sourceDaoImpl) ListForRhcConnection(rhcConnectionId *int64, limit, offs
 	query.Count(&count)
 
 	// Run the actual query.
-	err = query.Find(&sources).Error
+	err = query.Limit(limit).Offset(offset).Find(&sources).Error
 	if err != nil {
 		return nil, count, util.NewErrBadRequest(err)
 	}
