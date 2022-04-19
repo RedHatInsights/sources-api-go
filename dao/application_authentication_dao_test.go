@@ -69,6 +69,7 @@ func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
 // test only fetches the application authentications related to the given list of applications.
 func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("appauthfind")
 
 	// Get all the DAOs we are going to work with.
@@ -165,6 +166,7 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 // test only fetches the application authentications related to the given list of authentications.
 func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("appauthfind")
 
 	// Get all the DAOs we are going to work with.
