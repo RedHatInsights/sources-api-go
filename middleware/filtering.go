@@ -51,6 +51,16 @@ func parseFilter(c echo.Context) []util.Filter {
 			}
 
 			f = append(f, filter)
+		} else if !strings.HasPrefix(key, "sort_by") {
+			// This is to ensure backward compatibility with the Rails API. Any
+			// query parameters that do not have `filter` or `sort_by` at the
+			// beginning need to be treated as "raw" output filters. e.g. if
+			// someone passes `id=25` we need to support that as equivalent to
+			// `filter[id]=25`
+			//
+			// if the column doesn't exist PG will throw a sqlstate error -
+			// which is expected.
+			f = append(f, util.Filter{Name: key, Value: values})
 		}
 	}
 

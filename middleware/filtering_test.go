@@ -38,7 +38,7 @@ func TestParseFilterWithOperation(t *testing.T) {
 }
 
 func TestParseFilterWithoutOperation(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[name]=test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[name]=test", nil)
 	c := e.NewContext(req, nil)
 
 	filters := parseFilter(c)
@@ -63,7 +63,7 @@ func TestParseFilterWithoutOperation(t *testing.T) {
 }
 
 func TestParseSorting(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?sort_by=name", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?sort_by=name", nil)
 	c := e.NewContext(req, nil)
 
 	sortFilter := parseSorting(c)
@@ -85,7 +85,7 @@ func TestParseSorting(t *testing.T) {
 }
 
 func TestParseSortingMultiple(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?sort_by=name&sort_by=uid", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?sort_by=name&sort_by=uid", nil)
 	c := e.NewContext(req, nil)
 
 	sortFilter := parseSorting(c)
@@ -138,7 +138,7 @@ func TestParseSubresourceFilterWithOperation(t *testing.T) {
 }
 
 func TestParseSubresourceFilterWithoutOperation(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v2.1/sources?filter[source_type][name]=test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[source_type][name]=test", nil)
 	c := e.NewContext(req, nil)
 
 	filters := parseFilter(c)
@@ -163,5 +163,21 @@ func TestParseSubresourceFilterWithoutOperation(t *testing.T) {
 
 	if f.Value[0] != "test" {
 		t.Error("did not parse value correctly")
+	}
+}
+
+func TestParseFilteringWithoutFilterArg(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?name=test", nil)
+	c := e.NewContext(req, nil)
+
+	filters := parseFilter(c)
+	f := filters[0]
+
+	if f.Name != "name" {
+		t.Errorf("did not parse name correctly")
+	}
+
+	if f.Value[0] != "test" {
+		t.Errorf("did not parse value correctly")
 	}
 }
