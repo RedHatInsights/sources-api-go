@@ -106,7 +106,7 @@ func RhcConnectionCreate(c echo.Context) error {
 	return c.JSON(http.StatusCreated, connection.ToResponse())
 }
 
-func RhcConnectionUpdate(c echo.Context) error {
+func RhcConnectionEdit(c echo.Context) error {
 	paramId := c.Param("id")
 
 	rhcConnectionId, err := strconv.ParseInt(paramId, 10, 64)
@@ -114,7 +114,7 @@ func RhcConnectionUpdate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	input := &model.RhcConnectionUpdateRequest{}
+	input := &model.RhcConnectionEditRequest{}
 	if err := c.Bind(input); err != nil {
 		return err
 	}

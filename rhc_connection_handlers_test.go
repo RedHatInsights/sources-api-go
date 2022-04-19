@@ -317,8 +317,8 @@ func TestRhcConnectionCreateRelationExists(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
-func TestRhcConnectionUpdate(t *testing.T) {
-	requestBody := model.RhcConnectionUpdateRequest{
+func TestRhcConnectionEdit(t *testing.T) {
+	requestBody := model.RhcConnectionEditRequest{
 		Extra: nil,
 	}
 
@@ -343,7 +343,7 @@ func TestRhcConnectionUpdate(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	err = RhcConnectionUpdate(c)
+	err = RhcConnectionEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -353,7 +353,7 @@ func TestRhcConnectionUpdate(t *testing.T) {
 	}
 }
 
-func TestRhcConnectionUpdateInvalidParam(t *testing.T) {
+func TestRhcConnectionEditInvalidParam(t *testing.T) {
 	invalidId := "xxx"
 
 	c, rec := request.CreateTestContext(
@@ -369,8 +369,8 @@ func TestRhcConnectionUpdateInvalidParam(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(invalidId)
 
-	badRequestRhcConnectionUpdate := ErrorHandlingContext(RhcConnectionUpdate)
-	err := badRequestRhcConnectionUpdate(c)
+	badRequestRhcConnectionEdit := ErrorHandlingContext(RhcConnectionEdit)
+	err := badRequestRhcConnectionEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -378,7 +378,7 @@ func TestRhcConnectionUpdateInvalidParam(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
-func TestRhcConnectionUpdateNotFound(t *testing.T) {
+func TestRhcConnectionEditNotFound(t *testing.T) {
 	invalidId := "12345"
 
 	c, rec := request.CreateTestContext(
@@ -394,8 +394,8 @@ func TestRhcConnectionUpdateNotFound(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(invalidId)
 
-	notFoundRhcConnectionUpdate := ErrorHandlingContext(RhcConnectionUpdate)
-	err := notFoundRhcConnectionUpdate(c)
+	notFoundRhcConnectionEdit := ErrorHandlingContext(RhcConnectionEdit)
+	err := notFoundRhcConnectionEdit(c)
 	if err != nil {
 		t.Error(err)
 	}

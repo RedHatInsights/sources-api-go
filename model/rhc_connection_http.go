@@ -14,8 +14,8 @@ type RhcConnectionCreateRequest struct {
 	SourceId    int64
 }
 
-// RhcConnectionUpdateRequest represents a request coming from the outside to update a Red Hat Connector connection.
-type RhcConnectionUpdateRequest struct {
+// RhcConnectionEditRequest represents a request coming from the outside to update a Red Hat Connector connection.
+type RhcConnectionEditRequest struct {
 	Extra datatypes.JSON `json:"extra"`
 }
 

@@ -23,7 +23,7 @@ type RhcConnection struct {
 	Sources []Source `gorm:"many2many:source_rhc_connections"`
 }
 
-func (r *RhcConnection) UpdateFromRequest(input *RhcConnectionUpdateRequest) {
+func (r *RhcConnection) UpdateFromRequest(input *RhcConnectionEditRequest) {
 	r.Extra = input.Extra
 }
 
