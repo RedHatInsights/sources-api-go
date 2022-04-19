@@ -84,7 +84,8 @@ objects:
             cpu: ${CPU_REQUEST}
             memory: ${MEMORY_REQUEST}
     database:
-      sharedDbAppName: sources-api
+      name: sources
+      version: 12
     kafkaTopics:
     - topicName: platform.sources.event-stream
       partitions: 3
