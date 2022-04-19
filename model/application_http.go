@@ -34,4 +34,8 @@ type ApplicationEditRequest struct {
 
 	AvailabilityStatus      *string `json:"availability_status"`
 	AvailabilityStatusError *string `json:"availability_status_error"`
+
+	// TODO: remove these once satellite goes away.
+	LastCheckedAt   *string `json:"last_checked_at"`
+	LastAvailableAt *string `json:"last_available_at"`
 }
