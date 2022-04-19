@@ -87,7 +87,7 @@ func LogrusLogLevelFrom(configLogLevel string) logrus.Level {
 	return logLevel
 }
 
-func backtrace() string {
+func backtrace() []string {
 	var filenames []string
 
 	pc := make([]uintptr, 1000)
@@ -95,10 +95,10 @@ func backtrace() string {
 	frames := runtime.CallersFrames(pc[:n])
 
 	for frame, isNextFrameValid := frames.Next(); isNextFrameValid; frame, isNextFrameValid = frames.Next() {
-		filenames = append(filenames, fmt.Sprintf("%s:%d", frame.File, frame.Line))
+		filenames = append(filenames, fmt.Sprintf("%s(%s:%d)", frame.Function, frame.File, frame.Line))
 	}
 
-	return strings.Join(filenames, ";")
+	return filenames
 }
 
 type CustomLoggerFormatter struct {
