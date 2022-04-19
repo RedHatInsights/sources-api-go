@@ -47,6 +47,8 @@ objects:
           value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
         - name: SOURCES_ENV
           value: ${SOURCES_ENV}
+        - name: MARKETPLACE_HOST
+          value: ${MARKETPLACE_HOST}
         - name: SOURCES_PSKS
           valueFrom:
             secretKeyRef:
@@ -201,7 +203,7 @@ parameters:
   name: RBAC_PATH
   required: true
   value: /api/rbac/v1
-- description: Host to user for the marketplace URL.
+- description: Host to use for the marketplace URL.
   displayName: Marketplace host URL
   name: MARKETPLACE_HOST
   required: true
