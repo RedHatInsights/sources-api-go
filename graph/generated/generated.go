@@ -124,6 +124,8 @@ type ApplicationResolver interface {
 	TenantID(ctx context.Context, obj *model1.Application) (string, error)
 }
 type AuthenticationResolver interface {
+	ID(ctx context.Context, obj *model1.Authentication) (string, error)
+
 	ResourceID(ctx context.Context, obj *model1.Authentication) (string, error)
 	TenantID(ctx context.Context, obj *model1.Authentication) (string, error)
 }
@@ -1046,14 +1048,14 @@ func (ec *executionContext) _Authentication_id(ctx context.Context, field graphq
 		Object:     "Authentication",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.Authentication().ID(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3867,15 +3869,25 @@ func (ec *executionContext) _Authentication(ctx context.Context, sel ast.Selecti
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Authentication")
 		case "id":
+			field := field
+
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Authentication_id(ctx, field, obj)
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Authentication_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
 
-			out.Values[i] = innerFunc(ctx)
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
 
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+			})
 		case "authtype":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Authentication_authtype(ctx, field, obj)
