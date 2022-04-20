@@ -57,8 +57,9 @@ func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 
 func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
-	query := DB.Debug().Model(&m.Application{}).
-		Where("tenant_id = ?", a.TenantID)
+	query := DB.Debug().
+		Model(&m.Application{}).
+		Where("applications.tenant_id = ?", a.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -68,7 +69,10 @@ func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 	count := int64(0)
 	query.Count(&count)
 
-	result := query.Limit(limit).Offset(offset).Find(&applications)
+	result := query.
+		Limit(limit).
+		Offset(offset).
+		Find(&applications)
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
