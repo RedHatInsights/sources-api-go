@@ -9,6 +9,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"gorm.io/datatypes"
@@ -25,6 +26,7 @@ var defaultSchema = "dao"
 func TestMain(t *testing.M) {
 	flags = parser.ParseFlags()
 	if flags.Integration {
+		Vault = &mocks.MockVault{}
 		ConnectAndMigrateDB("dao")
 	}
 
