@@ -40,14 +40,6 @@ func (add *authenticationDaoDbImpl) List(limit, offset int, filters []util.Filte
 		return nil, 0, util.NewErrBadRequest(err)
 	}
 
-	marketplaceTokenCacher = GetMarketplaceTokenCacher(add.TenantID)
-	for i := 0; i < len(authentications); i++ {
-		err := setMarketplaceTokenAuthExtraField(&authentications[i])
-		if err != nil {
-			return nil, 0, err
-		}
-	}
-
 	return authentications, count, nil
 }
 
@@ -63,11 +55,6 @@ func (add *authenticationDaoDbImpl) GetById(id string) (*m.Authentication, error
 
 	if err != nil {
 		return nil, util.NewErrNotFound("authentication")
-	}
-
-	err = setMarketplaceTokenAuthExtraField(authentication)
-	if err != nil {
-		return nil, err
 	}
 
 	return authentication, nil
@@ -120,13 +107,6 @@ func (add *authenticationDaoDbImpl) ListForSource(sourceID int64, limit, offset 
 
 	if err != nil {
 		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	for _, auth := range authentications {
-		err := setMarketplaceTokenAuthExtraField(&auth)
-		if err != nil {
-			return nil, 0, err
-		}
 	}
 
 	return authentications, count, nil
@@ -184,13 +164,6 @@ func (add *authenticationDaoDbImpl) ListForApplication(applicationID int64, limi
 		return nil, 0, util.NewErrBadRequest(err)
 	}
 
-	for _, auth := range authentications {
-		err := setMarketplaceTokenAuthExtraField(&auth)
-		if err != nil {
-			return nil, 0, err
-		}
-	}
-
 	return authentications, count, nil
 }
 
@@ -245,13 +218,6 @@ func (add *authenticationDaoDbImpl) ListForApplicationAuthentication(appAuthID i
 		return nil, 0, util.NewErrBadRequest(err)
 	}
 
-	for _, auth := range authentications {
-		err := setMarketplaceTokenAuthExtraField(&auth)
-		if err != nil {
-			return nil, 0, err
-		}
-	}
-
 	return authentications, count, nil
 }
 
@@ -304,13 +270,6 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 
 	if err != nil {
 		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	for _, auth := range authentications {
-		err := setMarketplaceTokenAuthExtraField(&auth)
-		if err != nil {
-			return nil, 0, err
-		}
 	}
 
 	return authentications, count, nil

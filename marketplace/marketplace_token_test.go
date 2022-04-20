@@ -1,4 +1,4 @@
-package redis
+package marketplace
 
 import (
 	"encoding/json"
@@ -7,19 +7,19 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
-	"github.com/go-redis/redis/v8"
+	"github.com/RedHatInsights/sources-api-go/redis"
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
 
 var tokenCacher = &MarketplaceTokenCacher{TenantID: 5}
 
 // setUpFakeToken sets up a test token ready to be used.
-func setUpFakeToken() *marketplace.BearerToken {
+func setUpFakeToken() *BearerToken {
 	expiration := time.Now().Add(24 * time.Hour).Unix()
 	testApiToken := "testApiToken"
 
-	return &marketplace.BearerToken{
+	return &BearerToken{
 		Expiration: &expiration,
 		Token:      &testApiToken,
 	}
@@ -27,8 +27,8 @@ func setUpFakeToken() *marketplace.BearerToken {
 
 // TestGetTokenBadTenant tests that when given a bad or nonexistent tenant, an expected error is returned.
 func TestGetTokenBadTenant(t *testing.T) {
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)
@@ -45,8 +45,8 @@ func TestGetToken(t *testing.T) {
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)
@@ -81,7 +81,7 @@ func TestGetToken(t *testing.T) {
 // TestSetTokenUnreachableRedis tests that an error is returned when something goes wrong. In this case, an
 // unreachable Redis server is simulated.
 func TestSetTokenUnreachableRedis(t *testing.T) {
-	Client = redis.NewClient(&redis.Options{
+	redis.Client = goredis.NewClient(&goredis.Options{
 		Addr:        "127.0.0.1:2345",
 		DialTimeout: time.Millisecond,
 	})
@@ -102,8 +102,8 @@ func TestSetTokenSuccess(t *testing.T) {
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)
@@ -142,8 +142,8 @@ func TestSetTokenExpired(t *testing.T) {
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)

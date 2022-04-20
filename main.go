@@ -30,7 +30,6 @@ func main() {
 
 	switch {
 	case conf.StatusListener:
-		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
 		go statuslistener.Run()
 	case conf.BackgroundWorker:
 		go jobs.Run()
@@ -86,10 +85,6 @@ func runServer() {
 	getEndpointDao = getEndpointDaoWithTenant
 	getMetaDataDao = getMetaDataDaoWithoutTenant
 	getRhcConnectionDao = getDefaultRhcConnectionDao
-
-	// Set up marketplace's token management functions
-	dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
-	dao.GetMarketplaceTokenProvider = dao.GetMarketplaceTokenProviderWithApiKey
 
 	// setting up the "http.Client" for the marketplace token provider
 	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib

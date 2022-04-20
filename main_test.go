@@ -55,9 +55,6 @@ func TestMain(t *testing.M) {
 
 		service.Producer = events.EventStreamProducer{Sender: &mocks.MockSender{}}
 
-		// Set up marketplace's token management functions
-		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
-
 		database.CreateFixtures()
 		err := dao.PopulateStaticTypeCache()
 		if err != nil {

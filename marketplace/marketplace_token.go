@@ -1,4 +1,4 @@
-package redis
+package marketplace
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
+	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/sirupsen/logrus"
 )
 
@@ -15,9 +15,9 @@ var redisKeySuffix = "marketplace_token_%d"
 
 type TokenCacher interface {
 	// FetchToken fetches a marketplace token from the cache.
-	FetchToken() (*marketplace.BearerToken, error)
+	FetchToken() (*BearerToken, error)
 	// CacheToken sets a marketplace token on the cache.
-	CacheToken(token *marketplace.BearerToken) error
+	CacheToken(token *BearerToken) error
 }
 
 // MarketplaceTokenCacher is an struct which implements the "TokenCacher" interface. This helps in abstracting away the
@@ -27,15 +27,15 @@ type MarketplaceTokenCacher struct {
 }
 
 // FetchToken fetches the token from the Redis cache.
-func (mtc *MarketplaceTokenCacher) FetchToken() (*marketplace.BearerToken, error) {
+func (mtc *MarketplaceTokenCacher) FetchToken() (*BearerToken, error) {
 	redisKey := fmt.Sprintf(redisKeySuffix, mtc.TenantID)
 
-	cachedToken, err := Client.Get(context.Background(), redisKey).Result()
+	cachedToken, err := redis.Client.Get(context.Background(), redisKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("token not present in Redis: %s", err)
 	}
 
-	token := &marketplace.BearerToken{}
+	token := &BearerToken{}
 	if err = json.Unmarshal([]byte(cachedToken), &token); err != nil {
 		return nil, fmt.Errorf("could not unmarshal the cached token: %s", err)
 	}
@@ -46,7 +46,7 @@ func (mtc *MarketplaceTokenCacher) FetchToken() (*marketplace.BearerToken, error
 }
 
 // CacheToken sets the token on the Redis cache.
-func (mtc *MarketplaceTokenCacher) CacheToken(token *marketplace.BearerToken) error {
+func (mtc *MarketplaceTokenCacher) CacheToken(token *BearerToken) error {
 	redisKey := fmt.Sprintf(redisKeySuffix, mtc.TenantID)
 
 	tokenExpiration := time.Unix(*token.Expiration, 0)
@@ -56,7 +56,7 @@ func (mtc *MarketplaceTokenCacher) CacheToken(token *marketplace.BearerToken) er
 		return fmt.Errorf("refusing to cache an expired token")
 	}
 
-	err := Client.Set(
+	err := redis.Client.Set(
 		context.Background(),
 		redisKey,
 		token,

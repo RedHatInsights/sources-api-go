@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
@@ -30,6 +31,7 @@ func TestMain(t *testing.M) {
 		ConnectAndMigrateDB("dao")
 	}
 
+	logging.InitLogger(config.Get())
 	code := t.Run()
 
 	if flags.Integration {
