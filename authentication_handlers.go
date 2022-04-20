@@ -6,6 +6,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -46,8 +47,15 @@ func AuthenticationList(c echo.Context) error {
 		return err
 	}
 
+	tenantId := authDao.Tenant()
 	out := make([]interface{}, 0, len(authentications))
 	for _, auth := range authentications {
+		// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
+		err := marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, &auth)
+		if err != nil {
+			return err
+		}
+
 		out = append(out, *auth.ToResponse())
 	}
 
@@ -64,6 +72,14 @@ func AuthenticationGet(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
+	tenantId := authDao.Tenant()
+	err = marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, auth)
+	if err != nil {
+		return err
+	}
+
 	return c.JSON(http.StatusOK, auth.ToResponse())
 }
 
@@ -110,6 +126,13 @@ func AuthenticationCreate(c echo.Context) error {
 	err = authDao.Create(auth)
 	if err != nil {
 		return util.NewErrBadRequest(err)
+	}
+
+	// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
+	tenantId := authDao.Tenant()
+	err = marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, auth)
+	if err != nil {
+		return err
 	}
 
 	accountNumber, err := getAccountNumberFromEchoContext(c)
@@ -160,6 +183,13 @@ func AuthenticationEdit(c echo.Context) error {
 	}
 	auth.Source = *source
 
+	// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
+	tenantId := authDao.Tenant()
+	err = marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, auth)
+	if err != nil {
+		return err
+	}
+
 	setNotificationForAvailabilityStatus(c, previousStatus, auth)
 	setEventStreamResource(c, auth)
 	return c.JSON(http.StatusOK, auth.ToResponse())
@@ -172,6 +202,13 @@ func AuthenticationDelete(c echo.Context) error {
 	}
 
 	auth, err := authDao.Delete(c.Param("uid"))
+	if err != nil {
+		return err
+	}
+
+	// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
+	tenantId := authDao.Tenant()
+	err = marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, auth)
 	if err != nil {
 		return err
 	}
