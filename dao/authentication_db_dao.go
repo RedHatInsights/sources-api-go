@@ -16,6 +16,7 @@ type authenticationDaoDbImpl struct {
 func (add *authenticationDaoDbImpl) List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
 	query := DB.
 		Debug().
+		Where("authentications.tenant_id = ?", add.TenantID).
 		Model(&m.Authentication{})
 
 	query, err := applyFilters(query, filters)
@@ -30,8 +31,6 @@ func (add *authenticationDaoDbImpl) List(limit, offset int, filters []util.Filte
 	// limiting + running the actual query.
 	authentications := make([]m.Authentication, 0, limit)
 	err = query.
-		Debug().
-		Where("tenant_id = ?", add.TenantID).
 		Limit(limit).
 		Offset(offset).
 		Find(&authentications).
