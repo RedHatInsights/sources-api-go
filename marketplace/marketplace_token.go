@@ -13,13 +13,6 @@ import (
 
 var redisKeySuffix = "marketplace_token_%d"
 
-type TokenCacher interface {
-	// FetchToken fetches a marketplace token from the cache.
-	FetchToken() (*BearerToken, error)
-	// CacheToken sets a marketplace token on the cache.
-	CacheToken(token *BearerToken) error
-}
-
 // MarketplaceTokenCacher is an struct which implements the "TokenCacher" interface. This helps in abstracting away the
 // dependencies and making testing easier.
 type MarketplaceTokenCacher struct {

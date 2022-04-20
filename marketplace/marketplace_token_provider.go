@@ -14,20 +14,9 @@ import (
 // which http client we want for the "GetToken" function, and allows us to mock it easily.
 var GetHttpClient func() HttpClient
 
-// HttpClient abstracts away the client to be used in the GetToken function, and allows mocking it easily for the
-// tests.
-type HttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
 // GetHttpClientStdlib returns a "http.Client" with a timeout of 10 seconds.
 func GetHttpClientStdlib() HttpClient {
 	return &http.Client{Timeout: 10 * time.Second}
-}
-
-type TokenProvider interface {
-	// RequestToken returns a bearer token using the given API Key.
-	RequestToken() (*BearerToken, error)
 }
 
 // MarketplaceTokenProvider is a type that satisfies the "TokenProvider" interface. The aim is to abstract away the
