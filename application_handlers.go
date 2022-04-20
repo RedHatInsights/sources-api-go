@@ -125,13 +125,7 @@ func ApplicationCreate(c echo.Context) error {
 
 		// do the rest async. Don't want to be tied to kafka.
 		go func() {
-			xrhid, ok := c.Get("x-rh-identity").(string)
-			if !ok {
-				c.Logger().Warnf("Failed to pull x-rh-identity from request - ditching post to kafka")
-				return
-			}
-
-			err := service.SendSuperKeyCreateRequest(xrhid, application)
+			err := service.SendSuperKeyCreateRequest(application, service.ForwadableHeaders(c))
 			if err != nil {
 				c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
 			}

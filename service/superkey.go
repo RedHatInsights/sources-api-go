@@ -13,7 +13,7 @@ import (
 
 const SUPERKEY_REQUEST_QUEUE = "platform.sources.superkey-requests"
 
-func SendSuperKeyCreateRequest(identity string, application *m.Application) error {
+func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
 	application, err := loadApplication(application)
 	if err != nil {
@@ -64,16 +64,13 @@ func SendSuperKeyCreateRequest(identity string, application *m.Application) erro
 	if err != nil {
 		return err
 	}
-	m.AddHeaders([]kafka.Header{
-		{Key: "event_type", Value: []byte("create_application")},
-		{Key: "x-rh-identity", Value: []byte(identity)},
-		{Key: "x-rh-sources-account-number", Value: []byte(application.Tenant.ExternalTenant)},
-	})
+
+	m.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("create_application")}))
 
 	return produceSuperkeyRequest(&m)
 }
 
-func SendSuperKeyDeleteRequest(identity string, application *m.Application) error {
+func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
 	application, err := loadApplication(application)
 	if err != nil {
@@ -124,11 +121,8 @@ func SendSuperKeyDeleteRequest(identity string, application *m.Application) erro
 	if err != nil {
 		return err
 	}
-	m.AddHeaders([]kafka.Header{
-		{Key: "event_type", Value: []byte("destroy_application")},
-		{Key: "x-rh-identity", Value: []byte(identity)},
-		{Key: "x-rh-sources-account-number", Value: []byte(application.Tenant.ExternalTenant)},
-	})
+
+	m.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("destroy_application")}))
 
 	return produceSuperkeyRequest(&m)
 }
