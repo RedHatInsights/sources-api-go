@@ -7,25 +7,31 @@ APP_NAME="sources"  # name of app-sre "application" folder this component lives 
 COMPONENT_NAME="sources-api-go"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/sources-api-go"
 
-IQE_PLUGINS="sources"
-IQE_MARKER_EXPRESSION="sources_smoke"
-IQE_FILTER_EXPRESSION=""
+IQE_PLUGINS="sources"  # name of the IQE plugin for this app.
+IQE_MARKER_EXPRESSION="sources_smoke"  # This is the value passed to pytest -m
+IQE_FILTER_EXPRESSION=""  # This is the value passed to pytest -k
+IQE_CJI_TIMEOUT="30m"  # This is the time to wait for smoke test to complete or fail
 
 # Install bonfire repo/initialize
-# CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
-# curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
+# https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/bootstrap.sh
+# This script automates the install / config of bonfire
+CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
+curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 
-# source $CICD_ROOT/build.sh
-# source $CICD_ROOT/deploy_ephemeral_env.sh
-# source $CICD_ROOT/smoke_test.sh
-
-# test building in the container
-make container
+source $CICD_ROOT/build.sh
+if [[ $? != 0 ]]; then
+    exit 1
+fi
+source $CICD_ROOT/deploy_ephemeral_env.sh
+if [[ $? != 0 ]]; then
+    exit 1
+fi
+source $CICD_ROOT/smoke_test.sh
 if [[ $? != 0 ]]; then
     exit 1
 fi
 
-
+# spin up the db for integration tests
 DB_CONTAINER="sources-api-db-$(uuidgen)"
 echo "Spinning up container: ${DB_CONTAINER}"
 
