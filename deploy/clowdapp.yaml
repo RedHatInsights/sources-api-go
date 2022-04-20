@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: sources-api-go
+  name: sources-api
 objects:
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
-    name: sources-api-go
+    name: sources-api
   spec:
     envName: ${ENV_NAME}
     deployments:
@@ -84,7 +84,8 @@ objects:
             cpu: ${CPU_REQUEST}
             memory: ${MEMORY_REQUEST}
     database:
-      sharedDbAppName: sources-api
+      name: sources
+      version: 12
     kafkaTopics:
     - topicName: platform.sources.event-stream
       partitions: 3
@@ -114,9 +115,8 @@ objects:
       partitions: 3
       replicas: 3
     inMemoryDb: true
+    featureFlags: true
     dependencies:
-    - sources-api
-    optionalDependencies:
     - rbac
 parameters:
 - description: Scheme of the Cloud Meter API
