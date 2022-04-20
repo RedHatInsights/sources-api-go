@@ -378,6 +378,9 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 }
 
 func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
+	appTypeId := int64(1)
+	wantSourcesCount := len(testutils.GetSourcesWithAppType(appTypeId))
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/1/sources",
@@ -391,14 +394,14 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 	)
 
 	c.SetParamNames("application_type_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", appTypeId))
 
 	err := ApplicationTypeListSource(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -416,7 +419,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != wantSourcesCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -426,7 +429,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 			t.Error("model did not deserialize as a source")
 		}
 
-		if s["name"] != "Source1" {
+		if s["id"] == 1 && s["name"] != "Source1" {
 			t.Error("ghosts infected the return")
 		}
 	}

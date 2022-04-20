@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -84,12 +85,8 @@ func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit
 			return nil, 0, util.NewErrNotFound("application type")
 		}
 
-		// Application type exists = return sources subcollection
-		for index, source := range src.Sources {
-			if source.ID == object.Id {
-				sources = append(sources, src.Sources[index])
-			}
-		}
+		// Application type exists = find related sources
+		sources = testutils.GetSourcesWithAppType(object.Id)
 
 	default:
 		return nil, 0, fmt.Errorf("unexpected primary collection type")
@@ -333,7 +330,6 @@ func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}
 	}
 
 	count := int64(len(appTypesOut))
-
 	return appTypesOut, count, nil
 }
 
