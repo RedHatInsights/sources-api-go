@@ -91,7 +91,7 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 func (sk SuperkeyDestroyJob) sendForApplication(id int64) error {
 	l.Log.Infof("Sending SuperKey Delete request for application %v", sk.Id)
 
-	err := service.SendSuperKeyDeleteRequest(sk.Identity, &m.Application{ID: id, TenantID: sk.Tenant})
+	err := service.SendSuperKeyDeleteRequest(&m.Application{ID: id, TenantID: sk.Tenant}, sk.Headers)
 	if err != nil {
 		return err
 	}
