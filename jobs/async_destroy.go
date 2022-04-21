@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -10,11 +11,11 @@ import (
 )
 
 type AsyncDestroyJob struct {
-	Headers     []kafka.Header
-	Tenant      int64
-	WaitSeconds int
-	Model       string
-	Id          int64
+	Headers     []kafka.Header `json:"headers"`
+	Tenant      int64          `json:"tenant"`
+	WaitSeconds int            `json:"wait_seconds"`
+	Model       string         `json:"model"`
+	Id          int64          `json:"id"`
 }
 
 func (ad AsyncDestroyJob) Delay() time.Duration {
@@ -40,7 +41,6 @@ func (ad AsyncDestroyJob) Run() error {
 		if err != nil {
 			return err
 		}
-
 	case "application":
 		err := service.DeleteCascade(&ad.Tenant, "Application", ad.Id, ad.Headers)
 		if err != nil {
@@ -51,4 +51,12 @@ func (ad AsyncDestroyJob) Run() error {
 	}
 
 	return nil
+}
+
+func (ad AsyncDestroyJob) ToJSON() []byte {
+	bytes, err := json.Marshal(&ad)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
 }

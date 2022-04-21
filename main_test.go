@@ -7,12 +7,14 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/middleware"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -50,6 +52,8 @@ func TestMain(t *testing.M) {
 		getAuthenticationDao = getAuthenticationDaoWithTenant
 
 		dao.Vault = &mocks.MockVault{}
+
+		service.Producer = events.EventStreamProducer{Sender: &mocks.MockSender{}}
 
 		// Set up marketplace's token management functions
 		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId

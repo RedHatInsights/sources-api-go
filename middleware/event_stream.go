@@ -54,6 +54,14 @@ func RaiseEvent(next echo.HandlerFunc) echo.HandlerFunc {
 
 		headers := service.ForwadableHeaders(c)
 
-		return service.RaiseEvent(eventType, resource, headers)
+		// async!
+		go func() {
+			err := service.RaiseEvent(eventType, resource, headers)
+			if err != nil {
+				l.Log.Warnf("Error raising event %v: %v", eventType, err)
+			}
+		}()
+
+		return nil
 	}
 }

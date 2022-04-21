@@ -10,6 +10,27 @@ objects:
   spec:
     envName: ${ENV_NAME}
     deployments:
+    - name: background-worker
+      minReplicas: 1
+      podSpec:
+        args:
+        - -background-worker
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: LOG_LEVEL
+          value: ${LOG_LEVEL}
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: encryption-key
+        resources:
+          limits:
+            cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
+            memory: ${AVAILABILITY_LISTENER_MEMORY_LIMIT}
+          requests:
+            cpu: ${AVAILABILITY_LISTENER_CPU_REQUEST}
+            memory: ${AVAILABILITY_LISTENER_MEMORY_REQUEST}
     - name: availability-status-listener
       minReplicas: ${{AVAILABILITY_MIN_REPLICAS}}
       podSpec:

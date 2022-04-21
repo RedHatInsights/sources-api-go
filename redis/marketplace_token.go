@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -29,7 +30,7 @@ type MarketplaceTokenCacher struct {
 func (mtc *MarketplaceTokenCacher) FetchToken() (*marketplace.BearerToken, error) {
 	redisKey := fmt.Sprintf(redisKeySuffix, mtc.TenantID)
 
-	cachedToken, err := Client.Get(redisKey).Result()
+	cachedToken, err := Client.Get(context.Background(), redisKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("token not present in Redis: %s", err)
 	}
@@ -56,6 +57,7 @@ func (mtc *MarketplaceTokenCacher) CacheToken(token *marketplace.BearerToken) er
 	}
 
 	err := Client.Set(
+		context.Background(),
 		redisKey,
 		token,
 		redisExpiration,

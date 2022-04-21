@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -13,11 +14,11 @@ import (
 )
 
 type SuperkeyDestroyJob struct {
-	Headers  []kafka.Header
-	Identity string
-	Tenant   int64
-	Model    string
-	Id       int64
+	Headers  []kafka.Header `json:"headers"`
+	Identity string         `json:"identity"`
+	Tenant   int64          `json:"tenant"`
+	Model    string         `json:"model"`
+	Id       int64          `json:"id"`
 }
 
 func (sk SuperkeyDestroyJob) Delay() time.Duration {
@@ -106,4 +107,12 @@ func (sk SuperkeyDestroyJob) sendForApplication(id int64) error {
 	})
 
 	return nil
+}
+
+func (sk SuperkeyDestroyJob) ToJSON() []byte {
+	bytes, err := json.Marshal(&sk)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
 }

@@ -26,13 +26,15 @@ func main() {
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
 	// a time can run the migrations.
 	redis.Init()
-	jobs.Init()
 	dao.Init()
 
-	if conf.StatusListener {
+	switch {
+	case conf.StatusListener:
 		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
 		go statuslistener.Run()
-	} else {
+	case conf.BackgroundWorker:
+		go jobs.Run()
+	default:
 		// launch 2 listeners - one for metrics and one for the actual application,
 		// one on 8000 and one on 9000 (per clowder)
 		go runServer()

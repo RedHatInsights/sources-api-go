@@ -117,7 +117,7 @@ func Init() {
 	Vault = vaultClient.Logical()
 
 	// we only want to seed the database when running the api pod - not the status listener
-	if !conf.StatusListener {
+	if !conf.StatusListener && !conf.BackgroundWorker {
 		err = seedDatabase()
 		if err != nil {
 			logging.Log.Fatalf("Failed to seed db: %v", err)

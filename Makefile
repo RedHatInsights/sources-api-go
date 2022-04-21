@@ -21,6 +21,9 @@ inlinerun:
 listener:
 	go run `ls *.go | grep -v test` -listener
 
+backgroundworker:
+	go run `ls *.go | grep -v test` -background-worker
+
 container:
 	docker build . -t sources-api-go
 
