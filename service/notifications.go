@@ -23,9 +23,10 @@ type Notifier interface {
 type AvailabilityStatusNotifier struct {
 }
 
-var (
+var notificationTopic = config.Get().KafkaTopic("platform.notifications.ingress")
+
+const (
 	application                = "sources"
-	notificationTopic          = config.Get().KafkaTopic("platform.notifications.ingress")
 	statusEventType            = "availability-status"
 	bundle                     = "console"
 	notificationMessageVersion = "v1.1.0"
