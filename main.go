@@ -56,6 +56,8 @@ func runServer() {
 	// set the binder to the one that does not allow extra parameters in payload
 	e.Binder = &NoUnknownFieldsBinder{}
 
+	// strip trailing slashes
+	e.Pre(middleware.RemoveTrailingSlash())
 	// recover from any `panic()`'s that happen in the handler, so the server doesn't crash.
 	e.Use(middleware.Recover())
 	// set up logging with our custom logger
