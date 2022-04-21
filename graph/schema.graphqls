@@ -30,7 +30,7 @@ input SortBy{
   direction: Direction
 }
 
-# Base Query Object, which returns the array of sources with metadata
+# Base Query Object, which returns the array of sources (or application types) with metadata
 type Query {
   sources(
     limit: Int,
@@ -38,6 +38,13 @@ type Query {
     sort_by: [SortBy]
     filter: [Filter]
     ): [Source!]!
+
+  application_types(
+    limit: Int,
+    offset: Int,
+    sort_by: [SortBy]
+    filter: [Filter]
+  ): [ApplicationType]
 
   meta: Meta!
 }
@@ -107,4 +114,15 @@ type Authentication {
 
 type Meta {
   count: Int!
+}
+
+type ApplicationType {
+  id: ID!
+  name: String!
+  display_name: String!
+  dependent_applications: Any
+  supported_source_types: Any
+  supported_authentication_types: Any
+
+  sources: [Source]!
 }
