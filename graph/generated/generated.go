@@ -38,6 +38,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Application() ApplicationResolver
+	ApplicationType() ApplicationTypeResolver
 	Authentication() AuthenticationResolver
 	Endpoint() EndpointResolver
 	Query() QueryResolver
@@ -57,6 +58,16 @@ type ComplexityRoot struct {
 		ID                      func(childComplexity int) int
 		PausedAt                func(childComplexity int) int
 		TenantID                func(childComplexity int) int
+	}
+
+	ApplicationType struct {
+		DependentApplications        func(childComplexity int) int
+		DisplayName                  func(childComplexity int) int
+		ID                           func(childComplexity int) int
+		Name                         func(childComplexity int) int
+		Sources                      func(childComplexity int) int
+		SupportedAuthenticationTypes func(childComplexity int) int
+		SupportedSourceTypes         func(childComplexity int) int
 	}
 
 	Authentication struct {
@@ -91,8 +102,9 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Meta    func(childComplexity int) int
-		Sources func(childComplexity int, limit *int, offset *int, sortBy []*model.SortBy, filter []*model.Filter) int
+		ApplicationTypes func(childComplexity int, limit *int, offset *int, sortBy []*model.SortBy, filter []*model.Filter) int
+		Meta             func(childComplexity int) int
+		Sources          func(childComplexity int, limit *int, offset *int, sortBy []*model.SortBy, filter []*model.Filter) int
 	}
 
 	Source struct {
@@ -123,6 +135,14 @@ type ApplicationResolver interface {
 	Authentications(ctx context.Context, obj *model1.Application) ([]*model1.Authentication, error)
 	TenantID(ctx context.Context, obj *model1.Application) (string, error)
 }
+type ApplicationTypeResolver interface {
+	ID(ctx context.Context, obj *model1.ApplicationType) (string, error)
+
+	DependentApplications(ctx context.Context, obj *model1.ApplicationType) (interface{}, error)
+	SupportedSourceTypes(ctx context.Context, obj *model1.ApplicationType) (interface{}, error)
+	SupportedAuthenticationTypes(ctx context.Context, obj *model1.ApplicationType) (interface{}, error)
+	Sources(ctx context.Context, obj *model1.ApplicationType) ([]*model1.Source, error)
+}
 type AuthenticationResolver interface {
 	ID(ctx context.Context, obj *model1.Authentication) (string, error)
 
@@ -137,6 +157,7 @@ type EndpointResolver interface {
 }
 type QueryResolver interface {
 	Sources(ctx context.Context, limit *int, offset *int, sortBy []*model.SortBy, filter []*model.Filter) ([]*model1.Source, error)
+	ApplicationTypes(ctx context.Context, limit *int, offset *int, sortBy []*model.SortBy, filter []*model.Filter) ([]*model1.ApplicationType, error)
 	Meta(ctx context.Context) (*model.Meta, error)
 }
 type SourceResolver interface {
@@ -220,6 +241,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Application.TenantID(childComplexity), true
+
+	case "ApplicationType.dependent_applications":
+		if e.complexity.ApplicationType.DependentApplications == nil {
+			break
+		}
+
+		return e.complexity.ApplicationType.DependentApplications(childComplexity), true
+
+	case "ApplicationType.display_name":
+		if e.complexity.ApplicationType.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.ApplicationType.DisplayName(childComplexity), true
+
+	case "ApplicationType.id":
+		if e.complexity.ApplicationType.ID == nil {
+			break
+		}
+
+		return e.complexity.ApplicationType.ID(childComplexity), true
+
+	case "ApplicationType.name":
+		if e.complexity.ApplicationType.Name == nil {
+			break
+		}
+
+		return e.complexity.ApplicationType.Name(childComplexity), true
+
+	case "ApplicationType.sources":
+		if e.complexity.ApplicationType.Sources == nil {
+			break
+		}
+
+		return e.complexity.ApplicationType.Sources(childComplexity), true
+
+	case "ApplicationType.supported_authentication_types":
+		if e.complexity.ApplicationType.SupportedAuthenticationTypes == nil {
+			break
+		}
+
+		return e.complexity.ApplicationType.SupportedAuthenticationTypes(childComplexity), true
+
+	case "ApplicationType.supported_source_types":
+		if e.complexity.ApplicationType.SupportedSourceTypes == nil {
+			break
+		}
+
+		return e.complexity.ApplicationType.SupportedSourceTypes(childComplexity), true
 
 	case "Authentication.authtype":
 		if e.complexity.Authentication.AuthType == nil {
@@ -374,6 +444,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Meta.Count(childComplexity), true
+
+	case "Query.application_types":
+		if e.complexity.Query.ApplicationTypes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_application_types_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ApplicationTypes(childComplexity, args["limit"].(*int), args["offset"].(*int), args["sort_by"].([]*model.SortBy), args["filter"].([]*model.Filter)), true
 
 	case "Query.meta":
 		if e.complexity.Query.Meta == nil {
@@ -597,6 +679,13 @@ type Query {
     filter: [Filter]
     ): [Source!]!
 
+  application_types(
+    limit: Int,
+    offset: Int,
+    sort_by: [SortBy]
+    filter: [Filter]
+  ): [ApplicationType]
+
   meta: Meta!
 }
 
@@ -666,6 +755,17 @@ type Authentication {
 type Meta {
   count: Int!
 }
+
+type ApplicationType {
+  id: ID!
+  name: String!
+  display_name: String!
+  dependent_applications: Any
+  supported_source_types: Any
+  supported_authentication_types: Any
+
+  sources: [Source]!
+}
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -686,6 +786,48 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_application_types_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 []*model.SortBy
+	if tmp, ok := rawArgs["sort_by"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sort_by"))
+		arg2, err = ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐSortBy(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sort_by"] = arg2
+	var arg3 []*model.Filter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg3, err = ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋgraphᚋmodelᚐFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg3
 	return args, nil
 }
 
@@ -1035,6 +1177,242 @@ func (ec *executionContext) _Application_tenant_id(ctx context.Context, field gr
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApplicationType_id(ctx context.Context, field graphql.CollectedField, obj *model1.ApplicationType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApplicationType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ApplicationType().ID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApplicationType_name(ctx context.Context, field graphql.CollectedField, obj *model1.ApplicationType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApplicationType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApplicationType_display_name(ctx context.Context, field graphql.CollectedField, obj *model1.ApplicationType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApplicationType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DisplayName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApplicationType_dependent_applications(ctx context.Context, field graphql.CollectedField, obj *model1.ApplicationType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApplicationType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ApplicationType().DependentApplications(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApplicationType_supported_source_types(ctx context.Context, field graphql.CollectedField, obj *model1.ApplicationType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApplicationType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ApplicationType().SupportedSourceTypes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApplicationType_supported_authentication_types(ctx context.Context, field graphql.CollectedField, obj *model1.ApplicationType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApplicationType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ApplicationType().SupportedAuthenticationTypes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApplicationType_sources(ctx context.Context, field graphql.CollectedField, obj *model1.ApplicationType) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApplicationType",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.ApplicationType().Sources(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model1.Source)
+	fc.Result = res
+	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Authentication_id(ctx context.Context, field graphql.CollectedField, obj *model1.Authentication) (ret graphql.Marshaler) {
@@ -1805,6 +2183,45 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 	res := resTmp.([]*model1.Source)
 	fc.Result = res
 	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_application_types(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_application_types_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ApplicationTypes(rctx, args["limit"].(*int), args["offset"].(*int), args["sort_by"].([]*model.SortBy), args["filter"].([]*model.Filter))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model1.ApplicationType)
+	fc.Result = res
+	return ec.marshalOApplicationType2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplicationType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_meta(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3858,6 +4275,138 @@ func (ec *executionContext) _Application(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var applicationTypeImplementors = []string{"ApplicationType"}
+
+func (ec *executionContext) _ApplicationType(ctx context.Context, sel ast.SelectionSet, obj *model1.ApplicationType) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, applicationTypeImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ApplicationType")
+		case "id":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ApplicationType_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "name":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ApplicationType_name(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "display_name":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._ApplicationType_display_name(ctx, field, obj)
+			}
+
+			out.Values[i] = innerFunc(ctx)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "dependent_applications":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ApplicationType_dependent_applications(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "supported_source_types":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ApplicationType_supported_source_types(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "supported_authentication_types":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ApplicationType_supported_authentication_types(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "sources":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ApplicationType_sources(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var authenticationImplementors = []string{"Authentication"}
 
 func (ec *executionContext) _Authentication(ctx context.Context, sel ast.SelectionSet, obj *model1.Authentication) graphql.Marshaler {
@@ -4191,6 +4740,26 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "application_types":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_application_types(ctx, field)
 				return res
 			}
 
@@ -5068,6 +5637,44 @@ func (ec *executionContext) marshalNMeta2ᚖgithubᚗcomᚋRedHatInsightsᚋsour
 	return ec._Meta(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v []*model1.Source) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOSource2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
 func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model1.Source) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -5460,6 +6067,54 @@ func (ec *executionContext) marshalOApplication2ᚖgithubᚗcomᚋRedHatInsights
 	return ec._Application(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOApplicationType2ᚕᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplicationType(ctx context.Context, sel ast.SelectionSet, v []*model1.ApplicationType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOApplicationType2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplicationType(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOApplicationType2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐApplicationType(ctx context.Context, sel ast.SelectionSet, v *model1.ApplicationType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ApplicationType(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOAuthentication2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐAuthentication(ctx context.Context, sel ast.SelectionSet, v *model1.Authentication) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -5586,6 +6241,13 @@ func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋRedHatInsightsᚋ
 	}
 	res, err := ec.unmarshalInputSortBy(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSource2ᚖgithubᚗcomᚋRedHatInsightsᚋsourcesᚑapiᚑgoᚋmodelᚐSource(ctx context.Context, sel ast.SelectionSet, v *model1.Source) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Source(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

@@ -13,6 +13,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
 	generated_model "github.com/RedHatInsights/sources-api-go/graph/model"
 	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func (r *applicationResolver) ID(ctx context.Context, obj *model.Application) (string, error) {
@@ -49,6 +50,32 @@ func (r *applicationResolver) Authentications(ctx context.Context, obj *model.Ap
 
 func (r *applicationResolver) TenantID(ctx context.Context, obj *model.Application) (string, error) {
 	return strconv.Itoa(int(*tenantIdFromCtx(ctx))), nil
+}
+
+func (r *applicationTypeResolver) ID(ctx context.Context, obj *model.ApplicationType) (string, error) {
+	return strconv.FormatInt(obj.Id, 10), nil
+}
+
+func (r *applicationTypeResolver) DependentApplications(ctx context.Context, obj *model.ApplicationType) (interface{}, error) {
+	return obj.DependentApplications, nil
+}
+
+func (r *applicationTypeResolver) SupportedSourceTypes(ctx context.Context, obj *model.ApplicationType) (interface{}, error) {
+	return obj.SupportedSourceTypes, nil
+}
+
+func (r *applicationTypeResolver) SupportedAuthenticationTypes(ctx context.Context, obj *model.ApplicationType) (interface{}, error) {
+	return obj.SupportedAuthenticationTypes, nil
+}
+
+func (r *applicationTypeResolver) Sources(ctx context.Context, obj *model.ApplicationType) ([]*model.Source, error) {
+	srces, _, err := dao.GetSourceDao(tenantIdFromCtx(ctx)).SubCollectionList(model.ApplicationType{Id: obj.Id}, 500, 0, []util.Filter{})
+	out := make([]*model.Source, len(srces))
+	for i := range srces {
+		out[i] = &srces[i]
+	}
+
+	return out, err
 }
 
 func (r *authenticationResolver) ID(ctx context.Context, obj *model.Authentication) (string, error) {
@@ -110,6 +137,29 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 	out := make([]*model.Source, len(srces))
 	for i := range srces {
 		out[i] = &srces[i]
+	}
+	return out, err
+}
+
+func (r *queryResolver) ApplicationTypes(ctx context.Context, limit *int, offset *int, sortBy []*generated_model.SortBy, filter []*generated_model.Filter) ([]*model.ApplicationType, error) {
+	// default limit and offset
+	if limit == nil {
+		limit = new(int)
+		*limit = 100
+	}
+	if offset == nil {
+		offset = new(int)
+		*offset = 0
+	}
+
+	// parse any filters passed along the request
+	f := parseArgs(sortBy, filter)
+	appTypes, count, err := dao.GetApplicationTypeDao(tenantIdFromCtx(ctx)).List(*limit, *offset, f)
+	sendCount(ctx, count)
+
+	out := make([]*model.ApplicationType, len(appTypes))
+	for i := range appTypes {
+		out[i] = &appTypes[i]
 	}
 	return out, err
 }
@@ -177,6 +227,11 @@ func (r *sourceResolver) TenantID(ctx context.Context, obj *model.Source) (strin
 // Application returns generated.ApplicationResolver implementation.
 func (r *Resolver) Application() generated.ApplicationResolver { return &applicationResolver{r} }
 
+// ApplicationType returns generated.ApplicationTypeResolver implementation.
+func (r *Resolver) ApplicationType() generated.ApplicationTypeResolver {
+	return &applicationTypeResolver{r}
+}
+
 // Authentication returns generated.AuthenticationResolver implementation.
 func (r *Resolver) Authentication() generated.AuthenticationResolver {
 	return &authenticationResolver{r}
@@ -192,6 +247,7 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 func (r *Resolver) Source() generated.SourceResolver { return &sourceResolver{r} }
 
 type applicationResolver struct{ *Resolver }
+type applicationTypeResolver struct{ *Resolver }
 type authenticationResolver struct{ *Resolver }
 type endpointResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

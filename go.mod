@@ -11,8 +11,8 @@ require (
 	github.com/go-gormigrate/gormigrate/v2 v2.0.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang-migrate/migrate/v4 v4.15.1
+	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
-    github.com/google/go-cmp v0.5.6
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jackc/pgx/v4 v4.15.0

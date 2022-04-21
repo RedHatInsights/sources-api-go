@@ -76,3 +76,7 @@ models:
     fields:
       id:
         resolver: true
+  ApplicationType:
+    fields:
+      sources:
+        resolver: true
