@@ -144,17 +144,6 @@ func DropSchema(dbSchema string) {
 	}
 }
 
-func CloseTestDbConnection() {
-	rawDB, err := DB.DB()
-	if err != nil {
-		log.Fatal(err)
-	}
-	rawDB.Close()
-
-	CloseConnection()
-	ConnectToTestDB(defaultSchema)
-}
-
 // MigrateSchema migrates all the models for the current schema.
 func MigrateSchema() {
 	// Use a custom "authentication" table to avoid Gorm creating FKs when the real databases don't have them.
