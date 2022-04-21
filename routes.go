@@ -36,7 +36,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
 		r.GET("/sources/:id", SourceGet, middleware.Tenancy)
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
-		r.PATCH("/sources/:id", SourceEdit, permissionMiddleware...)
+		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
 		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy)
 		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
@@ -51,7 +51,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
 		r.GET("/applications/:id", ApplicationGet, middleware.Tenancy)
 		r.POST("/applications", ApplicationCreate, permissionMiddleware...)
-		r.PATCH("/applications/:id", ApplicationEdit, permissionMiddleware...)
+		r.PATCH("/applications/:id", ApplicationEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.SuperKeyDestroyApplication)...)
 		r.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
 		r.POST("/applications/:id/pause", ApplicationPause, middleware.Tenancy)
@@ -61,7 +61,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
 		r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
 		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
-		r.PATCH("/authentications/:uid", AuthenticationEdit, permissionMiddleware...)
+		r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
 
 		// ApplicationTypes
@@ -73,7 +73,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
 		r.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
 		r.POST("/endpoints", EndpointCreate, permissionMiddleware...)
-		r.PATCH("/endpoints/:id", EndpointEdit, permissionMiddleware...)
+		r.PATCH("/endpoints/:id", EndpointEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/endpoints/:id", EndpointDelete, permissionMiddleware...)
 		r.GET("/endpoints/:endpoint_id/authentications", EndpointListAuthentications, tenancyWithListMiddleware...)
 
@@ -98,7 +98,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/rhc_connections", RhcConnectionList, tenancyWithListMiddleware...)
 		r.GET("/rhc_connections/:id", RhcConnectionGetById, permissionMiddleware...)
 		r.POST("/rhc_connections", RhcConnectionCreate, permissionMiddleware...)
-		r.PATCH("/rhc_connections/:id", RhcConnectionEdit, permissionMiddleware...)
+		r.PATCH("/rhc_connections/:id", RhcConnectionEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
 		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
 

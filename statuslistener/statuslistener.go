@@ -12,6 +12,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -116,13 +117,33 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
+	previousStatus, err := dao.GetAvailabilityStatusFromStatusMessage(tenant.Id, statusMessage.ResourceID, statusMessage.ResourceType)
+	if err != nil {
+		l.Log.Errorf("unable to get status availability: %s", err)
+		return
+	}
+
 	resource.TenantID = tenant.Id
 	resource.AccountNumber = tenant.ExternalTenant
-	err = (*modelEventDao).FetchAndUpdateBy(*resource, updateAttributes)
-
+	resultRecord, err := (*modelEventDao).FetchAndUpdateBy(*resource, updateAttributes)
 	if err != nil {
-		l.Log.Errorf("Update error in status availability: %s", err)
+		l.Log.Errorf("unable to update availability status: %s", err)
 		return
+	}
+
+	if previousStatus != statusMessage.Status {
+
+		emailInfo, ok := resultRecord.(m.EmailNotification)
+		if !ok {
+			l.Log.Errorf("error in type assert of %v", resultRecord)
+		}
+
+		if emailInfo != nil {
+			err = service.EmitAvailabilityStatusNotification(accountNumber, emailInfo.ToEmail(previousStatus))
+			if err != nil {
+				l.Log.Errorf("unable to emit notification: %v", err)
+			}
+		}
 	}
 
 	updateAttributeKeys := make([]string, 0)

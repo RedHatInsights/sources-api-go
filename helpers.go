@@ -50,6 +50,10 @@ func getLimitAndOffset(c echo.Context) (int, int, error) {
 	return limit, offset, nil
 }
 
+func setNotificationForAvailabilityStatus(c echo.Context, previousStatus string, resource m.EmailNotification) {
+	c.Set("emailNotificationInfo", resource.ToEmail(previousStatus))
+}
+
 func setEventStreamResource(c echo.Context, model m.Event) {
 	// get the model type we're raising the event for
 	// 1. Strip the pointer symbol

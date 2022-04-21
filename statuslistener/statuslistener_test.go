@@ -16,7 +16,9 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/go-cmp/cmp"
 	kafkaGo "github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 )
@@ -391,7 +393,9 @@ type TestData struct {
 
 	MessageHeaders []kafkaGo.Header
 
-	RaiseEventCalled bool
+	RaiseEventCalled                          bool
+	ExpectedEmitAvailabilityStatusCallCounter int
+	EmailNotificationInfo                     *m.EmailNotificationInfo
 }
 
 func TestConsumeStatusMessage(t *testing.T) {
@@ -418,11 +422,13 @@ func TestConsumeStatusMessage(t *testing.T) {
 	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: headers, RaiseEventCalled: true}
 
+	emailNotificationInfo := &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Application"}
 	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
-	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: headers, RaiseEventCalled: true}
+	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: headers, RaiseEventCalled: true, ExpectedEmitAvailabilityStatusCallCounter: 1, EmailNotificationInfo: emailNotificationInfo}
 
+	emailNotificationInfo = &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", PreviousAvailabilityStatus: "unavailable", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Endpoint"}
 	statusMessageEndpoint := types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
-	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: true}
+	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: true, ExpectedEmitAvailabilityStatusCallCounter: 1, EmailNotificationInfo: emailNotificationInfo}
 
 	statusMessageEndpoint = types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", ResourceIDRaw: "99", Status: m.Available}
 	endpointTestDataNotFound := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: false}
@@ -434,6 +440,8 @@ func TestConsumeStatusMessage(t *testing.T) {
 	testData[3] = endpointTestDataNotFound
 
 	for _, testEntry := range testData {
+		service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{EmailNotificationInfo: testEntry.EmailNotificationInfo}
+
 		sender := MockEventStreamSender{TestSuite: t, StatusMessage: testEntry.StatusMessage}
 		esp := &events.EventStreamProducer{Sender: &sender}
 		avs := AvailabilityStatusListener{EventStreamProducer: esp}
@@ -452,7 +460,23 @@ func TestConsumeStatusMessage(t *testing.T) {
 				wasOrWasNotExpected = " not "
 			}
 
-			sender.TestSuite.Errorf("RaiseEvent was%scalled while it was%sexpected", wasOrWasNot, wasOrWasNotExpected)
+			sender.TestSuite.Errorf("RaiseEvent was%scalled while it was%sexpected (%s:%s)", wasOrWasNot, wasOrWasNotExpected, testEntry.ResourceType, testEntry.ResourceID)
+		}
+
+		if testEntry.ExpectedEmitAvailabilityStatusCallCounter > 0 {
+			notificationProducer, ok := service.NotificationProducer.(*mocks.MockAvailabilityStatusNotificationProducer)
+			if !ok {
+				t.Errorf("unable to cast notification producer (%s:%s)", testEntry.ResourceType, testEntry.ResourceID)
+			}
+
+			if testEntry.ExpectedEmitAvailabilityStatusCallCounter != notificationProducer.EmitAvailabilityStatusCallCounter {
+				t.Errorf("method EmitAvailabilityStatusNotification was not called (%s:%s)", testEntry.ResourceType, testEntry.ResourceID)
+			}
+
+			if !cmp.Equal(testEntry.EmailNotificationInfo, notificationProducer.EmailNotificationInfo) {
+				t.Errorf("Invalid email notification data(%s:%s)", testEntry.ResourceType, testEntry.ResourceID)
+				t.Errorf("Expected: %v Obtained: %v", testEntry.EmailNotificationInfo, notificationProducer.EmailNotificationInfo)
+			}
 		}
 	}
 }

@@ -68,7 +68,7 @@
   ],
   "endpoints": [
     {
-      "availability_status": null,
+      "availability_status": "unavailable",
       "availability_status_error": null,
       "certificate_authority": null,
       "created_at": "2021-12-06 20:00:14 CET",
@@ -89,7 +89,7 @@
       "verify_ssl": null
     },
     {
-      "availability_status": null,
+      "availability_status": "unavailable",
       "availability_status_error": null,
       "certificate_authority": null,
       "created_at": "2021-12-06 20:00:14 CET",

@@ -175,13 +175,19 @@ func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 	return BulkMessageFromSource(&application.Source, authentication)
 }
 
-func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) error {
+func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
 	result := DB.Debug().Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("application not found %v", resource)
+		return nil, fmt.Errorf("application not found %v", resource)
 	}
 
-	return nil
+	a.TenantID = &resource.TenantID
+	application, err := a.GetByIdWithPreload(&resource.ResourceID, "Source")
+	if err != nil {
+		return nil, err
+	}
+
+	return application, nil
 }
 
 func (a *applicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
