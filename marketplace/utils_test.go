@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 )
@@ -29,8 +29,18 @@ func setUpBearerToken() *BearerToken {
 }
 
 // setUpValidMarketplaceAuth sets up a valid authentication which is of the "marketplace" type.
-func setUpValidMarketplaceAuth() *m.Authentication {
-	return &m.Authentication{AuthType: "marketplace-token", Password: util.StringRef("apiKey")}
+func setUpValidMarketplaceAuth() (*m.Authentication, error) {
+	// Encrypt the password so that the utility can properly decrypt it.
+	cypherText, err := util.Encrypt("apiKey")
+	if err != nil {
+		return nil, fmt.Errorf(`could not encrypt the password: %s`, err)
+	}
+
+	return &m.Authentication{
+			AuthType: "marketplace-token",
+			Password: &cypherText,
+		},
+		nil
 }
 
 // -----------------------------
@@ -66,7 +76,7 @@ type marketplaceTokenCacherNotCachedButCacheable struct {
 }
 
 func (mtcnc *marketplaceTokenCacherNotCachedButCacheable) FetchToken() (*BearerToken, error) {
-	return nil, fmt.Errorf("token not present")
+	return nil, redis.Nil
 }
 
 func (mtcnc *marketplaceTokenCacherNotCachedButCacheable) CacheToken(token *BearerToken) error {
@@ -79,7 +89,7 @@ type marketplaceTokenCacherNotCached struct {
 }
 
 func (mtcnc *marketplaceTokenCacherNotCached) FetchToken() (*BearerToken, error) {
-	return nil, errors.New("token not present")
+	return nil, redis.Nil
 }
 
 func (mtcnc *marketplaceTokenCacherNotCached) CacheToken(token *BearerToken) error {
@@ -114,11 +124,15 @@ func (marketplaceTokenProviderFailure) RequestToken() (*BearerToken, error) {
 // TestNotMarketplaceAuthNotProcessed tests that in the case of having a non-marketplace authentication, no token is
 // fetched whatsoever.
 func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
-	auth := setUpValidMarketplaceAuth()
+	auth, err := setUpValidMarketplaceAuth()
 	auth.AuthType = "whatever"
 
+	if err != nil {
+		t.Error(err)
+	}
+
 	tenantId := int64(5)
-	err := SetMarketplaceTokenAuthExtraField(tenantId, auth)
+	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no errors, got %s", err)
 	}
@@ -143,11 +157,14 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 	// logger.
 	logging.Log = logrus.New()
 
-	auth := setUpValidMarketplaceAuth()
+	auth, err := setUpValidMarketplaceAuth()
+	if err != nil {
+		t.Error(err)
+	}
 
 	// Call the function under test
 	tenantId := int64(5)
-	err := SetMarketplaceTokenAuthExtraField(tenantId, auth)
+	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
@@ -198,12 +215,17 @@ func TestAuthFromVaultMarketplaceProviderEmptyPassword(t *testing.T) {
 		}
 	}
 
-	auth := setUpValidMarketplaceAuth()
-	auth.Password = nil // set up the empty password to simulate a missing API key
+	auth, err := setUpValidMarketplaceAuth()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Set up the empty password to simulate a missing API key.
+	auth.Password = nil
 
 	// Call the function under test
 	tenantId := int64(5)
-	err := SetMarketplaceTokenAuthExtraField(tenantId, auth)
+	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err == nil {
 		t.Errorf("want err, got nil")
 	}
@@ -231,7 +253,10 @@ func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
 		}
 	}
 
-	auth := setUpValidMarketplaceAuth()
+	auth, err := setUpValidMarketplaceAuth()
+	if err != nil {
+		t.Error(err)
+	}
 
 	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
 	// logger.
@@ -239,7 +264,7 @@ func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
-	err := SetMarketplaceTokenAuthExtraField(tenantId, auth)
+	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
@@ -274,11 +299,14 @@ func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
 	// logger.
 	logging.Log = logrus.New()
 
-	auth := setUpValidMarketplaceAuth()
+	auth, err := setUpValidMarketplaceAuth()
+	if err != nil {
+		t.Error(err)
+	}
 
 	// Call the function under test
 	tenantId := int64(5)
-	err := SetMarketplaceTokenAuthExtraField(tenantId, auth)
+	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
@@ -308,10 +336,13 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 	// logger.
 	logging.Log = logrus.New()
 
-	auth := setUpValidMarketplaceAuth()
+	auth, err := setUpValidMarketplaceAuth()
+	if err != nil {
+		t.Error(err)
+	}
 
 	tenantId := int64(5)
-	err := SetMarketplaceTokenAuthExtraField(tenantId, auth)
+	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err == nil {
 		t.Error("want error, got nil")
 	}
@@ -323,12 +354,6 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 func TestAuthFromDbExtraNoContent(t *testing.T) {
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
 	config.Get().SecretStore = "database"
-	// Initialize the encryption key to the following: aaaaaaaaaaaaaaaa
-	err := os.Setenv("ENCRYPTION_KEY", "YWFhYWFhYWFhYWFhYWFhYQ")
-	if err != nil {
-		t.Errorf(`error setting the "ENCRYPTION_KEY" environment variable: %s`, err)
-	}
-	util.InitializeEncryption()
 
 	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
 	// both miss the cache and be able to cache the provided token.
@@ -345,13 +370,10 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 		}
 	}
 
-	auth := setUpValidMarketplaceAuth()
-	// Encrypt the password so that the utility can properly decrypt it.
-	cypherText, err := util.Encrypt(*auth.Password)
+	auth, err := setUpValidMarketplaceAuth()
 	if err != nil {
-		t.Errorf(`could not encrypt the password: %s`, err)
+		t.Error(err)
 	}
-	auth.Password = &cypherText
 
 	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
 	// logger.
@@ -380,12 +402,6 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 func TestAuthFromDbExtraNullContent(t *testing.T) {
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
 	config.Get().SecretStore = "database"
-	// Initialize the encryption key to the following: aaaaaaaaaaaaaaaa
-	err := os.Setenv("ENCRYPTION_KEY", "YWFhYWFhYWFhYWFhYWFhYQ")
-	if err != nil {
-		t.Errorf(`error setting the "ENCRYPTION_KEY" environment variable: %s`, err)
-	}
-	util.InitializeEncryption()
 
 	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
 	// both miss the cache and be able to cache the provided token.
@@ -402,14 +418,13 @@ func TestAuthFromDbExtraNullContent(t *testing.T) {
 		}
 	}
 
-	auth := setUpValidMarketplaceAuth()
+	auth, err := setUpValidMarketplaceAuth()
+	if err != nil {
+		t.Error(err)
+	}
+
 	// The "null" JSON object is valid and the JSON marshaller simply unmarshals that as "nil" in the target object.
 	auth.ExtraDb = datatypes.JSON(`null`)
-	cypherText, err := util.Encrypt(*auth.Password)
-	if err != nil {
-		t.Errorf(`could not encrypt the password: %s`, err)
-	}
-	auth.Password = &cypherText
 
 	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
 	// logger.
@@ -442,12 +457,6 @@ func TestAuthFromDbExtraNullContent(t *testing.T) {
 func TestAuthFromDbExtraPreviousContent(t *testing.T) {
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
 	config.Get().SecretStore = "database"
-	// Initialize the encryption key to the following: aaaaaaaaaaaaaaaa
-	err := os.Setenv("ENCRYPTION_KEY", "YWFhYWFhYWFhYWFhYWFhYQ")
-	if err != nil {
-		t.Errorf(`error setting the "ENCRYPTION_KEY" environment variable: %s`, err)
-	}
-	util.InitializeEncryption()
 
 	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
 	// both miss the cache and be able to cache the provided token.
@@ -464,14 +473,12 @@ func TestAuthFromDbExtraPreviousContent(t *testing.T) {
 		}
 	}
 
-	auth := setUpValidMarketplaceAuth()
-	auth.ExtraDb = []byte(`{"hello": "world"}`)
-	// Encrypt the password so that the utility can properly decrypt it.
-	cypherText, err := util.Encrypt(*auth.Password)
+	auth, err := setUpValidMarketplaceAuth()
 	if err != nil {
-		t.Errorf(`could not encrypt the password: %s`, err)
+		t.Error(err)
 	}
-	auth.Password = &cypherText
+
+	auth.ExtraDb = []byte(`{"hello": "world"}`)
 
 	// We need the logging mechanism initialized, as otherwise we will hit a dereference error when trying to use the
 	// logger.

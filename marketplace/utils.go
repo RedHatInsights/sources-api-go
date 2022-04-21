@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
 
@@ -61,9 +62,14 @@ func SetMarketplaceTokenAuthExtraField(tenantId int64, auth *model.Authenticatio
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
 	token, err := marketplaceTokenCacher.FetchToken()
 
-	// If it's not present, request one token to the marketplace, cache it, and assign it to the "extra" field
-	// of auth
 	if err != nil {
+		// If the error isn't "redis.Nil" something went wrong with Redis.
+		if err != redis.Nil {
+			return err
+		}
+		// In this case we can assume the token is not present in redis, so we can request one token to the
+		// marketplace, cache it, and assign it to the "extra" field of the authentication.
+
 		// The Api key must be present to be able to send the request to the marketplace
 		if auth.Password == nil {
 			return errors.New("API key not present for the marketplace authentication")

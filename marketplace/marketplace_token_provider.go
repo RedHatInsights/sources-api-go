@@ -1,13 +1,14 @@
 package marketplace
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 )
 
 // GetHttpClient variable that holds the function which returns an HttpClient. This allows us to set up in runtime
@@ -39,7 +40,9 @@ func (mtp *MarketplaceTokenProvider) RequestToken() (*BearerToken, error) {
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("could not create the request object: %s", err)
+		logging.Log.Errorf(`error setting up the marketplace token request: %s`, err)
+
+		return nil, errors.New("could not properly prepare to reach the marketplace")
 	}
 
 	// Set the proper headers to accept JSON, and let the server know we're sending urlencoded data.
@@ -49,11 +52,15 @@ func (mtp *MarketplaceTokenProvider) RequestToken() (*BearerToken, error) {
 	client := GetHttpClient()
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("could not perform the request to the marketplace: %s", err)
+		logging.Log.Errorf(`error sending the marketplace token request: %s`, err)
+
+		return nil, errors.New("could not reach the marketplace")
 	}
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code received from the marketplace: %d", response.StatusCode)
+		logging.Log.Errorf("unexpected status code received from the marketplace: %d. Response body: %s", response.StatusCode, response.Body)
+
+		return nil, errors.New("unexpected response received from the marketplace")
 	}
 
 	return DecodeMarketplaceTokenFromResponse(response)

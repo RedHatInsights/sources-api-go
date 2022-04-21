@@ -41,7 +41,7 @@ func TestNotReachingMarketplace(t *testing.T) {
 		t.Errorf("want error, got none")
 	}
 
-	want := "could not perform the request to the marketplace: simulating not being able to reach the marketplace"
+	want := "could not reach the marketplace"
 	if err.Error() != want {
 		t.Errorf("want %s, got %s", want, err)
 	}
@@ -59,7 +59,7 @@ func TestInvalidStatusCodeReturnsError(t *testing.T) {
 		t.Errorf("want error, got none")
 	}
 
-	want := "unexpected status code received from the marketplace: 400"
+	want := "unexpected response received from the marketplace"
 	if err.Error() != want {
 		t.Errorf("want %s, got %s", want, err)
 	}

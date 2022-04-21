@@ -3,6 +3,7 @@ package marketplace
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -35,8 +36,9 @@ func TestGetTokenBadTenant(t *testing.T) {
 
 	tokenCacher.TenantID = 12345
 	_, err := tokenCacher.FetchToken()
-	if err == nil {
-		t.Error("want error, got none")
+
+	if err != redis.Nil {
+		t.Errorf(`want error of type "redis.Nil", got "%s"`, reflect.TypeOf(err))
 	}
 }
 
@@ -92,8 +94,10 @@ func TestSetTokenUnreachableRedis(t *testing.T) {
 
 	// Call the actual function
 	err := tokenCacher.CacheToken(fakeToken)
-	if err == nil {
-		t.Error("want error, got none")
+
+	want := "could not store the marketplace token"
+	if want != err.Error() {
+		t.Errorf(`unexpected error when caching the token. Want "%s", got "%s"`, want, err)
 	}
 }
 
@@ -158,11 +162,8 @@ func TestSetTokenExpired(t *testing.T) {
 
 	// Call the actual function
 	err := tokenCacher.CacheToken(fakeToken)
-	if err == nil {
-		t.Errorf("want error, got none")
-	}
 
-	want := "refusing to cache an expired token"
+	want := "the obtained marketplace token has already expired. Try again"
 	if want != err.Error() {
 		t.Errorf("want %s, got %s", want, err)
 	}
