@@ -44,8 +44,8 @@ type notificationMetadata struct {
 }
 
 type notificationEvent struct {
-	Metadata string `json:"metadata"`
-	Payload  string `json:"payload"`
+	Metadata notificationMetadata `json:"metadata"`
+	Payload  string               `json:"payload"`
 }
 
 type notificationRecipients struct {
@@ -84,13 +84,7 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(a
 		return err
 	}
 
-	metadata, err := json.Marshal(&notificationMetadata{})
-	if err != nil {
-		l.Log.Warnf(`error when marshalling the email notification metadata: %s`, err)
-		return err
-	}
-
-	event := notificationEvent{Metadata: string(metadata), Payload: string(payload)}
+	event := notificationEvent{Metadata: notificationMetadata{}, Payload: string(payload)}
 
 	msg := &kafka.Message{}
 	err = msg.AddValueAsJSON(&notificationMessage{
