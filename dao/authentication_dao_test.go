@@ -132,6 +132,7 @@ func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
 // TestAuthFromVaultMarketplaceCacheHit tests that when there's a cache hit with the marketplace token, it simply
 // returns the token on the "extra" field.
 func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
+	originalSecretStore := conf.SecretStore
 	// We need to simulate that the Vault is online.
 	conf.SecretStore = "vault"
 
@@ -180,6 +181,7 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 			t.Errorf(`invalid token expiration. Want "%d", got "%d"`, want, got)
 		}
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVaultMarketplaceProviderEmptyPassword tests that if no API key is stored on Vault, and if there's a
@@ -463,6 +465,7 @@ func TestAuthFromVault(t *testing.T) {
 // miss and the token is successfully requested to the marketplace. It simulates the extra field not having any
 // previous content.
 func TestAuthFromDbExtraNoContent(t *testing.T) {
+	originalSecretStore := conf.SecretStore
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
 	conf.SecretStore = "database"
 	// Initialize the encryption key to the following: aaaaaaaaaaaaaaaa
@@ -516,6 +519,7 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 	if !bytes.Equal(want, auth.ExtraDb) {
 		t.Errorf(`want "%s", got "%s"`, want, auth.ExtraDb)
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromDbExtraNullContent is a regression test. It simulates the extra field coming with a valid JSON "null"
@@ -586,6 +590,7 @@ func TestAuthFromDbExtraNullContent(t *testing.T) {
 // miss and the token is successfully requested to the marketplace. It simulates the extra field having previous
 // content.
 func TestAuthFromDbExtraPreviousContent(t *testing.T) {
+	originalSecretStore := conf.SecretStore
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
 	conf.SecretStore = "database"
 	// Initialize the encryption key to the following: aaaaaaaaaaaaaaaa
@@ -645,6 +650,7 @@ func TestAuthFromDbExtraPreviousContent(t *testing.T) {
 	if !bytes.Equal(want, auth.ExtraDb) {
 		t.Errorf(`want "%s", got "%s"`, want, auth.ExtraDb)
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestSecretPathDidntChange is a flag test which tells us when the path of the Vault secrets changed. This potentially
@@ -743,6 +749,7 @@ func TestFindKeysByResourceTypeAndId(t *testing.T) {
 func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
+	originalSecretStore := conf.SecretStore
 
 	wantCount := int64(len(fixtures.TestAuthenticationData))
 	Vault = &mocks.MockVault{}
@@ -779,4 +786,5 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 		}
 	}
 	DropSchema("offset_limit")
+	conf.SecretStore = originalSecretStore
 }

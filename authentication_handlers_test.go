@@ -93,6 +93,7 @@ func TestAuthenticationList(t *testing.T) {
 
 func TestAuthenticationGet(t *testing.T) {
 	var id string
+	originalSecretStore := conf.SecretStore
 
 	// If we're running integration tests without Vault...
 	if parser.RunningIntegrationTests && !config.IsVaultOn() {
@@ -140,6 +141,7 @@ func TestAuthenticationGet(t *testing.T) {
 			t.Errorf(`wrong authentication fetched. Want "%s", got "%s"`, id, outAuthentication.ID)
 		}
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 func TestAuthenticationGetNotFound(t *testing.T) {
