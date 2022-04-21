@@ -38,6 +38,7 @@ func (r *RhcConnection) ToEvent() interface{} {
 		LastAvailableAt:         util.DateTimePointerToRecordFormat(r.LastAvailableAt),
 		LastCheckedAt:           util.DateTimePointerToRecordFormat(r.LastCheckedAt),
 		AvailabilityStatusError: &r.AvailabilityStatusError,
+		SourceIds:               r.SourceIDs(),
 		CreatedAt:               util.DateTimeToRecordFormat(r.CreatedAt),
 		UpdatedAt:               util.DateTimeToRecordFormat(r.UpdatedAt),
 	}
@@ -48,19 +49,24 @@ func (r *RhcConnection) ToEvent() interface{} {
 func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
 	id := strconv.FormatInt(r.ID, 10)
 
-	sourceIds := make([]string, len(r.Sources))
-	for i, src := range r.Sources {
-		sourceIds[i] = strconv.FormatInt(src.ID, 10)
-	}
-
 	return &RhcConnectionResponse{
 		Id:                      &id,
 		RhcId:                   &r.RhcId,
 		Extra:                   r.Extra,
 		AvailabilityStatus:      r.AvailabilityStatus,
 		AvailabilityStatusError: r.AvailabilityStatusError,
-		SourceIds:               sourceIds,
+		SourceIds:               r.SourceIDs(),
 	}
+}
+
+// helper function to pull the source ids from the object.
+func (r *RhcConnection) SourceIDs() []string {
+	sourceIds := make([]string, len(r.Sources))
+	for i, src := range r.Sources {
+		sourceIds[i] = strconv.FormatInt(src.ID, 10)
+	}
+
+	return sourceIds
 }
 
 func (r *RhcConnection) ToEmail(previousStatus string) *EmailNotificationInfo {
