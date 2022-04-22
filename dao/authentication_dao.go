@@ -655,7 +655,21 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 			return errors.New("API key not present for the marketplace authentication")
 		}
 
-		marketplaceTokenProvider = GetMarketplaceTokenProvider(*auth.Password)
+		var apiKey string
+		if config.IsVaultOn() {
+			apiKey = *auth.Password
+		} else {
+			// When using the database backed authentications we need to decrypt the API Key to be able to fetch a proper
+			// token from the marketplace.
+			decryptedPassword, err := util.Decrypt(*auth.Password)
+			if err != nil {
+				return err
+			}
+
+			apiKey = decryptedPassword
+		}
+
+		marketplaceTokenProvider = GetMarketplaceTokenProvider(apiKey)
 
 		token, err = marketplaceTokenProvider.RequestToken()
 		if err != nil {
@@ -691,6 +705,12 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 			err := json.Unmarshal(auth.ExtraDb, &tmpContent)
 			if err != nil {
 				return err
+			}
+
+			// If the "ExtraDb" field is "null" —JSON value "null", not Golang's "nil"— the "Unmarshal" function sets
+			// "tmpContent" as nil, so we need to make sure it is properly initialized to avoid a panic.
+			if tmpContent == nil {
+				tmpContent = make(map[string]interface{})
 			}
 
 			// Append the token and marshal the content back, so that it is ready to be sent.

@@ -12,16 +12,20 @@ import (
 
 var (
 	// "the key" to encrypt/decrypt passwords with
-	key        = os.Getenv("ENCRYPTION_KEY")
+	key        string
 	keyPresent = false
 )
 
 // init for this file basically just decodes the ENCRYPTION_KEY env var to the
 // plain text equivalent
 func init() {
-	if key == "" {
-		return
-	}
+	InitializeEncryption()
+}
+
+// InitializeEncryption allows reinitializing the encryption key by reading from the "ENCRYPTION_KEY" environment
+// variable again. Useful for testing purposes outside the "util" package.
+func InitializeEncryption() {
+	key = os.Getenv("ENCRYPTION_KEY")
 
 	// the key is base64 encoded in the ENV
 	decoded, err := base64.RawStdEncoding.DecodeString(key)
