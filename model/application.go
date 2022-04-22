@@ -117,7 +117,7 @@ func (app *Application) ToEmail(previousStatus string) *EmailNotificationInfo {
 		SourceID:                   strconv.FormatInt(app.SourceID, 10),
 		SourceName:                 app.Source.Name,
 		ResourceDisplayName:        "Application",
-		CurrentAvailabilityStatus:  app.AvailabilityStatus,
-		PreviousAvailabilityStatus: previousStatus,
+		CurrentAvailabilityStatus:  util.FormatAvailabilityStatus(app.AvailabilityStatus),
+		PreviousAvailabilityStatus: util.FormatAvailabilityStatus(previousStatus),
 	}
 }

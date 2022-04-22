@@ -72,7 +72,7 @@ func (r *RhcConnection) SourceIDs() []string {
 func (r *RhcConnection) ToEmail(previousStatus string) *EmailNotificationInfo {
 	return &EmailNotificationInfo{
 		ResourceDisplayName:        "RHC Connection",
-		CurrentAvailabilityStatus:  r.AvailabilityStatus,
-		PreviousAvailabilityStatus: previousStatus,
+		CurrentAvailabilityStatus:  util.FormatAvailabilityStatus(r.AvailabilityStatus),
+		PreviousAvailabilityStatus: util.FormatAvailabilityStatus(previousStatus),
 	}
 }
