@@ -186,8 +186,8 @@ func (auth *Authentication) ToEmail(previousStatus string) *EmailNotificationInf
 
 	return &EmailNotificationInfo{
 		ResourceDisplayName:        "Authentication",
-		CurrentAvailabilityStatus:  availabilityStatus,
-		PreviousAvailabilityStatus: previousStatus,
+		CurrentAvailabilityStatus:  util.FormatAvailabilityStatus(availabilityStatus),
+		PreviousAvailabilityStatus: util.FormatAvailabilityStatus(previousStatus),
 		SourceName:                 auth.Source.Name,
 		SourceID:                   strconv.FormatInt(auth.SourceID, 10),
 	}

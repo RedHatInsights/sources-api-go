@@ -148,7 +148,7 @@ func (endpoint *Endpoint) ToEmail(previousStatus string) *EmailNotificationInfo 
 		SourceID:                   strconv.FormatInt(endpoint.SourceID, 10),
 		SourceName:                 endpoint.Source.Name,
 		ResourceDisplayName:        "Endpoint",
-		CurrentAvailabilityStatus:  endpoint.AvailabilityStatus,
-		PreviousAvailabilityStatus: previousStatus,
+		CurrentAvailabilityStatus:  util.FormatAvailabilityStatus(endpoint.AvailabilityStatus),
+		PreviousAvailabilityStatus: util.FormatAvailabilityStatus(previousStatus),
 	}
 }

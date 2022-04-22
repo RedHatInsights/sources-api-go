@@ -34,3 +34,11 @@ func ParseStatusMessageToResource(resource *Resource, statusMessage types.Status
 	resource.ResourceID = resourceID
 	return resource, nil
 }
+
+func FormatAvailabilityStatus(status string) string {
+	if status == "" {
+		return "unknown"
+	}
+
+	return status
+}
