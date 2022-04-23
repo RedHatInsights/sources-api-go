@@ -25,6 +25,8 @@ type RequestData struct {
 	endpointMap         *map[int64][]m.Endpoint
 	AuthenticationMutex *sync.Mutex
 	authenticationMap   *map[string][]m.Authentication
+	SourceMutex         *sync.Mutex
+	sourceIdList        *[]string
 }
 
 // wrapper around a mutex that only loads applications up one time and makes any
@@ -33,10 +35,14 @@ func (rd *RequestData) EnsureApplicationsAreLoaded() error {
 	rd.ApplicationMutex.Lock()
 	defer rd.ApplicationMutex.Unlock()
 
+	// waiting until the sourceIDs we need are loaded
+	rd.SourceMutex.Lock()
+	defer rd.SourceMutex.Unlock()
+
 	// load up the application map if it isn't present - this will only happen
 	// once and any other threads will wait for it to complete
 	if rd.applicationMap == nil {
-		apps, _, err := dao.GetApplicationDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{})
+		apps, _, err := dao.GetApplicationDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}
@@ -58,8 +64,12 @@ func (rd *RequestData) EnsureEndpointsAreLoaded() error {
 	rd.EndpointMutex.Lock()
 	defer rd.EndpointMutex.Unlock()
 
+	// waiting until the sourceIDs we need are loaded
+	rd.SourceMutex.Lock()
+	defer rd.SourceMutex.Unlock()
+
 	if rd.endpointMap == nil {
-		endpts, _, err := dao.GetEndpointDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{})
+		endpts, _, err := dao.GetEndpointDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}
@@ -79,8 +89,12 @@ func (rd *RequestData) EnsureAuthenticationsAreLoaded() error {
 	rd.AuthenticationMutex.Lock()
 	defer rd.AuthenticationMutex.Unlock()
 
+	// waiting until the sourceIDs we need are loaded
+	rd.SourceMutex.Lock()
+	defer rd.SourceMutex.Unlock()
+
 	if rd.authenticationMap == nil {
-		auths, _, err := dao.GetAuthenticationDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{})
+		auths, _, err := dao.GetAuthenticationDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}
@@ -94,4 +108,11 @@ func (rd *RequestData) EnsureAuthenticationsAreLoaded() error {
 	}
 
 	return nil
+}
+
+// effectively just sets the source ID list and then unlocks the mutext so the
+// rest of the subresources can run
+func (rd *RequestData) SetSourceIDs(ids []string) {
+	rd.sourceIdList = &ids
+	rd.SourceMutex.Unlock()
 }
