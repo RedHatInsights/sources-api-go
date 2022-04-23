@@ -32,6 +32,10 @@ type RequestData struct {
 // wrapper around a mutex that only loads applications up one time and makes any
 // other routines wait until the map is ready
 func (rd *RequestData) EnsureApplicationsAreLoaded() error {
+	if rd.applicationMap != nil {
+		return nil
+	}
+
 	rd.ApplicationMutex.Lock()
 	defer rd.ApplicationMutex.Unlock()
 
@@ -40,7 +44,9 @@ func (rd *RequestData) EnsureApplicationsAreLoaded() error {
 	defer rd.SourceMutex.Unlock()
 
 	// load up the application map if it isn't present - this will only happen
-	// once and any other threads will wait for it to complete
+	// once and any other threads will wait for it to complete. We have to check
+	// again due to the fact that multiple threads might have locked this the
+	// first time
 	if rd.applicationMap == nil {
 		apps, _, err := dao.GetApplicationDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
@@ -61,6 +67,10 @@ func (rd *RequestData) EnsureApplicationsAreLoaded() error {
 
 // largely a copy/paste of above - so I won't duplicate the comments
 func (rd *RequestData) EnsureEndpointsAreLoaded() error {
+	if rd.endpointMap != nil {
+		return nil
+	}
+
 	rd.EndpointMutex.Lock()
 	defer rd.EndpointMutex.Unlock()
 
@@ -85,7 +95,12 @@ func (rd *RequestData) EnsureEndpointsAreLoaded() error {
 	return nil
 }
 
+// largely a copy/paste of above - so I won't duplicate the comments
 func (rd *RequestData) EnsureAuthenticationsAreLoaded() error {
+	if rd.authenticationMap != nil {
+		return nil
+	}
+
 	rd.AuthenticationMutex.Lock()
 	defer rd.AuthenticationMutex.Unlock()
 
