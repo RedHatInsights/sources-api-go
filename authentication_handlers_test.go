@@ -24,6 +24,9 @@ import (
 )
 
 func TestAuthenticationList(t *testing.T) {
+	if conf.SecretStore == "vault" {
+		t.Skip("Skipping test for secret store = vault")
+	}
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/authentications",
@@ -59,7 +62,7 @@ func TestAuthenticationList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != len(fixtures.TestAuthenticationData) {
 		t.Error("not enough objects passed back from DB")
 	}
 

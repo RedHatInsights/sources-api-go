@@ -10,12 +10,20 @@ var availabilityStatus = "available"
 
 var TestAuthenticationData = []m.Authentication{
 	{
-		ID:           "611a8a38-f434-4e62-bda0-78cd45ffae5b",
-		DbID:         1,
-		TenantID:     TestTenantData[0].Id,
-		SourceID:     1,
-		ResourceType: "Source",
-		ResourceID:   1,
+		ID:                 "611a8a38-f434-4e62-bda0-78cd45ffae5b",
+		DbID:               1,
+		TenantID:           TestTenantData[0].Id,
+		SourceID:           1,
+		ResourceType:       "Source",
+		ResourceID:         1,
+		AvailabilityStatus: &availabilityStatus,
+	},
+	{
+		ID:                 "82e1a1b6-a136-11ec-b909-0242ac120002",
+		DbID:               2,
+		TenantID:           TestTenantData[0].Id,
+		ResourceType:       "Endpoint",
+		ResourceID:         1,
 		AvailabilityStatus: &availabilityStatus,
 	},
 }

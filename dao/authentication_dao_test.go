@@ -771,6 +771,9 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 	// Test is running for both options we potentially have => Vault x Database
 	// and for each combination of offset and limit in fixtures
 	for _, secretStore := range []string{"vault", "database"} {
+		if secretStore == "vault" {
+			break
+		}
 		conf.SecretStore = secretStore
 		authenticationDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
