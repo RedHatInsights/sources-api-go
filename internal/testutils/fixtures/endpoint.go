@@ -39,4 +39,15 @@ var TestEndpointData = []m.Endpoint{
 		Path:               &path2,
 		AvailabilityStatus: "unavailable",
 	},
+	{
+		ID:                 300,
+		SourceID:           2,
+		TenantID:           1,
+		Port:               &port,
+		Default:            &defaultValueSource2,
+		Scheme:             &scheme2,
+		Host:               &host2,
+		Path:               &path2,
+		AvailabilityStatus: "unavailable",
+	},
 }

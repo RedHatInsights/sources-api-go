@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -204,7 +205,7 @@ func TestEndpointList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	if len(out.Data) != len(fixtures.TestEndpointData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -564,11 +565,12 @@ func TestEndpointEditBadRequest(t *testing.T) {
 }
 
 func TestEndpointDelete(t *testing.T) {
+	endpoint := "300"
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
-		"/api/sources/v3.1/endpoints/1",
+		fmt.Sprintf("/api/sources/v3.1/endpoints/%s", endpoint),
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
@@ -576,7 +578,7 @@ func TestEndpointDelete(t *testing.T) {
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(endpoint)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	err := EndpointDelete(c)
@@ -591,7 +593,7 @@ func TestEndpointDelete(t *testing.T) {
 	// Check that endpoint doesn't exist.
 	c, rec = request.CreateTestContext(
 		http.MethodGet,
-		"/api/sources/v3.1/endpoints/1",
+		fmt.Sprintf("/api/sources/v3.1/endpoints/%s", endpoint),
 		nil,
 		map[string]interface{}{
 			"tenantID": int64(1),
@@ -599,7 +601,7 @@ func TestEndpointDelete(t *testing.T) {
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(endpoint)
 
 	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
 	err = notFoundEndpointGet(c)
