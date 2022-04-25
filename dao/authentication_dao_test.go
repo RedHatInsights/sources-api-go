@@ -219,6 +219,8 @@ func TestAuthFromVaultMarketplaceProviderEmptyPassword(t *testing.T) {
 // TestAuthFromVaultMarketplaceProviderSuccess tests that a proper serialized token is returned when there's a cache
 // miss and the token is successfully requested to the marketplace.
 func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
+	originalSecretStore := conf.SecretStore
+	conf.SecretStore = "vault"
 	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
 	// both miss the cache and be able to cache the provided token.
 	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
@@ -248,12 +250,16 @@ func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
+
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVaultMarketplaceProviderSuccessCacheFailure tests that even if caching the requested token from the
 // marketplace fails, the process continues and a serialized token is returned. Having an issue when caching the token
 // should not impede to return the requested token from the marketplace.
 func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
+	originalSecretStore := conf.SecretStore
+	conf.SecretStore = "vault"
 	// In this test case we need a cache miss but an error when caching the token.
 	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
 		return &marketplaceTokenCacherNotCached{
@@ -282,11 +288,14 @@ func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVaultMarketplaceProviderFailure tests that if there is an error when requesting the token to the
 // marketplace, a nil authentication object is returned.
 func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
+	originalSecretStore := conf.SecretStore
+	conf.SecretStore = "vault"
 	// In this test the token cacher should simulate a cache miss and the cache function should return no error.
 	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
 		return &marketplaceTokenCacherNotCachedButCacheable{
@@ -314,6 +323,7 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 	if err == nil {
 		t.Error("want error, got nil")
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVault tests that when Vault returns a properly formatted authentication, the authFromvault function is
