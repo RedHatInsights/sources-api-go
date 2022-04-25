@@ -134,10 +134,18 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 	srces, count, err := dao.GetSourceDao(tenantIdFromCtx(ctx)).List(*limit, *offset, f)
 	sendCount(ctx, count)
 
+	// storing the IDs of relevant sources on the request context for later subresources
+	sourceIDs := make([]string, len(srces))
+
+	// output data needs to be pointers for some reason.
 	out := make([]*model.Source, len(srces))
 	for i := range srces {
 		out[i] = &srces[i]
+		sourceIDs[i] = strconv.FormatInt(srces[i].ID, 10)
 	}
+
+	// this will unlock the source mutex and let the subresources go
+	getRequestDataFromCtx(ctx).SetSourceIDs(sourceIDs)
 	return out, err
 }
 
