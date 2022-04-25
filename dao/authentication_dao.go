@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -691,35 +692,23 @@ func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
 
 		auth.Extra["marketplace"] = token
 	} else {
-		if auth.ExtraDb == nil {
-			// In case there is no content in the database we can safely marshal the token and return it directly.
-			auth.ExtraDb, err = json.Marshal(token)
+		var extra = make(map[string]interface{})
+		extra["marketplace"] = token
+
+		// The "extra" column in the database may contain JSON already, and in that case we need to unmarshal that
+		// content into the struct to make sure we don't overwrite it. However, if the existing content happens to be
+		// the valid JSON "null" value, we must skip unmarshalling that to the map, since "json.Unmarshal" just turns
+		// the map "nil".
+		if auth.ExtraDb != nil && !bytes.Equal(auth.ExtraDb, []byte("null")) {
+			err := json.Unmarshal(auth.ExtraDb, &extra)
 			if err != nil {
 				return err
 			}
-		} else {
-			// If there is already existing content, we must merge the existing JSON content with the token.
-			var tmpContent map[string]interface{}
+		}
 
-			// Unmarshal the existing content to a map, to be able to easily append the token.
-			err := json.Unmarshal(auth.ExtraDb, &tmpContent)
-			if err != nil {
-				return err
-			}
-
-			// If the "ExtraDb" field is "null" —JSON value "null", not Golang's "nil"— the "Unmarshal" function sets
-			// "tmpContent" as nil, so we need to make sure it is properly initialized to avoid a panic.
-			if tmpContent == nil {
-				tmpContent = make(map[string]interface{})
-			}
-
-			// Append the token and marshal the content back, so that it is ready to be sent.
-			tmpContent["marketplace"] = token
-
-			auth.ExtraDb, err = json.Marshal(tmpContent)
-			if err != nil {
-				return err
-			}
+		auth.ExtraDb, err = json.Marshal(extra)
+		if err != nil {
+			return err
 		}
 	}
 

@@ -508,7 +508,11 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 		t.Errorf("want no error, got %s", err)
 	}
 
-	want, err := json.Marshal(setUpBearerToken())
+	// tmpWant will hold the structure to what we are expecting to get in return when calling the function under test.
+	tmpWant := make(map[string]interface{})
+	tmpWant["marketplace"] = setUpBearerToken()
+
+	want, err := json.Marshal(tmpWant)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
