@@ -95,14 +95,12 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 		return nil, 0, err
 	}
 
-	// Handle if the limit is longer than the keys available
-	end := 0
-	if limit > len(keys) {
+	// Handle how limit and offset affects start and end index in "keys" array
+	end := limit + offset
+	if end > len(keys) {
 		end = len(keys)
-	} else {
-		end = limit
 	}
-	if offset > limit {
+	if offset >= end {
 		return nil, int64(len(keys)), nil
 	}
 
