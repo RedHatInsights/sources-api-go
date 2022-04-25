@@ -24,9 +24,6 @@ import (
 )
 
 func TestAuthenticationList(t *testing.T) {
-	if conf.SecretStore == "vault" {
-		t.Skip("Skipping test for secret store = vault")
-	}
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/authentications",

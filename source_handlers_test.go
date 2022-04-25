@@ -100,7 +100,7 @@ func TestSourceListAuthentications(t *testing.T) {
 			t.Errorf(`the IDs from the authentication don't match. Want "%s", got "%s"'`, want, got)
 		}
 	} else {
-		want := fixtures.TestAuthenticationData[0].DbID
+		want := fixtures.TestAuthenticationData[2].DbID
 
 		outputId, ok := auth1["id"].(string)
 		if !ok {
