@@ -88,6 +88,7 @@ func seedSourceTypes() error {
 		}
 
 		// mark the fields as updated
+		st.Category = values.Category
 		st.ProductName = values.ProductName
 		st.IconUrl = values.IconURL
 		st.Schema = schema

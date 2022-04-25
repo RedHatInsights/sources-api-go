@@ -10,12 +10,17 @@ import (
 	"gorm.io/datatypes"
 )
 
+const CategoryCloud = "Cloud"
+const CategoryDeveloperSources = "Developer sources"
+const CategoryRedhat = "Red Hat"
+
 type SourceType struct {
 	//fields for gorm
 	Id        int64     `gorm:"primarykey" json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
+	Category     string            `json:"category"`
 	Name         string            `json:"name"`
 	ProductName  string            `json:"product_name"`
 	Vendor       string            `json:"vendor"`
@@ -34,6 +39,7 @@ func (st *SourceType) ToResponse() *SourceTypeResponse {
 		Id:          id,
 		CreatedAt:   util.DateTimeToRFC3339(st.CreatedAt),
 		UpdatedAt:   util.DateTimeToRFC3339(st.UpdatedAt),
+		Category:    st.Category,
 		Name:        st.Name,
 		ProductName: st.ProductName,
 		Vendor:      st.Vendor,

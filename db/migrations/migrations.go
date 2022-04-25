@@ -13,6 +13,7 @@ import (
 
 var migrationsCollection = []*gormigrate.Migration{
 	InitialSchema(),
+	SourceTypesAddCategoryColumn(),
 }
 
 var ctx = context.Background()

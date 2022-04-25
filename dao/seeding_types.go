@@ -9,6 +9,7 @@ type (
 )
 
 type sourceTypeSeed struct {
+	Category    string      `json:"category"`
 	ProductName string      `json:"product_name"`
 	Schema      interface{} `json:"schema"`
 	Vendor      string      `json:"vendor"`
