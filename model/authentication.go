@@ -60,7 +60,6 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationResponse{
 		ID:                      id,
-		CreatedAt:               util.DateTimeToRFC3339(auth.CreatedAt),
 		Name:                    util.ValueOrBlank(auth.Name),
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,

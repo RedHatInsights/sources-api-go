@@ -9,8 +9,7 @@ import (
 )
 
 type AuthenticationResponse struct {
-	ID        string `json:"id"`
-	CreatedAt string `json:"created_at"`
+	ID string `json:"id"`
 
 	Name                    string                 `json:"name,omitempty"`
 	AuthType                string                 `json:"authtype"`
