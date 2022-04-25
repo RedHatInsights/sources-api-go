@@ -150,5 +150,6 @@ func (endpoint *Endpoint) ToEmail(previousStatus string) *EmailNotificationInfo 
 		ResourceDisplayName:        "Endpoint",
 		CurrentAvailabilityStatus:  util.FormatAvailabilityStatus(endpoint.AvailabilityStatus),
 		PreviousAvailabilityStatus: util.FormatAvailabilityStatus(previousStatus),
+		TenantID:                   strconv.FormatInt(endpoint.TenantID, 10),
 	}
 }

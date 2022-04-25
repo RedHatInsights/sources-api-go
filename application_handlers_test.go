@@ -557,6 +557,7 @@ func TestApplicationEdit(t *testing.T) {
 		PreviousAvailabilityStatus: "unknown",
 		SourceName:                 fixtures.TestSourceData[0].Name,
 		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
+		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),
 	}
 
 	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {

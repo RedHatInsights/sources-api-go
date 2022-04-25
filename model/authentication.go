@@ -190,6 +190,7 @@ func (auth *Authentication) ToEmail(previousStatus string) *EmailNotificationInf
 		PreviousAvailabilityStatus: util.FormatAvailabilityStatus(previousStatus),
 		SourceName:                 auth.Source.Name,
 		SourceID:                   strconv.FormatInt(auth.SourceID, 10),
+		TenantID:                   strconv.FormatInt(auth.TenantID, 10),
 	}
 }
 
