@@ -423,11 +423,11 @@ func TestConsumeStatusMessage(t *testing.T) {
 	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: headers, RaiseEventCalled: true}
 
-	emailNotificationInfo := &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", PreviousAvailabilityStatus: "unknown", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Application"}
+	emailNotificationInfo := &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", PreviousAvailabilityStatus: "unknown", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Application", TenantID: "1"}
 	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: headers, RaiseEventCalled: true, ExpectedEmitAvailabilityStatusCallCounter: 1, EmailNotificationInfo: emailNotificationInfo}
 
-	emailNotificationInfo = &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", PreviousAvailabilityStatus: "unavailable", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Endpoint"}
+	emailNotificationInfo = &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", PreviousAvailabilityStatus: "unavailable", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Endpoint", TenantID: "1"}
 	statusMessageEndpoint := types.StatusMessage{ResourceType: "Endpoint", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	endpointTestData := TestData{StatusMessage: statusMessageEndpoint, MessageHeaders: headers, RaiseEventCalled: true, ExpectedEmitAvailabilityStatusCallCounter: 1, EmailNotificationInfo: emailNotificationInfo}
 

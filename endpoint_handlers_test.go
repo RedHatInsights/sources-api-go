@@ -465,6 +465,7 @@ func TestEndpointEdit(t *testing.T) {
 		PreviousAvailabilityStatus: "unavailable",
 		SourceName:                 "",
 		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
+		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),
 	}
 
 	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {

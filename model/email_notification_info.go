@@ -10,4 +10,5 @@ type EmailNotificationInfo struct {
 	PreviousAvailabilityStatus string `json:"previous_availability_status"`
 	SourceID                   string `json:"source_id"`
 	SourceName                 string `json:"source_name"`
+	TenantID                   string `json:"tenant_id"`
 }

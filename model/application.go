@@ -119,5 +119,6 @@ func (app *Application) ToEmail(previousStatus string) *EmailNotificationInfo {
 		ResourceDisplayName:        "Application",
 		CurrentAvailabilityStatus:  util.FormatAvailabilityStatus(app.AvailabilityStatus),
 		PreviousAvailabilityStatus: util.FormatAvailabilityStatus(previousStatus),
+		TenantID:                   strconv.FormatInt(app.TenantID, 10),
 	}
 }
