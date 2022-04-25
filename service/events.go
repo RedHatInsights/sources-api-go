@@ -33,6 +33,7 @@ func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) 
 // ForwadableHeaders fetches the required identity headers from the request that are needed to forward along:
 // 	1. x-rh-identity -- a generated one if it wasn't passed along (e.g. psk)
 //	2. x-rh-sources-psk -- always passed if present, and used for generation.
+//	3. x-rh-sources-org-id -- always passed if present, and used for generation.
 func ForwadableHeaders(c echo.Context) []kafka.Header {
 	headers := make([]kafka.Header, 0)
 
@@ -57,6 +58,13 @@ func ForwadableHeaders(c echo.Context) []kafka.Header {
 				Key:   "x-rh-identity",
 				Value: []byte(util.XRhIdentityWithAccountNumber(psk)),
 			})
+		}
+	}
+
+	if c.Get("x-rh-sources-org-id") != nil {
+		orgId, ok := c.Get("x-rh-sources-org-id").(string)
+		if ok {
+			headers = append(headers, kafka.Header{Key: "x-rh-sources-org-id", Value: []byte(orgId)})
 		}
 	}
 
