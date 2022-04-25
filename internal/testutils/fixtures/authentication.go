@@ -6,6 +6,8 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
+var availabilityStatus = "available"
+
 var TestAuthenticationData = []m.Authentication{
 	{
 		ID:           "611a8a38-f434-4e62-bda0-78cd45ffae5b",
@@ -14,6 +16,7 @@ var TestAuthenticationData = []m.Authentication{
 		SourceID:     1,
 		ResourceType: "Source",
 		ResourceID:   1,
+		AvailabilityStatus: &availabilityStatus,
 	},
 }
 

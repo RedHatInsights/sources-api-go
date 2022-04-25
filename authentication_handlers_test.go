@@ -321,7 +321,7 @@ func TestAuthenticationEdit(t *testing.T) {
 
 	emailNotificationInfo := &m.EmailNotificationInfo{ResourceDisplayName: "Authentication",
 		CurrentAvailabilityStatus:  newAvailabilityStatus,
-		PreviousAvailabilityStatus: "unknown",
+		PreviousAvailabilityStatus: "available",
 		SourceName:                 fixtures.TestSourceData[0].Name,
 		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
 		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),
