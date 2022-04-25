@@ -397,7 +397,7 @@ rh-marketplace:
   vendor: Red Hat
   schema:
     authentication:
-    - type: token
+    - type: marketplace-token
       name: API Token
       fields:
       - component: text-field
