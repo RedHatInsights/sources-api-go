@@ -132,6 +132,7 @@ func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
 // TestAuthFromVaultMarketplaceCacheHit tests that when there's a cache hit with the marketplace token, it simply
 // returns the token on the "extra" field.
 func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
+	originalSecretStore := conf.SecretStore
 	// We need to simulate that the Vault is online.
 	conf.SecretStore = "vault"
 
@@ -180,6 +181,7 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 			t.Errorf(`invalid token expiration. Want "%d", got "%d"`, want, got)
 		}
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVaultMarketplaceProviderEmptyPassword tests that if no API key is stored on Vault, and if there's a
@@ -217,6 +219,8 @@ func TestAuthFromVaultMarketplaceProviderEmptyPassword(t *testing.T) {
 // TestAuthFromVaultMarketplaceProviderSuccess tests that a proper serialized token is returned when there's a cache
 // miss and the token is successfully requested to the marketplace.
 func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
+	originalSecretStore := conf.SecretStore
+	conf.SecretStore = "vault"
 	// In this test we need to simulate a cache miss, and then a proper token caching. So the fake TokenCacher should
 	// both miss the cache and be able to cache the provided token.
 	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
@@ -246,12 +250,16 @@ func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
+
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVaultMarketplaceProviderSuccessCacheFailure tests that even if caching the requested token from the
 // marketplace fails, the process continues and a serialized token is returned. Having an issue when caching the token
 // should not impede to return the requested token from the marketplace.
 func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
+	originalSecretStore := conf.SecretStore
+	conf.SecretStore = "vault"
 	// In this test case we need a cache miss but an error when caching the token.
 	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
 		return &marketplaceTokenCacherNotCached{
@@ -280,11 +288,14 @@ func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVaultMarketplaceProviderFailure tests that if there is an error when requesting the token to the
 // marketplace, a nil authentication object is returned.
 func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
+	originalSecretStore := conf.SecretStore
+	conf.SecretStore = "vault"
 	// In this test the token cacher should simulate a cache miss and the cache function should return no error.
 	GetMarketplaceTokenCacher = func(tenantId *int64) redis.TokenCacher {
 		return &marketplaceTokenCacherNotCachedButCacheable{
@@ -312,6 +323,7 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 	if err == nil {
 		t.Error("want error, got nil")
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromVault tests that when Vault returns a properly formatted authentication, the authFromvault function is
@@ -463,6 +475,7 @@ func TestAuthFromVault(t *testing.T) {
 // miss and the token is successfully requested to the marketplace. It simulates the extra field not having any
 // previous content.
 func TestAuthFromDbExtraNoContent(t *testing.T) {
+	originalSecretStore := conf.SecretStore
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
 	conf.SecretStore = "database"
 	// Initialize the encryption key to the following: aaaaaaaaaaaaaaaa
@@ -520,6 +533,7 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 	if !bytes.Equal(want, auth.ExtraDb) {
 		t.Errorf(`want "%s", got "%s"`, want, auth.ExtraDb)
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestAuthFromDbExtraNullContent is a regression test. It simulates the extra field coming with a valid JSON "null"
@@ -590,6 +604,7 @@ func TestAuthFromDbExtraNullContent(t *testing.T) {
 // miss and the token is successfully requested to the marketplace. It simulates the extra field having previous
 // content.
 func TestAuthFromDbExtraPreviousContent(t *testing.T) {
+	originalSecretStore := conf.SecretStore
 	// Simulate that the Vault instance is off, and that we're pulling authentications from the database.
 	conf.SecretStore = "database"
 	// Initialize the encryption key to the following: aaaaaaaaaaaaaaaa
@@ -649,6 +664,7 @@ func TestAuthFromDbExtraPreviousContent(t *testing.T) {
 	if !bytes.Equal(want, auth.ExtraDb) {
 		t.Errorf(`want "%s", got "%s"`, want, auth.ExtraDb)
 	}
+	conf.SecretStore = originalSecretStore
 }
 
 // TestSecretPathDidntChange is a flag test which tells us when the path of the Vault secrets changed. This potentially
@@ -747,6 +763,7 @@ func TestFindKeysByResourceTypeAndId(t *testing.T) {
 func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
+	originalSecretStore := conf.SecretStore
 
 	wantCount := int64(len(fixtures.TestAuthenticationData))
 	Vault = &mocks.MockVault{}
@@ -783,4 +800,5 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 		}
 	}
 	DropSchema("offset_limit")
+	conf.SecretStore = originalSecretStore
 }

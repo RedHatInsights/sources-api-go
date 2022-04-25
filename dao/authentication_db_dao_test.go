@@ -44,6 +44,7 @@ func createAuthenticationFixture(t *testing.T) {
 // if the minimum data is provided for an authentication.
 func TestAuthenticationDbCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
@@ -63,6 +64,7 @@ func TestAuthenticationDbCreate(t *testing.T) {
 // entities if the minimum data is provided for an authentication.
 func TestAuthenticationDbBulkCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
@@ -80,6 +82,7 @@ func TestAuthenticationDbBulkCreate(t *testing.T) {
 // TestAuthenticationDbList tests that the "list" operation returns the expected number of authentications.
 func TestAuthenticationDbList(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
@@ -117,6 +120,7 @@ func TestAuthenticationDbList(t *testing.T) {
 // TestAuthenticationDbGet tests that the "get" operation is able to fetch the expected authentication.
 func TestAuthenticationDbGetById(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -148,6 +152,7 @@ func TestAuthenticationDbGetById(t *testing.T) {
 // TestAuthenticationDbUpdate tests that the "update" operation is able to properly update the authentication.
 func TestAuthenticationDbUpdate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -189,6 +194,7 @@ func TestAuthenticationDbUpdate(t *testing.T) {
 // TestAuthenticationDbGet tests that the "delete" operation is able to delete the expected authentication.
 func TestAuthenticationDbDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -228,6 +234,7 @@ func TestAuthenticationDbDelete(t *testing.T) {
 // non-existing authentication.
 func TestAuthenticationDbDeleteNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
@@ -255,6 +262,7 @@ func TestTenantId(t *testing.T) {
 // TestListForSource tests if "list for source" only lists the authentications of the related source, and no more.
 func TestListForSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -315,6 +323,7 @@ func TestListForSource(t *testing.T) {
 // under test.
 func TestListForSourceNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -337,6 +346,7 @@ func TestListForSourceNotFound(t *testing.T) {
 // more.
 func TestListForApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -409,6 +419,7 @@ func TestListForApplication(t *testing.T) {
 // function under test.
 func TestListForApplicationNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -431,6 +442,7 @@ func TestListForApplicationNotFound(t *testing.T) {
 // the related ApplicationAuthentication, and no more.
 func TestListForApplicationAuthentication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -518,6 +530,7 @@ func TestListForApplicationAuthentication(t *testing.T) {
 // authentication is given to the function under test.
 func TestListForApplicationAuthenticationNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -539,6 +552,7 @@ func TestListForApplicationAuthenticationNotFound(t *testing.T) {
 // TestListForEndpoint tests if "list for Endpoint" only lists the authentications of the related endpoint, and no more.
 func TestListForEndpoint(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
@@ -610,6 +624,7 @@ func TestListForEndpoint(t *testing.T) {
 // function under test.
 func TestListForEndpointNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
@@ -631,6 +646,7 @@ func TestListForEndpointNotFound(t *testing.T) {
 // TestFetchAndUpdateBy tests if "FetchAndUpdateBy" updates the timestamps as expected.
 func TestFetchAndUpdateBy(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -717,6 +733,7 @@ func TestFetchAndUpdateBy(t *testing.T) {
 // TestToEventJSON tests if "FetchAndUpdateBy" returns the expected output for the given resource.
 func TestToEventJSON(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -764,6 +781,7 @@ func TestToEventJSON(t *testing.T) {
 // test also "BulkMessageFromSource".
 func TestBulkMessage(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Create the authentication fixture that we will be fetching.
@@ -828,6 +846,7 @@ func TestBulkMessage(t *testing.T) {
 // resource type and a resource id.
 func TestListIdsForResource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// In this test we want a clean "authentications" table.
@@ -946,6 +965,7 @@ func TestListIdsForResource(t *testing.T) {
 // authentications are created for multiple resource types and the function tries to bulk delete them all.
 func TestBulkDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// Specify the resources we will be creating the authentications for.
@@ -1063,6 +1083,7 @@ func TestBulkDelete(t *testing.T) {
 // The test checks that in the case of receiving an empty slice, no authentications are deleted.
 func TestBulkDeleteRegression(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("authentications_db")
 
 	// How many authentications will we be creating per resource?

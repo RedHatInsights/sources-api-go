@@ -30,6 +30,7 @@ import (
 )
 
 func TestSourceListAuthentications(t *testing.T) {
+	originalSecretStore := conf.SecretStore
 	tenantId := fixtures.TestTenantData[0].Id
 
 	// If we're running integration tests without Vault...
@@ -115,6 +116,7 @@ func TestSourceListAuthentications(t *testing.T) {
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	conf.SecretStore = originalSecretStore
 }
 
 func TestSourceListAuthenticationsNotFound(t *testing.T) {

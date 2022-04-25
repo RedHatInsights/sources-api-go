@@ -727,8 +727,16 @@ func (m MockAuthenticationDao) List(limit, offset int, filters []util.Filter) ([
 
 func (m MockAuthenticationDao) GetById(id string) (*m.Authentication, error) {
 	for _, auth := range m.Authentications {
-		if auth.ID == id {
-			return &auth, nil
+		// If secret store is database, we compare given ID with different field
+		// than if secret store is vault
+		if conf.SecretStore == "database" {
+			if fmt.Sprintf("%d", auth.DbID) == id {
+				return &auth, nil
+			}
+		} else {
+			if auth.ID == id {
+				return &auth, nil
+			}
 		}
 	}
 
@@ -791,8 +799,16 @@ func (m MockAuthenticationDao) Update(auth *m.Authentication) error {
 
 func (m MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
 	for _, auth := range m.Authentications {
-		if auth.ID == id {
-			return &auth, nil
+		// If secret store is database, we compare given ID with different field
+		// than if secret store is vault
+		if conf.SecretStore == "database" {
+			if fmt.Sprintf("%d", auth.DbID) == id {
+				return &auth, nil
+			}
+		} else {
+			if auth.ID == id {
+				return &auth, nil
+			}
 		}
 	}
 	return nil, util.NewErrNotFound("authentication")
