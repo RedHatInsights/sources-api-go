@@ -576,6 +576,14 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		auth.LastCheckedAt = &parsedLastCheckedAt
 	}
 
+	if data["tenant_id"] != nil {
+		id, err := strconv.ParseInt(data["tenant_id"].(string), 10, 64)
+		if err != nil {
+			return nil
+		}
+		auth.TenantID = id
+	}
+
 	return auth
 }
 
