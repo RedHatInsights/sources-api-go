@@ -61,7 +61,6 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	return &AuthenticationResponse{
 		ID:                      id,
 		Name:                    util.ValueOrBlank(auth.Name),
-		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
 		Username:                util.ValueOrBlank(auth.Username),
 		Extra:                   extra,
