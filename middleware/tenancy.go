@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -67,8 +68,16 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("invalid identity structure received")
 			}
 
-			if identity.Identity.AccountNumber == "" && identity.Identity.OrgID == "" {
-				return fmt.Errorf("account number or OrgId not present in x-rh-identity")
+			// Check that we received at least an account number or an org ID.
+			// In the case of receiving an identity with an OrgId, but without an AccountNumber, log it since we need
+			// to be on the lookout for these anemic tenants. There might be services that still only support using
+			// EbsAccount numbers, and might not work otherwise.
+			if identity.Identity.AccountNumber == "" {
+				if identity.Identity.OrgID == "" {
+					return fmt.Errorf("account number or OrgId not present in x-rh-identity")
+				} else {
+					log.Warnf(`[org_id: %s] potential anemic tenant found`, identity.Identity.OrgID)
+				}
 			}
 
 			c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", identity.Identity.OrgID, identity.Identity.AccountNumber)
