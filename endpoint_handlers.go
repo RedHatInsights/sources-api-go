@@ -273,7 +273,7 @@ func EndpointListAuthentications(c echo.Context) error {
 
 	auths, count, err := authDB.ListForEndpoint(id, limit, offset, filters)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	out := make([]interface{}, len(auths))

@@ -848,3 +848,82 @@ func TestEndpointListAuthentications(t *testing.T) {
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
+
+func TestEndpointListAuthenticationsBadRequestInvalidEndpointId(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/xxx/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues("xxx")
+
+	badRequestEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := badRequestEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestEndpointListAuthenticationsBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/xxx/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues("xxx")
+
+	badRequestEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := badRequestEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestEndpointListAuthenticationsNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/09834098349/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues("09834098349")
+
+	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := notFoundEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}

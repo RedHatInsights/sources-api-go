@@ -16,7 +16,7 @@ type MockVault struct {
 
 var VaultPath = []string{fmt.Sprintf("Application_%d_%v", fixtures.TestTenantData[0].Id, fixtures.TestAuthenticationData[0].ID)}
 
-// getVaultPathsFromFixtures creates list of fault paths
+// getVaultPathsFromFixtures creates list of vault paths
 func getVaultPathsFromFixtures() []interface{} {
 	var vaultPaths []interface{}
 
