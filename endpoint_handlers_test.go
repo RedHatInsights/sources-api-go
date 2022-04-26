@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
@@ -18,6 +20,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/go-cmp/cmp"
+	"github.com/labstack/echo/v4"
 )
 
 func TestSourceEndpointSubcollectionList(t *testing.T) {
@@ -651,4 +654,140 @@ func TestEndpointDeleteNotFound(t *testing.T) {
 	}
 
 	templates.NotFoundTest(t, rec)
+}
+
+// TestEndpointEditPaused tests that an endpoint can be edited even if it is paused, if the payload is right. Runs on
+// unit tests by swapping the mock endpoint's DAO to one that simulates that the endpoints are paused.
+func TestEndpointEditPaused(t *testing.T) {
+	validDate := time.Now().Format(util.RecordDateTimeFormat)
+
+	req := m.ResourceEditPausedRequest{
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
+		LastAvailableAt:         &validDate,
+		LastCheckedAt:           &validDate,
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/endpoints/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	// Make sure we are using the "NoUnknownFieldsBinder".
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("accountNumber", fixtures.TestTenantData[0].ExternalTenant)
+
+	// Store the original "getEndopintDao" function to restore it later.
+	backupGetEndpointDao := getEndpointDao
+	getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) {
+		return &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
+	}
+
+	// Set the fixture endpoint as "paused".
+	pausedAt := time.Now()
+	fixtures.TestEndpointData[0].PausedAt = &pausedAt
+
+	badRequestEndpointEdit := ErrorHandlingContext(EndpointEdit)
+	err := badRequestEndpointEdit(c)
+
+	// Revert the fixture endpoint to its default value.
+	fixtures.TestEndpointData[0].PausedAt = nil
+	if err != nil {
+		t.Errorf(`unexpected error when editing a paused endpoint: %s`, err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusOK, rec.Code)
+	}
+
+	// Restore the original "getEndpointDao" function.
+	getEndpointDao = backupGetEndpointDao
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
+}
+
+// TestEndpointEditPausedInvalidFields tests that a "bad request" response is returned when a paused endpoint is tried
+// to be updated when the payload has not allowed fields. Runs on unit tests by swapping the mock endpoint's DAO to one
+// that simulates that the endpoints are paused.
+func TestEndpointEditPausedInvalidFields(t *testing.T) {
+	availabilityStatus := "available"
+	req := m.EndpointEditRequest{
+		AvailabilityStatus: &availabilityStatus,
+		Scheme:             util.StringRef("scheme"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/endpoints/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	// Make sure we don't accept the "Scheme" field we set up above.
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("accountNumber", fixtures.TestTenantData[0].ExternalTenant)
+
+	// Set the fixture endpoint as "paused".
+	pausedAt := time.Now()
+	fixtures.TestEndpointData[0].PausedAt = &pausedAt
+
+	// Store the original "getEndopintDao" function to restore it later.
+	backupGetEndpointDao := getEndpointDao
+	getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) {
+		return &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
+	}
+
+	badRequestEndpointEdit := ErrorHandlingContext(EndpointEdit)
+	err := badRequestEndpointEdit(c)
+
+	// Revert the fixture endpoint to its default value.
+	fixtures.TestEndpointData[0].PausedAt = nil
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
+	}
+
+	got, err := io.ReadAll(rec.Body)
+	if err != nil {
+		t.Errorf(`error reading the response: %s`, err)
+	}
+
+	want := []byte("scheme")
+	if !bytes.Contains(got, want) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, want, err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
+	}
+
+	// Restore the original "getEndpointDao" function.
+	getEndpointDao = backupGetEndpointDao
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
 }

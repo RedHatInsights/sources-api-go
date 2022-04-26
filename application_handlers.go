@@ -141,11 +141,6 @@ func ApplicationEdit(c echo.Context) error {
 		return err
 	}
 
-	input := &m.ApplicationEditRequest{}
-	if err := c.Bind(input); err != nil {
-		return err
-	}
-
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -156,8 +151,28 @@ func ApplicationEdit(c echo.Context) error {
 		return util.NewErrNotFound("application")
 	}
 
+	// Store the previous status before updating the application.
 	previousStatus := app.AvailabilityStatus
-	app.UpdateFromRequest(input)
+
+	if app.PausedAt != nil {
+		input := &m.ResourceEditPausedRequest{}
+		if err := c.Bind(input); err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		err := app.UpdateFromRequestPaused(input)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+	} else {
+		input := &m.ApplicationEditRequest{}
+		if err := c.Bind(input); err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		app.UpdateFromRequest(input)
+	}
+
 	err = applicationDB.Update(app)
 	if err != nil {
 		return err

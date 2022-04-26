@@ -234,6 +234,7 @@ func SwitchSchema(schema string) {
 // omitted, this could lead to "unique constraint violation" errors because of a duplicate id.
 func UpdateTablesSequences(schema string) {
 	tables := []string{
+		"applications",
 		"application_types",
 		"sources",
 		"source_types",

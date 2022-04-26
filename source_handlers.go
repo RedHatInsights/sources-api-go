@@ -132,11 +132,6 @@ func SourceEdit(c echo.Context) error {
 		return err
 	}
 
-	input := &m.SourceEditRequest{}
-	if err := c.Bind(input); err != nil {
-		return err
-	}
-
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -147,8 +142,29 @@ func SourceEdit(c echo.Context) error {
 		return err
 	}
 
+	// Store the previous status before updating the source.
 	previousStatus := s.AvailabilityStatus
-	s.UpdateFromRequest(input)
+
+	// If "PausedAt" contains a date it means that the source was paused back then.
+	if s.PausedAt != nil {
+		input := &m.SourcePausedEditRequest{}
+		if err := c.Bind(input); err != nil {
+			return err
+		}
+
+		err := s.UpdateFromRequestPaused(input)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+	} else {
+		input := &m.SourceEditRequest{}
+		if err := c.Bind(input); err != nil {
+			return err
+		}
+
+		s.UpdateFromRequest(input)
+	}
+
 	err = sourcesDB.Update(s)
 	if err != nil {
 		return err

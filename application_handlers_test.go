@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
+	time "time"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
@@ -897,4 +899,268 @@ func applicationEventTestHelper(t *testing.T, c echo.Context, expectedEventType 
 	}
 
 	return nil
+}
+
+// TestApplicationEditPausedUnitInvalidFields tests that a "bad request" response is returned when a paused application
+// is tried to be updated when the payload has not allowed fields. Sets the first application of the fixtures as paused
+// and then it unpauses it back once the test is finished.
+func TestApplicationEditPaused(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	req := m.ApplicationEditRequest{
+		Extra:                   map[string]interface{}{"thing": true},
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/applications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	// Make sure we are using the "NoUnknownFieldsBinder".
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	// Modify the application so that the underlying code identifies it as "paused".
+	err := dao.DB.Model(m.Application{}).Where("id = ?", 1).UpdateColumn("paused_at", time.Now()).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	badRequestApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+	err = badRequestApplicationEdit(c)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Revert the changes so other tests don't have any problems.
+	err = dao.DB.Model(m.Application{}).Where("id = ?", 1).UpdateColumn("paused_at", nil).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
+	}
+
+	want := "extra"
+	got := rec.Body.String()
+	if !strings.Contains(got, want) {
+		t.Errorf(`unexpected body returned. Want "%s" contained in what we got "%s"`, want, got)
+	}
+
+	// Modify the application back to its original state.
+	err = dao.DB.Model(m.Application{}).Where("id = ?", 1).UpdateColumn("paused_at", nil).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
+}
+
+// TestApplicationEditPausedUnitInvalidFields tests that a "bad request" response is returned when a paused application
+// is tried to be updated when the payload has not allowed fields. Sets the first application of the fixtures as paused
+// and then it unpauses it back once the test is finished.
+func TestApplicationEditPausedIntegration(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	req := m.ApplicationEditRequest{
+		Extra:                   map[string]interface{}{"thing": true},
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/applications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	// Make sure we are using the "NoUnknownFieldsBinder".
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	// Modify the application so that the underlying code identifies it as "paused".
+	err := dao.DB.Model(m.Application{}).Where("id = ?", 1).UpdateColumn("paused_at", time.Now()).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	badRequestApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+	err = badRequestApplicationEdit(c)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Revert the changes so other tests don't have any problems.
+	err = dao.DB.Model(m.Application{}).Where("id = ?", 1).UpdateColumn("paused_at", nil).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
+	}
+
+	want := "extra"
+	got := rec.Body.String()
+	if !strings.Contains(got, want) {
+		t.Errorf(`unexpected body returned. Want "%s" contained in what we got "%s"`, want, got)
+	}
+
+	// Modify the application back to its original state.
+	err = dao.DB.Model(m.Application{}).Where("id = ?", 1).UpdateColumn("paused_at", nil).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
+}
+
+// TestApplicationEditPaused tests that an application can be edited even if it is paused, if the payload is right.
+// Runs on unit tests by swapping the mock application's DAO to one that simulates that the applications are paused.
+func TestApplicationEditPausedUnit(t *testing.T) {
+	validDate := time.Now().Format(util.RecordDateTimeFormat)
+
+	req := m.ResourceEditPausedRequest{
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
+		LastAvailableAt:         &validDate,
+		LastCheckedAt:           &validDate,
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/applications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	// Make sure we are using the "NoUnknownFieldsBinder".
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	// Get the specific ApplicationDao mock which simulates that the applications are paused.
+	backupDao := getApplicationDao
+	getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) {
+		return &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}, nil
+	}
+
+	appEdit := ErrorHandlingContext(ApplicationEdit)
+	err := appEdit(c)
+
+	if err != nil {
+		t.Errorf(`unexpected error when editing a paused application: %s`, err)
+	}
+
+	// Go back to the previous DAO mock.
+	getApplicationDao = backupDao
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusOK, rec.Code)
+	}
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
+}
+
+// TestApplicationEditPausedUnitInvalidFields tests that a "bad request" response is returned when a paused application
+// is tried to be updated when the payload has not allowed fields. Runs on unit tests by swapping the mock
+// application's DAO to one that simulates that the applications are paused.
+func TestApplicationEditPausedUnitInvalidFields(t *testing.T) {
+	req := m.ApplicationEditRequest{
+		Extra:                   map[string]interface{}{"thing": true},
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/applications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	// Make sure we don't accept the "Extra" field we set up above
+	backupBinder := c.Echo().Binder
+	c.Echo().Binder = &NoUnknownFieldsBinder{}
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	// Get the specific ApplicationDao mock which simulates that the applications are paused.
+	backupDao := getApplicationDao
+	getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) {
+		return &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}, nil
+	}
+
+	// Set the fixture application as "paused".
+	pausedAt := time.Now()
+	fixtures.TestApplicationData[0].PausedAt = &pausedAt
+
+	badRequestApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+	err := badRequestApplicationEdit(c)
+
+	// Revert the fixture endpoint to its default value.
+	fixtures.TestApplicationData[0].PausedAt = nil
+	if err != nil {
+		t.Errorf(`unexpected error on the handler's response: %s'`, err)
+	}
+
+	// Go back to the previous DAO mock.
+	getApplicationDao = backupDao
+
+	got, err := io.ReadAll(rec.Body)
+	if err != nil {
+		t.Errorf(`error reading the response: %s`, err)
+	}
+
+	want := []byte("extra")
+	if !bytes.Contains(got, want) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, want, err)
+	}
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
+	}
+
+	// Restore the binder to not affect any other tests.
+	c.Echo().Binder = backupBinder
 }
