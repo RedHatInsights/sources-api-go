@@ -199,8 +199,12 @@ func SourceDelete(c echo.Context) (err error) {
 	c.Logger().Infof("Deleting Source Id %v", id)
 
 	// Cascade delete the source.
-	headers := service.ForwadableHeaders(c)
-	err = service.DeleteCascade(sourcesDB.Tenant(), "Source", id, headers)
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
+
+	err = service.DeleteCascade(sourcesDB.Tenant(), "Source", id, forwardableHeaders)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
@@ -418,17 +422,20 @@ func SourcePause(c echo.Context) error {
 	}
 
 	// Get the Kafka headers we will need to be forwarding.
-	kafkaHeaders := service.ForwadableHeaders(c)
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
 
 	// Raise the pause event for the source.
-	err = service.RaiseEvent("Source.pause", source, kafkaHeaders)
+	err = service.RaiseEvent("Source.pause", source, forwardableHeaders)
 	if err != nil {
 		return err
 	}
 
 	// Raise the pause event for its applications
 	for _, app := range source.Applications {
-		err := service.RaiseEvent("Application.pause", &app, kafkaHeaders)
+		err := service.RaiseEvent("Application.pause", &app, forwardableHeaders)
 		if err != nil {
 			return err
 		}
@@ -461,17 +468,20 @@ func SourceUnpause(c echo.Context) error {
 	}
 
 	// Get the Kafka headers we will need to be forwarding.
-	kafkaHeaders := service.ForwadableHeaders(c)
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
 
 	// Raise the unpause event for the source.
-	err = service.RaiseEvent("Source.unpause", source, kafkaHeaders)
+	err = service.RaiseEvent("Source.unpause", source, forwardableHeaders)
 	if err != nil {
 		return err
 	}
 
 	// Raise the unpause event for its applications
 	for _, app := range source.Applications {
-		err := service.RaiseEvent("Application.unpause", &app, kafkaHeaders)
+		err := service.RaiseEvent("Application.unpause", &app, forwardableHeaders)
 		if err != nil {
 			return err
 		}

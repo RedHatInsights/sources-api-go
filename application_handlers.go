@@ -123,9 +123,14 @@ func ApplicationCreate(c echo.Context) error {
 	if applicationDB.IsSuperkey(application.ID) {
 		c.Set("skip_raise", true)
 
+		forwardableHeaders, err := service.ForwadableHeaders(c)
+		if err != nil {
+			return err
+		}
+
 		// do the rest async. Don't want to be tied to kafka.
 		go func() {
-			err := service.SendSuperKeyCreateRequest(application, service.ForwadableHeaders(c))
+			err := service.SendSuperKeyCreateRequest(application, forwardableHeaders)
 			if err != nil {
 				c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
 			}
@@ -216,8 +221,12 @@ func ApplicationDelete(c echo.Context) error {
 	c.Logger().Infof("Deleting Application Id %v", id)
 
 	// Cascade delete the application.
-	headers := service.ForwadableHeaders(c)
-	err = service.DeleteCascade(applicationDB.Tenant(), "Application", id, headers)
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
+
+	err = service.DeleteCascade(applicationDB.Tenant(), "Application", id, forwardableHeaders)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
@@ -313,10 +322,13 @@ func ApplicationPause(c echo.Context) error {
 	}
 
 	// Get the Kafka headers we will need to be forwarding.
-	kafkaHeaders := service.ForwadableHeaders(c)
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
 
 	// Raise the pause event for the application.
-	err = service.RaiseEvent("Application.pause", application, kafkaHeaders)
+	err = service.RaiseEvent("Application.pause", application, forwardableHeaders)
 	if err != nil {
 		return err
 	}
@@ -347,10 +359,13 @@ func ApplicationUnpause(c echo.Context) error {
 	}
 
 	// Get the Kafka headers we will need to be forwarding.
-	kafkaHeaders := service.ForwadableHeaders(c)
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
 
 	// Raise the unpause event for the application.
-	err = service.RaiseEvent("Application.unpause", application, kafkaHeaders)
+	err = service.RaiseEvent("Application.unpause", application, forwardableHeaders)
 	if err != nil {
 		return err
 	}

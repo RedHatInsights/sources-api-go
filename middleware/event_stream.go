@@ -52,7 +52,10 @@ func RaiseEvent(next echo.HandlerFunc) echo.HandlerFunc {
 
 		l.Log.Infof("Raising Event %v", eventType)
 
-		headers := service.ForwadableHeaders(c)
+		headers, err := service.ForwadableHeaders(c)
+		if err != nil {
+			return err
+		}
 
 		// async!
 		go func() {
