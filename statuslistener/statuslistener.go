@@ -104,14 +104,14 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
-	accountNumber, err := util.AccountNumberFromHeaders(headers)
+	id, err := util.IdentityFromKafkaHeaders(headers)
 	if err != nil {
 		l.Log.Error(err)
 		return
 	}
 
 	tenantDao := dao.GetTenantDao()
-	tenant, err := tenantDao.TenantByAccountNumber(accountNumber)
+	tenant, err := tenantDao.TenantByIdentity(id)
 	if err != nil {
 		l.Log.Error(err)
 		return
@@ -139,7 +139,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		}
 
 		if emailInfo != nil {
-			err = service.EmitAvailabilityStatusNotification(accountNumber, emailInfo.ToEmail(previousStatus))
+			err = service.EmitAvailabilityStatusNotification(id.AccountNumber, emailInfo.ToEmail(previousStatus))
 			if err != nil {
 				l.Log.Errorf("unable to emit notification: %v", err)
 			}

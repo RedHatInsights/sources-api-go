@@ -39,8 +39,13 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to pull x-rh-identity from request")
 			}
 
+			forwardableHeaders, err := service.ForwadableHeaders(c)
+			if err != nil {
+				return err
+			}
+
 			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
-				Headers:  service.ForwadableHeaders(c),
+				Headers:  forwardableHeaders,
 				Tenant:   tenantId,
 				Identity: xrhid,
 				Model:    "source",
@@ -74,8 +79,13 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to pull x-rh-identity from request")
 			}
 
+			forwardableHeaders, err := service.ForwadableHeaders(c)
+			if err != nil {
+				return err
+			}
+
 			jobs.Enqueue(&jobs.SuperkeyDestroyJob{
-				Headers:  service.ForwadableHeaders(c),
+				Headers:  forwardableHeaders,
 				Tenant:   tenantId,
 				Identity: xrhid,
 				Model:    "application",

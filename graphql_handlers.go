@@ -112,7 +112,12 @@ func ProxyGraphqlToLegacySources(c echo.Context) error {
 	}
 
 	// fetch the headers to forward along
-	for _, h := range service.ForwadableHeaders(c) {
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
+
+	for _, h := range forwardableHeaders {
 		req.Header.Add(h.Key, string(h.Value))
 	}
 

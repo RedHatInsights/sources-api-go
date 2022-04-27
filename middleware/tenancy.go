@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -36,33 +38,59 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
 
 			tenantDao := dao.GetTenantDao()
-			t, err := tenantDao.GetOrCreateTenantID(accountNumber)
+			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity{AccountNumber: accountNumber})
 			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request")
+				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("tenantID", *t)
 			c.Set("accountNumber", accountNumber)
+			c.Set("tenantID", tenantId)
+
+		case c.Get("psk-org-id") != nil:
+			orgId, ok := c.Get("psk-org-id").(string)
+			if !ok {
+				return errors.New("failed to cast orgId to string")
+			}
+
+			c.Logger().Debugf(`[org_id: %s] Looking up Tenant ID`, orgId)
+
+			tenantDao := dao.GetTenantDao()
+			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity{OrgID: orgId})
+			if err != nil {
+				return fmt.Errorf("failed to get or create tenant for request: %s", err)
+			}
+
+			c.Set("tenantID", tenantId)
+
 		case c.Get("identity") != nil:
 			identity, ok := c.Get("identity").(identity.XRHID)
 			if !ok {
-				return fmt.Errorf("failed to cast account-number to string")
+				return fmt.Errorf("invalid identity structure received")
 			}
 
+			// Check that we received at least an account number or an org ID.
+			// In the case of receiving an identity with an OrgId, but without an AccountNumber, log it since we need
+			// to be on the lookout for these anemic tenants. There might be services that still only support using
+			// EbsAccount numbers, and might not work otherwise.
 			if identity.Identity.AccountNumber == "" {
-				return fmt.Errorf("account number not present in x-rh-identity")
+				if identity.Identity.OrgID == "" {
+					return fmt.Errorf("account number or OrgId not present in x-rh-identity")
+				} else {
+					log.Warnf(`[org_id: %s] potential anemic tenant found`, identity.Identity.OrgID)
+				}
 			}
 
-			c.Logger().Debugf("Looking up Tenant ID for account number %v", identity.Identity.AccountNumber)
+			c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", identity.Identity.OrgID, identity.Identity.AccountNumber)
 
 			tenantDao := dao.GetTenantDao()
-			t, err := tenantDao.GetOrCreateTenantID(identity.Identity.AccountNumber)
+			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity)
 			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request: %v", err)
+				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("tenantID", *t)
 			c.Set("accountNumber", identity.Identity.AccountNumber)
+			c.Set("tenantID", tenantId)
+
 		default:
 			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}

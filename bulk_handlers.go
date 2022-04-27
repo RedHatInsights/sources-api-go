@@ -38,7 +38,12 @@ func BulkCreate(c echo.Context) error {
 		return err
 	}
 
-	service.SendBulkMessages(output, service.ForwadableHeaders(c), xrhid)
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
+
+	service.SendBulkMessages(output, forwardableHeaders, xrhid)
 
 	return c.JSON(http.StatusCreated, output.ToResponse())
 }

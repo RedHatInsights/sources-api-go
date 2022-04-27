@@ -31,21 +31,24 @@ func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
 	return XRHIdentity, nil
 }
 
-func AccountNumberFromHeaders(headers []kafka.Header) (string, error) {
+// IdentityFromKafkaHeaders returns an identity from the provided Kafka headers, if the array contains one of the
+// "x-rh-sources-account-number" or "x-rh-identity" headers. It returns early on the first match, without any specific
+// preference or order.
+func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error) {
 	for _, header := range headers {
 		if header.Key == xrhAccountNumberKey {
-			return string(header.Value), nil
+			return &identity.Identity{AccountNumber: string(header.Value)}, nil
 		}
 
 		if header.Key == xrhIdentityKey {
-			XRHIdentity, err := ParseXRHIDHeader(string(header.Value))
+			xRhIdentity, err := ParseXRHIDHeader(string(header.Value))
 			if err != nil {
-				return "", err
+				return nil, err
 			}
 
-			return XRHIdentity.Identity.AccountNumber, nil
+			return &xRhIdentity.Identity, nil
 		}
 	}
 
-	return "", fmt.Errorf("unable to get account number from headers, %s and %s are missing", xrhAccountNumberKey, xrhIdentityKey)
+	return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", xrhAccountNumberKey, xrhIdentityKey)
 }
