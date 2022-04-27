@@ -111,7 +111,7 @@ func TestSystemClusterID(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"x-rh-identity": "dummy",
-			"identity": identity.XRHID{
+			"identity": &identity.XRHID{
 				Identity: identity.Identity{
 					System: map[string]interface{}{"cluster_id": "test_cluster"},
 				},
@@ -136,7 +136,7 @@ func TestSystemCN(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"x-rh-identity": "dummy",
-			"identity": identity.XRHID{
+			"identity": &identity.XRHID{
 				Identity: identity.Identity{
 					System: map[string]interface{}{"cn": "test_cert"},
 				},
@@ -161,7 +161,7 @@ func TestSystemPatch(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"x-rh-identity": "dummy",
-			"identity": identity.XRHID{
+			"identity": &identity.XRHID{
 				Identity: identity.Identity{
 					System: map[string]interface{}{"cn": "test_cert"},
 				},
@@ -186,7 +186,7 @@ func TestSystemDelete(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"x-rh-identity": "dummy",
-			"identity": identity.XRHID{
+			"identity": &identity.XRHID{
 				Identity: identity.Identity{
 					System: map[string]interface{}{"cn": "test_cert"},
 				},
@@ -227,7 +227,7 @@ func TestRbacWithAccess(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"x-rh-identity": "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
-			"identity":      identity.XRHID{Identity: identity.Identity{}},
+			"identity":      &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
 
@@ -250,7 +250,7 @@ func TestRbacWithoutAccess(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"x-rh-identity": "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
-			"identity":      identity.XRHID{Identity: identity.Identity{}},
+			"identity":      &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
 
@@ -273,7 +273,7 @@ func TestRbacNoConnection(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			"x-rh-identity": "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
-			"identity":      identity.XRHID{Identity: identity.Identity{}},
+			"identity":      &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
 

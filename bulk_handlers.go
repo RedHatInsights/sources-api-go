@@ -26,7 +26,7 @@ func BulkCreate(c echo.Context) error {
 	if !ok {
 		c.Logger().Warnf("bad xrhid %v", c.Get("x-rh-identity"))
 	}
-	id, ok := c.Get("identity").(identity.XRHID)
+	id, ok := c.Get("identity").(*identity.XRHID)
 	if !ok {
 		c.Logger().Warnf("failed to pull identity from request")
 		return fmt.Errorf("failed to pull identity from request")

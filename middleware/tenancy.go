@@ -63,7 +63,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set("tenantID", tenantId)
 
 		case c.Get("identity") != nil:
-			identity, ok := c.Get("identity").(identity.XRHID)
+			identity, ok := c.Get("identity").(*identity.XRHID)
 			if !ok {
 				return fmt.Errorf("invalid identity structure received")
 			}

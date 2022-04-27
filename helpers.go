@@ -102,7 +102,7 @@ func getTenantFromEchoContext(c echo.Context) (int64, error) {
 }
 
 func getAccountNumberFromEchoContext(c echo.Context) (string, error) {
-	id, ok := c.Get("identity").(identity.XRHID)
+	id, ok := c.Get("identity").(*identity.XRHID)
 	if !ok {
 		return "", fmt.Errorf("failed to pull identity from context")
 	}

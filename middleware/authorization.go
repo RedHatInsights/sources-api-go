@@ -49,7 +49,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			// first check the identity (already parsed) to see if it contains
 			// the system key and if it does do some extra checks to authorize
 			// based on some internal rules (operator + satellite)
-			identity, ok := c.Get("identity").(identity.XRHID)
+			identity, ok := c.Get("identity").(*identity.XRHID)
 			if !ok {
 				return fmt.Errorf("error casting identity to struct: %+v", c.Get("identity"))
 			}
