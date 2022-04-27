@@ -89,6 +89,8 @@ objects:
             secretKeyRef:
               name: sources-api-secrets
               key: encryption-key
+        - name: TENANT_TRANSLATOR_URL
+          value: ${TENANT_TRANSLATOR_SCHEME}://${TENANT_TRANSLATOR_HOST}:${TENANT_TRANSLATOR_PORT}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -236,3 +238,15 @@ parameters:
   name: SOURCES_ENV
   required: true
   value: stage
+- description: Scheme for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_SCHEME
+  required: true
+  value: 'http'
+- description: Host for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_HOST
+  required: true
+  value: 'apicast.3scale-dev.svc.cluster.local'
+- description: Port for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_PORT
+  required: true
+  value: '8892'

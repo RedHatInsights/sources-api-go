@@ -13,6 +13,8 @@ import (
 
 var migrationsCollection = []*gormigrate.Migration{
 	InitialSchema(),
+	AddOrgIdToTenants(),
+	TranslateEbsAccountNumbersToOrgIds(),
 	SourceTypesAddCategoryColumn(),
 }
 
