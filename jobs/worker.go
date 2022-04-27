@@ -14,7 +14,9 @@ const workQueue = "sources_api_jobs"
 
 // Runs the worker just consuming off of a redis list
 func Run() {
-	l.Log.Infof("Starting up Background worker listening to redis queue %q", workQueue)
+	l.Log.Infof("Starting up Background worker listening to redis queue [%v]", workQueue)
+
+	runScheduledJobs()
 
 	for {
 		// This is a BLocking Pop that will effectively wait forever until
