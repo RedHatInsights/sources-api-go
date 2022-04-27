@@ -18,7 +18,7 @@ type EventModelDao interface {
 	ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
-func UpdateMessage(eventObject *EventModelDao, resource util.Resource, attributes []string) ([]byte, error) {
+func UpdateMessage(eventObject EventModelDao, resource util.Resource, attributes []string) ([]byte, error) {
 	updatedAttributes := map[string]interface{}{}
 
 	resourceID := ""
@@ -30,7 +30,7 @@ func UpdateMessage(eventObject *EventModelDao, resource util.Resource, attribute
 
 	updatedAttributes["updated"] = map[string]interface{}{resource.ResourceType: map[string]interface{}{resourceID: attributes}}
 
-	bulkMessage, err := (*eventObject).BulkMessage(resource)
+	bulkMessage, err := eventObject.BulkMessage(resource)
 	if err != nil {
 		return nil, fmt.Errorf("error in BulkMessage: %v", err.Error())
 	}

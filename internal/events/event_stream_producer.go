@@ -69,7 +69,7 @@ func (esp *EventStreamProducer) RaiseEventForUpdate(resource util.Resource, upda
 		return err
 	}
 
-	resourceJSON, err := (*eventModelDao).ToEventJSON(resource)
+	resourceJSON, err := eventModelDao.ToEventJSON(resource)
 	if err != nil {
 		return err
 	}
