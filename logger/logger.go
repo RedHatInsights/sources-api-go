@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -86,6 +87,20 @@ func LogrusLogLevelFrom(configLogLevel string) logrus.Level {
 	return logLevel
 }
 
+func backtrace() []string {
+	var filenames []string
+
+	pc := make([]uintptr, 1000)
+	n := runtime.Callers(0, pc)
+	frames := runtime.CallersFrames(pc[:n])
+
+	for frame, isNextFrameValid := frames.Next(); isNextFrameValid; frame, isNextFrameValid = frames.Next() {
+		filenames = append(filenames, fmt.Sprintf("%s(%s:%d)", frame.Function, frame.File, frame.Line))
+	}
+
+	return filenames
+}
+
 type CustomLoggerFormatter struct {
 	Hostname              string
 	AppName               string
@@ -135,6 +150,10 @@ func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	if entry.Logger.Level == logrus.DebugLevel && entry.Caller != nil && !f.InjectedToOtherLogger {
 		data["filename"] = fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line)
+	}
+
+	if entry.Level == logrus.ErrorLevel || entry.Level == logrus.WarnLevel {
+		data["backtrace"] = backtrace()
 	}
 
 	for k, v := range entry.Data {
