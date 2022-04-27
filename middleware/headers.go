@@ -67,7 +67,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			if err != nil {
 				return err
 			}
-			c.Set("identity", *id)
+			c.Set("identity", id)
 		}
 
 		return next(c)
