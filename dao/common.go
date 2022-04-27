@@ -13,7 +13,7 @@ const (
 	DEFAULT_OFFSET = 0
 )
 
-func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
+func GetFromResourceType(resourceType string) (m.EventModelDao, error) {
 	var resource m.EventModelDao
 	switch strings.ToLower(resourceType) {
 	case "source":
@@ -28,7 +28,7 @@ func GetFromResourceType(resourceType string) (*m.EventModelDao, error) {
 		return nil, fmt.Errorf("invalid resource_type (%s) to get DAO instance", resourceType)
 	}
 
-	return &resource, nil
+	return resource, nil
 }
 
 func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, resourceType string) (string, error) {

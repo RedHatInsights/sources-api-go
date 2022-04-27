@@ -125,7 +125,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 
 	resource.TenantID = tenant.Id
 	resource.AccountNumber = tenant.ExternalTenant
-	resultRecord, err := (*modelEventDao).FetchAndUpdateBy(*resource, updateAttributes)
+	resultRecord, err := modelEventDao.FetchAndUpdateBy(*resource, updateAttributes)
 	if err != nil {
 		l.Log.Errorf("unable to update availability status: %s", err)
 		return
