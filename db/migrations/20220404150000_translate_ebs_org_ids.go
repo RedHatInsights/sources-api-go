@@ -42,7 +42,11 @@ func TranslateEbsAccountNumbersToOrgIds() *gormigrate.Migration {
 				return err
 			}
 
-			// Attempt to translate the EANs.
+			// Attempt to translate the EANs, unless there is nothing to translate.
+			if len(ebsAccountNumbers) == 0 {
+				return nil
+			}
+
 			translator := tenantid.NewTranslator(config.Get().TenantTranslatorUrl)
 			results, err := translator.EANsToOrgIDs(context.Background(), ebsAccountNumbers)
 			if err != nil {
