@@ -95,14 +95,15 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 		return nil, 0, err
 	}
 
-	// Handle if the limit is longer than the keys available
-	end := 0
-	if limit > len(keys) {
+	// Set start and end index and take into account value of offset and limit
+	start := offset
+	end := offset + limit
+
+	if end > len(keys) {
 		end = len(keys)
-	} else {
-		end = limit
 	}
-	if offset > limit {
+
+	if start >= end {
 		return nil, int64(len(keys)), nil
 	}
 
@@ -110,7 +111,7 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 	// ".getKey"
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(a.TenantID)
 	out := make([]m.Authentication, 0, len(keys))
-	for _, val := range keys[offset:end] {
+	for _, val := range keys[start:end] {
 		secret, err := a.getKey(val)
 		if err != nil {
 			return nil, 0, err
