@@ -756,8 +756,6 @@ func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset i
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
-	count := int64(len(mAuth.Authentications))
-
 	out := make([]m.Authentication, 0)
 
 	for _, auth := range mAuth.Authentications {
@@ -766,7 +764,7 @@ func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset i
 		}
 	}
 
-	return out, count, nil
+	return out, int64(len(out)), nil
 }
 
 func (m MockAuthenticationDao) ListForApplication(applicationID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
