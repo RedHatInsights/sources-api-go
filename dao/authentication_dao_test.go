@@ -782,7 +782,6 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 		authenticationDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
 		for _, d := range fixtures.TestDataOffsetLimit {
-			fmt.Println(secretStore, d.Limit, d.Offset)
 			authentications, gotCount, err := authenticationDao.List(d.Limit, d.Offset, []util.Filter{})
 			if err != nil {
 				t.Errorf(`unexpected error when listing the authentications: %s`, err)
