@@ -21,6 +21,10 @@ type ErrorDocument struct {
 func ErrorDoc(message, status string) *ErrorDocument {
 	l.Log.Error(message)
 
+	return ErrorDocWithoutLogging(message, status)
+}
+
+func ErrorDocWithoutLogging(message, status string) *ErrorDocument {
 	return &ErrorDocument{
 		[]Error{{
 			Detail: message,
