@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -28,6 +31,10 @@ func main() {
 	redis.Init()
 	dao.Init()
 
+	shutdown := make(chan struct{})
+	interrupts := make(chan os.Signal, 1)
+	signal.Notify(interrupts, os.Interrupt, syscall.SIGTERM)
+
 	switch {
 	case conf.StatusListener:
 		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
@@ -37,21 +44,22 @@ func main() {
 	default:
 		// launch 2 listeners - one for metrics and one for the actual application,
 		// one on 8000 and one on 9000 (per clowder)
-		go runServer()
+		go runServer(shutdown)
 		go runMetricExporter()
 	}
 
-	interrupts := make(chan os.Signal, 1)
-	signal.Notify(interrupts, os.Interrupt, syscall.SIGTERM)
-
-	// Block waiting for a signal from the OS, exit cleanly once we get it.
+	// wait for a signal from the OS, gracefully terminating the echo servers
+	// if/when that comes in
 	s := <-interrupts
+	logging.Log.Infof("Received %v, exiting", s)
 
-	logging.Log.Warnf("Received %v, exiting", s)
+	shutdown <- struct{}{}
+	<-shutdown
+
 	os.Exit(0)
 }
 
-func runServer() {
+func runServer(shutdown chan struct{}) {
 	e := echo.New()
 	logging.InitEchoLogger(e, conf)
 
@@ -98,8 +106,26 @@ func runServer() {
 	e.HideBanner = true
 	e.HidePort = true
 
-	logging.Log.Infof("API Server started on :8000")
-	e.Logger.Fatal(e.Start(":8000"))
+	go func() {
+		logging.Log.Infof("API Server started on :8000")
+
+		if err := e.Start(":8000"); err != nil && err != http.ErrServerClosed {
+			e.Logger.Warn(err)
+		}
+	}()
+
+	// wait for the shutdown signal to come
+	<-shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	// shut down the server gracefully, with a timeout of 20 seconds
+	if err := e.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+		logging.Log.Fatal(err)
+	}
+
+	// let the main goroutine know we're ready to exit
+	shutdown <- struct{}{}
 }
 
 func runMetricExporter() {
