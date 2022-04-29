@@ -19,13 +19,10 @@ func TestNotReachingMarketplace(t *testing.T) {
 	marketplaceTokenProvider = &MarketplaceTokenProvider{ApiKey: &fakeApiKey}
 	_, err := marketplaceTokenProvider.RequestToken()
 
-	if err == nil {
-		t.Errorf("want error, got none")
-	}
-
 	want := "could not reach the marketplace"
-	if err.Error() != want {
-		t.Errorf("want %s, got %s", want, err)
+	got := err.Error()
+	if want != got {
+		t.Errorf(`unexpected error: want "%s", got "%s"`, want, got)
 	}
 }
 
@@ -48,12 +45,9 @@ func TestInvalidStatusCodeReturnsError(t *testing.T) {
 	marketplaceTokenProvider = &MarketplaceTokenProvider{ApiKey: &fakeApiKey}
 	_, err := marketplaceTokenProvider.RequestToken()
 
-	if err == nil {
-		t.Errorf("want error, got none")
-	}
-
 	want := "unexpected response received from the marketplace"
-	if err.Error() != want {
-		t.Errorf("want %s, got %s", want, err)
+	got := err.Error()
+	if want != got {
+		t.Errorf(`unexpected error: want "%s", got "%s"`, want, err)
 	}
 }
