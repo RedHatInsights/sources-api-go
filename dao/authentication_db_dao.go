@@ -267,7 +267,7 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 		Error
 
 	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
+		return nil, 0, err
 	}
 
 	if !endpointExists {
