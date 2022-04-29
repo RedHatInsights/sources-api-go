@@ -56,4 +56,7 @@ vault:
 generate:
 	go generate ./...
 
+migration:
+	@sh db/migrations/new_migration.sh
+
 .PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener alltest generate
