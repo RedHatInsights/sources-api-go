@@ -6,30 +6,35 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
+var availabilityStatus = "available"
+
 var TestAuthenticationData = []m.Authentication{
 	{
-		ID:           "611a8a38-f434-4e62-bda0-78cd45ffae5b",
-		DbID:         1,
-		TenantID:     TestTenantData[0].Id,
-		SourceID:     1,
-		ResourceType: "Application",
-		ResourceID:   1,
+		ID:                 "611a8a38-f434-4e62-bda0-78cd45ffae5b",
+		DbID:               1,
+		TenantID:           TestTenantData[0].Id,
+		SourceID:           1,
+		ResourceType:       "Application",
+		ResourceID:         1,
+		AvailabilityStatus: &availabilityStatus,
 	},
 	{
-		ID:           "82e1a1b6-a136-11ec-b909-0242ac120002",
-		DbID:         2,
-		TenantID:     TestTenantData[0].Id,
-		SourceID:     2,
-		ResourceType: "Endpoint",
-		ResourceID:   1,
+		ID:                 "82e1a1b6-a136-11ec-b909-0242ac120002",
+		DbID:               2,
+		TenantID:           TestTenantData[0].Id,
+		SourceID:           2,
+		ResourceType:       "Endpoint",
+		ResourceID:         1,
+		AvailabilityStatus: &availabilityStatus,
 	},
 	{
-		ID:           "24127a2a-c4db-11ec-9d64-0242ac120002",
-		DbID:         3,
-		TenantID:     TestTenantData[0].Id,
-		SourceID:     2,
-		ResourceType: "Source",
-		ResourceID:   1,
+		ID:                 "24127a2a-c4db-11ec-9d64-0242ac120002",
+		DbID:               3,
+		TenantID:           TestTenantData[0].Id,
+		SourceID:           2,
+		ResourceType:       "Source",
+		ResourceID:         1,
+		AvailabilityStatus: &availabilityStatus,
 	},
 }
 
