@@ -21,6 +21,7 @@ type Application struct {
 	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`
 
 	Extra             datatypes.JSON `json:"extra,omitempty"`
+	RetryCounter      *int8          `json:"-" gorm:"default:0"`
 	SuperkeyData      datatypes.JSON `json:"-"`
 	GotSuperkeyUpdate bool           `json:"-" gorm:"-"`
 
