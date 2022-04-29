@@ -25,7 +25,7 @@ func ConnectToTestDB(dbSchema string) {
 	}})
 
 	if err != nil {
-		log.Fatalf("db must not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
+		log.Fatalf("db does not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
 	}
 
 	rawDB, err := db.DB()
