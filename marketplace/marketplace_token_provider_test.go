@@ -1,38 +1,20 @@
 package marketplace
 
 import (
-	"errors"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/RedHatInsights/sources-api-go/config"
 )
-
-// httpClientErrorRequest is a mock of the http.Client object which always returns an error when the ".Do" function
-// gets called.
-type httpClientErrorRequest struct{}
-
-// httpClientInvalidStatusCodeResponse is a mock of the http.Client which always returns a response with a 400 status
-// code.
-type httpClientInvalidStatusCodeResponse struct{}
-
-// Do returns an error simulating a non-reachability issue to the provided host.
-func (h httpClientErrorRequest) Do(req *http.Request) (*http.Response, error) {
-	return nil, errors.New("simulating not being able to reach the marketplace")
-
-}
-
-// Do returns an empty response with an 400 code.
-func (h httpClientInvalidStatusCodeResponse) Do(req *http.Request) (*http.Response, error) {
-	response := http.Response{StatusCode: 400}
-
-	return &response, nil
-}
 
 // fakeApiKey is a fake API key just for the tests.
 var fakeApiKey = "fakeApiKey"
 
 // TestNotReachingMarketplace tests that an error is returned when an error occurs within the HTTP Client.
 func TestNotReachingMarketplace(t *testing.T) {
-	GetHttpClient = func() HttpClient { return httpClientErrorRequest{} }
+	// Set an invalid host as the marketplace host to force an error in the http.Client
+	config.Get().MarketplaceHost = "invalidhost"
 
 	marketplaceTokenProvider = &MarketplaceTokenProvider{ApiKey: &fakeApiKey}
 	_, err := marketplaceTokenProvider.RequestToken()
@@ -50,7 +32,18 @@ func TestNotReachingMarketplace(t *testing.T) {
 // TestInvalidStatusCodeReturnsError checks that an error is returned when a non 200 status code is returned on the
 // response from the marketplace.
 func TestInvalidStatusCodeReturnsError(t *testing.T) {
-	GetHttpClient = func() HttpClient { return httpClientInvalidStatusCodeResponse{} }
+	// Set up a fake test server which returns a "Bad Request" status code, instead of the "OK" that the function under
+	// test expects.
+	server := httptest.NewServer(
+		http.HandlerFunc(
+			func(writer http.ResponseWriter, request *http.Request) {
+				writer.WriteHeader(http.StatusBadRequest)
+			},
+		),
+	)
+	defer server.Close()
+
+	config.Get().MarketplaceHost = server.URL
 
 	marketplaceTokenProvider = &MarketplaceTokenProvider{ApiKey: &fakeApiKey}
 	_, err := marketplaceTokenProvider.RequestToken()

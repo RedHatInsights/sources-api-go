@@ -9,7 +9,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	echoMetrics "github.com/labstack/echo-contrib/prometheus"
@@ -85,9 +84,6 @@ func runServer() {
 	getEndpointDao = getEndpointDaoWithTenant
 	getMetaDataDao = getMetaDataDaoWithoutTenant
 	getRhcConnectionDao = getDefaultRhcConnectionDao
-
-	// setting up the "http.Client" for the marketplace token provider
-	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib
 
 	// hiding the ascii art to make the logs more json-like
 	e.HideBanner = true
