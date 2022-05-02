@@ -503,6 +503,8 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 }
 
 func TestApplicationEdit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
@@ -1044,6 +1046,8 @@ func TestApplicationEditPausedIntegration(t *testing.T) {
 // TestApplicationEditPaused tests that an application can be edited even if it is paused, if the payload is right.
 // Runs on unit tests by swapping the mock application's DAO to one that simulates that the applications are paused.
 func TestApplicationEditPausedUnit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	validDate := time.Now().Format(util.RecordDateTimeFormat)
 
 	req := m.ResourceEditPausedRequest{

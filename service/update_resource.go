@@ -7,6 +7,10 @@ import (
 )
 
 func UpdateSourceFromApplicationAvailabilityStatus(application *m.Application, previousStatus string) error {
+	if application == nil {
+		return nil
+	}
+
 	if previousStatus != application.AvailabilityStatus {
 		source := &m.Source{}
 		source.ID = application.SourceID

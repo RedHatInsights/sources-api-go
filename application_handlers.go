@@ -186,6 +186,7 @@ func ApplicationEdit(c echo.Context) error {
 
 	setNotificationForAvailabilityStatus(c, previousStatus, app)
 	setEventStreamResource(c, app)
+
 	if statusFromRequest != nil {
 		err := service.UpdateSourceFromApplicationAvailabilityStatus(app, previousStatus)
 		if err != nil {
