@@ -12,7 +12,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	echoMetrics "github.com/labstack/echo-contrib/prometheus"
@@ -37,7 +36,6 @@ func main() {
 
 	switch {
 	case conf.StatusListener:
-		dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
 		go statuslistener.Run()
 	case conf.BackgroundWorker:
 		go jobs.Run()
@@ -94,13 +92,6 @@ func runServer(shutdown chan struct{}) {
 	getEndpointDao = getEndpointDaoWithTenant
 	getMetaDataDao = getMetaDataDaoWithoutTenant
 	getRhcConnectionDao = getDefaultRhcConnectionDao
-
-	// Set up marketplace's token management functions
-	dao.GetMarketplaceTokenCacher = dao.GetMarketplaceTokenCacherWithTenantId
-	dao.GetMarketplaceTokenProvider = dao.GetMarketplaceTokenProviderWithApiKey
-
-	// setting up the "http.Client" for the marketplace token provider
-	marketplace.GetHttpClient = marketplace.GetHttpClientStdlib
 
 	// hiding the ascii art to make the logs more json-like
 	e.HideBanner = true

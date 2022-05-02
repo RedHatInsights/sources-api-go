@@ -1,25 +1,26 @@
-package redis
+package marketplace
 
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
-	"github.com/go-redis/redis/v8"
+	"github.com/RedHatInsights/sources-api-go/redis"
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
 
 var tokenCacher = &MarketplaceTokenCacher{TenantID: 5}
 
 // setUpFakeToken sets up a test token ready to be used.
-func setUpFakeToken() *marketplace.BearerToken {
+func setUpFakeToken() *BearerToken {
 	expiration := time.Now().Add(24 * time.Hour).Unix()
 	testApiToken := "testApiToken"
 
-	return &marketplace.BearerToken{
+	return &BearerToken{
 		Expiration: &expiration,
 		Token:      &testApiToken,
 	}
@@ -27,16 +28,17 @@ func setUpFakeToken() *marketplace.BearerToken {
 
 // TestGetTokenBadTenant tests that when given a bad or nonexistent tenant, an expected error is returned.
 func TestGetTokenBadTenant(t *testing.T) {
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)
 
 	tokenCacher.TenantID = 12345
 	_, err := tokenCacher.FetchToken()
-	if err == nil {
-		t.Error("want error, got none")
+
+	if err != redis.Nil {
+		t.Errorf(`want error of type "redis.Nil", got "%s"`, reflect.TypeOf(err))
 	}
 }
 
@@ -45,8 +47,8 @@ func TestGetToken(t *testing.T) {
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)
@@ -81,7 +83,7 @@ func TestGetToken(t *testing.T) {
 // TestSetTokenUnreachableRedis tests that an error is returned when something goes wrong. In this case, an
 // unreachable Redis server is simulated.
 func TestSetTokenUnreachableRedis(t *testing.T) {
-	Client = redis.NewClient(&redis.Options{
+	redis.Client = goredis.NewClient(&goredis.Options{
 		Addr:        "127.0.0.1:2345",
 		DialTimeout: time.Millisecond,
 	})
@@ -92,8 +94,10 @@ func TestSetTokenUnreachableRedis(t *testing.T) {
 
 	// Call the actual function
 	err := tokenCacher.CacheToken(fakeToken)
-	if err == nil {
-		t.Error("want error, got none")
+
+	want := "could not store the marketplace token"
+	if want != err.Error() {
+		t.Errorf(`unexpected error when caching the token. Want "%s", got "%s"`, want, err)
 	}
 }
 
@@ -102,8 +106,8 @@ func TestSetTokenSuccess(t *testing.T) {
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)
@@ -142,8 +146,8 @@ func TestSetTokenExpired(t *testing.T) {
 	// We need a logger as the cache and uncache functions log what's being done.
 	logger.Log = logrus.New()
 
-	Client = redis.NewClient(
-		&redis.Options{
+	redis.Client = goredis.NewClient(
+		&goredis.Options{
 			Addr: miniredis.Addr(),
 		},
 	)
@@ -158,11 +162,8 @@ func TestSetTokenExpired(t *testing.T) {
 
 	// Call the actual function
 	err := tokenCacher.CacheToken(fakeToken)
-	if err == nil {
-		t.Errorf("want error, got none")
-	}
 
-	want := "refusing to cache an expired token"
+	want := "the obtained marketplace token has already expired. Try again"
 	if want != err.Error() {
 		t.Errorf("want %s, got %s", want, err)
 	}

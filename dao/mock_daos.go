@@ -813,7 +813,8 @@ func (m MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
 }
 
 func (m MockAuthenticationDao) Tenant() *int64 {
-	panic("implement me")
+	fakeTenantId := int64(12345)
+	return &fakeTenantId
 }
 
 func (m MockAuthenticationDao) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {

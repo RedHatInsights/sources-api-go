@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,13 +11,10 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
-	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/uuid"
 	"github.com/hashicorp/vault/api"
-	"github.com/sirupsen/logrus"
 )
 
 // vaultSecretPathFormat defines the format of the path that the secrets will be created with in Vault. The idea is
@@ -53,33 +49,6 @@ type authenticationDaoImpl struct {
 	TenantID *int64
 }
 
-// marketplaceTokenCacher is a variable that holds the "GetMarketplaceTokenCacher" function, or any function that is
-// similar to that one. This way we can inject the "TokenCacher" dependency at runtime, which enables easier mocking
-// and testing.
-var marketplaceTokenCacher redis.TokenCacher
-
-// GetMarketplaceTokenCacher stores a function that returns a TokenCacher
-var GetMarketplaceTokenCacher func(*int64) redis.TokenCacher
-
-// GetMarketplaceTokenCacherWithTenantId is the default implementation which returns a default "TokenCacher" instance,
-// which is used in the main application.
-func GetMarketplaceTokenCacherWithTenantId(tenantId *int64) redis.TokenCacher {
-	return &redis.MarketplaceTokenCacher{TenantID: *tenantId}
-}
-
-// marketplaceTokenProvider is a variable similar to marketplaceTokenCacher, which holds the function that returns the
-// required dependency.
-var marketplaceTokenProvider marketplace.TokenProvider
-
-// GetMarketplaceTokenProvider stores a function that retunrs a TokenProvider
-var GetMarketplaceTokenProvider func(string) marketplace.TokenProvider
-
-// GetMarketplaceTokenProviderWithApiKey is the default implementation which returns a default "TokenProvider" instance,
-// which is used in the main application.
-func GetMarketplaceTokenProviderWithApiKey(apiKey string) marketplace.TokenProvider {
-	return &marketplace.MarketplaceTokenProvider{ApiKey: &apiKey}
-}
-
 /*
 	Listing is kind of tough here - it is basically O(N) where N is the results
 	returned from vault. It will get slow probably when there are 100 results to
@@ -107,9 +76,6 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 		return nil, int64(len(keys)), nil
 	}
 
-	// Initialize the marketplace token cacher as it will be used in the underlying "authFromVault" function, inside
-	// ".getKey"
-	marketplaceTokenCacher = GetMarketplaceTokenCacher(a.TenantID)
 	out := make([]m.Authentication, 0, len(keys))
 	for _, val := range keys[start:end] {
 		secret, err := a.getKey(val)
@@ -263,9 +229,6 @@ func (a *authenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 		return nil, util.NewErrNotFound("authentication")
 	}
 
-	// The token cacher is initialized here because "getKey" has a call to "authFromvault", and it's the only
-	// way of getting the tenant id without passing it around.
-	marketplaceTokenCacher = GetMarketplaceTokenCacher(a.TenantID)
 	return a.getKey(fullKey)
 }
 
@@ -537,14 +500,6 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		auth.SourceID = id
 	}
 
-	// Try to set the marketplace token in the "auth.Extra" field. If the authentication isn't of the "marketplace"
-	// type, this whole thing is skipped.
-	if err := setMarketplaceTokenAuthExtraField(auth); err != nil {
-		logging.Log.Error(err)
-
-		return nil
-	}
-
 	if data["availability_status"] != nil {
 		var availabilityStatus string
 		if availabilityStatus, ok = data["availability_status"].(string); !ok {
@@ -634,88 +589,6 @@ func (a *authenticationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, err
 	}
 
 	return data, nil
-}
-
-// setMarketplaceTokenAuthExtraField tries to put the marketplace token as a JSON string in the "auth.Extra" field
-// only if the provided authentication is of the type "marketplace".
-func setMarketplaceTokenAuthExtraField(auth *m.Authentication) error {
-	// If the authentication isn't a "marketplace" auth, then skip getting the token
-	if auth.AuthType != "marketplace-token" {
-		return nil
-	}
-
-	var token *marketplace.BearerToken
-
-	// First try to fetch the token from the cache
-	token, err := marketplaceTokenCacher.FetchToken()
-
-	// If it's not present, request one token to the marketplace, cache it, and assign it to the "extra" field
-	// of auth
-	if err != nil {
-		// The Api key must be present to be able to send the request to the marketplace
-		if auth.Password == nil {
-			return errors.New("API key not present for the marketplace authentication")
-		}
-
-		var apiKey string
-		if config.IsVaultOn() {
-			apiKey = *auth.Password
-		} else {
-			// When using the database backed authentications we need to decrypt the API Key to be able to fetch a proper
-			// token from the marketplace.
-			decryptedPassword, err := util.Decrypt(*auth.Password)
-			if err != nil {
-				return err
-			}
-
-			apiKey = decryptedPassword
-		}
-
-		marketplaceTokenProvider = GetMarketplaceTokenProvider(apiKey)
-
-		token, err = marketplaceTokenProvider.RequestToken()
-		if err != nil {
-			return fmt.Errorf("could not get token from the marketplace: %s", err)
-		}
-
-		// Cache the token. We really don't mind if we cannot properly cache it: we can request another one and
-		// return the one that we got. But we log the error for traceability and future debugging.
-		err = marketplaceTokenCacher.CacheToken(token)
-		if err != nil {
-			logging.Log.Errorf("could not cache the token in Redis: %s", err)
-		}
-	}
-
-	if config.IsVaultOn() {
-		if auth.Extra == nil {
-			auth.Extra = make(map[string]interface{})
-		}
-
-		auth.Extra["marketplace"] = token
-	} else {
-		var extra = make(map[string]interface{})
-		extra["marketplace"] = token
-
-		// The "extra" column in the database may contain JSON already, and in that case we need to unmarshal that
-		// content into the struct to make sure we don't overwrite it. However, if the existing content happens to be
-		// the valid JSON "null" value, we must skip unmarshalling that to the map, since "json.Unmarshal" just turns
-		// the map "nil".
-		if auth.ExtraDb != nil && !bytes.Equal(auth.ExtraDb, []byte("null")) {
-			err := json.Unmarshal(auth.ExtraDb, &extra)
-			if err != nil {
-				return err
-			}
-		}
-
-		auth.ExtraDb, err = json.Marshal(extra)
-		if err != nil {
-			return err
-		}
-	}
-
-	logging.Log.Log(logrus.InfoLevel, "marketplace token included in authentication")
-
-	return nil
 }
 
 func (a *authenticationDaoImpl) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
