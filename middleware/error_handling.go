@@ -18,10 +18,10 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 			switch err.(type) {
 			case util.ErrNotFound:
 				statusCode = http.StatusNotFound
-				message = util.ErrorDoc(err.Error(), "404")
+				message = util.ErrorDocWithoutLogging(err.Error(), "404")
 			case util.ErrBadRequest:
 				statusCode = http.StatusBadRequest
-				message = util.ErrorDoc(err.Error(), "400")
+				message = util.ErrorDocWithoutLogging(err.Error(), "400")
 			default:
 				statusCode = http.StatusInternalServerError
 				message = util.ErrorDoc(fmt.Sprintf("Internal Server Error: %v", err.Error()), "500")
