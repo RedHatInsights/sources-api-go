@@ -45,6 +45,7 @@ func (l *CustomGORMLogger) Trace(_ context.Context, begin time.Time, fc func() (
 		"rows":     rows,
 		"duration": duration,
 		"filename": fileWithLineNum,
+		"log_type": SQLType,
 	})
 
 	switch {

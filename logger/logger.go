@@ -20,6 +20,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	DefaultType = "default"
+	RequestType = "request"
+	EchoType    = "echo"
+	SQLType     = "sql"
+)
+
 var Log *logrus.Logger
 
 var cloudWatchHook *lc.Hook
@@ -105,6 +112,7 @@ type CustomLoggerFormatter struct {
 	Hostname              string
 	AppName               string
 	InjectedToOtherLogger bool
+	LogType               string
 }
 
 //Marshaler is an interface any type can implement to change its output in our production logs.
@@ -112,8 +120,8 @@ type Marshaler interface {
 	MarshalLog() map[string]interface{}
 }
 
-func NewCustomLoggerFormatter(config *appconf.SourcesApiConfig, injectedToOtherLogger bool) *CustomLoggerFormatter {
-	return &CustomLoggerFormatter{AppName: config.AppName, Hostname: config.Hostname, InjectedToOtherLogger: injectedToOtherLogger}
+func NewCustomLoggerFormatter(config *appconf.SourcesApiConfig, injectedToOtherLogger bool, logType string) *CustomLoggerFormatter {
+	return &CustomLoggerFormatter{AppName: config.AppName, Hostname: config.Hostname, InjectedToOtherLogger: injectedToOtherLogger, LogType: logType}
 }
 
 func basicLogFields(logLevel string, appName string, hostName string) map[string]interface{} {
@@ -154,6 +162,10 @@ func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	if entry.Level == logrus.ErrorLevel || entry.Level == logrus.WarnLevel {
 		data["backtrace"] = backtrace()
+	}
+
+	if f.LogType != "" {
+		data["log_type"] = f.LogType
 	}
 
 	for k, v := range entry.Data {
@@ -216,6 +228,8 @@ func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
 		fieldsDefaultFormat[k] = v
 	}
 
+	fieldsDefaultFormat["log_type"] = RequestType
+
 	j, err := json.Marshal(fieldsDefaultFormat)
 
 	if err != nil {
@@ -229,7 +243,7 @@ func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
 func InitEchoLogger(e *echo.Echo, config *appconf.SourcesApiConfig) {
 	logger := logrusEcho.Logger()
 	logger.SetOutput(LogOutputFrom(config.LogHandler))
-	logger.SetFormatter(NewCustomLoggerFormatter(config, true))
+	logger.SetFormatter(NewCustomLoggerFormatter(config, true, EchoType))
 
 	AddHooksTo(logger.Logger, config)
 	e.Logger = logger
@@ -252,7 +266,7 @@ func InitLogger(config *appconf.SourcesApiConfig) {
 	Log = &logrus.Logger{
 		Out:          LogOutputFrom(config.LogHandler),
 		Level:        LogrusLogLevelFrom(config.LogLevel),
-		Formatter:    NewCustomLoggerFormatter(config, false),
+		Formatter:    NewCustomLoggerFormatter(config, false, DefaultType),
 		Hooks:        make(logrus.LevelHooks),
 		ReportCaller: true,
 	}
