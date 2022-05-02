@@ -158,13 +158,14 @@ func ApplicationEdit(c echo.Context) error {
 
 	// Store the previous status before updating the application.
 	previousStatus := app.AvailabilityStatus
+	var statusFromRequest *string
 
 	if app.PausedAt != nil {
 		input := &m.ResourceEditPausedRequest{}
 		if err := c.Bind(input); err != nil {
 			return util.NewErrBadRequest(err)
 		}
-
+		statusFromRequest = input.AvailabilityStatus
 		err := app.UpdateFromRequestPaused(input)
 		if err != nil {
 			return util.NewErrBadRequest(err)
@@ -174,7 +175,7 @@ func ApplicationEdit(c echo.Context) error {
 		if err := c.Bind(input); err != nil {
 			return util.NewErrBadRequest(err)
 		}
-
+		statusFromRequest = input.AvailabilityStatus
 		app.UpdateFromRequest(input)
 	}
 
@@ -185,6 +186,12 @@ func ApplicationEdit(c echo.Context) error {
 
 	setNotificationForAvailabilityStatus(c, previousStatus, app)
 	setEventStreamResource(c, app)
+	if statusFromRequest != nil {
+		err := service.UpdateSourceFromApplicationAvailabilityStatus(app, previousStatus)
+		if err != nil {
+			return err
+		}
+	}
 
 	// for this model we ONLY raise the update for superkey sources once the
 	// worker posts back.
