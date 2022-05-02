@@ -132,6 +132,19 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}
 
 	if previousStatus != statusMessage.Status {
+		if statusMessage.ResourceType == "Application" {
+			appDao := dao.GetApplicationDao(&tenant.Id)
+			app, err := appDao.GetById(&resource.ResourceID)
+			if err != nil {
+				l.Log.Errorf("unable to fetch application: %s", err)
+				return
+			}
+
+			err = service.UpdateSourceFromApplicationAvailabilityStatus(app, previousStatus)
+			if err != nil {
+				return
+			}
+		}
 
 		emailInfo, ok := resultRecord.(m.EmailNotification)
 		if !ok {
