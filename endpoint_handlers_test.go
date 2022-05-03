@@ -793,3 +793,137 @@ func TestEndpointEditPausedInvalidFields(t *testing.T) {
 	// Restore the binder to not affect any other tests.
 	c.Echo().Binder = backupBinder
 }
+
+func TestEndpointListAuthentications(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues("1")
+
+	err := EndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	auth1, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if auth1["resource_type"] != "Endpoint" {
+		t.Error("ghosts infected the return")
+	}
+
+	if auth1["resource_id"] != "1" {
+		t.Error("ghosts infected the return")
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestEndpointListAuthenticationsBadRequestInvalidEndpointId(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/xxx/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues("xxx")
+
+	badRequestEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := badRequestEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestEndpointListAuthenticationsBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/xxx/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues("xxx")
+
+	badRequestEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := badRequestEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestEndpointListAuthenticationsNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/09834098349/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues("09834098349")
+
+	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := notFoundEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}

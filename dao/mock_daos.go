@@ -775,8 +775,29 @@ func (m MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64,
 	panic("implement me")
 }
 
-func (m MockAuthenticationDao) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
-	panic("implement me")
+func (mAuth MockAuthenticationDao) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	endpointExists := false
+
+	for _, e := range fixtures.TestEndpointData {
+		if e.ID == endpointID {
+			endpointExists = true
+			break
+		}
+	}
+
+	if !endpointExists {
+		return nil, 0, util.NewErrNotFound("endpoint")
+	}
+
+	out := make([]m.Authentication, 0)
+
+	for _, auth := range mAuth.Authentications {
+		if auth.ResourceType == "Endpoint" && auth.ResourceID == endpointID {
+			out = append(out, auth)
+		}
+	}
+
+	return out, int64(len(out)), nil
 }
 
 func (m MockAuthenticationDao) Create(auth *m.Authentication) error {
