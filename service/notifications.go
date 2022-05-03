@@ -115,10 +115,10 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(a
 
 func EmitAvailabilityStatusNotification(accountNumber string, emailNotificationInfo *m.EmailNotificationInfo) error {
 	l.Log.Infof("[tenant_id: %s][source_id: %s] Publishing status notification status changed from: %s to %s",
-		emailNotificationInfo.SourceID,
 		emailNotificationInfo.TenantID,
-		emailNotificationInfo.CurrentAvailabilityStatus,
-		emailNotificationInfo.PreviousAvailabilityStatus)
+		emailNotificationInfo.SourceID,
+		emailNotificationInfo.PreviousAvailabilityStatus,
+		emailNotificationInfo.CurrentAvailabilityStatus)
 
 	return NotificationProducer.EmitAvailabilityStatusNotification(accountNumber, emailNotificationInfo)
 }
