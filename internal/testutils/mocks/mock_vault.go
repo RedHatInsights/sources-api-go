@@ -54,7 +54,7 @@ func (m *MockVault) Delete(path string) (*api.Secret, error) {
 	return nil, util.NewErrNotFound("authentication")
 }
 
-// getVaultPathsFromFixtures creates list of fault paths
+// getVaultPathsFromFixtures creates list of vault paths
 func getVaultPathsFromFixtures() []interface{} {
 	var vaultPaths []interface{}
 
