@@ -105,6 +105,21 @@ func stringContainAnySubString(stringToSearch string, subStrings []string) bool 
 	return false
 }
 
+/*
+  example:
+	functionNameFromPath("github.com/RedHatInsights/sources-api-go/middleware.Timing.func1")
+	=> "middleware.Timing.func1"
+*/
+func functionNameFromPath(functionWithPath string) string {
+	functionPathParts := strings.Split(functionWithPath, "/")
+	partsLength := len(functionPathParts)
+	if partsLength == 0 {
+		return ""
+	}
+
+	return functionPathParts[partsLength-1]
+}
+
 func backtrace() []string {
 	var filenames []string
 
@@ -114,7 +129,7 @@ func backtrace() []string {
 
 	for frame, isNextFrameValid := frames.Next(); isNextFrameValid; frame, isNextFrameValid = frames.Next() {
 		if stringContainAnySubString(frame.Function, whiteListForFunctionsInBacktrace) {
-			filenames = append(filenames, fmt.Sprintf("%s(%s:%d)", frame.Function, frame.File, frame.Line))
+			filenames = append(filenames, fmt.Sprintf("%s(%s:%d)", functionNameFromPath(frame.Function), frame.File, frame.Line))
 		}
 	}
 
