@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 var availabilityStatus = "available"
@@ -14,6 +15,7 @@ var TestAuthenticationData = []m.Authentication{
 		DbID:               1,
 		TenantID:           TestTenantData[0].Id,
 		SourceID:           1,
+		Username:           util.StringRef("first"),
 		ResourceType:       "Application",
 		ResourceID:         1,
 		AvailabilityStatus: &availabilityStatus,
@@ -23,6 +25,7 @@ var TestAuthenticationData = []m.Authentication{
 		DbID:               2,
 		TenantID:           TestTenantData[0].Id,
 		SourceID:           2,
+		Username:           util.StringRef("second"),
 		ResourceType:       "Endpoint",
 		ResourceID:         1,
 		AvailabilityStatus: &availabilityStatus,
@@ -31,6 +34,7 @@ var TestAuthenticationData = []m.Authentication{
 		ID:                 "24127a2a-c4db-11ec-9d64-0242ac120002",
 		DbID:               3,
 		TenantID:           TestTenantData[0].Id,
+		Username:           util.StringRef("third"),
 		SourceID:           2,
 		ResourceType:       "Source",
 		ResourceID:         1,

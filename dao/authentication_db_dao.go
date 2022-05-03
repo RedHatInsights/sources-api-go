@@ -92,8 +92,7 @@ func (add *authenticationDaoDbImpl) ListForSource(sourceID int64, limit, offset 
 	// getting the total count (filters included) for pagination
 	count := int64(0)
 	query.
-		Where("resource_id = ?", sourceID).
-		Where("resource_type = 'Source'").
+		Where("source_id = ?", sourceID).
 		Where("tenant_id = ?", add.TenantID).
 		Count(&count)
 
