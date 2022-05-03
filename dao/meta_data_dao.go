@@ -7,6 +7,11 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
+const (
+	AWS_WIZARD_ACCOUNT_NUMBER_SETTING = "aws_wizard_account_number"
+	RETRY_SOURCE_CREATION_SETTING     = "retry_source_creation"
+)
+
 // GetMetaDataDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
 var GetMetaDataDao func() MetaDataDao
@@ -95,9 +100,23 @@ func (md *metaDataDaoImpl) GetSuperKeyAccountNumber(applicationTypeId int64) (st
 		Select("payload").
 		Where("type = ?", m.APP_META_DATA).
 		Where("application_type_id = ?", applicationTypeId).
-		Where("name = 'aws_wizard_account_number'").
+		Where("name = ?", AWS_WIZARD_ACCOUNT_NUMBER_SETTING).
 		First(&account)
 
 	// it gets stored as `"12345"` but we do not want the quotes - remove them here.
 	return strings.ReplaceAll(account, `"`, ``), result.Error
+}
+
+func (md *metaDataDaoImpl) ApplicationOptedIntoRetry(applicationTypeId int64) (bool, error) {
+	var optIn bool
+
+	result := DB.Debug().
+		Model(&m.MetaData{}).
+		Select(`payload::text = '"true"'`).
+		Where("name = ?", RETRY_SOURCE_CREATION_SETTING).
+		Where("type = ?", m.APP_META_DATA).
+		Where("application_type_id = ?", applicationTypeId).
+		Scan(&optIn)
+
+	return optIn, result.Error
 }

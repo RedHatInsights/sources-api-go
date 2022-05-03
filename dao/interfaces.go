@@ -134,6 +134,7 @@ type MetaDataDao interface {
 	GetById(id *int64) (*m.MetaData, error)
 	GetSuperKeySteps(applicationTypeId int64) ([]m.MetaData, error)
 	GetSuperKeyAccountNumber(applicationTypeId int64) (string, error)
+	ApplicationOptedIntoRetry(applicationTypeId int64) (bool, error)
 }
 
 type SourceTypeDao interface {

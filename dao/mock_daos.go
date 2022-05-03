@@ -284,6 +284,10 @@ func (md *MockMetaDataDao) GetSuperKeyAccountNumber(applicationTypeId int64) (st
 	panic("not implemented!")
 }
 
+func (md *MockMetaDataDao) ApplicationOptedIntoRetry(applicationTypeId int64) (bool, error) {
+	panic("not implemented!")
+}
+
 func (a *MockApplicationTypeDao) Create(src *m.ApplicationType) error {
 	panic("not implemented") // TODO: Implement
 }
