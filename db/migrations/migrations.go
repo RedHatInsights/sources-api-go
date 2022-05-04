@@ -17,6 +17,7 @@ var migrationsCollection = []*gormigrate.Migration{
 	TranslateEbsAccountNumbersToOrgIds(),
 	SourceTypesAddCategoryColumn(),
 	AddRetryCounterToApplications(),
+	AddTenantsExternalTenantOrgIdUnique(),
 }
 
 var ctx = context.Background()
