@@ -220,7 +220,7 @@ func ApplicationDelete(c echo.Context) error {
 	// Check if the application exists before proceeding.
 	applicationExists, err := applicationDB.Exists(id)
 	if err != nil {
-		return util.NewErrBadRequest(err)
+		return err
 	}
 
 	if !applicationExists {
