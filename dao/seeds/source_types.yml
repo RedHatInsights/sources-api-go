@@ -66,6 +66,24 @@ amazon:
           pattern: "^arnaws:.*"
         - type: min-length
           threshold: 10
+    - type: provisioning-service-arn
+      name: Provisioning service's ARN
+      fields:
+        - component: text-field
+          name: authentication.authtype
+          hideField: true
+          initializeOnMount: true
+          initialValue: provisioning-service-arn
+        - name: authentication.username
+          component: text-field
+          label: ARN
+          isRequired: true
+          validate:
+            - type: required
+            - type: pattern
+              pattern: "^arnaws:.*"
+            - type: min-length
+              threshold: 10
     endpoint:
       hidden: true
       fields:
