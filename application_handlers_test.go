@@ -682,6 +682,54 @@ func TestApplicationEditBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+func TestApplicationDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	appId := "300"
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/applications/"+appId,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(appId)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
+	}
+
+	// Check that application doesn't exist
+	c, rec = request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/"+appId,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(appId)
+
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+	err = notFoundApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationDeleteNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
