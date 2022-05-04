@@ -94,10 +94,7 @@ func Init() {
 	rawDB.SetMaxOpenConns(20)
 
 	// Perform database migrations.
-	err = migrations.Migrate(DB)
-	if err != nil {
-		logging.Log.Fatalf(`Error migrating database "%s": %s`, conf.DatabaseName, err)
-	}
+	migrations.Migrate(DB)
 
 	// Open up the conn to Vault
 	cfg := vault.DefaultConfig()
