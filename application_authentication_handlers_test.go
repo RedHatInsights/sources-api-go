@@ -56,22 +56,29 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	appAuth, ok := out.Data[0].(map[string]interface{})
+	appAuth, ok := out.Data[1].(map[string]interface{})
 	if !ok {
 		t.Error("model did not deserialize as a source")
 	}
 
-	if appAuth["id"] != "1" {
+	if appAuth["id"] != "2" {
 		t.Error("ghosts infected the return")
 	}
 
-	if appAuth["application_id"] != "1" {
+	if appAuth["application_id"] != "5" {
 		t.Error("ghosts infected the return")
 	}
 
-	authID := strconv.Itoa(int(fixtures.TestAuthenticationData[0].DbID))
-	if appAuth["authentication_id"].(string) != authID {
-		t.Error("ghosts infected the return")
+	// This is working only when SECRET_STORE=database
+	// In app auth table we don't have column for vault path and we are checking this
+	// when we creating the response, so then we get different results for unit tests
+	// (auth ID = hash from vault path) and for integration tests (auth ID is db ID because
+	// vault path column is missing in db)
+	if conf.SecretStore == "database" {
+		authID := strconv.Itoa(int(fixtures.TestAuthenticationData[3].DbID))
+		if appAuth["authentication_id"].(string) != authID {
+			t.Error("ghosts infected the return")
+		}
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -130,9 +137,17 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 	if err != nil {
 		t.Error("Failed unmarshaling output")
 	}
-	authID := strconv.Itoa(int(fixtures.TestAuthenticationData[0].DbID))
-	if out.AuthenticationID != authID {
-		t.Error("ghosts infected the return")
+
+	// This is working only when SECRET_STORE=database
+	// In app auth table we don't have column for vault path and we are checking this
+	// when we creating the response, so then we get different results for unit tests
+	// (auth ID = hash from vault path) and for integration tests (auth ID is db ID because
+	// vault path column is missing in db)
+	if conf.SecretStore == "database" {
+		authID := strconv.Itoa(int(fixtures.TestAuthenticationData[0].DbID))
+		if out.AuthenticationID != authID {
+			t.Error("ghosts infected the return")
+		}
 	}
 
 	if out.ApplicationID != "1" {
