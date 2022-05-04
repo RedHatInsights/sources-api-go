@@ -27,6 +27,7 @@ const (
 	SQLType     = "sql"
 )
 
+var whiteListForFunctionsInBacktrace = []string{"RedHatInsights", "redhatinsights", "main"}
 var Log *logrus.Logger
 
 var cloudWatchHook *lc.Hook
@@ -94,6 +95,31 @@ func LogrusLogLevelFrom(configLogLevel string) logrus.Level {
 	return logLevel
 }
 
+// StringContainAnySubString - TODO: Move this function to util package
+func stringContainAnySubString(stringToSearch string, subStrings []string) bool {
+	for _, subString := range subStrings {
+		if strings.Contains(stringToSearch, subString) {
+			return true
+		}
+	}
+	return false
+}
+
+/*
+  example:
+	functionNameFromPath("github.com/RedHatInsights/sources-api-go/middleware.Timing.func1")
+	=> "middleware.Timing.func1"
+*/
+func functionNameFromPath(functionWithPath string) string {
+	functionPathParts := strings.Split(functionWithPath, "/")
+	partsLength := len(functionPathParts)
+	if partsLength == 0 {
+		return ""
+	}
+
+	return functionPathParts[partsLength-1]
+}
+
 func backtrace() []string {
 	var filenames []string
 
@@ -102,7 +128,9 @@ func backtrace() []string {
 	frames := runtime.CallersFrames(pc[:n])
 
 	for frame, isNextFrameValid := frames.Next(); isNextFrameValid; frame, isNextFrameValid = frames.Next() {
-		filenames = append(filenames, fmt.Sprintf("%s(%s:%d)", frame.Function, frame.File, frame.Line))
+		if stringContainAnySubString(frame.Function, whiteListForFunctionsInBacktrace) {
+			filenames = append(filenames, fmt.Sprintf("%s(%s:%d)", functionNameFromPath(frame.Function), frame.File, frame.Line))
+		}
 	}
 
 	return filenames
