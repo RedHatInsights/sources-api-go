@@ -31,7 +31,8 @@ const redisSleepTime = 3 * time.Second
 const redisLockExpirationTime = 30 * time.Second
 
 // Migrate migrates the database schema to the latest version. Implements the single instance lock algorithm detailed
-// in https://redis.io/topics/distlock#correct-implementation-with-a-single-instance.
+// in https://redis.io/topics/distlock#correct-implementation-with-a-single-instance. On error, it tries deleting the
+// lock before exiting the program.
 func Migrate(db *gorm.DB) {
 	// Using UUID as the lock value since it's a safe way of obtaining a unique string among all the clients.
 	uuid, err := uuidpkg.NewUUID()
