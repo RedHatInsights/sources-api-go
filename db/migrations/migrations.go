@@ -20,6 +20,7 @@ var migrationsCollection = []*gormigrate.Migration{
 	AddTableUsers(),
 	MakeEmptyExternalTenantsOrgIdsNull(),
 	RemoveDuplicatedTenantIdsOrgIds(),
+	AddTenantsExternalTenantOrgIdUniqueIndex(),
 }
 
 var ctx = context.Background()
