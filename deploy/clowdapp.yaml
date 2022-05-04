@@ -84,6 +84,8 @@ objects:
               name: sources-api-secrets
               key: psks
               optional: true
+        - name: BYPASS_RBAC
+          value: ${BYPASS_RBAC}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
@@ -229,6 +231,10 @@ parameters:
   name: RBAC_PATH
   required: true
   value: /api/rbac/v1
+- description: Skip the RBAC service entirely. If "BYPASS_RBAC=true" all the identified requests will be assumed to be valid.
+  displayName: Bypass RBAC option enabled
+  name: BYPASS_RBAC
+  value: "false"
 - description: Host to use for the marketplace URL.
   displayName: Marketplace host URL
   name: MARKETPLACE_HOST
