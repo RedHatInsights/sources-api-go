@@ -393,24 +393,28 @@ func (a *MockSourceTypeDao) Delete(id *int64) error {
 }
 
 func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Application, int64, error) {
-	var applications []m.Application
+	source := primaryCollection.(m.Source)
+	var sourceExists bool
 
-	for index, i := range a.Applications {
-		switch object := primaryCollection.(type) {
-		case m.Source:
-			if i.SourceID == object.ID {
-				applications = append(applications, a.Applications[index])
-			}
-		default:
-			return nil, 0, fmt.Errorf("unexpected primary collection type")
+	for _, s := range fixtures.TestSourceData {
+		if s.ID == source.ID {
+			sourceExists = true
 		}
 	}
-	count := int64(len(applications))
-	if count == 0 {
-		return nil, count, util.NewErrNotFound("application")
+	// if source doesn't exist, return Not Found Err
+	if !sourceExists {
+		return nil, 0, util.NewErrNotFound("source")
 	}
 
-	return applications, count, nil
+	// else return list of related applications
+	var applications []m.Application
+	for _, app := range a.Applications {
+		if source.ID == app.SourceID {
+			applications = append(applications, app)
+		}
+	}
+
+	return applications, int64(len(applications)), nil
 }
 
 func (a *MockApplicationDao) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
