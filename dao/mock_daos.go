@@ -775,8 +775,15 @@ func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset i
 	return out, int64(len(out)), nil
 }
 
-func (m MockAuthenticationDao) ListForApplication(applicationID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
-	panic("implement me")
+func (mAuth MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	var out []m.Authentication
+	for _, auth := range fixtures.TestAuthenticationData {
+		if auth.ResourceType == "Application" && auth.ResourceID == appId {
+			out = append(out, auth)
+		}
+	}
+
+	return out, int64(len(out)), nil
 }
 
 func (m MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
