@@ -52,7 +52,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 1 {
+	if len(out.Data) != len(fixtures.TestApplicationAuthenticationData) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -268,6 +268,33 @@ func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
 	}
 
 	templates.BadRequestTest(t, rec)
+}
+
+func TestApplicationAuthenticationDelete(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/application_authentications/300",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.SetParamNames("id")
+	c.SetParamValues("300")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationAuthenticationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("Did not return 204. Body: %s", rec.Body.String())
+	}
+
+	if rec.Body.Len() != 0 {
+		t.Errorf("Response body is not nil")
+	}
 }
 
 func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {

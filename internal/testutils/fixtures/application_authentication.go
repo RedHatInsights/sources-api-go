@@ -15,4 +15,12 @@ var TestApplicationAuthenticationData = []m.ApplicationAuthentication{
 		AuthenticationID:  1,
 		AuthenticationUID: TestAuthenticationData[0].ID,
 	},
+	{
+		ID:                300,
+		VaultPath:         fmt.Sprintf("Application_%d_%v", TestTenantData[0].Id, TestAuthenticationData[3].ID),
+		TenantID:          TestTenantData[0].Id,
+		ApplicationID:     4,
+		AuthenticationID:  5,
+		AuthenticationUID: TestAuthenticationData[3].ID,
+	},
 }
