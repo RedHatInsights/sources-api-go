@@ -59,7 +59,21 @@ func TestEndpointAvailability(t *testing.T) {
 	}
 }
 
-func TestBothAvailability(t *testing.T) {
+func TestRhcConnectionAvailability(t *testing.T) {
+	d := &dummyChecker{}
+	ac = d
+
+	RequestAvailabilityCheck(&m.Source{
+		// 2 rhc connections!
+		SourceRhcConnections: []m.SourceRhcConnection{{RhcConnection: m.RhcConnection{RhcId: "asdf"}}, {RhcConnection: m.RhcConnection{RhcId: "qwerty"}}},
+	}, []kafka.Header{})
+
+	if d.RhcConnectionCounter != 2 {
+		t.Errorf("availability check not called for all rhc connections, got %v expected %v", d.RhcConnectionCounter, 2)
+	}
+}
+
+func TestAllAvailability(t *testing.T) {
 	d := &dummyChecker{}
 	ac = d
 
@@ -68,6 +82,8 @@ func TestBothAvailability(t *testing.T) {
 		Applications: []m.Application{{}, {}, {}},
 		// 3 endpoints on this source.
 		Endpoints: []m.Endpoint{{}, {}, {}, {}},
+		// ...and 1 rhc connection
+		SourceRhcConnections: []m.SourceRhcConnection{{RhcConnection: m.RhcConnection{RhcId: "asdf"}}},
 	}, []kafka.Header{})
 
 	if d.ApplicationCounter != 3 {
@@ -76,5 +92,9 @@ func TestBothAvailability(t *testing.T) {
 
 	if d.EndpointCounter != 4 {
 		t.Errorf("availability check not called for all endpoints, got %v expected %v", d.EndpointCounter, 4)
+	}
+
+	if d.RhcConnectionCounter != 1 {
+		t.Errorf("availability check not called for all rhc connections, got %v expected %v", d.RhcConnectionCounter, 1)
 	}
 }

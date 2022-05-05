@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -32,6 +33,8 @@ var (
 	satelliteTopic = config.Get().KafkaTopic("platform.topological-inventory.operations-satellite")
 	// default availability checker instance
 	ac availabilityChecker = &availabilityCheckRequester{}
+	// cloud connector url
+	cloudConnectorUrl = os.Getenv("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL")
 )
 
 // requests both types of availability checks for a source
@@ -164,7 +167,7 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 	}
 }
 
-type rhcConnectionStausResponse struct {
+type rhcConnectionStatusResponse struct {
 	Status string `json:"status"`
 }
 
@@ -177,6 +180,11 @@ func (acr availabilityCheckRequester) RhcConnectionAvailabilityCheck(source *m.S
 }
 
 func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header) {
+	if cloudConnectorUrl == "" {
+		l.Log.Warnf("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL not set - skipping check for RHC Connection Availability Status [%v]", rhcConnection.RhcId)
+		return
+	}
+
 	// per: https://github.com/RedHatInsights/cloud-connector/blob/master/internal/controller/api/api.spec.json
 	body, err := json.Marshal(map[string]interface{}{
 		"account": source.Tenant.ExternalTenant,
@@ -191,8 +199,7 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// TODO: get rhc url + psk in config
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://rhc/connection_status", bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", cloudConnectorUrl, bytes.NewBuffer(body))
 	if err != nil {
 		l.Log.Warnf("Failed to create request for RHC Connection for ID %v, e: %v", source.ID, err)
 		return
@@ -201,11 +208,17 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 	req.Header.Set("org_id", source.Tenant.OrgID)
 
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil || resp.StatusCode != 200 {
+	if err != nil {
 		l.Log.Warnf("Failed to request connection_status for RHC ID [%v]: %v", rhcConnection.RhcId, err)
 		return
 	}
+
 	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		l.Log.Warnf("Invalid return code received for RHC ID [%v]: %v", rhcConnection.RhcId, resp.StatusCode)
+		return
+	}
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -213,7 +226,7 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 		return
 	}
 
-	var status rhcConnectionStausResponse
+	var status rhcConnectionStatusResponse
 	err = json.Unmarshal(b, &status)
 	if err != nil {
 		l.Log.Warnf("failed to unmarshal response: %v", err)
@@ -233,8 +246,18 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 
 	// only go through and update if there was a change.
 	if rhcConnection.AvailabilityStatus != sanitizedStatus {
+		now := time.Now()
+
 		source.AvailabilityStatus = sanitizedStatus
+		source.LastCheckedAt = &now
+
 		rhcConnection.AvailabilityStatus = sanitizedStatus
+		rhcConnection.LastCheckedAt = &now
+
+		if sanitizedStatus == m.Available {
+			source.LastAvailableAt = &now
+			rhcConnection.LastAvailableAt = &now
+		}
 
 		err = dao.GetSourceDao(&source.TenantID).Update(source)
 		if err != nil {
