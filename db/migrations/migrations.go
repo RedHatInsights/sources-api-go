@@ -2,9 +2,9 @@ package migrations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/go-gormigrate/gormigrate/v2"
 	uuidpkg "github.com/google/uuid"
@@ -31,18 +31,19 @@ const redisSleepTime = 3 * time.Second
 const redisLockExpirationTime = 30 * time.Second
 
 // Migrate migrates the database schema to the latest version. Implements the single instance lock algorithm detailed
-// in https://redis.io/topics/distlock#correct-implementation-with-a-single-instance.
-func Migrate(db *gorm.DB) error {
+// in https://redis.io/topics/distlock#correct-implementation-with-a-single-instance. On error, it tries deleting the
+// lock before exiting the program.
+func Migrate(db *gorm.DB) {
 	// Using UUID as the lock value since it's a safe way of obtaining a unique string among all the clients.
 	uuid, err := uuidpkg.NewUUID()
 	if err != nil {
-		return err
+		logging.Log.Fatalf(`could not generate a UUID for the Redis lock: %s`, err)
 	}
 
 	// Before doing anything, check for the existence of the lock.
 	exists, err := redis.Client.Exists(ctx, redisLockKey).Result()
 	if err != nil {
-		return err
+		logging.Log.Fatalf(`error when fetching the Redis lock: %s`, err)
 	}
 
 	// If the lock is present, we must wait in order to be able to obtain it ourselves.
@@ -52,7 +53,7 @@ func Migrate(db *gorm.DB) error {
 
 		exists, err = redis.Client.Exists(ctx, redisLockKey).Result()
 		if err != nil {
-			return err
+			logging.Log.Fatalf(`error when checking if the Redis lock exists: %s`, err)
 		}
 
 		lockExists = exists != 0
@@ -61,29 +62,29 @@ func Migrate(db *gorm.DB) error {
 	// Set the migrations lock.
 	err = redis.Client.Set(ctx, redisLockKey, uuid.String(), redisLockExpirationTime).Err()
 	if err != nil {
-		return err
+		logging.Log.Fatalf(`error when setting the Redis lock: %s`, err)
 	}
 
 	// Perform the migrations and store the error for a proper return.
 	migrateTool := gormigrate.New(db, gormigrate.DefaultOptions, migrationsCollection)
-	migrationErr := migrateTool.Migrate()
+	err = migrateTool.Migrate()
+	if err != nil {
+		logging.Log.Fatalf(`error when performing the database migrations: %s. The Redis lock is going to try to be released...`, err)
+	}
 
 	// Once the migrations have finished, get the lock's value to attempt to release it.
 	value, err := redis.Client.Get(ctx, redisLockKey).Result()
 	if err != nil {
-		return err
+		logging.Log.Fatalf(`error when getting the Redis lock after the migrations have run: %s`, err)
 	}
 
 	// The lock's value should coincide with the one we set above. If it doesn't something very wrong happened.
 	if value == uuid.String() {
 		err = redis.Client.Del(ctx, redisLockKey).Err()
 		if err != nil {
-			return err
+			logging.Log.Fatalf(`error when deleting the Redis lock after the migrations have run: %s`, err)
 		}
 	} else {
-		return fmt.Errorf(`migrations lock release failed. Expecting lock with value "%s", got "%s"`, uuid.String(), value)
+		logging.Log.Fatalf(`migrations lock release failed. Expecting lock with value "%s", got "%s"`, uuid.String(), value)
 	}
-
-	// Return the result of the migration process, in case something went wrong.
-	return migrationErr
 }
