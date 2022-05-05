@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"testing"
@@ -347,6 +348,126 @@ func TestApplicationAuthenticationDeleteBadRequest(t *testing.T) {
 
 	badRequestApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
 	err := badRequestApplicationAuthenticationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestApplicationAuthenticationListAuthentications(t *testing.T) {
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_authentication_id")
+	c.SetParamValues("2")
+
+	err := ApplicationAuthenticationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	if out.Meta.Count != 1 {
+		t.Error("count not set correctly")
+	}
+
+	auth, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as an authentication")
+	}
+
+	authWant := fixtures.TestAuthenticationData[3]
+	if auth["id"] != fmt.Sprintf("%d", authWant.DbID) {
+		t.Errorf("wrong authentication id, want %d, got %s", authWant.DbID, auth["id"])
+	}
+
+	if auth["resource_type"] != authWant.ResourceType {
+		t.Errorf("wrong authentication resource type, want %s, got %s", authWant.ResourceType, auth["resource_type"])
+	}
+
+	if auth["resource_id"] != fmt.Sprintf("%d", authWant.ResourceID) {
+		t.Errorf("wrong authentication resource type, want %d, got %s", authWant.ResourceID, auth["resource_id"])
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestApplicationAuthenticationListAuthenticationsNotFound(t *testing.T) {
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/78967899/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_authentication_id")
+	c.SetParamValues("78967899")
+
+	notFoundAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+	err := notFoundAppAuthListAuths(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestApplicationAuthenticationListAuthenticationsBadRequest(t *testing.T) {
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/xxx/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_authentication_id")
+	c.SetParamValues("xxx")
+
+	badRequestAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+	err := badRequestAppAuthListAuths(c)
 	if err != nil {
 		t.Error(err)
 	}

@@ -799,8 +799,30 @@ func (mAuth MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ [
 	return out, int64(len(out)), nil
 }
 
-func (m MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
-	panic("implement me")
+func (mAuthDao MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	var appAuthExists bool
+	var authID int64
+
+	for _, appAuth := range fixtures.TestApplicationAuthenticationData {
+		if appAuth.ID == appAuthID {
+			authID = appAuth.AuthenticationID
+			appAuthExists = true
+			break
+		}
+	}
+
+	if !appAuthExists {
+		return nil, 0, util.NewErrNotFound("application authentication")
+	}
+
+	auth, err := mAuthDao.GetById(fmt.Sprintf("%d", authID))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	authentications := []m.Authentication{*auth}
+
+	return authentications, int64(1), nil
 }
 
 func (mAuth MockAuthenticationDao) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
