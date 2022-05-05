@@ -309,11 +309,32 @@ func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1234523452542")
 
-	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationDelete)
-	err := notFoundApplicationAuthenticationGet(c)
+	notFoundApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
+	err := notFoundApplicationAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
 
 	templates.NotFoundTest(t, rec)
+}
+
+func TestApplicationAuthenticationDeleteBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/application_authentications/xxx",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+	c.SetParamNames("id")
+	c.SetParamValues("xxx")
+
+	badRequestApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
+	err := badRequestApplicationAuthenticationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
 }
