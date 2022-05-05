@@ -393,24 +393,27 @@ func (a *MockSourceTypeDao) Delete(id *int64) error {
 }
 
 func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Application, int64, error) {
-	source := primaryCollection.(m.Source)
-	var sourceExists bool
-
-	for _, s := range fixtures.TestSourceData {
-		if s.ID == source.ID {
-			sourceExists = true
-		}
-	}
-	// if source doesn't exist, return Not Found Err
-	if !sourceExists {
-		return nil, 0, util.NewErrNotFound("source")
-	}
-
-	// else return list of related applications
 	var applications []m.Application
-	for _, app := range a.Applications {
-		if source.ID == app.SourceID {
-			applications = append(applications, app)
+
+	switch object := primaryCollection.(type) {
+	case m.Source:
+		var sourceExists bool
+
+		for _, s := range fixtures.TestSourceData {
+			if s.ID == object.ID {
+				sourceExists = true
+			}
+		}
+		// if source doesn't exist, return Not Found Err
+		if !sourceExists {
+			return nil, 0, util.NewErrNotFound("source")
+		}
+
+		// else return list of related applications
+		for _, app := range a.Applications {
+			if object.ID == app.SourceID {
+				applications = append(applications, app)
+			}
 		}
 	}
 
@@ -776,6 +779,16 @@ func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset i
 }
 
 func (mAuth MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	var appExists bool
+	for _, app := range fixtures.TestApplicationData {
+		if app.ID == appId {
+			appExists = true
+		}
+	}
+	if !appExists {
+		return nil, 0, util.NewErrNotFound("application")
+	}
+
 	var out []m.Authentication
 	for _, auth := range fixtures.TestAuthenticationData {
 		if auth.ResourceType == "Application" && auth.ResourceID == appId {

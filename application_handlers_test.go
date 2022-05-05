@@ -839,6 +839,60 @@ func TestApplicationListAuthentications(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestApplicationListAuthenticationsNotFound(t *testing.T) {
+	appId := int64(7896785687)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+	err := notFoundApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestApplicationListAuthenticationsBadRequest(t *testing.T) {
+	appId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(appId)
+
+	badRequestApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+	err := badRequestApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 // TestPauseApplication tests that an application gets successfully paused.
 func TestPauseApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
