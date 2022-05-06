@@ -17,7 +17,7 @@ func InternalAuthenticationGet(c echo.Context) error {
 
 	auth, err := authDao.GetById(c.Param("uuid"))
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	exposeEncryptedAttribute := c.QueryParam("expose_encrypted_attribute[]")
