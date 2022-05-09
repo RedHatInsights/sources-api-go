@@ -49,8 +49,6 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 
 			// store the parsed header for later usage.
 			c.Set("identity", xRhIdentity)
-			// store the psk to pass along in headers
-			c.Set("psk-account", xRhIdentity.Identity.AccountNumber)
 
 			// store whether or not this a cert-auth based request
 			if xRhIdentity.Identity.System != nil && xRhIdentity.Identity.System["cn"] != nil {
