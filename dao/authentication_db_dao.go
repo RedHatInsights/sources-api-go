@@ -167,58 +167,29 @@ func (add *authenticationDaoDbImpl) ListForApplication(applicationID int64, limi
 	return authentications, count, nil
 }
 
-func (add *authenticationDaoDbImpl) ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
-	// Check that the application authentication exists before continuing.
-	var applicationAuthenticationExists bool
-	err := DB.Debug().
-		Model(&m.ApplicationAuthentication{}).
-		Select(`1`).
-		Where(`id = ?`, appAuthID).
-		Where(`tenant_id = ?`, add.TenantID).
-		Scan(&applicationAuthenticationExists).
+func (add *authenticationDaoDbImpl) ListForApplicationAuthentication(appAuthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	// Get application authentication
+	appAuth := &m.ApplicationAuthentication{ID: appAuthID}
+
+	err := DB.
+		Debug().
+		Where("tenant_id = ?", add.TenantID).
+		First(&appAuth).
 		Error
 
 	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	if !applicationAuthenticationExists {
 		return nil, 0, util.NewErrNotFound("application authentication")
 	}
 
-	// List and count all the authentications from the given application authentications.
-	query := DB.Debug().
-		Model(&m.Authentication{})
-
-	query, err = applyFilters(query, filters)
+	// Get authentication
+	auth, err := add.GetById(fmt.Sprintf("%d", appAuth.AuthenticationID))
 	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
+		return nil, 0, err
 	}
 
-	// getting the total count (filters included) for pagination
-	count := int64(0)
-	query.
-		Where("resource_id = ?", appAuthID).
-		Where("resource_type = 'ApplicationAuthentication'").
-		Where("tenant_id = ?", add.TenantID).
-		Count(&count)
+	authentications := []m.Authentication{*auth}
 
-	// limiting + running the actual query.
-	authentications := make([]m.Authentication, 0, limit)
-	err = query.
-		Where("resource_id = ?", appAuthID).
-		Where("resource_type = 'ApplicationAuthentication'").
-		Where("tenant_id = ?", add.TenantID).
-		Limit(limit).
-		Offset(offset).
-		Find(&authentications).
-		Error
-
-	if err != nil {
-		return nil, 0, util.NewErrBadRequest(err)
-	}
-
-	return authentications, count, nil
+	return authentications, int64(1), nil
 }
 
 func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
