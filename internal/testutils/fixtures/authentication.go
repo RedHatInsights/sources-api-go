@@ -37,6 +37,15 @@ var TestAuthenticationData = []m.Authentication{
 		AvailabilityStatus: &availabilityStatus,
 	},
 	{
+		ID:                 "8fb28f0e-cb7a-11ec-9d64-0242ac120002",
+		DbID:               4,
+		TenantID:           TestTenantData[0].Id,
+		SourceID:           4,
+		ResourceType:       "Application",
+		ResourceID:         5,
+		AvailabilityStatus: &availabilityStatus,
+	},
+	{
 		ID:                 "1683629d-b830-4542-8842-308525cb7004",
 		DbID:               5,
 		TenantID:           TestTenantData[0].Id,

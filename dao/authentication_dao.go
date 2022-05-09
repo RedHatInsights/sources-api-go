@@ -401,6 +401,9 @@ func (a *authenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 	// the uid is the last part of the path, e.g. Source_2_435-bnsd-4362
 	uid := paths[len(paths)-1]
 	auth.ID = uid
+
+	// set tenant id
+	auth.TenantID = *a.TenantID
 	return auth, nil
 }
 
