@@ -25,6 +25,7 @@ func TestParseAll(t *testing.T) {
 
 	c.Request().Header.Set("x-rh-identity", xrhid)
 	c.Request().Header.Set("x-rh-sources-psk", "1234")
+	c.Request().Header.Set("x-rh-sources-account-number", "1a2b3c4d5e")
 	c.Request().Header.Set("x-rh-sources-org-id", "abcde")
 
 	err := parseOrElse204(c)
@@ -40,8 +41,7 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was set as psk instead of %v", c.Get("psk").(string), "1234")
 	}
 
-	// Gets set from the xrhid's account number.
-	if c.Get("psk-account").(string) != "12345" {
+	if c.Get("psk-account").(string) != "1a2b3c4d5e" {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
 	}
 

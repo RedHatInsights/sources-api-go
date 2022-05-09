@@ -59,8 +59,8 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	s := mocks.MockSender{}
 	service.Producer = events.EventStreamProducer{Sender: &s}
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
-		"psk-account":   "1234",
-		"x-rh-identity": "asdfasdf",
+		"x-rh-sources-psk": "1234",
+		"x-rh-identity":    "asdfasdf",
 	})
 
 	f := raiseMiddleware(func(c echo.Context) error {

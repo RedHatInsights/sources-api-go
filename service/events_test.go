@@ -18,7 +18,7 @@ func TestForwadableHeadersPsk(t *testing.T) {
 	testPskAccountValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("psk-account", testPskAccountValue)
+	context.Set("x-rh-sources-psk", testPskAccountValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -228,7 +228,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 	testOrgIdValue := "12345"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("psk-account", testPskAccountValue)
+	context.Set("x-rh-sources-psk", testPskAccountValue)
 	context.Set("x-rh-sources-org-id", testOrgIdValue)
 
 	// Call the function under test.

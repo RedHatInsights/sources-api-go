@@ -40,8 +40,15 @@ func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) 
 func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 	headers := make([]kafka.Header, 0)
 
-	if c.Get("psk-account") != nil {
-		psk, ok := c.Get("psk-account").(string)
+	if c.Get("x-rh-sources-psk") != nil {
+		psk, ok := c.Get("x-rh-sources-psk").(string)
+		if ok {
+			headers = append(headers, kafka.Header{Key: "x-rh-sources-account-number", Value: []byte(psk)})
+		}
+	}
+
+	if c.Get("x-rh-sources-account-number") != nil {
+		psk, ok := c.Get("x-rh-sources-account-number").(string)
 		if ok {
 			headers = append(headers, kafka.Header{Key: "x-rh-sources-account-number", Value: []byte(psk)})
 		}
@@ -67,7 +74,7 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 			xRhId.Identity.OrgID = orgId
 		}
 
-		psk, pskOk := c.Get("psk-account").(string)
+		psk, pskOk := c.Get("x-rh-sources-psk").(string)
 		if pskOk {
 			xRhId.Identity.AccountNumber = psk
 		}
