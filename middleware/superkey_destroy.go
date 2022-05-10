@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
 	"github.com/RedHatInsights/sources-api-go/service"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -28,7 +29,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
-			return err
+			return util.NewErrBadRequest(err)
 		}
 
 		s := dao.GetSourceDao(&tenantId)
@@ -68,7 +69,7 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
-			return err
+			return util.NewErrBadRequest(err)
 		}
 
 		a := dao.GetApplicationDao(&tenantId)
