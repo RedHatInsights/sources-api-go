@@ -76,56 +76,6 @@ amazon:
         initialValue: aws
   vendor: Amazon
   icon_url: "/apps/frontend-assets/partners-icons/aws-long.svg"
-ansible-tower:
-  product_name: Red Hat Ansible Automation Platform
-  category: Red Hat
-  vendor: Red Hat
-  icon_url: "/apps/frontend-assets/platform-logos/ansible-automation-platform.svg"
-  schema:
-    authentication:
-    - type: username_password
-      name: Username and password
-      fields:
-      - component: text-field
-        name: authentication.authtype
-        hideField: true
-        initializeOnMount: true
-        initialValue: username_password
-      - component: text-field
-        name: authentication.username
-        label: User name
-        isRequired: true
-        validate:
-        - type: required
-      - component: text-field
-        name: authentication.password
-        label: Secret key
-        type: password
-        isRequired: true
-        validate:
-        - type: required
-    endpoint:
-      title: Ansible Tower endpoint
-      fields:
-      - component: text-field
-        name: endpoint.role
-        hideField: true
-        initializeOnMount: true
-        initialValue: ansible
-      - component: text-field
-        name: url
-        label: URL
-        validate:
-        - type: url
-      - component: switch
-        name: endpoint.verify_ssl
-        label: Verify SSL
-      - component: text-field
-        name: endpoint.certificate_authority
-        label: Certificate Authority
-        condition:
-          when: endpoint.verify_ssl
-          is: true
 google:
   product_name: Google Cloud
   category: Cloud
