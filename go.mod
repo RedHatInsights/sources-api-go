@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.2
 	github.com/RedHatInsights/rbac-client-go v1.0.0
 	github.com/RedHatInsights/tenant-utils v0.0.0-20220322192943-150a1a665a5f
+	github.com/Unleash/unleash-client-go/v3 v3.3.1
 	github.com/alicebob/miniredis/v2 v2.17.0
 	github.com/aws/aws-sdk-go v1.42.22
 	github.com/gertd/go-pluralize v0.1.7

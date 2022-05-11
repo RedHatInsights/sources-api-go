@@ -107,6 +107,8 @@ objects:
               name: cloud-connector-psk
               key: client-id
               optional: true
+        - name: FEATURE_FLAGS_SERVICE
+          value: ${FEATURE_FLAGS_SERVICE}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -282,3 +284,6 @@ parameters:
 - name: CLOUD_CONNECTOR_CHECK_PATH
   required: true
   value: "/connection_status"
+- description: Specify name of service for Feature Flags
+  name: FEATURE_FLAGS_SERVICE
+  value: 'unleash'

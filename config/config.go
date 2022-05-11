@@ -34,6 +34,12 @@ type SourcesApiConfig struct {
 	DatabaseUser              string
 	DatabasePassword          string
 	DatabaseName              string
+	FeatureFlagsEnvironment   string
+	FeatureFlagsHost          string
+	FeatureFlagsPort          string
+	FeatureFlagsSchema        string
+	FeatureFlagsAPIToken      string
+	FeatureFlagsService       string
 	CacheHost                 string
 	CachePort                 int
 	CachePassword             string
@@ -81,6 +87,11 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("CacheHost", cfg.InMemoryDb.Hostname)
 		options.SetDefault("CachePort", cfg.InMemoryDb.Port)
 		options.SetDefault("CachePassword", cfg.InMemoryDb.Password)
+
+		options.SetDefault("FeatureFlagsHost", cfg.FeatureFlags.Hostname)
+		options.SetDefault("FeatureFlagsPort", cfg.FeatureFlags.Port)
+		options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
+		options.SetDefault("FeatureFlagsAPIToken", cfg.FeatureFlags.ClientAccessToken)
 	} else {
 		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
@@ -104,6 +115,19 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("CacheHost", os.Getenv("REDIS_CACHE_HOST"))
 		options.SetDefault("CachePort", os.Getenv("REDIS_CACHE_PORT"))
 		options.SetDefault("CachePassword", os.Getenv("REDIS_CACHE_PASSWORD"))
+
+		options.SetDefault("FeatureFlagsHost", os.Getenv("FEATURE_FLAGS_HOST"))
+		options.SetDefault("FeatureFlagsPort", os.Getenv("FEATURE_FLAGS_PORT"))
+		options.SetDefault("FeatureFlagsSchema", os.Getenv("FEATURE_FLAGS_SCHEMA"))
+		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("FEATURE_FLAGS_API_TOKEN"))
+	}
+
+	options.SetDefault("FeatureFlagsService", os.Getenv("FEATURE_FLAGS_SERVICE"))
+
+	if os.Getenv("SOURCES_ENV") == "prod" {
+		options.SetDefault("FeatureFlagsEnvironment", "production")
+	} else {
+		options.SetDefault("FeatureFlagsEnvironment", "development")
 	}
 
 	options.SetDefault("KafkaGroupID", "sources-api-go")
@@ -176,6 +200,12 @@ func Get() *SourcesApiConfig {
 		DatabaseUser:              options.GetString("DatabaseUser"),
 		DatabasePassword:          options.GetString("DatabasePassword"),
 		DatabaseName:              options.GetString("DatabaseName"),
+		FeatureFlagsHost:          options.GetString("FeatureFlagsHost"),
+		FeatureFlagsEnvironment:   options.GetString("FeatureFlagsEnvironment"),
+		FeatureFlagsPort:          options.GetString("FeatureFlagsPort"),
+		FeatureFlagsAPIToken:      options.GetString("FeatureFlagsApiToken"),
+		FeatureFlagsSchema:        options.GetString("FeatureFlagsSchema"),
+		FeatureFlagsService:       options.GetString("FeatureFlagsService"),
 		CacheHost:                 options.GetString("CacheHost"),
 		CachePort:                 options.GetInt("CachePort"),
 		CachePassword:             options.GetString("CachePassword"),
