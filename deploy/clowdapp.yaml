@@ -95,6 +95,18 @@ objects:
               key: encryption-key
         - name: TENANT_TRANSLATOR_URL
           value: ${TENANT_TRANSLATOR_SCHEME}://${TENANT_TRANSLATOR_HOST}:${TENANT_TRANSLATOR_PORT}
+        - name: CLOUD_CONNECTOR_PSK
+          valueFrom:
+            secretKeyRef:
+              name: cloud-connector-psk
+              key: client-psk
+              optional: true
+        - name: CLOUD_CONNECTOR_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloud-connector-psk
+              key: client-id
+              optional: true
         readinessProbe:
           tcpSocket:
             port: 8000
