@@ -3,6 +3,32 @@ kind: Template
 metadata:
   name: sources-api
 objects:
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: sources-api-secrets
+    labels:
+      app: sources-api
+  stringData:
+    encryption-key: "${ENCRYPTION_KEY}"
+    secret-key: "${SECRET_KEY}"
+    psks: "thisMustBeEphemeralOrMinikube"
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: internal-psk
+    labels:
+      app: sources-api
+  stringData:
+    psk: "thisMustBeEphemeralOrMinikube"
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: sources-psk
+    labels:
+      app: sources-api
+  stringData:
+    psk: "thisMustBeEphemeralOrMinikube"
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
@@ -185,6 +211,12 @@ parameters:
 - description: Clowder ENV
   name: ENV_NAME
   required: true
+- name: ENCRYPTION_KEY
+  displayName: Encryption Key (Ephemeral)
+  required: true
+  description: Encryption Key for Passwords
+  from: "[a-zA-Z0-9]{43}"
+  generate: expression
 - description: Image
   name: IMAGE
   value: quay.io/cloudservices/sources-api-go
