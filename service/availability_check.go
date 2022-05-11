@@ -19,6 +19,11 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
+const (
+	disconnectedRhc = "cloud-connector returned 'disconnected'"
+	unavailbleRhc   = "cloud-connector returned a non-ok exit code for this connection"
+)
+
 type availabilityCheckRequester struct{}
 
 type availabilityChecker interface {
@@ -33,8 +38,10 @@ var (
 	satelliteTopic = config.Get().KafkaTopic("platform.topological-inventory.operations-satellite")
 	// default availability checker instance
 	ac availabilityChecker = &availabilityCheckRequester{}
-	// cloud connector url
-	cloudConnectorUrl = os.Getenv("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL")
+	// cloud connector related fields
+	cloudConnectorUrl      = os.Getenv("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL")
+	cloudConnectorPsk      = os.Getenv("CLOUD_CONNECTOR_PSK")
+	cloudConnectorClientId = os.Getenv("CLOUD_CONNECTOR_CLIENT_ID")
 )
 
 // requests both types of availability checks for a source
@@ -204,8 +211,10 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 		l.Log.Warnf("Failed to create request for RHC Connection for ID %v, e: %v", source.ID, err)
 		return
 	}
-	req.Header.Set("account", source.Tenant.ExternalTenant)
-	req.Header.Set("org_id", source.Tenant.OrgID)
+	req.Header.Set("x-rh-cloud-connector-org-id", source.Tenant.OrgID)
+	req.Header.Set("x-rh-cloud-connector-account", source.Tenant.ExternalTenant)
+	req.Header.Set("x-rh-cloud-connector-client-id", cloudConnectorClientId)
+	req.Header.Set("x-rh-cloud-connector-psk", cloudConnectorPsk)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -217,6 +226,8 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 
 	if resp.StatusCode/100 != 2 {
 		l.Log.Warnf("Invalid return code received for RHC ID [%v]: %v", rhcConnection.RhcId, resp.StatusCode)
+		// updating status to unavailable
+		updateRhcStatus(source, "unavailable", unavailbleRhc, rhcConnection, headers)
 		return
 	}
 
@@ -234,11 +245,13 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 	}
 
 	var sanitizedStatus string
+	var errstr string
 	switch status.Status {
 	case "connected":
 		sanitizedStatus = "available"
 	case "disconnected":
 		sanitizedStatus = "unavailable"
+		errstr = disconnectedRhc
 	default:
 		l.Log.Warnf("Invalid status returned from RHC: %v", status.Status)
 		return
@@ -246,34 +259,39 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 
 	// only go through and update if there was a change.
 	if rhcConnection.AvailabilityStatus != sanitizedStatus {
-		now := time.Now()
+		updateRhcStatus(source, sanitizedStatus, errstr, rhcConnection, headers)
+	}
+}
 
-		source.AvailabilityStatus = sanitizedStatus
-		source.LastCheckedAt = &now
+func updateRhcStatus(source *m.Source, status string, errstr string, rhcConnection *m.RhcConnection, headers []kafka.Header) {
+	now := time.Now()
 
-		rhcConnection.AvailabilityStatus = sanitizedStatus
-		rhcConnection.LastCheckedAt = &now
+	source.AvailabilityStatus = status
+	source.LastCheckedAt = &now
+	rhcConnection.AvailabilityStatus = status
+	rhcConnection.LastCheckedAt = &now
 
-		if sanitizedStatus == m.Available {
-			source.LastAvailableAt = &now
-			rhcConnection.LastAvailableAt = &now
-		}
+	if status == m.Available {
+		source.LastAvailableAt = &now
+		rhcConnection.LastAvailableAt = &now
+	} else {
+		rhcConnection.AvailabilityStatusError = errstr
+	}
 
-		err = dao.GetSourceDao(&source.TenantID).Update(source)
-		if err != nil {
-			l.Log.Warnf("failed to update source availability status: %v", err)
-			return
-		}
+	err := dao.GetSourceDao(&source.TenantID).Update(source)
+	if err != nil {
+		l.Log.Warnf("failed to update source availability status: %v", err)
+		return
+	}
 
-		err = dao.GetRhcConnectionDao(&source.TenantID).Update(rhcConnection)
-		if err != nil {
-			l.Log.Warnf("failed to update RHC Connection availability status: %v", err)
-			return
-		}
+	err = dao.GetRhcConnectionDao(&source.TenantID).Update(rhcConnection)
+	if err != nil {
+		l.Log.Warnf("failed to update RHC Connection availability status: %v", err)
+		return
+	}
 
-		err = RaiseEvent("RhcConnection.update", rhcConnection, headers)
-		if err != nil {
-			l.Log.Warnf("error raising RhcConneciton.update event: %v", err)
-		}
+	err = RaiseEvent("RhcConnection.update", rhcConnection, headers)
+	if err != nil {
+		l.Log.Warnf("error raising RhcConnection.update event: %v", err)
 	}
 }
