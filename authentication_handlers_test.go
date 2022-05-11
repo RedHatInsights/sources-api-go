@@ -21,6 +21,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/go-cmp/cmp"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 func TestAuthenticationList(t *testing.T) {
@@ -291,7 +292,7 @@ func TestAuthenticationEdit(t *testing.T) {
 		c.SetParamValues(id)
 	}
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set("accountNumber", fixtures.TestTenantData[0].ExternalTenant)
+	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	authEditHandlerWithNotifier := middleware.Notifier(AuthenticationEdit)
 	err = authEditHandlerWithNotifier(c)

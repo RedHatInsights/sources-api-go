@@ -6,6 +6,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 func Notifier(next echo.HandlerFunc) echo.HandlerFunc {
@@ -19,13 +20,13 @@ func Notifier(next echo.HandlerFunc) echo.HandlerFunc {
 			return fmt.Errorf("unable to find emailNotificationInfo instance in middleware")
 		}
 
-		accountNumber, ok := c.Get("accountNumber").(string)
+		xRhIdentity, ok := c.Get("identity").(*identity.XRHID)
 		if !ok {
-			return fmt.Errorf("failed to cast account-number to string")
+			return fmt.Errorf("failed to fetch the identity header")
 		}
 
 		if emailNotificationInfo.PreviousAvailabilityStatus != emailNotificationInfo.CurrentAvailabilityStatus {
-			return service.EmitAvailabilityStatusNotification(accountNumber, emailNotificationInfo)
+			return service.EmitAvailabilityStatusNotification(&xRhIdentity.Identity, emailNotificationInfo)
 		}
 
 		return nil
