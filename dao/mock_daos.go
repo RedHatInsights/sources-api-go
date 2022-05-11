@@ -395,22 +395,29 @@ func (a *MockSourceTypeDao) Delete(id *int64) error {
 func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	var applications []m.Application
 
-	for index, i := range a.Applications {
-		switch object := primaryCollection.(type) {
-		case m.Source:
-			if i.SourceID == object.ID {
-				applications = append(applications, a.Applications[index])
+	switch object := primaryCollection.(type) {
+	case m.Source:
+		var sourceExists bool
+
+		for _, s := range fixtures.TestSourceData {
+			if s.ID == object.ID {
+				sourceExists = true
 			}
-		default:
-			return nil, 0, fmt.Errorf("unexpected primary collection type")
+		}
+		// if source doesn't exist, return Not Found Err
+		if !sourceExists {
+			return nil, 0, util.NewErrNotFound("source")
+		}
+
+		// else return list of related applications
+		for _, app := range a.Applications {
+			if object.ID == app.SourceID {
+				applications = append(applications, app)
+			}
 		}
 	}
-	count := int64(len(applications))
-	if count == 0 {
-		return nil, count, util.NewErrNotFound("application")
-	}
 
-	return applications, count, nil
+	return applications, int64(len(applications)), nil
 }
 
 func (a *MockApplicationDao) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
@@ -771,8 +778,25 @@ func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset i
 	return out, int64(len(out)), nil
 }
 
-func (m MockAuthenticationDao) ListForApplication(applicationID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
-	panic("implement me")
+func (mAuth MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	var appExists bool
+	for _, app := range fixtures.TestApplicationData {
+		if app.ID == appId {
+			appExists = true
+		}
+	}
+	if !appExists {
+		return nil, 0, util.NewErrNotFound("application")
+	}
+
+	var out []m.Authentication
+	for _, auth := range fixtures.TestAuthenticationData {
+		if auth.ResourceType == "Application" && auth.ResourceID == appId {
+			out = append(out, auth)
+		}
+	}
+
+	return out, int64(len(out)), nil
 }
 
 func (m MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {

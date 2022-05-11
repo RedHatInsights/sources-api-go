@@ -108,6 +108,54 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+func TestSourceApplicationSubcollectionListEmptyList(t *testing.T) {
+	sourceId := int64(101)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	err := SourceListApplications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	if len(out.Data) != 0 {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
 func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -634,6 +682,54 @@ func TestApplicationEditBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+func TestApplicationDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	appId := "300"
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/applications/"+appId,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(appId)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err := ApplicationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
+	}
+
+	// Check that application doesn't exist
+	c, rec = request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/"+appId,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(appId)
+
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+	err = notFoundApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationDeleteNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
@@ -671,6 +767,125 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 
 	badRequestApplicationGet := ErrorHandlingContext(ApplicationDelete)
 	err := badRequestApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestApplicationListAuthentications(t *testing.T) {
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	err := ApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	var wantData []m.Authentication
+	for _, auth := range fixtures.TestAuthenticationData {
+		if auth.ResourceType == "Application" && auth.ResourceID == appId {
+			wantData = append(wantData, auth)
+		}
+	}
+
+	if len(wantData) != len(out.Data) {
+		t.Errorf("not enough objects passed back from DB, want %d, got %d", len(wantData), len(out.Data))
+	}
+
+	auth, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+	if conf.SecretStore == "database" {
+		if auth["id"] != fmt.Sprintf("%d", wantData[0].DbID) {
+			t.Error("ghosts infected the return")
+		}
+	}
+
+	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestApplicationListAuthenticationsNotFound(t *testing.T) {
+	appId := int64(7896785687)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+	err := notFoundApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestApplicationListAuthenticationsBadRequest(t *testing.T) {
+	appId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(appId)
+
+	badRequestApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+	err := badRequestApplicationListAuthentications(c)
 	if err != nil {
 		t.Error(err)
 	}
