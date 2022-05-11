@@ -28,9 +28,12 @@ type AvailabilityStatusListener struct {
 	*events.EventStreamProducer
 }
 
-func Run() {
+func Run(shutdown chan struct{}) {
 	avs := AvailabilityStatusListener{EventStreamProducer: NewEventStreamProducer()}
-	avs.subscribeToAvailabilityStatus()
+	go avs.subscribeToAvailabilityStatus()
+
+	<-shutdown
+	shutdown <- struct{}{}
 }
 
 func NewEventStreamProducer() *events.EventStreamProducer {

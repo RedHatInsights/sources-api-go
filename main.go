@@ -36,9 +36,9 @@ func main() {
 
 	switch {
 	case conf.StatusListener:
-		go statuslistener.Run()
+		go statuslistener.Run(shutdown)
 	case conf.BackgroundWorker:
-		go jobs.Run()
+		go jobs.Run(shutdown)
 	default:
 		// launch 2 listeners - one for metrics and one for the actual application,
 		// one on 8000 and one on 9000 (per clowder)
