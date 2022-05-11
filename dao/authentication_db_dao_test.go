@@ -470,12 +470,12 @@ func TestListForApplicationAuthentication(t *testing.T) {
 		t.Errorf(`error creating an application: %s`, err)
 	}
 
-	// Create a new authentication for the new application authentication. The "ResourceId" is missing since we still
-	// don't have the ID of the application authentication object.
+	// Create a new authentication for the new application authentication.
 	dao := GetAuthenticationDao(&fixtures.TestTenantData[1].Id)
 	auth := &model.Authentication{
 		AuthType:     TestAuthType,
-		ResourceType: "ApplicationAuthentication",
+		ResourceType: "Application",
+		ResourceID:   application.ID,
 		SourceID:     source.ID,
 		TenantID:     fixtures.TestTenantData[1].Id,
 	}
@@ -496,13 +496,6 @@ func TestListForApplicationAuthentication(t *testing.T) {
 	err = appAuthDao.Create(&appAuth)
 	if err != nil {
 		t.Errorf(`error creating application authentication: %s`, err)
-	}
-
-	// Update the authentication's appauth ID.
-	auth.ResourceID = appAuth.ID
-	err = dao.Update(auth)
-	if err != nil {
-		t.Errorf(`could not update authentication to set it's resource ID: %s`, err)
 	}
 
 	// Call the function under test.
