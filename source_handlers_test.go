@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -101,20 +100,8 @@ func TestSourceListAuthentications(t *testing.T) {
 			t.Errorf(`the IDs from the authentication don't match. Want "%s", got "%s"'`, want, got)
 		}
 	} else {
-		want := fixtures.TestAuthenticationData[2].DbID
-
-		outputId, ok := auth1["id"].(string)
-		if !ok {
-			t.Errorf(`invalid ID received from authentication. Want "%s", got "%s"`, "string", reflect.TypeOf(auth1["id"]))
-		}
-
-		got, err := strconv.ParseInt(outputId, 10, 64)
-		if err != nil {
-			t.Errorf(`could not parse ID from authentication: %s`, err)
-		}
-
-		if want != got {
-			t.Errorf(`the IDs from the authentication don't match. Want "%d", got "%d"'`, want, got)
+		if !util.SliceContainsString([]string{"testUser", "first", "second", "third"}, auth1["username"].(string)) {
+			t.Errorf("invalid username returned, not found in test tenant data.")
 		}
 	}
 

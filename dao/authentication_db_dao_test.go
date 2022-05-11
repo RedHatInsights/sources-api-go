@@ -288,6 +288,7 @@ func TestListForSource(t *testing.T) {
 			ResourceID:   source.ID,
 			ResourceType: "Source",
 			TenantID:     fixtures.TestTenantData[1].Id,
+			SourceID:     source.ID,
 		}
 
 		// Using bulk create so we don't check to see if the resource is there first
