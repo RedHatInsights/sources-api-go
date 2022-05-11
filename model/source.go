@@ -40,10 +40,11 @@ type Source struct {
 	Tenant   Tenant
 	TenantID int64 `json:"tenant_id"`
 
-	ApplicationTypes []*ApplicationType `gorm:"many2many:applications"`
-	Applications     []Application
-	Endpoints        []Endpoint
-	Authentications  []Authentication `gorm:"-"`
+	ApplicationTypes     []*ApplicationType `gorm:"many2many:applications"`
+	Applications         []Application
+	Endpoints            []Endpoint
+	Authentications      []Authentication `gorm:"-"`
+	SourceRhcConnections []SourceRhcConnection
 }
 
 func (src *Source) ToEvent() interface{} {

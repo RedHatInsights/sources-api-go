@@ -66,6 +66,8 @@ objects:
           value: ${CLOUD_METER_API_SCHEME}://${CLOUD_METER_API_HOST}:${CLOUD_METER_SOURCES_API_PORT}${CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH}
         - name: COST_MANAGEMENT_AVAILABILITY_CHECK_URL
           value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
+        - name: CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL
+          value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_CHECK_PATH}
         - name: SOURCES_ENV
           value: ${SOURCES_ENV}
         - name: MARKETPLACE_HOST
@@ -256,3 +258,15 @@ parameters:
   name: TENANT_TRANSLATOR_PORT
   required: true
   value: '8892'
+- name: CLOUD_CONNECTOR_SCHEME
+  required: true
+  value: "http"
+- name: CLOUD_CONNECTOR_HOST
+  required: true
+  value: "cloud-connector-api"
+- name: CLOUD_CONNECTOR_PORT
+  required: true
+  value: "9000"
+- name: CLOUD_CONNECTOR_CHECK_PATH
+  required: true
+  value: "/connection_status"

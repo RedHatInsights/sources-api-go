@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -21,6 +24,7 @@ type availabilityCheckRequester struct{}
 type availabilityChecker interface {
 	ApplicationAvailabilityCheck(source *m.Source)
 	EndpointAvailabilityCheck(source *m.Source)
+	RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header)
 }
 
 var (
@@ -29,10 +33,12 @@ var (
 	satelliteTopic = config.Get().KafkaTopic("platform.topological-inventory.operations-satellite")
 	// default availability checker instance
 	ac availabilityChecker = &availabilityCheckRequester{}
+	// cloud connector url
+	cloudConnectorUrl = os.Getenv("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL")
 )
 
 // requests both types of availability checks for a source
-func RequestAvailabilityCheck(source *m.Source) {
+func RequestAvailabilityCheck(source *m.Source, headers []kafka.Header) {
 	l.Log.Infof("Requesting Availability Check for Source [%v]", source.ID)
 
 	if len(source.Applications) != 0 {
@@ -41,6 +47,10 @@ func RequestAvailabilityCheck(source *m.Source) {
 
 	if len(source.Endpoints) != 0 {
 		ac.EndpointAvailabilityCheck(source)
+	}
+
+	if len(source.SourceRhcConnections) != 0 {
+		ac.RhcConnectionAvailabilityCheck(source, headers)
 	}
 
 	l.Log.Infof("Finished Publishing Availability Messages for Source %v", source.ID)
@@ -154,5 +164,116 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 	err = mgr.Produce(msg)
 	if err != nil {
 		l.Log.Warnf("Failed to produce kafka message for Source %v, error: %v", source.ID, err)
+	}
+}
+
+type rhcConnectionStatusResponse struct {
+	Status string `json:"status"`
+}
+
+// hit the RHC connector running in-cluster in order to check and see if the
+// status for each RHC id is connected or disconnected
+func (acr availabilityCheckRequester) RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header) {
+	for i := range source.SourceRhcConnections {
+		go pingRHC(source, &source.SourceRhcConnections[i].RhcConnection, headers)
+	}
+}
+
+func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header) {
+	if cloudConnectorUrl == "" {
+		l.Log.Warnf("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL not set - skipping check for RHC Connection Availability Status [%v]", rhcConnection.RhcId)
+		return
+	}
+
+	// per: https://github.com/RedHatInsights/cloud-connector/blob/master/internal/controller/api/api.spec.json
+	body, err := json.Marshal(map[string]interface{}{
+		"account": source.Tenant.ExternalTenant,
+		"node_id": rhcConnection.RhcId,
+	})
+	if err != nil {
+		l.Log.Warnf("Failed to marshal request body: %v", err)
+		return
+	}
+
+	// timeout after 10s
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "POST", cloudConnectorUrl, bytes.NewBuffer(body))
+	if err != nil {
+		l.Log.Warnf("Failed to create request for RHC Connection for ID %v, e: %v", source.ID, err)
+		return
+	}
+	req.Header.Set("account", source.Tenant.ExternalTenant)
+	req.Header.Set("org_id", source.Tenant.OrgID)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		l.Log.Warnf("Failed to request connection_status for RHC ID [%v]: %v", rhcConnection.RhcId, err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode/100 != 2 {
+		l.Log.Warnf("Invalid return code received for RHC ID [%v]: %v", rhcConnection.RhcId, resp.StatusCode)
+		return
+	}
+
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		l.Log.Warnf("failed to read body from request: %v", err)
+		return
+	}
+
+	var status rhcConnectionStatusResponse
+	err = json.Unmarshal(b, &status)
+	if err != nil {
+		l.Log.Warnf("failed to unmarshal response: %v", err)
+		return
+	}
+
+	var sanitizedStatus string
+	switch status.Status {
+	case "connected":
+		sanitizedStatus = "available"
+	case "disconnected":
+		sanitizedStatus = "unavailable"
+	default:
+		l.Log.Warnf("Invalid status returned from RHC: %v", status.Status)
+		return
+	}
+
+	// only go through and update if there was a change.
+	if rhcConnection.AvailabilityStatus != sanitizedStatus {
+		now := time.Now()
+
+		source.AvailabilityStatus = sanitizedStatus
+		source.LastCheckedAt = &now
+
+		rhcConnection.AvailabilityStatus = sanitizedStatus
+		rhcConnection.LastCheckedAt = &now
+
+		if sanitizedStatus == m.Available {
+			source.LastAvailableAt = &now
+			rhcConnection.LastAvailableAt = &now
+		}
+
+		err = dao.GetSourceDao(&source.TenantID).Update(source)
+		if err != nil {
+			l.Log.Warnf("failed to update source availability status: %v", err)
+			return
+		}
+
+		err = dao.GetRhcConnectionDao(&source.TenantID).Update(rhcConnection)
+		if err != nil {
+			l.Log.Warnf("failed to update RHC Connection availability status: %v", err)
+			return
+		}
+
+		err = RaiseEvent("RhcConnection.update", rhcConnection, headers)
+		if err != nil {
+			l.Log.Warnf("error raising RhcConneciton.update event: %v", err)
+		}
 	}
 }

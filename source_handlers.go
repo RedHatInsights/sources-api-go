@@ -339,20 +339,35 @@ func SourceCheckAvailability(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	src, err := sourceDao.GetByIdWithPreload(&sourceID,
-		"SourceType",
-		"Applications",
-		"Applications.ApplicationType",
-		"Endpoints",
-		"Endpoints.Tenant",
-		"Tenant",
-	)
-	if err != nil {
-		return err
+	exists, err := sourceDao.Exists(sourceID)
+	if !exists || err != nil {
+		return util.NewErrNotFound("source")
 	}
 
 	// do it async!
-	go func() { service.RequestAvailabilityCheck(src) }()
+	go func() {
+		src, err := sourceDao.GetByIdWithPreload(&sourceID,
+			"SourceType",
+			"Applications",
+			"Applications.ApplicationType",
+			"Endpoints",
+			"Endpoints.Tenant",
+			"Tenant",
+			"SourceRhcConnections",
+			"SourceRhcConnections.RhcConnection",
+		)
+		if err != nil {
+			c.Logger().Warnf("error loading up source for availability check: %v", err)
+			return
+		}
+
+		h, err := service.ForwadableHeaders(c)
+		if err != nil {
+			c.Logger().Warn(err)
+			return
+		}
+		service.RequestAvailabilityCheck(src, h)
+	}()
 
 	return c.JSON(http.StatusAccepted, map[string]interface{}{})
 }
