@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -55,10 +54,9 @@ func init() {
 			logging.Log.Warnf("FeatureFlagsAPIToken is empty")
 		}
 
-		unleashUrl := fmt.Sprintf("%s://%s:%s/api", conf.FeatureFlagsSchema, conf.FeatureFlagsHost, conf.FeatureFlagsPort)
 		unleashConfig := []unleash.ConfigOption{unleash.WithAppName(appName),
 			unleash.WithListener(&FeatureFlagListener{}),
-			unleash.WithUrl(unleashUrl),
+			unleash.WithUrl(conf.FeatureFlagsUrl),
 			unleash.WithEnvironment(conf.FeatureFlagsEnvironment),
 			unleash.WithRefreshInterval(refreshInterval * time.Second),
 			unleash.WithMetricsInterval(metricsInterval * time.Second),
