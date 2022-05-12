@@ -687,7 +687,7 @@ func TestApplicationDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
 
-	// ApplicationDelete() uses Cascade Delete - deleted is not only
+	// ApplicationDelete() uses cascade delete - deleted is not only
 	// application itself but related application authentication and
 	// authentications too => this test creates own test data
 
