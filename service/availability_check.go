@@ -192,6 +192,8 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 		return
 	}
 
+	l.Log.Infof("Requesting Availability Check for RHC %v", rhcConnection.ID)
+
 	// per: https://github.com/RedHatInsights/cloud-connector/blob/master/internal/controller/api/api.spec.json
 	body, err := json.Marshal(map[string]interface{}{
 		"account": source.Tenant.ExternalTenant,
@@ -226,6 +228,9 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 
 	if resp.StatusCode/100 != 2 {
 		l.Log.Warnf("Invalid return code received for RHC ID [%v]: %v", rhcConnection.RhcId, resp.StatusCode)
+		b, _ := io.ReadAll(resp.Body)
+		l.Log.Warnf("Body Returned from RHC ID [%v]: %s", rhcConnection.ID, b)
+
 		// updating status to unavailable
 		updateRhcStatus(source, "unavailable", unavailbleRhc, rhcConnection, headers)
 		return
