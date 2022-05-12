@@ -51,6 +51,10 @@ func init() {
 	if featureFlagsServiceUnleash() {
 		logging.InitLogger(conf)
 
+		if conf.FeatureFlagsAPIToken == "" {
+			logging.Log.Warnf("FeatureFlagsAPIToken is empty")
+		}
+
 		unleashUrl := fmt.Sprintf("%s://%s:%s/api", conf.FeatureFlagsSchema, conf.FeatureFlagsHost, conf.FeatureFlagsPort)
 		unleashConfig := []unleash.ConfigOption{unleash.WithAppName(appName),
 			unleash.WithListener(&FeatureFlagListener{}),

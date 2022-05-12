@@ -91,7 +91,13 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsHost", cfg.FeatureFlags.Hostname)
 		options.SetDefault("FeatureFlagsPort", cfg.FeatureFlags.Port)
 		options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
-		options.SetDefault("FeatureFlagsAPIToken", cfg.FeatureFlags.ClientAccessToken)
+
+		clientAccessToken := ""
+		if cfg.FeatureFlags.ClientAccessToken != nil {
+			clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
+		}
+
+		options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 	} else {
 		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
