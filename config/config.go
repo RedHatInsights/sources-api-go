@@ -93,7 +93,9 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
 
 		clientAccessToken := ""
-		if cfg.FeatureFlags.ClientAccessToken != nil {
+		if os.Getenv("UNLEASH_TOKEN") != "" {
+			clientAccessToken = os.Getenv("UNLEASH_TOKEN")
+		} else if cfg.FeatureFlags.ClientAccessToken != nil {
 			clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 		}
 
@@ -125,7 +127,7 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsHost", os.Getenv("FEATURE_FLAGS_HOST"))
 		options.SetDefault("FeatureFlagsPort", os.Getenv("FEATURE_FLAGS_PORT"))
 		options.SetDefault("FeatureFlagsSchema", os.Getenv("FEATURE_FLAGS_SCHEMA"))
-		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("FEATURE_FLAGS_API_TOKEN"))
+		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("UNLEASH_TOKEN"))
 	}
 
 	options.SetDefault("FeatureFlagsService", os.Getenv("FEATURE_FLAGS_SERVICE"))
