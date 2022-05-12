@@ -98,9 +98,14 @@ func runServer(shutdown chan struct{}) {
 	e.HidePort = true
 
 	go func() {
-		logging.Log.Infof("API Server started on :8000")
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8000"
+		}
 
-		if err := e.Start(":8000"); err != nil && err != http.ErrServerClosed {
+		logging.Log.Infof("API Server started on :%v", port)
+
+		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {
 			e.Logger.Warn(err)
 		}
 	}()
@@ -128,6 +133,11 @@ func runMetricExporter() {
 	e.HideBanner = true
 	e.HidePort = true
 
-	logging.Log.Infof("Metrics Server started on :9000")
-	e.Logger.Fatal(e.Start(":9000"))
+	port := os.Getenv("METRICS_PORT")
+	if port == "" {
+		port = "9000"
+	}
+
+	logging.Log.Infof("Metrics Server started on :%v", port)
+	e.Logger.Fatal(e.Start(":" + port))
 }
