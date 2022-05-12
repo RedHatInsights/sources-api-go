@@ -209,7 +209,7 @@ func Get() *SourcesApiConfig {
 		FeatureFlagsHost:          options.GetString("FeatureFlagsHost"),
 		FeatureFlagsEnvironment:   options.GetString("FeatureFlagsEnvironment"),
 		FeatureFlagsPort:          options.GetString("FeatureFlagsPort"),
-		FeatureFlagsAPIToken:      options.GetString("FeatureFlagsApiToken"),
+		FeatureFlagsAPIToken:      options.GetString("FeatureFlagsAPIToken"),
 		FeatureFlagsSchema:        options.GetString("FeatureFlagsSchema"),
 		FeatureFlagsService:       options.GetString("FeatureFlagsService"),
 		CacheHost:                 options.GetString("CacheHost"),
