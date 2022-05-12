@@ -142,12 +142,12 @@ func ApplicationAuthenticationListAuthentications(c echo.Context) error {
 
 	id, err := strconv.ParseInt(c.Param("application_authentication_id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, util.ErrorDoc(err.Error(), "400"))
+		return util.NewErrBadRequest(err)
 	}
 
 	auths, count, err := authDao.ListForApplicationAuthentication(id, 100, 0, nil)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, util.ErrorDoc(err.Error(), "404"))
+		return err
 	}
 
 	tenantId := authDao.Tenant()
