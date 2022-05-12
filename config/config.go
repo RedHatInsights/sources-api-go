@@ -90,7 +90,12 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsPort", cfg.FeatureFlags.Port)
 		options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
 
-		unleashUrl := fmt.Sprintf("%s://%s:%d/api", cfg.FeatureFlags.Scheme, cfg.FeatureFlags.Hostname, cfg.FeatureFlags.Port)
+		unleashUrl := ""
+		if os.Getenv("UNLEASH_URL") != "" {
+			unleashUrl = os.Getenv("UNLEASH_URL")
+		} else if cfg.FeatureFlags.ClientAccessToken != nil {
+			unleashUrl = fmt.Sprintf("%s://%s:%d/api", cfg.FeatureFlags.Scheme, cfg.FeatureFlags.Hostname, cfg.FeatureFlags.Port)
+		}
 		options.SetDefault("FeatureFlagsUrl", unleashUrl)
 
 		clientAccessToken := ""
@@ -99,7 +104,6 @@ func Get() *SourcesApiConfig {
 		} else if cfg.FeatureFlags.ClientAccessToken != nil {
 			clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 		}
-
 		options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 	} else {
 		options.SetDefault("AwsRegion", "us-east-1")
