@@ -98,7 +98,7 @@ func httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
 	}
 
 	req.Header.Add("x-rh-sources-account-number", source.Tenant.ExternalTenant)
-	req.Header.Add("x-rh-identity", util.XRhIdentityWithAccountNumber(source.Tenant.ExternalTenant))
+	req.Header.Add("x-rh-identity", util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -164,7 +164,7 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 	msg.AddHeaders([]kafka.Header{
 		{Key: "event_type", Value: []byte("Source.availability_check")},
 		{Key: "encoding", Value: []byte("json")},
-		{Key: "x-rh-identity", Value: []byte(util.XRhIdentityWithAccountNumber(endpoint.Tenant.ExternalTenant))},
+		{Key: "x-rh-identity", Value: []byte(util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))},
 		{Key: "x-rh-sources-account-number", Value: []byte(endpoint.Tenant.ExternalTenant)},
 	})
 

@@ -12,13 +12,13 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-// TestForwadableHeadersPsk tests that when the "psk-account" context value is present, two headers are returned from
+// TestForwadableHeadersPskAccountNumber tests that when the "psk-account" context value is present, two headers are returned from
 // the function under test: "x-rh-sources-account-number" and "x-rh-identity".
-func TestForwadableHeadersPsk(t *testing.T) {
+func TestForwadableHeadersAccountNumber(t *testing.T) {
 	testPskAccountValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("x-rh-sources-psk", testPskAccountValue)
+	context.Set("psk-account", testPskAccountValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -86,7 +86,7 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 	testOrgIdValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("x-rh-sources-org-id", testOrgIdValue)
+	context.Set("psk-org-id", testOrgIdValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -148,8 +148,9 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 	}
 }
 
-// TestForwadableHeadersXrhId tests that when the "x-rh-identity" context value is present, only one header is returned
-// from the function under test: "x-rh-identity".
+// TestForwadableHeadersXrhId tests that when the "x-rh-identity" context value
+// is present, it passes it along as well as adding the psk-account + psk-org-id
+// related headers.
 func TestForwadableHeadersXrhId(t *testing.T) {
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
 
@@ -176,7 +177,7 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 	}
 
 	{
-		want := 1
+		want := 3
 		got := len(headers)
 
 		if want != got {
@@ -185,7 +186,49 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 	}
 
 	{
-		xRhIdentityHeader := headers[0]
+		accountHeader := headers[0]
+		{
+			want := "x-rh-sources-account-number"
+			got := accountHeader.Key
+
+			if want != got {
+				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
+			}
+		}
+		{
+			{
+				want := testAccountNumber
+				got := string(accountHeader.Value)
+
+				if want != got {
+					t.Errorf(`incorrect account number on xRhId struct. Want "%s", got "%s"`, want, got)
+				}
+			}
+		}
+	}
+
+	{
+		orgIdHeader := headers[1]
+		{
+			want := "x-rh-sources-org-id"
+			got := orgIdHeader.Key
+
+			if want != got {
+				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
+			}
+		}
+		{
+			want := testOrgId
+			got := string(orgIdHeader.Value)
+
+			if want != got {
+				t.Errorf(`incorrect orgId on xRhId struct. Want "%s", got "%s"`, want, got)
+			}
+		}
+	}
+
+	{
+		xRhIdentityHeader := headers[2]
 
 		{
 			want := "x-rh-identity"
@@ -220,16 +263,13 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 	}
 }
 
-// TestForwadableHeadersOrgId tests that when the "psk-account" and "x-rh-sources-org-id" context values are present,
-// three headers are returned from the function under test: "x-rh-sources-account-number", "x-rh-sources-org-id" and
-// "x-rh-identity"
+// TestForwadableHeadersOrgId tests that when the and "x-rh-sources-org-id" context value is present,
+// two headers are returned from the function under test: "x-rh-sources-org-id" and "x-rh-identity"
 func TestForwadableHeadersPskOrgId(t *testing.T) {
-	testPskAccountValue := "abcde"
 	testOrgIdValue := "12345"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("x-rh-sources-psk", testPskAccountValue)
-	context.Set("x-rh-sources-org-id", testOrgIdValue)
+	context.Set("psk-org-id", testOrgIdValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -238,7 +278,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 	}
 
 	{
-		want := 3
+		want := 2
 		got := len(headers)
 
 		if want != got {
@@ -247,28 +287,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 	}
 
 	{
-		pskHeader := headers[0]
-
-		{
-			want := "x-rh-sources-account-number"
-			got := pskHeader.Key
-
-			if want != got {
-				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
-			}
-		}
-		{
-			want := []byte(testPskAccountValue)
-			got := pskHeader.Value
-
-			if !bytes.Equal(want, got) {
-				t.Errorf(`incorrect Kafka header value generated. Want "%s", got "%s"`, want, got)
-			}
-		}
-	}
-
-	{
-		orgIdHeader := headers[1]
+		orgIdHeader := headers[0]
 
 		{
 			want := "x-rh-sources-org-id"
@@ -289,7 +308,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 	}
 
 	{
-		xRhIdentityHeader := headers[2]
+		xRhIdentityHeader := headers[1]
 
 		{
 			want := "x-rh-identity"
@@ -303,14 +322,6 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 			xRhId, err := util.ParseXRHIDHeader(string(xRhIdentityHeader.Value))
 			if err != nil {
 				t.Errorf(`unexpected error when parsing the xRhIdentity base64 string: %s`, err)
-			}
-			{
-				want := testPskAccountValue
-				got := xRhId.Identity.AccountNumber
-
-				if want != got {
-					t.Errorf(`incorrect account number on xRhId struct. Want "%s", got "%s"`, want, got)
-				}
 			}
 			{
 				want := testOrgIdValue

@@ -1,17 +1,14 @@
 package service
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/kafka"
-	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 // Producer instance used to send messages - default just an empty instance of the struct.
@@ -35,63 +32,63 @@ func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) 
 
 // ForwadableHeaders fetches the required identity headers from the request that are needed to forward along:
 // 	1. x-rh-identity -- a generated one if it wasn't passed along (e.g. psk)
-//	2. x-rh-sources-psk -- always passed if present, and used for generation.
+//	2. x-rh-sources-account-number -- always passed if present, and used for generation.
 //	3. x-rh-sources-org-id -- always passed if present, and used for generation.
 func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 	headers := make([]kafka.Header, 0)
+	var account, orgId, xrhid string
+	var ok bool
 
-	if c.Get("x-rh-sources-psk") != nil {
-		psk, ok := c.Get("x-rh-sources-psk").(string)
-		if ok {
-			headers = append(headers, kafka.Header{Key: "x-rh-sources-account-number", Value: []byte(psk)})
+	// pulling the specified account if it exists
+	if c.Get("psk-account") != nil {
+		account, ok = c.Get("psk-account").(string)
+		if !ok {
+			return nil, fmt.Errorf("failed to cast psk-account to string")
 		}
 	}
 
-	if c.Get("x-rh-sources-account-number") != nil {
-		psk, ok := c.Get("x-rh-sources-account-number").(string)
-		if ok {
-			headers = append(headers, kafka.Header{Key: "x-rh-sources-account-number", Value: []byte(psk)})
+	// pulling the specified orgId if it exists
+	if c.Get("psk-org-id") != nil {
+		orgId, ok = c.Get("psk-org-id").(string)
+		if !ok {
+			return nil, fmt.Errorf("failed to cast psk-account to string")
 		}
 	}
 
-	if c.Get("x-rh-sources-org-id") != nil {
-		orgId, ok := c.Get("x-rh-sources-org-id").(string)
-		if ok {
-			headers = append(headers, kafka.Header{Key: "x-rh-sources-org-id", Value: []byte(orgId)})
-		}
-	}
-
+	// pull the xrhid OR generate one using the information from the PSK information.
 	if c.Get("x-rh-identity") != nil {
-		xrhid, ok := c.Get("x-rh-identity").(string)
+		rhid, ok := c.Get("x-rh-identity").(string)
 		if ok {
-			headers = append(headers, kafka.Header{Key: "x-rh-identity", Value: []byte(xrhid)})
-		}
-	} else {
-		var xRhId identity.XRHID
+			// set the xrhid to be passed on
+			xrhid = rhid
 
-		orgId, orgIdOk := c.Get("x-rh-sources-org-id").(string)
-		if orgIdOk {
-			xRhId.Identity.OrgID = orgId
-		}
-
-		psk, pskOk := c.Get("x-rh-sources-psk").(string)
-		if pskOk {
-			xRhId.Identity.AccountNumber = psk
-		}
-
-		if orgIdOk || pskOk {
-			contents, err := json.Marshal(xRhId)
+			// parse the encoded identity in case the psk-fields weren't set.
+			id, err := util.ParseXRHIDHeader(rhid)
 			if err != nil {
-				logging.Log.Errorf(`[account_number: %s][org_id: %s] Could not marshal xRhId object: %s`, xRhId.Identity.AccountNumber, xRhId.Identity.OrgID, err)
-
-				return nil, errors.New("error generating identity header")
+				return nil, err
 			}
 
-			encodedXrhId := base64.StdEncoding.EncodeToString(contents)
-			headers = append(headers, kafka.Header{Key: "x-rh-identity", Value: []byte(encodedXrhId)})
+			// account and orgId will be "" if they weren't present, so lets set them just in case.
+			if account == "" {
+				account = id.Identity.AccountNumber
+			}
+			if orgId == "" {
+				orgId = id.Identity.OrgID
+			}
 		}
-
+	} else {
+		xrhid = util.GeneratedXRhIdentity(account, orgId)
 	}
+
+	// need to check org_id + account since one or the other might not be there.
+	if account != "" {
+		headers = append(headers, kafka.Header{Key: "x-rh-sources-account-number", Value: []byte(account)})
+	}
+	if orgId != "" {
+		headers = append(headers, kafka.Header{Key: "x-rh-sources-org-id", Value: []byte(orgId)})
+	}
+
+	headers = append(headers, kafka.Header{Key: "x-rh-identity", Value: []byte(xrhid)})
 
 	return headers, nil
 }

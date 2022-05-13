@@ -1174,9 +1174,17 @@ func applicationEventTestHelper(t *testing.T, c echo.Context, expectedEventType 
 	}
 
 	{
+		var h kafka.Header
+		for _, header := range headers {
+			if header.Key == "event_type" {
+				h = header
+				break
+			}
+
+		}
 		// The header should contain the expected event type as well.
 		want := expectedEventType
-		got := string(headers[0].Value)
+		got := string(h.Value)
 		if want != got {
 			t.Errorf(`incorrect header on raise event. Want "%s", got "%s"`, want, got)
 			return errors.New(`incorrect header on raise event`)

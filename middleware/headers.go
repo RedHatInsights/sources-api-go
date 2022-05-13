@@ -55,7 +55,10 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 				c.Set("cert-auth", true)
 			}
 		} else {
-			dummyIdentity := util.XRhIdentityWithAccountNumber(c.Request().Header.Get("x-rh-sources-account-number"))
+			dummyIdentity := util.GeneratedXRhIdentity(
+				c.Request().Header.Get("x-rh-sources-account-number"),
+				c.Request().Header.Get("x-rh-sources-org-id"),
+			)
 
 			// backup xrhid from account number (in case of psk auth)
 			c.Set("x-rh-identity", dummyIdentity)

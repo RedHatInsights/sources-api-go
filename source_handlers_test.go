@@ -1256,7 +1256,8 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 		"/api/sources/v3.1/sources/1/pause",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID":      int64(1),
+			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 
@@ -1283,7 +1284,8 @@ func TestResumeSourceAndItsApplications(t *testing.T) {
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID":      int64(1),
+			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 
@@ -1322,7 +1324,8 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID":      int64(1),
+			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 
@@ -1399,7 +1402,8 @@ func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID":      int64(1),
+			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 
@@ -1499,9 +1503,16 @@ func sourceEventTestHelper(t *testing.T, c echo.Context, expectedEventType strin
 	}
 
 	{
+		var h kafka.Header
+		for _, header := range headers {
+			if header.Key == "event_type" {
+				h = header
+				break
+			}
+		}
 		// The header should contain the expected event type as well.
 		want := expectedEventType
-		got := string(headers[0].Value)
+		got := string(h.Value)
 		if want != got {
 			t.Errorf(`incorrect header on raise event. Want "%s", got "%s"`, want, got)
 			return errors.New(`incorrect header on raise event`)
