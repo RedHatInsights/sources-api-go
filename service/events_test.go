@@ -8,6 +8,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/kafka"
+	"github.com/RedHatInsights/sources-api-go/middleware/fields"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -18,7 +19,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 	testPskAccountValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("psk-account", testPskAccountValue)
+	context.Set(fields.ACCOUNT_NUMBER, testPskAccountValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -86,7 +87,7 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 	testOrgIdValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("psk-org-id", testOrgIdValue)
+	context.Set(fields.ORGID, testOrgIdValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -269,7 +270,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 	testOrgIdValue := "12345"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set("psk-org-id", testOrgIdValue)
+	context.Set(fields.ORGID, testOrgIdValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)

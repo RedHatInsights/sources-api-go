@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/middleware/fields"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
@@ -20,7 +21,7 @@ func Notifier(next echo.HandlerFunc) echo.HandlerFunc {
 			return fmt.Errorf("unable to find emailNotificationInfo instance in middleware")
 		}
 
-		xRhIdentity, ok := c.Get("identity").(*identity.XRHID)
+		xRhIdentity, ok := c.Get(fields.PARSED_IDENTITY).(*identity.XRHID)
 		if !ok {
 			return fmt.Errorf("failed to fetch the identity header")
 		}

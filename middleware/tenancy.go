@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/middleware/fields"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -29,8 +30,8 @@ import (
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		switch {
-		case c.Get("psk-account") != nil:
-			accountNumber, ok := c.Get("psk-account").(string)
+		case c.Get(fields.ACCOUNT_NUMBER) != nil:
+			accountNumber, ok := c.Get(fields.ACCOUNT_NUMBER).(string)
 			if !ok {
 				return fmt.Errorf("failed to cast account-number to string")
 			}
@@ -51,11 +52,11 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("identity", id)
-			c.Set("tenantID", tenantId)
+			c.Set(fields.PARSED_IDENTITY, id)
+			c.Set(fields.TENANTID, tenantId)
 
-		case c.Get("psk-org-id") != nil:
-			orgId, ok := c.Get("psk-org-id").(string)
+		case c.Get(fields.ORGID) != nil:
+			orgId, ok := c.Get(fields.ORGID).(string)
 			if !ok {
 				return errors.New("failed to cast orgId to string")
 			}
@@ -76,11 +77,11 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("identity", id)
-			c.Set("tenantID", tenantId)
+			c.Set(fields.PARSED_IDENTITY, id)
+			c.Set(fields.TENANTID, tenantId)
 
-		case c.Get("identity") != nil:
-			identity, ok := c.Get("identity").(*identity.XRHID)
+		case c.Get(fields.PARSED_IDENTITY) != nil:
+			identity, ok := c.Get(fields.PARSED_IDENTITY).(*identity.XRHID)
 			if !ok {
 				return fmt.Errorf("invalid identity structure received")
 			}
@@ -105,7 +106,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("tenantID", tenantId)
+			c.Set(fields.TENANTID, tenantId)
 
 		default:
 			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))

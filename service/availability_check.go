@@ -97,6 +97,7 @@ func httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
 		return
 	}
 
+	req.Header.Add("x-rh-sources-org-id", source.Tenant.OrgID)
 	req.Header.Add("x-rh-sources-account-number", source.Tenant.ExternalTenant)
 	req.Header.Add("x-rh-identity", util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
