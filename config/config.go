@@ -35,9 +35,7 @@ type SourcesApiConfig struct {
 	DatabasePassword          string
 	DatabaseName              string
 	FeatureFlagsEnvironment   string
-	FeatureFlagsHost          string
-	FeatureFlagsPort          string
-	FeatureFlagsSchema        string
+	FeatureFlagsUrl           string
 	FeatureFlagsAPIToken      string
 	FeatureFlagsService       string
 	CacheHost                 string
@@ -92,11 +90,20 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsPort", cfg.FeatureFlags.Port)
 		options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
 
+		unleashUrl := ""
+		if os.Getenv("UNLEASH_URL") != "" {
+			unleashUrl = os.Getenv("UNLEASH_URL")
+		} else if cfg.FeatureFlags.ClientAccessToken != nil {
+			unleashUrl = fmt.Sprintf("%s://%s:%d/api", cfg.FeatureFlags.Scheme, cfg.FeatureFlags.Hostname, cfg.FeatureFlags.Port)
+		}
+		options.SetDefault("FeatureFlagsUrl", unleashUrl)
+
 		clientAccessToken := ""
-		if cfg.FeatureFlags.ClientAccessToken != nil {
+		if os.Getenv("UNLEASH_TOKEN") != "" {
+			clientAccessToken = os.Getenv("UNLEASH_TOKEN")
+		} else if cfg.FeatureFlags.ClientAccessToken != nil {
 			clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 		}
-
 		options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 	} else {
 		options.SetDefault("AwsRegion", "us-east-1")
@@ -121,11 +128,8 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("CacheHost", os.Getenv("REDIS_CACHE_HOST"))
 		options.SetDefault("CachePort", os.Getenv("REDIS_CACHE_PORT"))
 		options.SetDefault("CachePassword", os.Getenv("REDIS_CACHE_PASSWORD"))
-
-		options.SetDefault("FeatureFlagsHost", os.Getenv("FEATURE_FLAGS_HOST"))
-		options.SetDefault("FeatureFlagsPort", os.Getenv("FEATURE_FLAGS_PORT"))
-		options.SetDefault("FeatureFlagsSchema", os.Getenv("FEATURE_FLAGS_SCHEMA"))
-		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("FEATURE_FLAGS_API_TOKEN"))
+		options.SetDefault("FeatureFlagsUrl", os.Getenv("FEATURE_FLAGS_URL"))
+		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("UNLEASH_TOKEN"))
 	}
 
 	options.SetDefault("FeatureFlagsService", os.Getenv("FEATURE_FLAGS_SERVICE"))
@@ -206,11 +210,9 @@ func Get() *SourcesApiConfig {
 		DatabaseUser:              options.GetString("DatabaseUser"),
 		DatabasePassword:          options.GetString("DatabasePassword"),
 		DatabaseName:              options.GetString("DatabaseName"),
-		FeatureFlagsHost:          options.GetString("FeatureFlagsHost"),
 		FeatureFlagsEnvironment:   options.GetString("FeatureFlagsEnvironment"),
-		FeatureFlagsPort:          options.GetString("FeatureFlagsPort"),
+		FeatureFlagsUrl:           options.GetString("FeatureFlagsUrl"),
 		FeatureFlagsAPIToken:      options.GetString("FeatureFlagsAPIToken"),
-		FeatureFlagsSchema:        options.GetString("FeatureFlagsSchema"),
 		FeatureFlagsService:       options.GetString("FeatureFlagsService"),
 		CacheHost:                 options.GetString("CacheHost"),
 		CachePort:                 options.GetInt("CachePort"),

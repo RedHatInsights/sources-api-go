@@ -29,6 +29,13 @@ objects:
       app: sources-api
   stringData:
     psk: "thisMustBeEphemeralOrMinikube"
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: unleash-ephemeral
+  type: Opaque
+  data:
+    CLIENT_ACCESS_TOKEN: ''
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
@@ -135,6 +142,13 @@ objects:
               optional: true
         - name: FEATURE_FLAGS_SERVICE
           value: ${FEATURE_FLAGS_SERVICE}
+        - name: UNLEASH_URL
+          value: ${UNLEASH_URL}
+        - name: UNLEASH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: ${UNLEASH_SECRET_NAME}
+              key: CLIENT_ACCESS_TOKEN
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -319,3 +333,10 @@ parameters:
 - description: Specify name of service for Feature Flags
   name: FEATURE_FLAGS_SERVICE
   value: 'unleash'
+- description: Unleash API url
+  name: UNLEASH_URL
+  value: ''
+- description: Unleash secret name
+  name: UNLEASH_SECRET_NAME
+  value: unleash-ephemeral
+
