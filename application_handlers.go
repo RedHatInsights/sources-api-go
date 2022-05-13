@@ -237,7 +237,7 @@ func ApplicationDelete(c echo.Context) error {
 
 	err = service.DeleteCascade(applicationDB.Tenant(), "Application", id, forwardableHeaders)
 	if err != nil {
-		return util.NewErrBadRequest(err)
+		return err
 	}
 
 	return c.NoContent(http.StatusNoContent)

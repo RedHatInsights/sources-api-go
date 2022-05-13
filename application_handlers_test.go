@@ -685,22 +685,86 @@ func TestApplicationEditBadRequest(t *testing.T) {
 
 func TestApplicationDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	appId := "300"
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	// ApplicationDelete() uses cascade delete - deleted is not only
+	// application itself but related application authentication and
+	// authentications too => this test creates own test data
+
+	// Create a source
+	tenantID := fixtures.TestTenantData[0].Id
+	sourceDao := dao.GetSourceDao(&tenantID)
+
+	src := m.Source{
+		Name:         "Source for TestApplicationDelete()",
+		SourceTypeID: 1,
+	}
+
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create an application
+	applicationDao := dao.GetApplicationDao(&tenantID)
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: 1,
+		Extra:             []byte(`{"Name": "app for TestApplicationDelete()"}`),
+	}
+
+	err = applicationDao.Create(&app)
+	if err != nil {
+		t.Errorf("application not created correctly: %s", err)
+	}
+
+	// Create an authentication
+	authenticationDao := dao.GetAuthenticationDao(&tenantID)
+
+	authName := "authentication for TestApplicationDelete()"
+	auth := m.Authentication{
+		Name:         &authName,
+		ResourceType: "Application",
+		ResourceID:   app.ID,
+		TenantID:     tenantID,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication not created correctly: %s", err)
+	}
+
+	// Create an application authentication
+	appAuthDao := dao.GetApplicationAuthenticationDao(&tenantID)
+	appAuth := m.ApplicationAuthentication{
+		ApplicationID:    app.ID,
+		AuthenticationID: auth.DbID,
+	}
+
+	err = appAuthDao.Create(&appAuth)
+	if err != nil {
+		t.Errorf("application authentication not created correctly: %s", err)
+	}
+
+	// Create test context and call the ApplicationDelete()
+	id := fmt.Sprintf("%d", app.ID)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
-		"/api/sources/v3.1/applications/"+appId,
+		"/api/sources/v3.1/applications/"+id,
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantID,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues(appId)
+	c.SetParamValues(id)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := ApplicationDelete(c)
+	err = ApplicationDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -710,25 +774,28 @@ func TestApplicationDelete(t *testing.T) {
 	}
 
 	// Check that application doesn't exist
-	c, rec = request.CreateTestContext(
-		http.MethodGet,
-		"/api/sources/v3.1/applications/"+appId,
-		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
-	)
-
-	c.SetParamNames("id")
-	c.SetParamValues(appId)
-
-	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
-	err = notFoundApplicationGet(c)
-	if err != nil {
-		t.Error(err)
+	_, err = applicationDao.GetById(&app.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'application not found', got %s", err)
 	}
 
-	templates.NotFoundTest(t, rec)
+	// Check that authentication doesn't exist
+	_, err = authenticationDao.GetById(auth.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'authentication not found', got %s", err)
+	}
+
+	// Check that application authentication doesn't exist
+	_, err = appAuthDao.GetById(&appAuth.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'application authentication not found', got %s", err)
+	}
+
+	// Clean up - delete created source
+	_, err = sourceDao.Delete(&src.ID)
+	if err != nil {
+		t.Errorf("source not deleted correctly: %s", err)
+	}
 }
 
 func TestApplicationDeleteNotFound(t *testing.T) {
