@@ -37,14 +37,21 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 
 			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
 
-			id := identity.Identity{AccountNumber: accountNumber}
+			// Use the whole "XRHID" struct for consistency, since many other parts in the code are expecting the
+			// "identity" context variable to have this struct.
+			id := &identity.XRHID{
+				Identity: identity.Identity{
+					AccountNumber: accountNumber,
+				},
+			}
+
 			tenantDao := dao.GetTenantDao()
-			tenantId, err := tenantDao.GetOrCreateTenantID(&id)
+			tenantId, err := tenantDao.GetOrCreateTenantID(&id.Identity)
 			if err != nil {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("identity", &id)
+			c.Set("identity", id)
 			c.Set("tenantID", tenantId)
 
 		case c.Get("psk-org-id") != nil:
@@ -55,14 +62,21 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 
 			c.Logger().Debugf(`[org_id: %s] Looking up Tenant ID`, orgId)
 
-			id := identity.Identity{OrgID: orgId}
+			// Use the whole "XRHID" struct for consistency, since many other parts in the code are expecting the
+			// "identity" context variable to have this struct.
+			id := &identity.XRHID{
+				Identity: identity.Identity{
+					OrgID: orgId,
+				},
+			}
+
 			tenantDao := dao.GetTenantDao()
-			tenantId, err := tenantDao.GetOrCreateTenantID(&id)
+			tenantId, err := tenantDao.GetOrCreateTenantID(&id.Identity)
 			if err != nil {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set("identity", &id)
+			c.Set("identity", id)
 			c.Set("tenantID", tenantId)
 
 		case c.Get("identity") != nil:
