@@ -23,6 +23,7 @@ func (binder *NoUnknownFieldsBinder) Bind(i interface{}, c echo.Context) error {
 	if c.Request().Body == http.NoBody || c.Request().Body == nil {
 		return util.NewErrBadRequest("no body")
 	}
+	defer c.Request().Body.Close()
 
 	// create a new decoder for the request body
 	dec := json.NewDecoder(c.Request().Body)
