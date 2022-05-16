@@ -38,6 +38,7 @@ type SourcesApiConfig struct {
 	FeatureFlagsUrl           string
 	FeatureFlagsAPIToken      string
 	FeatureFlagsService       string
+	FeatureFlagsBearerToken   string
 	CacheHost                 string
 	CachePort                 int
 	CachePassword             string
@@ -104,7 +105,7 @@ func Get() *SourcesApiConfig {
 		} else if cfg.FeatureFlags.ClientAccessToken != nil {
 			clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 		}
-		options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
+		options.SetDefault("FeatureFlagsBearerToken", clientAccessToken)
 	} else {
 		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
@@ -128,7 +129,8 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("CacheHost", os.Getenv("REDIS_CACHE_HOST"))
 		options.SetDefault("CachePort", os.Getenv("REDIS_CACHE_PORT"))
 		options.SetDefault("CachePassword", os.Getenv("REDIS_CACHE_PASSWORD"))
-		options.SetDefault("FeatureFlagsUrl", os.Getenv("FEATURE_FLAGS_URL"))
+
+		options.SetDefault("FeatureFlagsUrl", os.Getenv("UNLEASH_URL"))
 		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("UNLEASH_TOKEN"))
 	}
 
@@ -213,6 +215,7 @@ func Get() *SourcesApiConfig {
 		FeatureFlagsEnvironment:   options.GetString("FeatureFlagsEnvironment"),
 		FeatureFlagsUrl:           options.GetString("FeatureFlagsUrl"),
 		FeatureFlagsAPIToken:      options.GetString("FeatureFlagsAPIToken"),
+		FeatureFlagsBearerToken:   options.GetString("FeatureFlagsBearerToken"),
 		FeatureFlagsService:       options.GetString("FeatureFlagsService"),
 		CacheHost:                 options.GetString("CacheHost"),
 		CachePort:                 options.GetInt("CachePort"),

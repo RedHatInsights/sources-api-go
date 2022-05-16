@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -54,6 +55,13 @@ func init() {
 			logging.Log.Warnf("FeatureFlagsAPIToken is empty")
 		}
 
+		authorizationHeader := ""
+		if conf.FeatureFlagsBearerToken != "" {
+			authorizationHeader = fmt.Sprintf("Bearer %s", conf.FeatureFlagsAPIToken)
+		} else {
+			authorizationHeader = conf.FeatureFlagsAPIToken
+		}
+
 		unleashConfig := []unleash.ConfigOption{unleash.WithAppName(appName),
 			unleash.WithListener(&FeatureFlagListener{}),
 			unleash.WithUrl(conf.FeatureFlagsUrl),
@@ -61,7 +69,7 @@ func init() {
 			unleash.WithRefreshInterval(refreshInterval * time.Second),
 			unleash.WithMetricsInterval(metricsInterval * time.Second),
 			unleash.WithProjectName(projectName),
-			unleash.WithCustomHeaders(http.Header{"Authorization": {conf.FeatureFlagsAPIToken}})}
+			unleash.WithCustomHeaders(http.Header{"Authorization": {authorizationHeader}})}
 
 		err := unleash.Initialize(unleashConfig...)
 		if err != nil {
