@@ -113,7 +113,7 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 		return err
 	}
 
-	return nil
+	return mgr.Producer().Close()
 }
 
 func EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo) error {

@@ -172,6 +172,11 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 	if err != nil {
 		l.Log.Warnf("Failed to produce kafka message for Source %v, error: %v", source.ID, err)
 	}
+
+	err = mgr.Producer().Close()
+	if err != nil {
+		l.Log.Warnf("Failed to close kafka producer: %v", err)
+	}
 }
 
 type rhcConnectionStatusResponse struct {

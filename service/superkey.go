@@ -133,5 +133,11 @@ func produceSuperkeyRequest(m *kafka.Message) error {
 			KafkaBrokers:   config.Get().KafkaBrokers,
 			ProducerConfig: kafka.ProducerConfig{Topic: config.Get().KafkaTopic(SUPERKEY_REQUEST_QUEUE)}}}
 
-	return mgr.Produce(m)
+	err := mgr.Produce(m)
+	if err != nil {
+		mgr.Producer().Close()
+		return err
+	}
+
+	return mgr.Producer().Close()
 }

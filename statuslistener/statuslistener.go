@@ -29,11 +29,10 @@ type AvailabilityStatusListener struct {
 }
 
 func Run(shutdown chan struct{}) {
-	avs := AvailabilityStatusListener{EventStreamProducer: NewEventStreamProducer()}
-	go avs.subscribeToAvailabilityStatus()
+	l.Log.Infof("Starting Availability Status Listener on topic [%v]", config.KafkaTopic(sourcesStatusTopic))
 
-	<-shutdown
-	shutdown <- struct{}{}
+	avs := AvailabilityStatusListener{EventStreamProducer: NewEventStreamProducer()}
+	avs.subscribeToAvailabilityStatus(shutdown)
 }
 
 func NewEventStreamProducer() *events.EventStreamProducer {
@@ -41,7 +40,7 @@ func NewEventStreamProducer() *events.EventStreamProducer {
 	return &events.EventStreamProducer{Sender: sender}
 }
 
-func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
+func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown chan struct{}) {
 	if l.Log == nil {
 		panic("logging is not initialized")
 	}
@@ -54,11 +53,21 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus() {
 	}
 
 	kf := &kafka.Manager{Config: kafkaConfig}
-	err := kf.Consume(avs.ConsumeStatusMessage)
 
-	if err != nil {
-		l.Log.Errorf("Consumer kafka message error: %s", err.Error())
+	// run async for graceful shutdown handling
+	go func() {
+		if err := kf.Consume(avs.ConsumeStatusMessage); err != nil {
+			l.Log.Errorf("Consumer kafka message error: %s", err.Error())
+		}
+	}()
+
+	<-shutdown
+	l.Log.Infof("Closing Kafka Consumer...")
+
+	if err := kf.Consumer().Close(); err != nil {
+		l.Log.Warn(err)
 	}
+	shutdown <- struct{}{}
 }
 
 func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Message) {

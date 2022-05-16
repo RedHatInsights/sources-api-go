@@ -15,7 +15,7 @@ import (
 )
 
 // Producer instance used to send messages - default just an empty instance of the struct.
-var Producer = events.EventStreamProducer{Sender: &events.EventStreamSender{}}
+var Producer = func() events.Sender { return events.EventStreamProducer{Sender: &events.EventStreamSender{}} }
 
 // RaiseEvent raises an event with the provided resource.
 func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) error {
@@ -25,7 +25,7 @@ func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) 
 	}
 
 	headers = append(headers, kafka.Header{Key: "event_type", Value: []byte(eventType)})
-	err = Producer.RaiseEvent(eventType, msg, headers)
+	err = Producer().RaiseEvent(eventType, msg, headers)
 	if err != nil {
 		return fmt.Errorf("failed to raise event to kafka: %v", err)
 	}
