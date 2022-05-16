@@ -1032,7 +1032,7 @@ func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
 	// We back up the producer so that we can restore it once the test has finished. This way we don't mess up with
 	// other tests that may need to raise events.
 	backupProducer := service.Producer
-	service.Producer = events.EventStreamProducer{Sender: MockSender{}}
+	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: MockSender{}} }
 
 	var applicationRaiseEventCallCount int
 	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {
@@ -1086,7 +1086,7 @@ func TestPauseApplicationUnpauseRaiseEventCheck(t *testing.T) {
 	// We back up the producer so that we can restore it once the test has finished. This way we don't mess up with
 	// other tests that may need to raise events.
 	backupProducer := service.Producer
-	service.Producer = events.EventStreamProducer{Sender: MockSender{}}
+	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: MockSender{}} }
 
 	var applicationRaiseEventCallCount int
 	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {

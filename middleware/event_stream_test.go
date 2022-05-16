@@ -29,7 +29,7 @@ func (f *fakeEvent) ToEvent() interface{} {
 
 func TestRaiseEvent(t *testing.T) {
 	s := mocks.MockSender{}
-	service.Producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
@@ -57,7 +57,7 @@ func TestRaiseEvent(t *testing.T) {
 
 func TestRaiseEventWithHeaders(t *testing.T) {
 	s := mocks.MockSender{}
-	service.Producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
 		"x-rh-sources-psk": "1234",
 		"x-rh-identity":    "asdfasdf",
@@ -99,7 +99,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 
 func TestRaiseEventBody(t *testing.T) {
 	s := mocks.MockSender{}
-	service.Producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
@@ -131,7 +131,7 @@ func TestRaiseEventBody(t *testing.T) {
 
 func TestNoRaiseEvent(t *testing.T) {
 	s := mocks.MockSender{}
-	service.Producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {
@@ -157,7 +157,7 @@ func TestNoRaiseEvent(t *testing.T) {
 
 func TestSkipOnContext(t *testing.T) {
 	s := mocks.MockSender{}
-	service.Producer = events.EventStreamProducer{Sender: &s}
+	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.EmptyTestContext()
 
 	f := raiseMiddleware(func(c echo.Context) error {

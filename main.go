@@ -18,8 +18,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	_ "net/http/pprof"
 )
 
 var conf = config.Get()
@@ -105,10 +103,6 @@ func runServer(shutdown chan struct{}) {
 		if err := e.Start(":8000"); err != nil && err != http.ErrServerClosed {
 			e.Logger.Warn(err)
 		}
-	}()
-
-	go func() {
-		e.Logger.Fatal(http.ListenAndServe("localhost:6060", nil))
 	}()
 
 	// wait for the shutdown signal to come

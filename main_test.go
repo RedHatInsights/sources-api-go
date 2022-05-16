@@ -53,7 +53,7 @@ func TestMain(t *testing.M) {
 
 		dao.Vault = &mocks.MockVault{}
 
-		service.Producer = events.EventStreamProducer{Sender: &mocks.MockSender{}}
+		service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &mocks.MockSender{}} }
 
 		database.CreateFixtures()
 		err := dao.PopulateStaticTypeCache()
