@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
-	"github.com/RedHatInsights/sources-api-go/middleware/fields"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -30,8 +30,8 @@ import (
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		switch {
-		case c.Get(fields.ACCOUNT_NUMBER) != nil:
-			accountNumber, ok := c.Get(fields.ACCOUNT_NUMBER).(string)
+		case c.Get(h.ACCOUNT_NUMBER) != nil:
+			accountNumber, ok := c.Get(h.ACCOUNT_NUMBER).(string)
 			if !ok {
 				return fmt.Errorf("failed to cast account-number to string")
 			}
@@ -52,11 +52,11 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set(fields.PARSED_IDENTITY, id)
-			c.Set(fields.TENANTID, tenantId)
+			c.Set(h.PARSED_IDENTITY, id)
+			c.Set(h.TENANTID, tenantId)
 
-		case c.Get(fields.ORGID) != nil:
-			orgId, ok := c.Get(fields.ORGID).(string)
+		case c.Get(h.ORGID) != nil:
+			orgId, ok := c.Get(h.ORGID).(string)
 			if !ok {
 				return errors.New("failed to cast orgId to string")
 			}
@@ -77,11 +77,11 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set(fields.PARSED_IDENTITY, id)
-			c.Set(fields.TENANTID, tenantId)
+			c.Set(h.PARSED_IDENTITY, id)
+			c.Set(h.TENANTID, tenantId)
 
-		case c.Get(fields.PARSED_IDENTITY) != nil:
-			identity, ok := c.Get(fields.PARSED_IDENTITY).(*identity.XRHID)
+		case c.Get(h.PARSED_IDENTITY) != nil:
+			identity, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
 			if !ok {
 				return fmt.Errorf("invalid identity structure received")
 			}
@@ -106,7 +106,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to get or create tenant for request: %s", err)
 			}
 
-			c.Set(fields.TENANTID, tenantId)
+			c.Set(h.TENANTID, tenantId)
 
 		default:
 			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))

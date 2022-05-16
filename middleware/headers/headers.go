@@ -1,4 +1,4 @@
-package fields
+package headers
 
 const (
 	PSK             = "x-rh-sources-psk"

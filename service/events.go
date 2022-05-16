@@ -6,7 +6,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/kafka"
-	"github.com/RedHatInsights/sources-api-go/middleware/fields"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -41,24 +41,24 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 	var ok bool
 
 	// pulling the specified account if it exists
-	if c.Get(fields.ACCOUNT_NUMBER) != nil {
-		account, ok = c.Get(fields.ACCOUNT_NUMBER).(string)
+	if c.Get(h.ACCOUNT_NUMBER) != nil {
+		account, ok = c.Get(h.ACCOUNT_NUMBER).(string)
 		if !ok {
 			return nil, fmt.Errorf("failed to cast psk-account to string")
 		}
 	}
 
 	// pulling the specified orgId if it exists
-	if c.Get(fields.ORGID) != nil {
-		orgId, ok = c.Get(fields.ORGID).(string)
+	if c.Get(h.ORGID) != nil {
+		orgId, ok = c.Get(h.ORGID).(string)
 		if !ok {
 			return nil, fmt.Errorf("failed to cast psk-account to string")
 		}
 	}
 
 	// pull the xrhid OR generate one using the information from the PSK information.
-	if c.Get(fields.XRHID) != nil {
-		rhid, ok := c.Get(fields.XRHID).(string)
+	if c.Get(h.XRHID) != nil {
+		rhid, ok := c.Get(h.XRHID).(string)
 		if ok {
 			// set the xrhid to be passed on
 			xrhid = rhid
@@ -83,13 +83,13 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 
 	// need to check org_id + account since one or the other might not be there.
 	if account != "" {
-		headers = append(headers, kafka.Header{Key: fields.ACCOUNT_NUMBER, Value: []byte(account)})
+		headers = append(headers, kafka.Header{Key: h.ACCOUNT_NUMBER, Value: []byte(account)})
 	}
 	if orgId != "" {
-		headers = append(headers, kafka.Header{Key: fields.ORGID, Value: []byte(orgId)})
+		headers = append(headers, kafka.Header{Key: h.ORGID, Value: []byte(orgId)})
 	}
 
-	headers = append(headers, kafka.Header{Key: fields.XRHID, Value: []byte(xrhid)})
+	headers = append(headers, kafka.Header{Key: h.XRHID, Value: []byte(xrhid)})
 
 	return headers, nil
 }

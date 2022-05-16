@@ -7,7 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
-	"github.com/RedHatInsights/sources-api-go/middleware/fields"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -23,7 +23,7 @@ import (
 */
 func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tenantId, ok := c.Get(fields.TENANTID).(int64)
+		tenantId, ok := c.Get(h.TENANTID).(int64)
 		if !ok {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
@@ -36,7 +36,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 		s := dao.GetSourceDao(&tenantId)
 
 		if s.IsSuperkey(id) {
-			xrhid, ok := c.Get(fields.XRHID).(string)
+			xrhid, ok := c.Get(h.XRHID).(string)
 			if !ok {
 				return fmt.Errorf("failed to pull x-rh-identity from request")
 			}
@@ -63,7 +63,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 
 func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tenantId, ok := c.Get(fields.TENANTID).(int64)
+		tenantId, ok := c.Get(h.TENANTID).(int64)
 		if !ok {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
@@ -76,7 +76,7 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 		a := dao.GetApplicationDao(&tenantId)
 
 		if a.IsSuperkey(id) {
-			xrhid, ok := c.Get(fields.XRHID).(string)
+			xrhid, ok := c.Get(h.XRHID).(string)
 			if !ok {
 				return fmt.Errorf("failed to pull x-rh-identity from request")
 			}

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
-	"github.com/RedHatInsights/sources-api-go/middleware/fields"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -54,7 +54,7 @@ func TestGoodPSK(t *testing.T) {
 		http.MethodPost,
 		"/",
 		nil,
-		map[string]interface{}{fields.PSK: "1234"},
+		map[string]interface{}{h.PSK: "1234"},
 	)
 
 	err := permCheckOrElse204(c)
@@ -73,7 +73,7 @@ func TestBadPSK(t *testing.T) {
 		http.MethodPost,
 		"/",
 		nil,
-		map[string]interface{}{fields.PSK: "1234"},
+		map[string]interface{}{h.PSK: "1234"},
 	)
 
 	err := permCheckOrElse204(c)
