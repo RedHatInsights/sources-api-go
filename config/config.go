@@ -92,17 +92,13 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
 
 		unleashUrl := ""
-		if os.Getenv("UNLEASH_URL") != "" {
-			unleashUrl = os.Getenv("UNLEASH_URL")
-		} else if cfg.FeatureFlags.Hostname != "" {
+		if cfg.FeatureFlags.Hostname != "" {
 			unleashUrl = fmt.Sprintf("%s://%s:%d/api", cfg.FeatureFlags.Scheme, cfg.FeatureFlags.Hostname, cfg.FeatureFlags.Port)
 		}
 		options.SetDefault("FeatureFlagsUrl", unleashUrl)
 
 		clientAccessToken := ""
-		if os.Getenv("UNLEASH_TOKEN") != "" {
-			clientAccessToken = os.Getenv("UNLEASH_TOKEN")
-		} else if cfg.FeatureFlags.ClientAccessToken != nil {
+		if cfg.FeatureFlags.ClientAccessToken != nil {
 			clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 		}
 		options.SetDefault("FeatureFlagsBearerToken", clientAccessToken)
