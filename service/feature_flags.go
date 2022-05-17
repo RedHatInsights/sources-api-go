@@ -57,7 +57,7 @@ func init() {
 
 		authorizationHeader := ""
 		if conf.FeatureFlagsBearerToken != "" {
-			authorizationHeader = fmt.Sprintf("Bearer %s", conf.FeatureFlagsAPIToken)
+			authorizationHeader = fmt.Sprintf("Bearer %s", conf.FeatureFlagsBearerToken)
 		} else {
 			authorizationHeader = conf.FeatureFlagsAPIToken
 		}
