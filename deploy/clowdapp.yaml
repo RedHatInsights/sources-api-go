@@ -142,13 +142,6 @@ objects:
               optional: true
         - name: FEATURE_FLAGS_SERVICE
           value: ${FEATURE_FLAGS_SERVICE}
-        - name: UNLEASH_URL
-          value: ${UNLEASH_URL}
-        - name: UNLEASH_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: ${UNLEASH_SECRET_NAME}
-              key: CLIENT_ACCESS_TOKEN
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -333,10 +326,4 @@ parameters:
 - description: Specify name of service for Feature Flags
   name: FEATURE_FLAGS_SERVICE
   value: 'unleash'
-- description: Unleash API url
-  name: UNLEASH_URL
-  value: ''
-- description: Unleash secret name
-  name: UNLEASH_SECRET_NAME
-  value: unleash-ephemeral
 
