@@ -94,7 +94,7 @@ func Get() *SourcesApiConfig {
 		unleashUrl := ""
 		if os.Getenv("UNLEASH_URL") != "" {
 			unleashUrl = os.Getenv("UNLEASH_URL")
-		} else if cfg.FeatureFlags.ClientAccessToken != nil {
+		} else if cfg.FeatureFlags.Hostname != "" {
 			unleashUrl = fmt.Sprintf("%s://%s:%d/api", cfg.FeatureFlags.Scheme, cfg.FeatureFlags.Hostname, cfg.FeatureFlags.Port)
 		}
 		options.SetDefault("FeatureFlagsUrl", unleashUrl)
