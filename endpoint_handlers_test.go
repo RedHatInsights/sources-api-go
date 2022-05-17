@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -566,23 +567,76 @@ func TestEndpointEditBadRequest(t *testing.T) {
 }
 
 func TestEndpointDelete(t *testing.T) {
-	endpoint := "300"
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	// EndpointDelete() uses cascade delete - deleted is not only
+	// endpoint itself but related authentications too.
+	// This test creates own test data to not affect other tests.
+
+	// Create a source
+	tenantID := fixtures.TestTenantData[0].Id
+	sourceDao := dao.GetSourceDao(&tenantID)
+
+	src := m.Source{
+		Name:         "Source for TestApplicationDelete()",
+		SourceTypeID: 1,
+	}
+
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create an endpoint
+	endpointDao := dao.GetEndpointDao(&tenantID)
+
+	role := "new role"
+	endpoint := m.Endpoint{
+		SourceID: src.ID,
+		TenantID: tenantID,
+		Role:     &role,
+	}
+
+	err = endpointDao.Create(&endpoint)
+	if err != nil {
+		t.Errorf("endpoint not created correctly: %s", err)
+	}
+
+	// Create an authentication for endpoint
+	authenticationDao := dao.GetAuthenticationDao(&tenantID)
+
+	authName3 := "authentication for endpoint"
+	auth := m.Authentication{
+		Name:         &authName3,
+		ResourceType: "Endpoint",
+		ResourceID:   endpoint.ID,
+		TenantID:     tenantID,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for endpoint not created correctly: %s", err)
+	}
+
+	// Create test context and call the ApplicationDelete()
+	id := fmt.Sprintf("%d", endpoint.ID)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
-		fmt.Sprintf("/api/sources/v3.1/endpoints/%s", endpoint),
+		fmt.Sprintf("/api/sources/v3.1/endpoints/%s", id),
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantID,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues(endpoint)
+	c.SetParamValues(id)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := EndpointDelete(c)
+	err = EndpointDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -591,26 +645,23 @@ func TestEndpointDelete(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
 	}
 
-	// Check that endpoint doesn't exist.
-	c, rec = request.CreateTestContext(
-		http.MethodGet,
-		fmt.Sprintf("/api/sources/v3.1/endpoints/%s", endpoint),
-		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
-	)
-
-	c.SetParamNames("id")
-	c.SetParamValues(endpoint)
-
-	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
-	err = notFoundEndpointGet(c)
-	if err != nil {
-		t.Error(err)
+	// Check that endpoint doesn't exist
+	_, err = endpointDao.GetById(&endpoint.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'endpoint not found', got %s", err)
 	}
 
-	templates.NotFoundTest(t, rec)
+	// Check that authentication doesn't exist
+	_, err = authenticationDao.GetById(auth.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'authentication not found', got %s", err)
+	}
+
+	// Clean up - delete created source
+	_, err = sourceDao.Delete(&src.ID)
+	if err != nil {
+		t.Errorf("source not deleted correctly: %s", err)
+	}
 }
 
 func TestEndpointDeleteBadRequest(t *testing.T) {
