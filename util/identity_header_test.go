@@ -9,7 +9,7 @@ import (
 )
 
 func TestCreateIdentityHeader(t *testing.T) {
-	out := XRhIdentityWithAccountNumber("1234")
+	out := GeneratedXRhIdentity("1234", "2345")
 
 	bytes, err := base64.StdEncoding.DecodeString(out)
 	if err != nil {
@@ -23,6 +23,10 @@ func TestCreateIdentityHeader(t *testing.T) {
 	}
 
 	if identity.Identity.AccountNumber != "1234" {
-		t.Errorf("did not marshal correctly, got %v wanted %v", identity.Identity.AccountNumber, "1234")
+		t.Errorf("did not marshal account correctly, got %v wanted %v", identity.Identity.AccountNumber, "1234")
+	}
+
+	if identity.Identity.OrgID != "2345" {
+		t.Errorf("did not marshal org_id correctly, got %v wanted %v", identity.Identity.OrgID, "2345")
 	}
 }

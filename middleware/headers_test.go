@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -23,10 +24,10 @@ func TestParseAll(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set("x-rh-identity", xrhid)
-	c.Request().Header.Set("x-rh-sources-psk", "1234")
-	c.Request().Header.Set("x-rh-sources-account-number", "1a2b3c4d5e")
-	c.Request().Header.Set("x-rh-sources-org-id", "abcde")
+	c.Request().Header.Set(h.XRHID, xrhid)
+	c.Request().Header.Set(h.PSK, "1234")
+	c.Request().Header.Set(h.ACCOUNT_NUMBER, "1a2b3c4d5e")
+	c.Request().Header.Set(h.ORGID, "abcde")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -37,19 +38,19 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was returned instead of %v", rec.Code, 204)
 	}
 
-	if c.Get("psk").(string) != "1234" {
-		t.Errorf("%v was set as psk instead of %v", c.Get("psk").(string), "1234")
+	if c.Get(h.PSK).(string) != "1234" {
+		t.Errorf("%v was set as psk instead of %v", c.Get(h.PSK).(string), "1234")
 	}
 
-	if c.Get("psk-account").(string) != "1a2b3c4d5e" {
-		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
+	if c.Get(h.ACCOUNT_NUMBER).(string) != "1a2b3c4d5e" {
+		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
 	}
 
-	if c.Get("psk-org-id").(string) != "abcde" {
-		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get("x-rh-sources-org-id").(string))
+	if c.Get(h.ORGID).(string) != "abcde" {
+		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.ORGID).(string))
 	}
 
-	id, ok := c.Get("identity").(*identity.XRHID)
+	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
 	if !ok {
 		t.Errorf(`unexpected type of identity received. Want "*identity.XRHID", got "%s"`, reflect.TypeOf(c.Get("identity")))
 	}
@@ -67,7 +68,7 @@ func TestParseAccountNumber(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set("x-rh-sources-account-number", "9876")
+	c.Request().Header.Set(h.ACCOUNT_NUMBER, "9876")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -78,8 +79,8 @@ func TestParseAccountNumber(t *testing.T) {
 		t.Errorf("%v was returned instead of %v", rec.Code, 204)
 	}
 
-	if c.Get("psk-account").(string) != "9876" {
-		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
+	if c.Get(h.ACCOUNT_NUMBER).(string) != "9876" {
+		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
 	}
 }
 
@@ -91,7 +92,7 @@ func TestBadIdentityBase64(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set("x-rh-identity", "not valid base64")
+	c.Request().Header.Set(h.XRHID, "not valid base64")
 
 	err := parseOrElse204(c)
 	if err == nil {
@@ -117,7 +118,7 @@ func TestBadIdentityJson(t *testing.T) {
 	)
 
 	// base64 for: {"not a real field": true}
-	c.Request().Header.Set("x-rh-identity", "eyJub3QgYSByZWFsIGZpZWxkIjogdHJ1ZX0gLW4K")
+	c.Request().Header.Set(h.XRHID, "eyJub3QgYSByZWFsIGZpZWxkIjogdHJ1ZX0gLW4K")
 
 	err := parseOrElse204(c)
 	if err == nil {
@@ -142,8 +143,8 @@ func TestOnlyPskHeaders(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set("x-rh-sources-psk", "1234")
-	c.Request().Header.Set("x-rh-sources-account-number", "9876")
+	c.Request().Header.Set(h.PSK, "1234")
+	c.Request().Header.Set(h.ACCOUNT_NUMBER, "9876")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -154,11 +155,11 @@ func TestOnlyPskHeaders(t *testing.T) {
 		t.Errorf("%v was returned instead of %v", rec.Code, 204)
 	}
 
-	if c.Get("psk").(string) != "1234" {
+	if c.Get(h.PSK).(string) != "1234" {
 		t.Errorf("%v was set as psk instead of %v", c.Get("psk").(string), "1234")
 	}
 
-	if c.Get("psk-account").(string) != "9876" {
-		t.Errorf("%v was set as psk-account instead of %v", c.Get("psk-account").(string), "9876")
+	if c.Get(h.ACCOUNT_NUMBER).(string) != "9876" {
+		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
 	}
 }

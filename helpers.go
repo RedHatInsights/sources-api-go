@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -82,7 +83,7 @@ func setEventStreamResource(c echo.Context, model m.Event) {
 // getTenantFromEchoContext tries to extract the tenant from the echo context. If the "tenantID" is missing from the
 // context, then a default value and nil are returned as the int64 and error values.
 func getTenantFromEchoContext(c echo.Context) (int64, error) {
-	tenantValue := c.Get("tenantID")
+	tenantValue := c.Get(h.TENANTID)
 
 	// If no tenant is found in the context, that shouldn't imply an error.
 	if tenantValue == nil {
@@ -102,7 +103,7 @@ func getTenantFromEchoContext(c echo.Context) (int64, error) {
 }
 
 func getAccountNumberFromEchoContext(c echo.Context) (string, error) {
-	id, ok := c.Get("identity").(*identity.XRHID)
+	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
 	if !ok {
 		return "", fmt.Errorf("failed to pull identity from context")
 	}

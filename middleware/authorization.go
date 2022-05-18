@@ -9,6 +9,7 @@ import (
 
 	"github.com/RedHatInsights/rbac-client-go"
 	"github.com/RedHatInsights/sources-api-go/config"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -35,21 +36,21 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 		switch {
 		case bypassRbac:
 			c.Logger().Debugf("Skipping authorization check -- disabled in ENV")
-		case c.Get("psk") != nil:
-			psk, ok := c.Get("psk").(string)
+		case c.Get(h.PSK) != nil:
+			psk, ok := c.Get(h.PSK).(string)
 			if !ok {
-				return fmt.Errorf("error casting psk to string: %v", c.Get("psk"))
+				return fmt.Errorf("error casting psk to string: %v", c.Get(h.PSK))
 			}
 
 			if !pskMatches(psk) {
 				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
 			}
 
-		case c.Get("x-rh-identity") != nil:
+		case c.Get(h.XRHID) != nil:
 			// first check the identity (already parsed) to see if it contains
 			// the system key and if it does do some extra checks to authorize
 			// based on some internal rules (operator + satellite)
-			identity, ok := c.Get("identity").(*identity.XRHID)
+			identity, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
 			if !ok {
 				return fmt.Errorf("error casting identity to struct: %+v", c.Get("identity"))
 			}
@@ -80,7 +81,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			// otherwise, ship the xrhid off to rbac and check access rights.
-			rhid, ok := c.Get("x-rh-identity").(string)
+			rhid, ok := c.Get(h.XRHID).(string)
 			if !ok {
 				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get("x-rh-identity"))
 			}

@@ -60,7 +60,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
 		"x-rh-sources-psk": "1234",
-		"x-rh-identity":    "asdfasdf",
+		"x-rh-identity":    util.GeneratedXRhIdentity("1234", "1234"),
 	})
 
 	f := raiseMiddleware(func(c echo.Context) error {
@@ -85,11 +85,11 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 		t.Errorf("Wrong number of Hits to raise event, got %v expected %v", s.Hit, 1)
 	}
 
-	if len(s.Headers) != 3 {
+	if len(s.Headers) != 4 {
 		t.Errorf("Headers not set properly from RaiseEvent")
 	}
 
-	expected := []string{"event_type", "x-rh-identity", "x-rh-sources-account-number"}
+	expected := []string{"event_type", "x-rh-identity", "x-rh-sources-account-number", "x-rh-sources-org-id"}
 	for _, h := range s.Headers {
 		if !util.SliceContainsString(expected, h.Key) {
 			t.Errorf("Got bad header: [%v: %v]", h.Key, h.Value)

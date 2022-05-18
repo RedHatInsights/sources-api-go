@@ -21,8 +21,8 @@ import (
 var (
 	// the graphql handler server - initialized in the init() function below
 	srv *handler.Server
-	// the wrapped handler function for graphql
-	h echo.HandlerFunc
+	// the wrapped wrapper function for graphql
+	wrapper echo.HandlerFunc
 
 	// this is the uri to hit "old" sources api, initialized in the init() function
 	legacyUri string
@@ -38,7 +38,7 @@ func init() {
 		srv.Use(extension.Introspection{})
 	}
 
-	h = echo.WrapHandler(srv)
+	wrapper = echo.WrapHandler(srv)
 
 	// set the default host/port to what we'll see in k8s environments. Override
 	// this by setting these values locally
@@ -90,7 +90,7 @@ func GraphQLQuery(c echo.Context) error {
 		)),
 	)
 
-	return h(c)
+	return wrapper(c)
 }
 
 // this handler proxies the graphql request body + headers included over to the

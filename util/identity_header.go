@@ -7,9 +7,13 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-// XRhIdentityWithAccountNumber returns a base64 encoded header to use as x-rh-identity when one is not provided
-func XRhIdentityWithAccountNumber(account string) string {
-	bytes, err := json.Marshal(identity.XRHID{Identity: identity.Identity{AccountNumber: account}})
+// GeneratedXRhIdentity returns a base64 encoded header to use as x-rh-identity when one is not provided
+func GeneratedXRhIdentity(account, orgId string) string {
+	id := identity.XRHID{Identity: identity.Identity{
+		AccountNumber: account,
+		OrgID:         orgId},
+	}
+	bytes, err := json.Marshal(id)
 	if err != nil {
 		return ""
 	}
