@@ -4,9 +4,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
-	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
-	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -112,7 +110,8 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		return
 	}
 
-	headers := generateHeaders(app.Tenant.ExternalTenant, app.Tenant.OrgID)
+	// generate the forwardable headers from what we have in the tenant table
+	headers := app.Tenant.GetHeadersWithGeneratedXRHID()
 
 	// raise ALL THE EVENTS...AGAIN!
 	err = service.RaiseEvent("Source.create", &app.Source, headers)
@@ -134,13 +133,5 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		if err != nil {
 			l.Log.Warnf("Failed to raise ApplicationAuthentication.create event for appAuth %v: %v", app.ApplicationAuthentications[i].ID, err)
 		}
-	}
-}
-
-func generateHeaders(account, orgID string) []kafka.Header {
-	return []kafka.Header{
-		{Key: h.ACCOUNT_NUMBER, Value: []byte(account)},
-		{Key: h.ORGID, Value: []byte(orgID)},
-		{Key: h.XRHID, Value: []byte(util.GeneratedXRhIdentity(account, orgID))},
 	}
 }
