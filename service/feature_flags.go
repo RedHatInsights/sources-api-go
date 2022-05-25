@@ -19,6 +19,10 @@ var conf = config.Get()
 
 var ready = false
 
+func featureFlagsConfigPresent() bool {
+	return conf.FeatureFlagsUrl != ""
+}
+
 func featureFlagsServiceUnleash() bool {
 	return conf.FeatureFlagsService == "unleash"
 }
@@ -48,7 +52,7 @@ func (l FeatureFlagListener) OnRegistered(_ unleash.ClientData) {
 }
 
 func init() {
-	if featureFlagsServiceUnleash() {
+	if featureFlagsServiceUnleash() && featureFlagsConfigPresent() {
 		logging.InitLogger(conf)
 
 		if conf.FeatureFlagsAPIToken == "" {
@@ -80,6 +84,10 @@ func init() {
 
 func FeatureEnabled(feature string) bool {
 	if !featureFlagsServiceUnleash() {
+		return false
+	}
+
+	if !featureFlagsConfigPresent() {
 		return false
 	}
 
