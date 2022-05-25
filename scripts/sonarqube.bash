@@ -76,7 +76,11 @@ export SONAR_SCANNER_OPTS="-Djavax.net.ssl.trustStore=$rh_it_keystore_file -Djav
 # The Jenkins pipeline inject the pull request ID with the lowercase variable,
 # so the shellcheck rule must be disabled to avoid any issues.
 # shellcheck disable=SC2154
+#
+# Also, we need to tell the scanner to ignore the SQL files to avoid any warnings, since the Sonar Scanner only
+# supports "T-SQL" and "PL/SQL", and not the PostgresSQL dialect.
 sonar-scanner \
+  -Dsonar.exclusions="**/*.sql" \
   -Dsonar.host.url="$SONARQUBE_REPORT_URL" \
   -Dsonar.login="$SONARQUBE_TOKEN" \
   -Dsonar.projectKey=console.redhat.com:sources-api-go \
