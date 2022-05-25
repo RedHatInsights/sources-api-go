@@ -54,7 +54,7 @@ else
   readonly sonar_scanner_os="linux"
 fi
 
-readonly sonar_scanner_cli_version="4.6.2.2472"
+readonly sonar_scanner_cli_version="4.7.0.2747"
 readonly sonar_scanner_name="sonar-scanner-$sonar_scanner_cli_version-$sonar_scanner_os"
 readonly sonar_scanner_zipped_file="$sonarqube_download_dir/$sonar_scanner_name.zip"
 
