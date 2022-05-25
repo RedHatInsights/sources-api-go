@@ -87,21 +87,23 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("CachePort", cfg.InMemoryDb.Port)
 		options.SetDefault("CachePassword", cfg.InMemoryDb.Password)
 
-		options.SetDefault("FeatureFlagsHost", cfg.FeatureFlags.Hostname)
-		options.SetDefault("FeatureFlagsPort", cfg.FeatureFlags.Port)
-		options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
+		if cfg.FeatureFlags != nil {
+			options.SetDefault("FeatureFlagsHost", cfg.FeatureFlags.Hostname)
+			options.SetDefault("FeatureFlagsPort", cfg.FeatureFlags.Port)
+			options.SetDefault("FeatureFlagsSchema", string(cfg.FeatureFlags.Scheme))
 
-		unleashUrl := ""
-		if cfg.FeatureFlags.Hostname != "" {
-			unleashUrl = fmt.Sprintf("%s://%s:%d/api", cfg.FeatureFlags.Scheme, cfg.FeatureFlags.Hostname, cfg.FeatureFlags.Port)
-		}
-		options.SetDefault("FeatureFlagsUrl", unleashUrl)
+			unleashUrl := ""
+			if cfg.FeatureFlags.Hostname != "" {
+				unleashUrl = fmt.Sprintf("%s://%s:%d/api", cfg.FeatureFlags.Scheme, cfg.FeatureFlags.Hostname, cfg.FeatureFlags.Port)
+			}
+			options.SetDefault("FeatureFlagsUrl", unleashUrl)
 
-		clientAccessToken := ""
-		if cfg.FeatureFlags.ClientAccessToken != nil {
-			clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
+			clientAccessToken := ""
+			if cfg.FeatureFlags.ClientAccessToken != nil {
+				clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
+			}
+			options.SetDefault("FeatureFlagsBearerToken", clientAccessToken)
 		}
-		options.SetDefault("FeatureFlagsBearerToken", clientAccessToken)
 	} else {
 		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
