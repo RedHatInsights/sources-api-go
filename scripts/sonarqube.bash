@@ -58,7 +58,7 @@ readonly sonar_scanner_cli_version="4.7.0.2747"
 readonly sonar_scanner_name="sonar-scanner-$sonar_scanner_cli_version-$sonar_scanner_os"
 readonly sonar_scanner_zipped_file="$sonarqube_download_dir/$sonar_scanner_name.zip"
 
-curl --output "$sonar_scanner_zipped_file" --insecure "$SONARQUBE_CLI_URL"
+curl --output "$sonar_scanner_zipped_file" "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip"
 unzip -d "$sonarqube_extract_dir" "$sonar_scanner_zipped_file"
 
 #
