@@ -131,6 +131,8 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant) ([]m.Source
 			}
 
 			source.SourceTypeIDRaw = sourceType.Id
+		default:
+			return nil, fmt.Errorf("no source type present, need either [source_type_name] or [source_type_id]")
 		}
 
 		// set up the source type + id for validation
