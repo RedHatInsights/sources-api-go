@@ -1,0 +1,116 @@
+version: '3'
+
+services:
+  sources-api-db-setup:
+    container_name: sources-api-db-setup
+    image: sources-api
+    build:
+      context: .
+    entrypoint: /sources-api-go -setup
+    environment:
+      # db:
+      - DATABASE_HOST=sources-db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+
+      - ENCRYPTION_KEY=YWFhYWFhYWFhYWFhYWFhYQ
+    depends_on:
+      - sources-db
+
+  sources:
+    container_name: sources-api-server
+    image: sources-api
+    build:
+      context: .
+    environment:
+      # db:
+      - DATABASE_HOST=sources-db
+      - DATABASE_PORT=5432
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=postgres
+      # redis:
+      - REDIS_CACHE_HOST=sources-redis
+      - REDIS_CACHE_PORT=6379
+      # kafka:
+      - QUEUE_HOST=sources-kafka
+      - QUEUE_PORT=29092
+
+      - SOURCES_PSKS=thisMustBeEphemeralOrMinikube
+      - BYPASS_RBAC=true
+      - ENCRYPTION_KEY=YWFhYWFhYWFhYWFhYWFhYQ
+    ports:
+      - 3000:8000
+      - 9394:9394
+    depends_on:
+      - sources-db
+      - sources-redis
+      - sources-kafka
+
+  sources-db:
+    container_name: sources-db
+    image: postgres:14
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    privileged: true
+    ports:
+      - 15434:5432
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - log_statement=all
+
+  sources-zookeeper:
+    container_name: sources-zookeeper
+    image: confluentinc/cp-zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=32181
+      - ZOOKEEPER_SERVER_ID=1
+
+  sources-kafka:
+    container_name: sources-kafka
+    image: confluentinc/cp-kafka
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=DOCKER://sources-kafka:29092,LOCALHOST://localhost:9092
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=DOCKER:PLAINTEXT,LOCALHOST:PLAINTEXT
+      - KAFKA_INTER_BROKER_LISTENER_NAME=DOCKER
+      - KAFKA_BROKER_ID=1
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_ZOOKEEPER_CONNECT=sources-zookeeper:32181
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    ports:
+      - 9092:9092
+      - 29092:29092
+    depends_on:
+      - sources-zookeeper
+
+  init-kafka:
+    image: confluentinc/cp-kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server sources-kafka:29092 --list
+
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server sources-kafka:29092 --create --if-not-exists --topic platform.sources.event-stream --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server sources-kafka:29092 --create --if-not-exists --topic platform.sources.status --replication-factor 1 --partitions 1
+
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server sources-kafka:29092 --list
+      "
+    depends_on:
+      - sources-kafka
+
+  sources-redis:
+    container_name: sources-redis
+    image: redis:5.0.4
+    ports:
+      - 6378:6379
+
+networks:
+  default:
+    name: ${DOCKER_NETWORK_NAME-sources-api_default}
