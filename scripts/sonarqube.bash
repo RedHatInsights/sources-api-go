@@ -54,11 +54,11 @@ else
   readonly sonar_scanner_os="linux"
 fi
 
-readonly sonar_scanner_cli_version="4.6.2.2472"
+readonly sonar_scanner_cli_version="4.7.0.2747"
 readonly sonar_scanner_name="sonar-scanner-$sonar_scanner_cli_version-$sonar_scanner_os"
 readonly sonar_scanner_zipped_file="$sonarqube_download_dir/$sonar_scanner_name.zip"
 
-curl --output "$sonar_scanner_zipped_file" --insecure "$SONARQUBE_CLI_URL"
+curl --output "$sonar_scanner_zipped_file" "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip"
 unzip -d "$sonarqube_extract_dir" "$sonar_scanner_zipped_file"
 
 #
@@ -76,7 +76,11 @@ export SONAR_SCANNER_OPTS="-Djavax.net.ssl.trustStore=$rh_it_keystore_file -Djav
 # The Jenkins pipeline inject the pull request ID with the lowercase variable,
 # so the shellcheck rule must be disabled to avoid any issues.
 # shellcheck disable=SC2154
+#
+# Also, we need to tell the scanner to ignore the SQL files to avoid any warnings, since the Sonar Scanner only
+# supports "T-SQL" and "PL/SQL", and not the PostgresSQL dialect.
 sonar-scanner \
+  -Dsonar.exclusions="**/*.sql" \
   -Dsonar.host.url="$SONARQUBE_REPORT_URL" \
   -Dsonar.login="$SONARQUBE_TOKEN" \
   -Dsonar.projectKey=console.redhat.com:sources-api-go \
