@@ -32,6 +32,15 @@ var Log *logrus.Logger
 
 var cloudWatchHook *lc.Hook
 
+// GetCloudWatchHook is an overrideable function which returns a CloudWatch Hook. The idea is to abstract away how the
+// hook is grabbed, for easier testing in the future.
+var GetCloudWatchHook func(config *appconf.SourcesApiConfig) *lc.Hook
+
+// init sets the default function which provides a ClowdWatch Hook.
+func init() {
+	GetCloudWatchHook = singleCloudWatchLogrusHook
+}
+
 func singleCloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
 	if cloudWatchHook == nil {
 		cloudWatchHook = cloudWatchLogrusHook(config)
@@ -41,7 +50,7 @@ func singleCloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
 }
 
 func AddHooksTo(logger *logrus.Logger, config *appconf.SourcesApiConfig) {
-	hook := singleCloudWatchLogrusHook(config)
+	hook := GetCloudWatchHook(config)
 	if hook == nil {
 		Log.Warn("Key or Secret are missing for logging to Cloud Watch.")
 	} else {
