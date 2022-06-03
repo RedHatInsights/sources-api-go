@@ -213,6 +213,7 @@ func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribute
 		return nil, fmt.Errorf("source not found %v", resource)
 	}
 
+	s.TenantID = &resource.TenantID
 	source, err := s.GetById(&resource.ResourceID)
 	if err != nil {
 		return nil, err
