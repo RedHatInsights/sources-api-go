@@ -2,11 +2,11 @@ version: '3'
 
 services:
   sources-api-db-setup:
-    container_name: sources-api-db-setup
-    image: sources-api
-    build:
-      context: .
-    entrypoint: /sources-api-go -setup
+    image: golang:1.17
+    entrypoint: "bash"
+    command:
+      - -c
+      - "go build && ./sources-api-go -setup"
     environment:
       # db:
       - DATABASE_HOST=sources-db
@@ -15,6 +15,9 @@ services:
       - DATABASE_PASSWORD=postgres
 
       - ENCRYPTION_KEY=YWFhYWFhYWFhYWFhYWFhYQ
+    working_dir: /work
+    volumes:
+      - ./:/work
     depends_on:
       - sources-db
 
