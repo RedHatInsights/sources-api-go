@@ -31,14 +31,24 @@ type applicationDaoImpl struct {
 	TenantID *int64
 }
 
+func (a applicationDaoImpl) getDb() *gorm.DB {
+	if a.TenantID == nil {
+		panic("nil tenant found in application db DAO")
+	}
+
+	return DB.Debug().
+		Model(&m.Application{}).
+		Where("tenant_id = ?", a.TenantID)
+}
+
 func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
-	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, a.getDb())
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
 
-	query := relationObject.HasMany(&m.Application{}, DB.Debug())
+	query := relationObject.HasMany(&m.Application{}, a.getDb())
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
@@ -57,9 +67,7 @@ func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 
 func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
-	query := DB.Debug().
-		Model(&m.Application{}).
-		Where("applications.tenant_id = ?", a.TenantID)
+	query := a.getDb().Where("applications.tenant_id = ?", a.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -81,7 +89,7 @@ func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 
 func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
-	result := DB.Debug().First(&app)
+	result := a.getDb().First(&app)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("application")
 	}
@@ -92,7 +100,7 @@ func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 // Function that searches for an application and preloads any specified relations
 func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
 	app := &m.Application{ID: *id}
-	q := DB.Where("tenant_id = ?", a.TenantID)
+	q := a.getDb()
 
 	for _, preload := range preloads {
 		q = q.Preload(preload)
@@ -114,18 +122,16 @@ func (a *applicationDaoImpl) Create(app *m.Application) error {
 }
 
 func (a *applicationDaoImpl) Update(app *m.Application) error {
-	result := DB.Debug().Updates(app)
+	result := a.getDb().Updates(app)
 	return result.Error
 }
 
 func (a *applicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 	var application m.Application
 
-	result := DB.
-		Debug().
+	result := a.getDb().
 		Clauses(clause.Returning{}).
 		Where("id = ?", id).
-		Where("tenant_id = ?", a.TenantID).
 		Delete(&application)
 
 	if result.Error != nil {
@@ -146,7 +152,7 @@ func (a *applicationDaoImpl) Tenant() *int64 {
 func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 	var valid bool
 
-	result := DB.Model(&m.Application{}).
+	result := a.getDb().
 		Select(`"Source".app_creation_workflow = ?`, m.AccountAuth).
 		Where("applications.id = ?", id).
 		Where("applications.tenant_id = ?", a.TenantID).
@@ -162,7 +168,7 @@ func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 
 func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	application := &m.Application{ID: resource.ResourceID}
-	result := DB.Debug().Preload("Source").Find(&application)
+	result := a.getDb().Preload("Source").Find(&application)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -176,7 +182,7 @@ func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 }
 
 func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
-	result := DB.Debug().Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := a.getDb().Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("application not found %v", resource)
 	}
@@ -190,11 +196,9 @@ func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttr
 	return application, nil
 }
 
+// TODO: remove?
 func (a *applicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
-	app := &m.Application{ID: *id}
-	result := DB.Debug().Preload("Tenant").Find(&app)
-
-	return app, result.Error
+	return a.GetByIdWithPreload(id, "Tenant")
 }
 
 func (a *applicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
@@ -205,10 +209,8 @@ func (a *applicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
 func (a *applicationDaoImpl) Pause(id int64) error {
-	err := DB.Debug().
-		Model(&m.Application{}).
+	err := a.getDb().
 		Where("id = ?", id).
-		Where("tenant_id = ?", a.TenantID).
 		Update("paused_at", time.Now()).
 		Error
 
@@ -216,10 +218,8 @@ func (a *applicationDaoImpl) Pause(id int64) error {
 }
 
 func (a *applicationDaoImpl) Unpause(id int64) error {
-	err := DB.Debug().
-		Model(&m.Application{}).
+	err := a.getDb().
 		Where("id = ?", id).
-		Where("tenant_id = ?", a.TenantID).
 		Update("paused_at", nil).
 		Error
 
@@ -237,8 +237,7 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 	// The "len(objects) != 0" check to delete the resources is necessary to avoid Gorm issuing the "cannot batch
 	// delete without a where condition" error, since there might be times when the applications don't have any related
 	// application authentications.
-	err := DB.
-		Debug().
+	err := a.getDb().
 		Transaction(func(tx *gorm.DB) error {
 			// Fetch and delete the application authentications.
 			err := tx.
@@ -291,10 +290,9 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 func (a *applicationDaoImpl) Exists(applicationId int64) (bool, error) {
 	var applicationExists bool
 
-	err := DB.Model(&m.Application{}).
+	err := a.getDb().
 		Select("1").
 		Where("id = ?", applicationId).
-		Where("tenant_id = ?", a.TenantID).
 		Scan(&applicationExists).
 		Error
 
