@@ -110,7 +110,9 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 
 func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	result := DB.Debug().First(src)
+	result := DB.Debug().
+		Where("tenant_id = ?", s.TenantID).
+		First(src)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("source")
 	}
@@ -211,6 +213,7 @@ func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribute
 		return nil, fmt.Errorf("source not found %v", resource)
 	}
 
+	s.TenantID = &resource.TenantID
 	source, err := s.GetById(&resource.ResourceID)
 	if err != nil {
 		return nil, err

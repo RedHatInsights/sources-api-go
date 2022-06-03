@@ -91,7 +91,9 @@ func (a *endpointDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.
 
 func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 	app := &m.Endpoint{ID: *id}
-	result := DB.Debug().First(&app)
+	result := DB.Debug().
+		Where("tenant_id = ?", a.TenantID).
+		First(&app)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("endpoint")
 	}

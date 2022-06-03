@@ -39,6 +39,7 @@ func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 	}
 
 	query := relationObject.HasMany(&m.Application{}, DB.Debug())
+	query = query.Where("applications.tenant_id = ?", a.TenantID)
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
@@ -81,7 +82,9 @@ func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 
 func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	app := &m.Application{ID: *id}
-	result := DB.Debug().First(&app)
+	result := DB.Debug().
+		Where("tenant_id = ?", a.TenantID).
+		First(&app)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("application")
 	}
