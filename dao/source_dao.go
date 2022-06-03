@@ -110,7 +110,9 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 
 func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	result := DB.Debug().First(src)
+	result := DB.Debug().
+		Where("tenant_id = ?", s.TenantID).
+		First(src)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("source")
 	}
