@@ -27,6 +27,8 @@ type Application struct {
 
 	TenantID int64
 	Tenant   Tenant
+	UserID   *int64 `json:"user_id"`
+	User     User
 
 	SourceID int64 `json:"source_id"`
 	Source   Source

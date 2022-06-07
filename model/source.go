@@ -39,6 +39,8 @@ type Source struct {
 
 	Tenant   Tenant
 	TenantID int64 `json:"tenant_id"`
+	User     User
+	UserID   *int64 `json:"user_id"`
 
 	ApplicationTypes     []*ApplicationType `gorm:"many2many:applications"`
 	Applications         []Application

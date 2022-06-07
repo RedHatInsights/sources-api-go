@@ -36,6 +36,8 @@ type Authentication struct {
 
 	TenantID int64 `json:"tenant_id"`
 	Tenant   Tenant
+	UserID   *int64 `json:"user_id"`
+	User     User
 
 	ResourceType string `json:"resource_type"`
 	ResourceID   int64  `json:"resource_id"`

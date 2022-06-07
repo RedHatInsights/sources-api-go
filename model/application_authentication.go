@@ -19,6 +19,8 @@ type ApplicationAuthentication struct {
 
 	TenantID int64
 	Tenant   Tenant
+	UserID   *int64
+	User     User
 
 	ApplicationID int64 `json:"application_id"`
 	Application   Application
