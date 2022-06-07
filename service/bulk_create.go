@@ -31,7 +31,7 @@ import (
 	3. Saving the Authentications
 	4. Saving the ApplicationAuthentications if necessary
 */
-func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant) (*m.BulkCreateOutput, error) {
+func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, _ *m.User) (*m.BulkCreateOutput, error) {
 	// the output from this request.
 	var output m.BulkCreateOutput
 
