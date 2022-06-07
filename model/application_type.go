@@ -11,6 +11,8 @@ import (
 	"gorm.io/datatypes"
 )
 
+const UserOwnership = "user"
+
 type ApplicationType struct {
 	//fields for gorm
 	Id        int64     `gorm:"primarykey" json:"id"`
@@ -66,4 +68,11 @@ func (at *ApplicationType) AvailabilityCheckURL() *url.URL {
 	}
 
 	return url
+}
+
+func (at *ApplicationType) UserResourceOwnership() bool {
+	if at.ResourceOwnership == nil {
+		return false
+	}
+	return *at.ResourceOwnership == UserOwnership
 }

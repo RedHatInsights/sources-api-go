@@ -171,3 +171,7 @@ type TenantDao interface {
 	// and if it is not preset, by its EBS account number.
 	TenantByIdentity(identity *identity.Identity) (*m.Tenant, error)
 }
+
+type UserDao interface {
+	CreateIfResourceOwnershipActive(userResource *m.UserResource) error
+}
