@@ -500,14 +500,7 @@
             "$ref": "#/components/responses/BadRequest"
           },
           "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "tags": [
@@ -1609,14 +1602,7 @@
             "$ref": "#/components/responses/BadRequest"
           },
           "404": {
-            "description": "The specified source was not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "tags": [
@@ -1665,14 +1651,7 @@
             }
           },
           "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "tags": [
@@ -1696,14 +1675,7 @@
             "$ref": "#/components/responses/BadRequest"
           },
           "404": {
-            "description": "Source not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "tags": [
@@ -1864,14 +1836,7 @@
             "$ref": "#/components/responses/BadRequest"
           },
           "404": {
-            "description": "Not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorNotFound"
-                }
-              }
-            }
+            "$ref": "#/components/responses/NotFound"
           }
         },
         "tags": [
