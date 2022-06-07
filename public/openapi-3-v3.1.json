@@ -1326,7 +1326,6 @@
         "operationId": "getRhcConnectionSources",
         "summary": "List sources related to an RHC Connection",
         "tags": [
-          "sources",
           "rhc-connections"
         ]
       }
@@ -1375,8 +1374,7 @@
         "operationId": "getSourcesRhcConnection",
         "summary": "List RHC Connections related to a source",
         "tags": [
-          "sources",
-          "rhc-connections"
+          "sources"
         ]
       }
     },
