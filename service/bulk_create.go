@@ -172,36 +172,9 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 	applications := make([]m.Application, 0)
 
 	for _, app := range reqApplications {
-		a := m.Application{}
-
-		switch {
-		case app.ApplicationTypeIDRaw != nil:
-			// look up by id if an id was specified
-			id, err := util.InterfaceToInt64(app.ApplicationTypeIDRaw)
-			if err != nil {
-				return nil, err
-			}
-
-			apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetById(&id)
-			if err != nil {
-				return nil, err
-			}
-
-			a.ApplicationType = *apptype
-			a.ApplicationTypeID = apptype.Id
-
-		case app.ApplicationTypeName != "":
-			// dynamically look up the application type by name if passed
-			apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetByName(app.ApplicationTypeName)
-			if err != nil {
-				return nil, fmt.Errorf("failed to lookup application_type_name %v", app.ApplicationTypeName)
-			}
-
-			a.ApplicationType = *apptype
-			a.ApplicationTypeID = apptype.Id
-
-		default:
-			return nil, fmt.Errorf("no application type present, need either [application_type_name] or [application_type_id]")
+		a, err := applicationFromBulkCreateApplication(&app, tenant)
+		if err != nil {
+			return nil, err
 		}
 
 		// loop through and find the source which this application belongs to.
@@ -222,7 +195,7 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 			a.Tenant = *tenant
 			a.TenantID = tenant.Id
 
-			applications = append(applications, a)
+			applications = append(applications, *a)
 		}
 	}
 
@@ -446,4 +419,40 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 			}
 		}
 	}()
+}
+
+func applicationFromBulkCreateApplication(reqApplication *m.BulkCreateApplication, tenant *m.Tenant) (*m.Application, error) {
+	a := m.Application{}
+
+	switch {
+	case reqApplication.ApplicationTypeIDRaw != nil:
+		// look up by id if an id was specified
+		id, err := util.InterfaceToInt64(reqApplication.ApplicationTypeIDRaw)
+		if err != nil {
+			return nil, err
+		}
+
+		apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetById(&id)
+		if err != nil {
+			return nil, err
+		}
+
+		a.ApplicationType = *apptype
+		a.ApplicationTypeID = apptype.Id
+
+	case reqApplication.ApplicationTypeName != "":
+		// dynamically look up the application type by name if passed
+		apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetByName(reqApplication.ApplicationTypeName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to lookup application_type_name %v", reqApplication.ApplicationTypeName)
+		}
+
+		a.ApplicationType = *apptype
+		a.ApplicationTypeID = apptype.Id
+
+	default:
+		return nil, fmt.Errorf("no application type present, need either [application_type_name] or [application_type_id]")
+	}
+
+	return &a, nil
 }
