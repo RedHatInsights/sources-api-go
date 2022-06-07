@@ -35,20 +35,6 @@ func TestSourceListAuthentications(t *testing.T) {
 	originalSecretStore := conf.SecretStore
 	tenantId := fixtures.TestTenantData[0].Id
 
-	// If we're running integration tests without Vault...
-	if parser.RunningIntegrationTests && !config.IsVaultOn() {
-		// Create one authentication for the database tests, to make sure that we at least have one we can fetch.
-		authsDao := dao.GetAuthenticationDao(&tenantId)
-		err := authsDao.Create(&fixtures.TestAuthenticationData[0])
-		if err != nil {
-			t.Errorf(`could not create the authentication fixture for the test`)
-		}
-	} else {
-		// If we're either running unit tests, or integration tests with Vault, we force the secret store to be "vault"
-		// since there are multiple places where this "if config.IsVaultOn()" check is run.
-		conf.SecretStore = "vault"
-	}
-
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/authentications",
