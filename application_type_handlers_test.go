@@ -232,7 +232,7 @@ func TestApplicationTypeGet(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/1",
 		nil,
-		map[string]interface{}{},
+		nil,
 	)
 
 	c.SetParamNames("id")
@@ -263,7 +263,7 @@ func TestApplicationTypeGetNotFound(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/12362095",
 		nil,
-		map[string]interface{}{},
+		nil,
 	)
 
 	c.SetParamNames("id")
@@ -283,7 +283,7 @@ func TestApplicationTypeGetBadRequest(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/xxx",
 		nil,
-		map[string]interface{}{},
+		nil,
 	)
 
 	c.SetParamNames("id")

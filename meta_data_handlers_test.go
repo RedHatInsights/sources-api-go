@@ -163,10 +163,9 @@ func TestMetaDataList(t *testing.T) {
 		"/api/sources/v3.1/app_meta_data",
 		nil,
 		map[string]interface{}{
-			"limit":    100,
-			"offset":   0,
-			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"limit":   100,
+			"offset":  0,
+			"filters": []util.Filter{},
 		},
 	)
 
@@ -220,7 +219,6 @@ func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {
 			"filters": []util.Filter{
 				{Name: "wrongName", Value: []string{"wrongValue"}},
 			},
-			"tenantID": int64(1),
 		},
 	)
 
@@ -238,9 +236,7 @@ func TestMetaDataGet(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/app_meta_data/1",
 		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
+		nil,
 	)
 
 	c.SetParamNames("id")
@@ -267,9 +263,7 @@ func TestMetaDataGetNotFound(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/app_meta_data/13984739874",
 		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
+		nil,
 	)
 
 	c.SetParamNames("id")
@@ -289,9 +283,7 @@ func TestMetaDataGetBadRequest(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/app_meta_data/xxx",
 		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
+		nil,
 	)
 
 	c.SetParamNames("id")

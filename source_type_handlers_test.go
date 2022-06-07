@@ -97,9 +97,8 @@ func TestSourceTypeGet(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/source_types/1",
 		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		})
+		nil,
+	)
 
 	c.SetParamNames("id")
 	c.SetParamValues("1")
@@ -129,9 +128,7 @@ func TestSourceTypeGetNotFound(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/source_types/3098539345",
 		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
+		nil,
 	)
 
 	c.SetParamNames("id")
@@ -151,9 +148,7 @@ func TestSourceTypeGetBadRequest(t *testing.T) {
 		http.MethodGet,
 		"/api/sources/v3.1/source_types/xxx",
 		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
+		nil,
 	)
 
 	c.SetParamNames("id")
