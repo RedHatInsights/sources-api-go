@@ -164,6 +164,7 @@ func MigrateSchema() {
 		LastAvailableAt         time.Time      `gorm:"column:last_available_at"`
 		SourceId                int64          `gorm:"column:source_id"`
 		TenantId                int64          `gorm:"column:tenant_id"`
+		UserID                  *int64         `gorm:"column:user_id"`
 		ResourceType            string         `gorm:"column:resource_type"`
 		ResourceId              int64          `gorm:"column:resource_id"`
 		CreatedAt               time.Time      `gorm:"column:created_at"`
@@ -242,6 +243,7 @@ func UpdateTablesSequences(schema string) {
 		"source_types",
 		"rhc_connections",
 		"tenants",
+		"users",
 		"applications",
 		"endpoints",
 		"rhc_connections",
