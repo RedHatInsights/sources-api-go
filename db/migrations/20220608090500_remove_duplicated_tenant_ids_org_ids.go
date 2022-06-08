@@ -50,8 +50,6 @@ func RemoveDuplicatedTenantIdsOrgIds() *gormigrate.Migration {
 							"texten"."external_tenant"
 						HAVING
 							count("texten"."external_tenant") > 1
-						AND
-							"texten"."external_tenant" != ''
 					)
 				OR
 					"t"."org_id" IN (
@@ -63,8 +61,6 @@ func RemoveDuplicatedTenantIdsOrgIds() *gormigrate.Migration {
 							"torgid"."org_id"
 						HAVING
 							count("torgid"."org_id") > 1
-						AND
-							"torgid"."org_id" != ''
 					)
 			`
 
