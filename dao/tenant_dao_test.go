@@ -238,3 +238,58 @@ func TestTenantByIdentityNotFound(t *testing.T) {
 
 	DropSchema("tenant_tests")
 }
+
+// TestCreateTenantNullEbsOrgId tests that when an empty string is received on the "AccountNumber" and "OrgId" identity
+// struct, a "NULL" value is stored in the database. This is important because the unique indexes of the
+// "external_tenant" and "org_id" columns don't consider "NULL"s as duplicates, but they do consider empty strings as
+// duplicates.
+func TestCreateTenantNullEbsOrgId(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("tenant_tests")
+
+	tenantDao := GetTenantDao()
+
+	// Try to insert a tenant without an "external_tenant" and "org_id" values.
+	id, err := tenantDao.GetOrCreateTenantID(&identity.Identity{})
+	if err != nil {
+		t.Errorf(`unexpected error when creating a tenant with a NULL EBS account number and OrgId: %s`, err)
+	}
+
+	// Fetch the created tenant. We need to use a "map[string]interface{}" because the tenant model doesn't use a
+	// pointer value, and therefore the "NULL" value from the database would get mapped as an empty string.
+	var createdTenant map[string]interface{}
+	err = DB.
+		Debug().
+		Model(&model.Tenant{}).
+		Where("id = ?", id).
+		Find(&createdTenant).
+		Error
+
+	if err != nil {
+		t.Errorf(`error when trying to find the created tenant: %s`, err)
+	}
+
+	// Check if the "external_tenant" column is present.
+	externalTenant, ok := createdTenant["external_tenant"]
+	if !ok {
+		t.Errorf(`could not find "external_tenant" column on a "get tenant by id" query: %s`, err)
+	}
+
+	// The expected value on the database should be "NULL".
+	if externalTenant != nil {
+		t.Errorf(`unexpected value returned. Want nil "external_tenant", got "%s"`, externalTenant)
+	}
+
+	// Check if the "org_id" column is present.
+	orgId, ok := createdTenant["org_id"]
+	if !ok {
+		t.Errorf(`could not find "org_id" column on a "get tenant by id" query: %s`, err)
+	}
+
+	// The expected value on the database should be "NULL".
+	if orgId != nil {
+		t.Errorf(`unexpected value returned. Want nil "org_id", got "%s"`, orgId)
+	}
+
+	DropSchema("tenant_tests")
+}
