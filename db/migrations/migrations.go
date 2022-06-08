@@ -18,6 +18,7 @@ var migrationsCollection = []*gormigrate.Migration{
 	SourceTypesAddCategoryColumn(),
 	AddRetryCounterToApplications(),
 	AddTableUsers(),
+	MakeEmptyExternalTenantsOrgIdsNull(),
 }
 
 var ctx = context.Background()
