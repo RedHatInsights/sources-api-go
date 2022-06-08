@@ -91,6 +91,8 @@ func RemoveDuplicatedTenantIdsOrgIds() *gormigrate.Migration {
 
 				// Group all "external_tenant" and "org_id"s into the above defined maps.
 				for _, t := range tenants {
+					logging.Log.Infof(`Duplicate tenant found: %#v`, t)
+
 					// Append the ID to the external tenants map.
 					if t.ExternalTenant != "" {
 						externalTenantIds[t.ExternalTenant] = append(externalTenantIds[t.ExternalTenant], t.Id)
@@ -107,8 +109,11 @@ func RemoveDuplicatedTenantIdsOrgIds() *gormigrate.Migration {
 
 				// Start processing the external tenants and grouping them into the main tenant.
 				for externalTenant, ids := range externalTenantIds {
+					logging.Log.Infof(`[external_tenant: %s][ids: %v] Processing duplicate tenant group`, externalTenant, ids)
+
 					// Grab the first tenant ID as the main one.
 					if len(ids) > 0 {
+						logging.Log.Infof(`[main_tenant_id: %d] Selecting main tenant id`, ids[0])
 						mainTenantId = ids[0]
 					}
 
@@ -118,6 +123,8 @@ func RemoveDuplicatedTenantIdsOrgIds() *gormigrate.Migration {
 
 					// Since we've already grabbed the first ID from the slice, just take the rest starting from there.
 					for _, id := range ids[1:] {
+						logging.Log.Infof(`[tenant_id: %d][external_tenant: %s] Processing tenant`, id, externalTenant)
+
 						// Update the old tenant ID from all the tables.
 						for _, table := range updatableTables {
 							err := updateTenantFromTable(tx, table, id, mainTenantId)
@@ -140,8 +147,11 @@ func RemoveDuplicatedTenantIdsOrgIds() *gormigrate.Migration {
 				// Finish by processing the org IDs to group them on the main tenant. The difference with the above
 				// code is that if an ID has already been processed, it will be skipped to avoid problems.
 				for orgId, ids := range orgIdIds {
+					logging.Log.Infof(`[org_id: %s][ids: %v] Processing duplicate tenant group`, orgId, ids)
+
 					// Grab the first tenant ID as the main one.
 					if len(ids) > 0 {
+						logging.Log.Infof(`[main_tenant_id: %d] Selecting main tenant id`, ids[0])
 						mainTenantId = ids[0]
 					}
 
@@ -151,6 +161,8 @@ func RemoveDuplicatedTenantIdsOrgIds() *gormigrate.Migration {
 
 					// Since we've already grabbed the first ID from the slice, just take the rest starting from there.
 					for _, id := range ids[1:] {
+						logging.Log.Infof(`[tenant_id: %d][org_id: %s] Processing tenant`, id, orgId)
+
 						// Update the old tenant ID from all the tables.
 						for _, table := range updatableTables {
 							err := updateTenantFromTable(tx, table, id, mainTenantId)
