@@ -22,6 +22,7 @@ type ApplicationType struct {
 	DependentApplications        datatypes.JSON `json:"dependent_applications"`
 	SupportedSourceTypes         datatypes.JSON `json:"supported_source_types"`
 	SupportedAuthenticationTypes datatypes.JSON `json:"supported_authentication_types"`
+	ResourceOwnership            *string        `json:"resource_ownership"`
 
 	Applications []Application
 	Sources      []*Source `gorm:"many2many:applications;"`
