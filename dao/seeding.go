@@ -179,6 +179,7 @@ func seedApplicationTypes() error {
 		at.SupportedAuthenticationTypes = supportedAuthenticationTypes
 		at.DisplayName = values.DisplayName
 		at.Name = name
+		at.ResourceOwnership = values.ResourceOwnership
 
 		var result *gorm.DB
 		// if this is a new record we need to create rather than save.
