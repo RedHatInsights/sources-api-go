@@ -248,6 +248,12 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 		return
 	}
 
+	// Log everything from the response
+	l.Log.Debugf(`RHC connection status sent request: %#v`, req)
+	l.Log.Debugf(`RHC connection status received response: %#v`, resp)
+	l.Log.Debugf(`RHC connection status response status code: %d`, resp.StatusCode)
+	l.Log.Debugf(`RHC connection status response body: %s`, b)
+
 	var status rhcConnectionStatusResponse
 	err = json.Unmarshal(b, &status)
 	if err != nil {
