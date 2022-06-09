@@ -21,6 +21,7 @@ type applicationTypeSeed struct {
 	DependentApplications        interface{} `json:"dependent_applications"`
 	SupportedSourceTypes         interface{} `json:"supported_source_types"`
 	SupportedAuthenticationTypes interface{} `json:"supported_authentication_types"`
+	ResourceOwnership            *string     `json:"resource_ownership"`
 }
 
 const SuperKeyMetaData = "SuperKeyMetaData"
