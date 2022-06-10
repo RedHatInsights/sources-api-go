@@ -249,10 +249,10 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 	}
 
 	// Log everything from the response
-	l.Log.Debugf(`RHC connection status sent request: %#v`, req)
-	l.Log.Debugf(`RHC connection status received response: %#v`, resp)
-	l.Log.Debugf(`RHC connection status response status code: %d`, resp.StatusCode)
-	l.Log.Debugf(`RHC connection status response body: %s`, b)
+	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status sent request: %#v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, req)
+	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status received response: %#v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, resp)
+	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status response status code: %d`, source.ID, rhcConnection.ID, rhcConnection.RhcId, resp.StatusCode)
+	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status response body: %s`, source.ID, rhcConnection.ID, rhcConnection.RhcId, b)
 
 	var status rhcConnectionStatusResponse
 	err = json.Unmarshal(b, &status)
@@ -306,6 +306,8 @@ func updateRhcStatus(source *m.Source, status string, errstr string, rhcConnecti
 		l.Log.Warnf("failed to update RHC Connection availability status: %v", err)
 		return
 	}
+
+	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d] RHC Connection's status updated to "%s"`, source.ID, rhcConnection.ID, status)
 
 	err = RaiseEvent("RhcConnection.update", rhcConnection, headers)
 	if err != nil {
