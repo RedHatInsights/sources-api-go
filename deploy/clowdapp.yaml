@@ -142,6 +142,8 @@ objects:
               optional: true
         - name: FEATURE_FLAGS_SERVICE
           value: ${FEATURE_FLAGS_SERVICE}
+        - name: RESOURCE_OWNERSHIP
+          value: ${RESOURCE_OWNERSHIP}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -326,4 +328,7 @@ parameters:
 - description: Specify name of service for Feature Flags
   name: FEATURE_FLAGS_SERVICE
   value: 'unleash'
+- description: Specify name to select strategy to ensure resource ownership
+  name: RESOURCE_OWNERSHIP
+  value: ''
 
