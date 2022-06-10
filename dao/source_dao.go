@@ -45,16 +45,28 @@ type sourceDaoImpl struct {
 	UserID   *int64
 }
 
+func (s sourceDaoImpl) getDbWithoutModel() *gorm.DB {
+	if s.TenantID == nil {
+		panic("nil tenant found in source db DAO")
+	}
+
+	return DB.Debug()
+}
+
+func (s sourceDaoImpl) getDb() *gorm.DB {
+	return s.getDbWithoutModel().Model(&m.Source{})
+}
+
 func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	// allocating a slice of source types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	sources := make([]m.Source, 0, limit)
 
-	relationObject, err := m.NewRelationObject(primaryCollection, *s.TenantID, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, *s.TenantID, s.getDbWithoutModel())
 	if err != nil {
 		return nil, 0, err
 	}
-	query := relationObject.HasMany(&m.Source{}, DB.Debug())
+	query := relationObject.HasMany(&m.Source{}, s.getDb())
 
 	query = query.Where("sources.tenant_id = ?", s.TenantID)
 
@@ -78,7 +90,7 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
-	query := DB.Debug().Model(&m.Source{}).Where("sources.tenant_id = ?", s.TenantID)
+	query := s.getDb().Where("sources.tenant_id = ?", s.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -124,7 +136,7 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 
 func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	result := DB.Debug().
+	result := s.getDb().
 		Where("tenant_id = ?", s.TenantID).
 		First(src)
 	if result.Error != nil {
@@ -137,7 +149,7 @@ func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 // Function that searches for a source and preloads any specified relations
 func (s *sourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	q := DB.Debug().Where("tenant_id = ?", s.TenantID)
+	q := s.getDb().Where("tenant_id = ?", s.TenantID)
 
 	for _, preload := range preloads {
 		q = q.Preload(preload)
@@ -157,15 +169,14 @@ func (s *sourceDaoImpl) Create(src *m.Source) error {
 }
 
 func (s *sourceDaoImpl) Update(src *m.Source) error {
-	result := DB.Debug().Updates(src)
+	result := s.getDbWithoutModel().Updates(src)
 	return result.Error
 }
 
 func (s *sourceDaoImpl) Delete(id *int64) (*m.Source, error) {
 	var source m.Source
 
-	result := DB.
-		Debug().
+	result := s.getDbWithoutModel().
 		Clauses(clause.Returning{}).
 		Where("id = ?", id).
 		Where("tenant_id = ?", s.TenantID).
@@ -192,7 +203,7 @@ func (s *sourceDaoImpl) Tenant() *int64 {
 
 func (s *sourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 	src := &m.Source{Name: name}
-	result := DB.Debug().Where("name = ? AND tenant_id = ?", name, s.TenantID).First(src)
+	result := s.getDb().Where("name = ? AND tenant_id = ?", name, s.TenantID).First(src)
 
 	// If the name is found, GORM returns one row and no errors.
 	return result.Error == nil
@@ -200,7 +211,7 @@ func (s *sourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 
 func (s *sourceDaoImpl) IsSuperkey(id int64) bool {
 	var valid bool
-	result := DB.Model(&m.Source{}).
+	result := s.getDb().
 		Select("app_creation_workflow = ?", m.AccountAuth).
 		Where("tenant_id = ?", s.TenantID).
 		Where("id = ?", id).
@@ -215,7 +226,7 @@ func (s *sourceDaoImpl) IsSuperkey(id int64) bool {
 
 func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	src := m.Source{ID: resource.ResourceID}
-	result := DB.Debug().Find(&src)
+	result := s.getDb().Find(&src)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -225,7 +236,7 @@ func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interfac
 }
 
 func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
-	result := DB.Debug().Model(&m.Source{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := s.getDb().Where("id = ?", resource.ResourceID).Updates(updateAttributes)
 
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("source not found %v", resource)
@@ -242,7 +253,7 @@ func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribute
 
 func (s *sourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {
 	src := &m.Source{ID: *id}
-	result := DB.Debug().Preload("Tenant").Find(&src)
+	result := s.getDb().Preload("Tenant").Find(&src)
 
 	return src, result.Error
 }
@@ -264,8 +275,7 @@ func (s *sourceDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
 func (s *sourceDaoImpl) ListForRhcConnection(rhcConnectionId *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0)
 
-	query := DB.Debug().
-		Model(&m.Source{}).
+	query := s.getDb().
 		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "sources"."id" = "sr"."source_id"`).
 		Where(`"sr"."rhc_connection_id" = ?`, rhcConnectionId).
 		Where(`"sr"."tenant_id" = ?`, s.TenantID)
@@ -480,7 +490,7 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 func (s *sourceDaoImpl) Exists(sourceId int64) (bool, error) {
 	var sourceExists bool
 
-	err := DB.Model(&m.Source{}).
+	err := s.getDb().
 		Select("1").
 		Where("id = ?", sourceId).
 		Where("tenant_id = ?", s.TenantID).

@@ -64,7 +64,8 @@ func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, pay
 
 func (esp *EventStreamProducer) RaiseEventForUpdate(resource util.Resource, updateAttributes []string, headers []kafka.Header) error {
 	allowed := esp.RaiseEventAllowed(resource.ResourceType, updateAttributes)
-	eventModelDao, err := dao.GetFromResourceType(resource.ResourceType)
+	eventModelDao, err := dao.GetFromResourceType(resource.ResourceType, resource.TenantID)
+
 	if err != nil {
 		return err
 	}
