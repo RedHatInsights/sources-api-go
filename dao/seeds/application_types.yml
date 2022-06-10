@@ -69,3 +69,11 @@
   supported_authentication_types:
     satellite:
     - receptor_node
+"/insights/platform/provisioning":
+  display_name: Provisioning
+  dependent_applications: []
+  supported_source_types:
+    - amazon
+  supported_authentication_types:
+    amazon:
+      - provisioning-arn
