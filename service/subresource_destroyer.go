@@ -37,7 +37,7 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 
 	switch resourceType {
 	case "Source":
-		sourceDao := dao.GetSourceDao(tenantId)
+		sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantId})
 		applicationAuthentications, applications, endpoints, rhcConnections, source, err := sourceDao.DeleteCascade(resourceId)
 		if err != nil {
 			return fmt.Errorf(`could not completely delete the source: %s`, err)

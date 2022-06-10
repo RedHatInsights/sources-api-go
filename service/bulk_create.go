@@ -151,7 +151,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant) ([]m.Source
 		s.SourceType = *sourceType
 
 		// validate the source request
-		err = ValidateSourceCreationRequest(dao.GetSourceDao(&tenant.Id), &source.SourceCreateRequest)
+		err = ValidateSourceCreationRequest(dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenant.Id}), &source.SourceCreateRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -287,7 +287,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 			var err error
 			switch strings.ToLower(auth.ResourceType) {
 			case "source":
-				_, err = dao.GetSourceDao(&tenant.Id).GetById(&id)
+				_, err = dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenant.Id}).GetById(&id)
 				if err == nil {
 					l.Log.Debugf("Found existing Source with id %v, adding to list and continuing", id)
 					a.ResourceID = id

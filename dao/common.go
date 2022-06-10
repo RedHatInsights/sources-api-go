@@ -38,7 +38,7 @@ func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, r
 		if err != nil {
 			return "", err
 		}
-		resource, err := GetSourceDao(&tenantID).GetById(&recordID)
+		resource, err := GetSourceDao(&SourceDaoParams{TenantID: &tenantID}).GetById(&recordID)
 		if err != nil {
 			return "", err
 		}

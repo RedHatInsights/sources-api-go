@@ -722,7 +722,7 @@ func TestApplicationDelete(t *testing.T) {
 
 	// Create a source
 	tenantID := fixtures.TestTenantData[0].Id
-	sourceDao := dao.GetSourceDao(&tenantID)
+	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantID})
 
 	src := m.Source{
 		Name:         "Source for TestApplicationDelete()",
