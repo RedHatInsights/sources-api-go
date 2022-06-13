@@ -51,7 +51,7 @@ func (r *RetryCreateJob) Run() error {
 		result = tx.Debug().
 			Select("id", "tenant_id", "application_type_id").
 			Model(&m.Application{}).
-			Where("availability_status != ? ", m.Available).
+			Where("availability_status IS DISTINCT FROM ? ", m.Available).
 			Where("created_at > ?", time.Now().Add(RECORD_AGE_LIMIT)).
 			Where("retry_counter < ?", RETRY_MAX).
 			Scan(&apps)
