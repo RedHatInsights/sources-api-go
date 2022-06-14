@@ -44,7 +44,7 @@ func SourceListApplicationTypes(c echo.Context) error {
 	}
 
 	var (
-		apptypes []m.ApplicationType
+		appTypes []m.ApplicationType
 		count    int64
 	)
 
@@ -53,7 +53,7 @@ func SourceListApplicationTypes(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	apptypes, count, err = applicationTypeDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+	appTypes, count, err = applicationTypeDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
 
 	if err != nil {
 		return err
@@ -61,9 +61,9 @@ func SourceListApplicationTypes(c echo.Context) error {
 
 	// converting the objects to the interface type so the collection response can process it
 	// allocating the length of our collection (so it doesn't have to resize)
-	out := make([]interface{}, len(apptypes))
-	for i := 0; i < len(apptypes); i++ {
-		out[i] = apptypes[i].ToResponse()
+	out := make([]interface{}, len(appTypes))
+	for i := 0; i < len(appTypes); i++ {
+		out[i] = appTypes[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
@@ -86,11 +86,11 @@ func ApplicationTypeList(c echo.Context) error {
 	}
 
 	var (
-		apptypes []m.ApplicationType
+		appTypes []m.ApplicationType
 		count    int64
 	)
 
-	apptypes, count, err = applicationTypeDB.List(limit, offset, filters)
+	appTypes, count, err = applicationTypeDB.List(limit, offset, filters)
 
 	if err != nil {
 		return err
@@ -98,9 +98,9 @@ func ApplicationTypeList(c echo.Context) error {
 
 	// converting the objects to the interface type so the collection response can process it
 	// allocating the length of our collection (so it doesn't have to resize)
-	out := make([]interface{}, len(apptypes))
-	for i := 0; i < len(apptypes); i++ {
-		out[i] = apptypes[i].ToResponse()
+	out := make([]interface{}, len(appTypes))
+	for i := 0; i < len(appTypes); i++ {
+		out[i] = appTypes[i].ToResponse()
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))

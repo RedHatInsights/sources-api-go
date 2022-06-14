@@ -92,13 +92,13 @@ func (a *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) 
 }
 
 func (a *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, error) {
-	apptype := &m.ApplicationType{}
-	result := DB.Debug().Where("name LIKE ?", "%"+name+"%").First(&apptype)
+	appType := &m.ApplicationType{}
+	result := DB.Debug().Where("name LIKE ?", "%"+name+"%").First(&appType)
 	if result.Error != nil {
 		return nil, util.NewErrNotFound("application type")
 	}
 
-	return apptype, nil
+	return appType, nil
 }
 
 func (a *applicationTypeDaoImpl) Create(_ *m.ApplicationType) error {

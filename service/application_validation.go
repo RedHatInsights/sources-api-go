@@ -8,7 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-// by default we'll be using an empty instance of the apptype dao - replacing it
+// by default we'll be using an empty instance of the appType dao - replacing it
 // in tests.
 var AppTypeDao = dao.GetApplicationTypeDao(nil)
 
