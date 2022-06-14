@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -85,4 +86,44 @@ func TestApplicationTypeListOffsetAndLimit(t *testing.T) {
 		}
 	}
 	DropSchema("offset_limit")
+}
+
+func TestApplicationTypeGetByName(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("app_type_by_name")
+	wantAppType := fixtures.TestApplicationTypeData[0]
+
+	tenantId := int64(1)
+	appTypeDao := GetApplicationTypeDao(&tenantId)
+
+	gotAppType, err := appTypeDao.GetByName(wantAppType.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if gotAppType.Name != wantAppType.Name {
+		t.Errorf("want source type name '%s', got source type name '%s'", wantAppType.Name, gotAppType.Name)
+	}
+
+	DropSchema("app_type_by_name")
+}
+
+func TestApplicationTypeGetByNameNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("app_type_by_name")
+	wantAppType := m.ApplicationType{Name: "not existing name"}
+
+	tenantId := int64(1)
+	appTypeDao := GetApplicationTypeDao(&tenantId)
+
+	gotAppType, err := appTypeDao.GetByName(wantAppType.Name)
+	if gotAppType != nil {
+		t.Error("got application type object, want nil")
+	}
+
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("want not found err, got '%v'", err)
+	}
+
+	DropSchema("app_type_by_name")
 }
