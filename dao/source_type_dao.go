@@ -58,8 +58,10 @@ func (st *sourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
 func (st *sourceTypeDaoImpl) GetByName(name string) (*m.SourceType, error) {
 	sourceType := &m.SourceType{}
 	result := DB.Debug().Where("name LIKE ?", "%"+name+"%").First(sourceType)
-
-	return sourceType, result.Error
+	if result.Error != nil {
+		return nil, util.NewErrNotFound("source type")
+	}
+	return sourceType, nil
 }
 
 func (a *sourceTypeDaoImpl) Create(_ *m.SourceType) error {
