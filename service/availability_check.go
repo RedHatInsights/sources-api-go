@@ -224,6 +224,10 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 	req.Header.Set("x-rh-cloud-connector-client-id", cloudConnectorClientId)
 	req.Header.Set("x-rh-cloud-connector-psk", cloudConnectorPsk)
 
+	// Log the request before sending it.
+	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status request: %#v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, req)
+	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status request's body: %v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, string(body))
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		l.Log.Warnf("Failed to request connection_status for RHC ID [%v]: %v", rhcConnection.RhcId, err)
@@ -249,7 +253,6 @@ func pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.H
 	}
 
 	// Log everything from the response
-	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status sent request: %#v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, req)
 	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status received response: %#v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, resp)
 	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status response status code: %d`, source.ID, rhcConnection.ID, rhcConnection.RhcId, resp.StatusCode)
 	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status response body: %s`, source.ID, rhcConnection.ID, rhcConnection.RhcId, b)
