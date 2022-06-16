@@ -5,10 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/labstack/echo/v4"
 )
 
-func EmptySubcollectionListTest(t *testing.T, rec *httptest.ResponseRecorder) {
+func EmptySubcollectionListTest(t *testing.T, c echo.Context, rec *httptest.ResponseRecorder) {
 	if rec.Code != 200 {
 		t.Error("Did not return 200")
 	}
@@ -34,4 +36,6 @@ func EmptySubcollectionListTest(t *testing.T, rec *httptest.ResponseRecorder) {
 	if len(out.Data) != 0 {
 		t.Errorf("expected 0 objects passed back from DB, got %d", len(out.Data))
 	}
+
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }

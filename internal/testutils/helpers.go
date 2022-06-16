@@ -66,4 +66,3 @@ func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset 
 		t.Error("last link is not correct for " + path)
 	}
 }
-
