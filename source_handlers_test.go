@@ -188,6 +188,37 @@ func TestSourceListAuthenticationsTenantNotExists(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestSourceListAuthenticationsInvalidTenant tests that not found is returned for
+// valid tenant and source that not belongs to this tenant
+func TestSourceListAuthenticationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	sourceId := int64(2)
+	tenantId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := notFoundSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourceListAuthenticationsNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
