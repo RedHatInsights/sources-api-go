@@ -75,7 +75,7 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationTypeMetaDataSubcollectionListNotFound(t *testing.T) {
@@ -203,7 +203,7 @@ func TestMetaDataList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {

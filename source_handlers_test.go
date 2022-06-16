@@ -122,7 +122,7 @@ func TestSourceListAuthentications(t *testing.T) {
 
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 	conf.SecretStore = originalSecretStore
 }
 
@@ -239,7 +239,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 // Existing source type + not existing source with this source type
@@ -307,7 +307,7 @@ func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
 
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
@@ -446,7 +446,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
@@ -587,7 +587,7 @@ func TestSourceList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListSatellite(t *testing.T) {
@@ -633,7 +633,7 @@ func TestSourceListSatellite(t *testing.T) {
 		t.Error("Objects were not filtered out of request")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListBadRequestInvalidFilter(t *testing.T) {

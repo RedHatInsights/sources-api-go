@@ -82,7 +82,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
@@ -418,7 +418,7 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 		t.Errorf("wrong authentication resource type, want %d, got %s", authWant.ResourceID, auth["resource_id"])
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationAuthenticationListAuthenticationsNotFound(t *testing.T) {

@@ -106,7 +106,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceApplicationSubcollectionListEmptyList(t *testing.T) {
@@ -154,7 +154,7 @@ func TestSourceApplicationSubcollectionListEmptyList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
@@ -308,7 +308,7 @@ func TestApplicationList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
@@ -904,7 +904,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationListAuthenticationsNotFound(t *testing.T) {

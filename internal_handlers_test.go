@@ -83,7 +83,7 @@ func TestSourceListInternal(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListInternalBadRequestInvalidFilter(t *testing.T) {
