@@ -271,6 +271,7 @@ func TestSourceListAuthenticationsBadRequest(t *testing.T) {
 
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	sourceTypeId := int64(1)
+	tenantId := int64(1)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -280,7 +281,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -314,7 +315,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	// (adding new fixtures will not affect the test)
 	var wantSourcesCount int
 	for _, i := range fixtures.TestSourceData {
-		if i.SourceTypeID == sourceTypeId {
+		if i.SourceTypeID == sourceTypeId && i.TenantID == tenantId {
 			wantSourcesCount++
 		}
 	}
@@ -329,7 +330,15 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 		if !ok {
 			t.Error("model did not deserialize as a source")
 		}
+	}
 
+	sourcesBelongToTenant, err := checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !sourcesBelongToTenant {
+		t.Error("the tenant doesn't own all sources")
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -1761,4 +1770,26 @@ func TestSourceEditPausedUnit(t *testing.T) {
 
 	// Restore the binder to not affect any other tests.
 	c.Echo().Binder = backupBinder
+}
+
+// HELPERS:
+
+// checkAllSourcesBelongToTenant checks that all returned sources belongs to given tenant
+func checkAllSourcesBelongToTenant(tenantId int64, sources []interface{}) (bool, error) {
+	// For every returned source
+	for _, srcOut := range sources {
+		srcOutId, err := strconv.ParseInt(srcOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			return false, err
+		}
+		// find source in fixtures and check the tenant id
+		for _, src := range fixtures.TestSourceData {
+			if srcOutId == src.ID {
+				if src.TenantID != tenantId {
+					return false, fmt.Errorf("expected tenant id = %d, got %d", tenantId, src.TenantID)
+				}
+			}
+		}
+	}
+	return true, nil
 }
