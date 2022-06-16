@@ -344,6 +344,38 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestSourceTypeSourceSubcollectionListTenantNotExists tests that empty list
+// is returned for existing source type and not existing tenant
+func TestSourceTypeSourceSubcollectionListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// Check existing source type with not existing tenant id
+	// Expected is empty list
+	sourceTypeId := int64(1)
+	tenantId := notExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_type_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceTypeId))
+
+	err := SourceTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 // Existing source type + not existing source with this source type
 // expected is Status OK + empty subcollection in response
 func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
