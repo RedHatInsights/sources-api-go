@@ -126,6 +126,35 @@ func TestSourceListAuthentications(t *testing.T) {
 	conf.SecretStore = originalSecretStore
 }
 
+// TestSourceListAuthenticationsEmptyList tests that empty list is returned
+// when the source doesn't have authentications
+func TestSourceListAuthenticationsEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(101)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	err := SourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestSourceListAuthenticationsNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
