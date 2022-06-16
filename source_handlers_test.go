@@ -33,7 +33,8 @@ import (
 
 func TestSourceListAuthentications(t *testing.T) {
 	originalSecretStore := conf.SecretStore
-	tenantId := fixtures.TestTenantData[0].Id
+	tenantId := int64(1)
+	sourceId := int64(2)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -48,7 +49,7 @@ func TestSourceListAuthentications(t *testing.T) {
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceListAuthentications(c)
 	if err != nil {
@@ -73,6 +74,17 @@ func TestSourceListAuthentications(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
+	var wantCount int
+	for _, a := range fixtures.TestAuthenticationData {
+		if a.SourceID == sourceId && a.TenantID == tenantId {
+			wantCount++
+		}
+	}
+
+	if out.Meta.Count != wantCount {
+		t.Error("count not set correctly")
+	}
+
 	auth1, ok := out.Data[0].(map[string]interface{})
 	if !ok {
 		t.Error("model did not deserialize as a source")
@@ -89,6 +101,25 @@ func TestSourceListAuthentications(t *testing.T) {
 		if !util.SliceContainsString([]string{"testUser", "first", "second", "third"}, auth1["username"].(string)) {
 			t.Errorf("invalid username returned, not found in test tenant data.")
 		}
+	}
+
+	if !config.IsVaultOn() {
+		// For every returned authentication
+		for _, authOut := range out.Data {
+			authOutId, err := strconv.ParseInt(authOut.(map[string]interface{})["id"].(string), 10, 64)
+			if err != nil {
+				t.Error(err)
+			}
+			// find auth in fixtures and check the tenant id
+			for _, authFixtures := range fixtures.TestAuthenticationData {
+				if authOutId == authFixtures.DbID {
+					if authFixtures.TenantID != tenantId {
+						t.Errorf("expected tenant id = %d, got %d", tenantId, authFixtures.TenantID)
+					}
+				}
+			}
+		}
+
 	}
 
 	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
