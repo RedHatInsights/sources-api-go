@@ -581,7 +581,7 @@ func TestEndpointDelete(t *testing.T) {
 
 	uid, err := uuid.NewUUID()
 	if err != nil {
-		t.Errorf(`could not create UUID fro the fixture source: %s`, err)
+		t.Errorf(`could not create UUID from the fixture source: %s`, err)
 	}
 
 	uidStr := uid.String()
