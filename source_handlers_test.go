@@ -31,6 +31,8 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
+var notExistingTenantId = int64(309832948930)
+
 func TestSourceListAuthentications(t *testing.T) {
 	originalSecretStore := conf.SecretStore
 	tenantId := int64(1)
@@ -153,6 +155,37 @@ func TestSourceListAuthenticationsEmptyList(t *testing.T) {
 	}
 
 	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestSourceListAuthenticationsTenantNotExists tests that not found is returned
+// for not existing tenant
+func TestSourceListAuthenticationsTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := notExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := notFoundSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceListAuthenticationsNotFound(t *testing.T) {
