@@ -376,8 +376,8 @@ func TestSourceTypeSourceSubcollectionListTenantNotExists(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
-// Existing source type + not existing source with this source type
-// expected is Status OK + empty subcollection in response
+// TestSourceTypeSourceSubcollectionListEmptySubcollection tests that empty list
+// is returned for existing source type without existing sources in db for given tenant
 func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
 	sourceTypeId := int64(100)
 
@@ -401,47 +401,7 @@ func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusOK {
-		t.Error("Did not return 200")
-	}
-
-	var out util.Collection
-	err = json.Unmarshal(rec.Body.Bytes(), &out)
-	if err != nil {
-		t.Error("Failed unmarshaling output")
-	}
-
-	if out.Meta.Limit != 100 {
-		t.Error("limit not set correctly")
-	}
-
-	if out.Meta.Offset != 0 {
-		t.Error("offset not set correctly")
-	}
-
-	// How many sources with given source type is in fixtures
-	// (adding new fixtures will not affect the test)
-	var wantSourcesCount int
-	for _, i := range fixtures.TestSourceData {
-		if i.SourceTypeID == sourceTypeId {
-			wantSourcesCount++
-		}
-	}
-
-	if len(out.Data) != wantSourcesCount {
-		t.Error("not enough objects passed back from DB")
-	}
-
-	for _, src := range out.Data {
-		_, ok := src.(map[string]interface{})
-
-		if !ok {
-			t.Error("model did not deserialize as a source")
-		}
-
-	}
-
-	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
