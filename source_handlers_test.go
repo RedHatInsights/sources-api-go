@@ -545,6 +545,37 @@ func TestApplicationTypeListSourceSubcollectionList(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestApplicationTypeListSourceSubcollectionListTenantNotExists tests that empty list
+// is returned for existing application type and not existing tenant
+func TestApplicationTypeListSourceSubcollectionListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// Check existing application type with not existing tenant id
+	appTypeId := int64(1)
+	tenantId := notExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues(fmt.Sprintf("%d", appTypeId))
+
+	err := ApplicationTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
