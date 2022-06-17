@@ -576,6 +576,35 @@ func TestApplicationTypeListSourceSubcollectionListTenantNotExists(t *testing.T)
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestApplicationTypeListSourceSubcollectionListEmptySubcollection tests that empty list
+// is returned for existing application type without existing sources for given tenant
+func TestApplicationTypeListSourceSubcollectionListEmptySubcollection(t *testing.T) {
+	appTypeId := int64(100)
+	tenantId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues(fmt.Sprintf("%d", appTypeId))
+
+	err := ApplicationTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
