@@ -332,13 +332,9 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 		}
 	}
 
-	sourcesBelongToTenant, err := checkAllSourcesBelongToTenant(tenantId, out.Data)
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
 	if err != nil {
 		t.Error(err)
-	}
-
-	if !sourcesBelongToTenant {
-		t.Error("the tenant doesn't own all sources")
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -1767,21 +1763,21 @@ func TestSourceEditPausedUnit(t *testing.T) {
 // HELPERS:
 
 // checkAllSourcesBelongToTenant checks that all returned sources belongs to given tenant
-func checkAllSourcesBelongToTenant(tenantId int64, sources []interface{}) (bool, error) {
+func checkAllSourcesBelongToTenant(tenantId int64, sources []interface{}) error {
 	// For every returned source
 	for _, srcOut := range sources {
 		srcOutId, err := strconv.ParseInt(srcOut.(map[string]interface{})["id"].(string), 10, 64)
 		if err != nil {
-			return false, err
+			return err
 		}
 		// find source in fixtures and check the tenant id
 		for _, src := range fixtures.TestSourceData {
 			if srcOutId == src.ID {
 				if src.TenantID != tenantId {
-					return false, fmt.Errorf("expected tenant id = %d, got %d", tenantId, src.TenantID)
+					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, src.TenantID)
 				}
 			}
 		}
 	}
-	return true, nil
+	return nil
 }
