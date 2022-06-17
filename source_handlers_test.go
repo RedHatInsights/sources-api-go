@@ -759,6 +759,32 @@ func TestSourceList(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestSourceListTenantNotExists tests that empty list is returned for not existing tenant
+func TestSourceListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// For not existing tenant is expected that returned value
+	// will be empty list and return code 200
+	tenantId := notExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		})
+
+	err := SourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestSourceListSatellite(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
