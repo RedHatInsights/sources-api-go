@@ -785,6 +785,33 @@ func TestSourceListTenantNotExists(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestSourceListTenantWithoutSources tests that empty list is returned for existing tenant
+// without related sources
+func TestSourceListTenantWithoutSources(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// For tenant without sources is expected that returned value
+	// will be empty list and return code 200
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		})
+
+	err := SourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestSourceListSatellite(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
