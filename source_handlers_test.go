@@ -1206,6 +1206,43 @@ func TestSourceEdit(t *testing.T) {
 	service.NotificationProducer = backupNotificationProducer
 }
 
+// TestSourceEditInvalidTenant tests situation when the tenant tries to
+// edit existing not owned source
+func TestSourceEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	newSourceName := "New source name"
+	req := m.SourceEditRequest{
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/8937498374",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSourceEdit := ErrorHandlingContext(SourceEdit)
+	err := notFoundSourceEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourceEditNotFound(t *testing.T) {
 	newSourceName := "New source name"
 	req := m.SourceEditRequest{
