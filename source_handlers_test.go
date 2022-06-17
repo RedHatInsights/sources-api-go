@@ -943,6 +943,34 @@ func TestSourceGetInvalidTenant(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestSourceGetTenantNotExists tests that not found is returned for
+// not existing tenant
+func TestSourceGetTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := notExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+	err := notFoundSourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourceGetNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
