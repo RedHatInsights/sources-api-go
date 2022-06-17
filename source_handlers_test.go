@@ -1579,6 +1579,36 @@ func TestSourcesGetRelatedRhcConnections(t *testing.T) {
 	}
 }
 
+// TestSourcesGetRelatedRhcConnectionsEmptyList tests that you get empty list
+// for source without rhc-connections
+func TestSourcesGetRelatedRhcConnectionsEmptyList(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	sourceId := int64(4)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/4/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	err := SourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 // TestSourcesGetRelatedRhcConnectionsInvalidTenant tests scenario with existing source
 // (with existing rhc-connections) but tenant is not owner of this source
 func TestSourcesGetRelatedRhcConnectionsInvalidTenant(t *testing.T) {
