@@ -1579,6 +1579,37 @@ func TestSourcesGetRelatedRhcConnections(t *testing.T) {
 	}
 }
 
+// TestSourcesGetRelatedRhcConnectionsInvalidTenant tests scenario with existing source
+// (with existing rhc-connections) but tenant is not owner of this source
+func TestSourcesGetRelatedRhcConnectionsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := notFoundSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourcesGetRelatedRhcConnectionsNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
