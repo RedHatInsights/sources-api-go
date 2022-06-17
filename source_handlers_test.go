@@ -1519,7 +1519,7 @@ func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
-func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
+func TestSourcesGetRelatedRhcConnections(t *testing.T) {
 	sourceId := "1"
 
 	c, rec := request.CreateTestContext(
@@ -1579,7 +1579,7 @@ func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
 	}
 }
 
-func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
+func TestSourcesGetRelatedRhcConnectionsNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/0394830498/rhc_connections",
@@ -1604,7 +1604,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T) {
+func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidSyntax(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/xxx/rhc_connections",
@@ -1629,7 +1629,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T
 	templates.BadRequestTest(t, rec)
 }
 
-func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T) {
+func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
