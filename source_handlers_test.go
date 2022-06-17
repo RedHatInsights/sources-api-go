@@ -685,6 +685,7 @@ func TestApplicationTypeListSourceSubcollectionListBadRequestInvalidFilter(t *te
 }
 
 func TestSourceList(t *testing.T) {
+	tenantId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources",
@@ -693,7 +694,7 @@ func TestSourceList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		})
 
 	err := SourceList(c)
@@ -719,7 +720,14 @@ func TestSourceList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestSourceData) {
+	var wantSourcesCount int
+	for _, s := range fixtures.TestSourceData {
+		if s.TenantID == tenantId {
+			wantSourcesCount++
+		}
+	}
+
+	if len(out.Data) != wantSourcesCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -741,6 +749,11 @@ func TestSourceList(t *testing.T) {
 
 	if s2["name"] != "Source2" {
 		t.Error("ghosts infected the return")
+	}
+
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
