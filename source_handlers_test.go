@@ -479,8 +479,9 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 	templates.BadRequestTest(t, rec)
 }
 
-func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
+func TestApplicationTypeListSourceSubcollectionList(t *testing.T) {
 	appTypeId := int64(1)
+	tenantId := int64(1)
 	wantSourcesCount := len(testutils.GetSourcesWithAppType(appTypeId))
 
 	c, rec := request.CreateTestContext(
@@ -491,7 +492,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -534,6 +535,11 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 		if s["id"] == 1 && s["name"] != "Source1" {
 			t.Error("ghosts infected the return")
 		}
+	}
+
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
