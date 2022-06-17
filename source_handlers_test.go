@@ -1447,6 +1447,34 @@ func TestAvailabilityStatusCheck(t *testing.T) {
 	}
 }
 
+// TestAvailabilityStatusCheckInvalidTenant tests availability status check
+// with a tenant who doesn't own the source
+func TestAvailabilityStatusCheckInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/183209745/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	err := notFoundSourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
