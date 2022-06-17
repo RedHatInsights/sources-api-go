@@ -883,17 +883,20 @@ func TestSourceListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestSourceGet(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceGet(c)
 	if err != nil {
@@ -912,6 +915,19 @@ func TestSourceGet(t *testing.T) {
 
 	if *outSrc.Name != "Source1" {
 		t.Error("ghosts infected the return")
+	}
+
+	if outSrc.ID != fmt.Sprintf("%d", sourceId) {
+		t.Errorf("source with wrong ID returned, expected %d, got %s", sourceId, outSrc.ID)
+	}
+
+	for _, src := range fixtures.TestSourceData {
+		if src.ID == sourceId {
+			if src.TenantID != tenantId {
+				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, src.TenantID)
+			}
+			break
+		}
 	}
 }
 
