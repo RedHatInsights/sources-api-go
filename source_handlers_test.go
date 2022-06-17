@@ -1132,6 +1132,9 @@ func TestSourceCreate(t *testing.T) {
 }
 
 func TestSourceEdit(t *testing.T) {
+	tenant := fixtures.TestTenantData[0]
+	source := fixtures.TestSourceData[0]
+
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
@@ -1148,14 +1151,14 @@ func TestSourceEdit(t *testing.T) {
 		"/api/sources/v3.1/sources/1",
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenant.Id,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", source.ID))
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(SourceEdit)
 	err := sourceEditHandlerWithNotifier(c)
@@ -1191,8 +1194,8 @@ func TestSourceEdit(t *testing.T) {
 		CurrentAvailabilityStatus:  "unavailable",
 		PreviousAvailabilityStatus: "available",
 		SourceName:                 newSourceName,
-		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
-		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),
+		SourceID:                   strconv.FormatInt(source.ID, 10),
+		TenantID:                   strconv.FormatInt(source.TenantID, 10),
 	}
 
 	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
