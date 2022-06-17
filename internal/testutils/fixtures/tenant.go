@@ -17,5 +17,4 @@ var TestTenantData = []m.Tenant{
 		ExternalTenant: "7893720",
 		OrgID:          "tenant without sources",
 	},
-
 }
