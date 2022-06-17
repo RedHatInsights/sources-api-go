@@ -1352,6 +1352,34 @@ func TestSourceDelete(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestSourceDeleteInvalidTenant tests situation when the tenant tries to
+// delete existing but not owned source
+func TestSourceDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/9038049384",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceDelete := ErrorHandlingContext(SourceDelete)
+	err := notFoundSourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourceDeleteNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
