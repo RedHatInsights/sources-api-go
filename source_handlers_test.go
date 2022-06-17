@@ -605,7 +605,7 @@ func TestApplicationTypeListSourceSubcollectionListEmptySubcollection(t *testing
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
-func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
+func TestApplicationTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/398748974/sources",
@@ -630,7 +630,7 @@ func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
+func TestApplicationTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/xxx/sources",
@@ -655,7 +655,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *tes
 	templates.BadRequestTest(t, rec)
 }
 
-func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
+func TestApplicationTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
