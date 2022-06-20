@@ -1590,6 +1590,28 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	}
 }
 
+func TestPauseSourceAndItsApplicationsNotFound(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/809897868745/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("809897868745")
+
+	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+	err := notFoundSourcePause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 // TestResumeSourceAndItsApplications tests that the "unpause source" endpoint sets all the applications and the source
 // itself as resumed, by setting their "paused_at" column as "NULL".
 func TestResumeSourceAndItsApplications(t *testing.T) {
