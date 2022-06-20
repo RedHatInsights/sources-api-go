@@ -1723,19 +1723,20 @@ func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidFilter(t *testing.T) {
 // itself as paused, by modifying their "paused_at" column.
 func TestPauseSourceAndItsApplications(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/sources/1/pause",
 		nil,
 		map[string]interface{}{
-			"tenantID":      int64(1),
-			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourcePause(c)
 	if err != nil {
@@ -1744,6 +1745,36 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 
 	if rec.Code != http.StatusNoContent {
 		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Check that the source is paused
+	daoParams := dao.SourceDaoParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&daoParams)
+	src, err := sourceDao.GetById(&sourceId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if src.PausedAt == nil {
+		t.Error("the source is not paused => 'paused_at' is nil and the opposite is expected")
+	}
+
+	// Check that relation applications are paused
+	appDao := dao.GetApplicationDao(&tenantId)
+	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, a := range apps {
+		if a.PausedAt == nil {
+			t.Errorf("application with id = %d is not paused and the opposite is expected", a.ID)
+		}
+	}
+
+	// Unpause the Source and its applications to not have affected test data for next tests
+	err = sourceDao.Unpause(sourceId)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
