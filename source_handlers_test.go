@@ -1907,6 +1907,31 @@ func TestUnpauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+func TestUnpauseSourceAndItsApplicationsBadRequest(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/xxx/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(sourceId)
+
+	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+	err := notFoundSourceUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 // MockSender is just a mock which will allow us to control how the "RaiseEvent" function gets executed.
 type MockSender struct {
 }
