@@ -1640,6 +1640,31 @@ func TestResumeSourceAndItsApplications(t *testing.T) {
 	}
 }
 
+func TestUnpauseSourceAndItsApplicationsNotFound(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(1789896785)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+	err := notFoundSourceUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 // MockSender is just a mock which will allow us to control how the "RaiseEvent" function gets executed.
 type MockSender struct {
 }
