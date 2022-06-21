@@ -59,4 +59,12 @@ generate:
 migration:
 	@sh db/migrations/new_migration.sh
 
+docker-up:
+	@docker-compose up -d sources-db sources-kafka
+	@sleep 7
+	@mkdir -p tmp/db
+	@docker-compose up sources-api-db-setup
+	@docker-compose up init-kafka
+	@docker-compose up -d
+
 .PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener alltest generate
