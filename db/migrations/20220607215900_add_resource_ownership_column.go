@@ -6,9 +6,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// AddResouceOwnershipToApplicationTypes adds new column "resource_ownership" into table
+// AddResourceOwnershipToApplicationTypes adds new column "resource_ownership" into table
 // "application_types".
-func AddResouceOwnershipToApplicationTypes() *gormigrate.Migration {
+func AddResourceOwnershipToApplicationTypes() *gormigrate.Migration {
 	type ApplicationType struct {
 		ResourceOwnership *string `gorm:"type:CHARACTER VARYING"`
 	}
