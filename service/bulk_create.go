@@ -432,23 +432,23 @@ func applicationFromBulkCreateApplication(reqApplication *m.BulkCreateApplicatio
 			return nil, err
 		}
 
-		apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetById(&id)
+		appType, err := dao.GetApplicationTypeDao(&tenant.Id).GetById(&id)
 		if err != nil {
 			return nil, err
 		}
 
-		a.ApplicationType = *apptype
-		a.ApplicationTypeID = apptype.Id
+		a.ApplicationType = *appType
+		a.ApplicationTypeID = appType.Id
 
 	case reqApplication.ApplicationTypeName != "":
 		// dynamically look up the application type by name if passed
-		apptype, err := dao.GetApplicationTypeDao(&tenant.Id).GetByName(reqApplication.ApplicationTypeName)
+		appType, err := dao.GetApplicationTypeDao(&tenant.Id).GetByName(reqApplication.ApplicationTypeName)
 		if err != nil {
 			return nil, fmt.Errorf("failed to lookup application_type_name %v", reqApplication.ApplicationTypeName)
 		}
 
-		a.ApplicationType = *apptype
-		a.ApplicationTypeID = apptype.Id
+		a.ApplicationType = *appType
+		a.ApplicationTypeID = appType.Id
 
 	default:
 		return nil, fmt.Errorf("no application type present, need either [application_type_name] or [application_type_id]")

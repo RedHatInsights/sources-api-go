@@ -188,8 +188,8 @@ func TestApplicationTypeList(t *testing.T) {
 		t.Error("not enough objects passed back from DB")
 	}
 
-	for _, apptype := range out.Data {
-		s, ok := apptype.(map[string]interface{})
+	for _, appType := range out.Data {
+		s, ok := appType.(map[string]interface{})
 		if !ok {
 			t.Error("model did not deserialize as a application type response")
 		}

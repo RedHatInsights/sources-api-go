@@ -73,14 +73,14 @@ func TestSeedingApplicationTypes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	atypes := make([]m.ApplicationType, 0)
-	result := DB.Model(&m.ApplicationType{}).Scan(&atypes)
+	appTypes := make([]m.ApplicationType, 0)
+	result := DB.Model(&m.ApplicationType{}).Scan(&appTypes)
 	if result.Error != nil {
-		t.Fatalf("failed to list apptypes: %v", result.Error)
+		t.Fatalf("failed to list app types: %v", result.Error)
 	}
 
-	if len(atypes) != len(seeds) {
-		t.Errorf("Seeding did not match values, got %v expected %v", len(atypes), len(seeds))
+	if len(appTypes) != len(seeds) {
+		t.Errorf("Seeding did not match values, got %v expected %v", len(appTypes), len(seeds))
 	}
 }
 
