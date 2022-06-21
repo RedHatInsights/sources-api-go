@@ -89,7 +89,7 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceEndpointSubcollectionListNotFound(t *testing.T) {
@@ -231,7 +231,7 @@ func TestEndpointList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
@@ -898,7 +898,7 @@ func TestEndpointListAuthentications(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestEndpointListAuthenticationsBadRequestInvalidEndpointId(t *testing.T) {

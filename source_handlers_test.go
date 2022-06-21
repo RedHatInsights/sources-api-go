@@ -31,9 +31,12 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
+var notExistingTenantId = int64(309832948930)
+
 func TestSourceListAuthentications(t *testing.T) {
 	originalSecretStore := conf.SecretStore
-	tenantId := fixtures.TestTenantData[0].Id
+	tenantId := int64(1)
+	sourceId := int64(2)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -48,7 +51,7 @@ func TestSourceListAuthentications(t *testing.T) {
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceListAuthentications(c)
 	if err != nil {
@@ -73,6 +76,17 @@ func TestSourceListAuthentications(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
+	var wantCount int
+	for _, a := range fixtures.TestAuthenticationData {
+		if a.SourceID == sourceId && a.TenantID == tenantId {
+			wantCount++
+		}
+	}
+
+	if out.Meta.Count != wantCount {
+		t.Error("count not set correctly")
+	}
+
 	auth1, ok := out.Data[0].(map[string]interface{})
 	if !ok {
 		t.Error("model did not deserialize as a source")
@@ -91,8 +105,118 @@ func TestSourceListAuthentications(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	if !config.IsVaultOn() {
+		// For every returned authentication
+		for _, authOut := range out.Data {
+			authOutId, err := strconv.ParseInt(authOut.(map[string]interface{})["id"].(string), 10, 64)
+			if err != nil {
+				t.Error(err)
+			}
+			// find auth in fixtures and check the tenant id
+			for _, authFixtures := range fixtures.TestAuthenticationData {
+				if authOutId == authFixtures.DbID {
+					if authFixtures.TenantID != tenantId {
+						t.Errorf("expected tenant id = %d, got %d", tenantId, authFixtures.TenantID)
+					}
+				}
+			}
+		}
+
+	}
+
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 	conf.SecretStore = originalSecretStore
+}
+
+// TestSourceListAuthenticationsEmptyList tests that empty list is returned
+// when the source doesn't have authentications
+func TestSourceListAuthenticationsEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(101)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	err := SourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestSourceListAuthenticationsTenantNotExists tests that not found is returned
+// for not existing tenant
+func TestSourceListAuthenticationsTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := notExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := notFoundSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestSourceListAuthenticationsInvalidTenant tests that not found is returned for
+// valid tenant and source that not belongs to this tenant
+func TestSourceListAuthenticationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	sourceId := int64(2)
+	tenantId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+	err := notFoundSourceListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceListAuthenticationsNotFound(t *testing.T) {
@@ -147,6 +271,7 @@ func TestSourceListAuthenticationsBadRequest(t *testing.T) {
 
 func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	sourceTypeId := int64(1)
+	tenantId := int64(1)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -156,7 +281,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -190,7 +315,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	// (adding new fixtures will not affect the test)
 	var wantSourcesCount int
 	for _, i := range fixtures.TestSourceData {
-		if i.SourceTypeID == sourceTypeId {
+		if i.SourceTypeID == sourceTypeId && i.TenantID == tenantId {
 			wantSourcesCount++
 		}
 	}
@@ -205,14 +330,50 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 		if !ok {
 			t.Error("model did not deserialize as a source")
 		}
-
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
-// Existing source type + not existing source with this source type
-// expected is Status OK + empty subcollection in response
+// TestSourceTypeSourceSubcollectionListTenantNotExists tests that empty list
+// is returned for existing source type and not existing tenant
+func TestSourceTypeSourceSubcollectionListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// Check existing source type with not existing tenant id
+	// Expected is empty list
+	sourceTypeId := int64(1)
+	tenantId := notExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/source_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_type_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceTypeId))
+
+	err := SourceTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestSourceTypeSourceSubcollectionListEmptySubcollection tests that empty list
+// is returned for existing source type without existing sources in db for given tenant
 func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
 	sourceTypeId := int64(100)
 
@@ -236,47 +397,7 @@ func TestSourceTypeSourceSubcollectionListEmptySubcollection(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != http.StatusOK {
-		t.Error("Did not return 200")
-	}
-
-	var out util.Collection
-	err = json.Unmarshal(rec.Body.Bytes(), &out)
-	if err != nil {
-		t.Error("Failed unmarshaling output")
-	}
-
-	if out.Meta.Limit != 100 {
-		t.Error("limit not set correctly")
-	}
-
-	if out.Meta.Offset != 0 {
-		t.Error("offset not set correctly")
-	}
-
-	// How many sources with given source type is in fixtures
-	// (adding new fixtures will not affect the test)
-	var wantSourcesCount int
-	for _, i := range fixtures.TestSourceData {
-		if i.SourceTypeID == sourceTypeId {
-			wantSourcesCount++
-		}
-	}
-
-	if len(out.Data) != wantSourcesCount {
-		t.Error("not enough objects passed back from DB")
-	}
-
-	for _, src := range out.Data {
-		_, ok := src.(map[string]interface{})
-
-		if !ok {
-			t.Error("model did not deserialize as a source")
-		}
-
-	}
-
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
@@ -415,7 +536,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
@@ -556,7 +677,7 @@ func TestSourceList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListSatellite(t *testing.T) {
@@ -602,7 +723,7 @@ func TestSourceListSatellite(t *testing.T) {
 		t.Error("Objects were not filtered out of request")
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceListBadRequestInvalidFilter(t *testing.T) {
@@ -1637,4 +1758,26 @@ func TestSourceEditPausedUnit(t *testing.T) {
 
 	// Restore the binder to not affect any other tests.
 	c.Echo().Binder = backupBinder
+}
+
+// HELPERS:
+
+// checkAllSourcesBelongToTenant checks that all returned sources belongs to given tenant
+func checkAllSourcesBelongToTenant(tenantId int64, sources []interface{}) error {
+	// For every returned source
+	for _, srcOut := range sources {
+		srcOutId, err := strconv.ParseInt(srcOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			return err
+		}
+		// find source in fixtures and check the tenant id
+		for _, src := range fixtures.TestSourceData {
+			if srcOutId == src.ID {
+				if src.TenantID != tenantId {
+					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, src.TenantID)
+				}
+			}
+		}
+	}
+	return nil
 }

@@ -65,7 +65,7 @@ func TestRhcConnectionList(t *testing.T) {
 
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestRhcConnectionListInvalidFilter(t *testing.T) {

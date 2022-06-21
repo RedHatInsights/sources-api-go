@@ -67,7 +67,7 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
@@ -199,7 +199,7 @@ func TestApplicationTypeList(t *testing.T) {
 		}
 	}
 
-	AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
 func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
