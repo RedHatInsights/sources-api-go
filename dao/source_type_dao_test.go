@@ -1,10 +1,12 @@
 package dao
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -41,4 +43,40 @@ func TestSourceTypeListOffsetAndLimit(t *testing.T) {
 		}
 	}
 	DropSchema("offset_limit")
+}
+
+func TestSourceTypeGetByName(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("source_type_by_name")
+	wantSourceType := fixtures.TestSourceTypeData[0]
+
+	sourceTypeDao := GetSourceTypeDao()
+	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if gotSourceType.Name != wantSourceType.Name {
+		t.Errorf("want source type name '%s', got source type name '%s'", wantSourceType.Name, gotSourceType.Name)
+	}
+
+	DropSchema("source_type_by_name")
+}
+
+func TestSourceTypeGetByNameNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("source_type_by_name")
+	wantSourceType := m.SourceType{Name: "not existing name"}
+
+	sourceTypeDao := GetSourceTypeDao()
+	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name)
+	if gotSourceType != nil {
+		t.Error("got source type object, want nil")
+	}
+
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("want not found err, got '%v'", err)
+	}
+
+	DropSchema("source_type_by_name")
 }
