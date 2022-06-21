@@ -921,8 +921,15 @@ func TestSourceGet(t *testing.T) {
 		t.Errorf("source with wrong ID returned, expected %d, got %s", sourceId, outSrc.ID)
 	}
 
+	// Convert ID from returned source into int64
+	outSrcId, err := strconv.ParseInt(outSrc.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check in fixtures that returned source belongs to the desired tenant
 	for _, src := range fixtures.TestSourceData {
-		if src.ID == sourceId {
+		if src.ID == outSrcId {
 			if src.TenantID != tenantId {
 				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, src.TenantID)
 			}
