@@ -491,11 +491,19 @@ func SourceUnpause(c echo.Context) error {
 		return err
 	}
 
+	// Check if the source exists
+	_, err = sourceDao.GetById(&sourceId)
+	if err != nil {
+		return err
+	}
+
+	// Unpause the existing source
 	err = sourceDao.Unpause(sourceId)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
 
+	// Load the source's applications
 	source, err := sourceDao.GetByIdWithPreload(&sourceId, "Applications")
 	if err != nil {
 		return err
