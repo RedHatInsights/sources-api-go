@@ -1759,7 +1759,12 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 		t.Error("the source is not paused => 'paused_at' is nil and the opposite is expected")
 	}
 
-	// Check that relation applications are paused
+	// Check that paused source belongs to desired tenant
+	if src.TenantID != tenantId {
+		t.Errorf("expected tenant %d, got %d", tenantId, src.TenantID)
+	}
+
+	// Check that relation applications are paused and belongs to desired tenant
 	appDao := dao.GetApplicationDao(&tenantId)
 	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
 	if err != nil {
@@ -1768,6 +1773,9 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	for _, a := range apps {
 		if a.PausedAt == nil {
 			t.Errorf("application with id = %d is not paused and the opposite is expected", a.ID)
+		}
+		if a.TenantID != tenantId {
+			t.Errorf("expected tenant %d, got %d", tenantId, a.TenantID)
 		}
 	}
 
