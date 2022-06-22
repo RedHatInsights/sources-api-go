@@ -22,7 +22,7 @@ func (ur *UserResource) UserOwnershipActive() bool {
 }
 
 func (ur *UserResource) userIDPresent() bool {
-	return ur.User.UserID != "" && ur.User != nil
+	return ur.User != nil && ur.User.UserID != ""
 }
 
 func (ur *UserResource) userResourceOwnership() bool {

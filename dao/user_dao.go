@@ -6,7 +6,7 @@ import (
 
 var GetUserDao func(*int64) UserDao
 
-// getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
+// getDefaultUserDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultUserDao(tenantId *int64) UserDao {
 	return &userDaoImpl{
 		TenantID: tenantId,
