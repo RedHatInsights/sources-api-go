@@ -26,5 +26,5 @@ func (ur *UserResource) userIDPresent() bool {
 }
 
 func (ur *UserResource) userResourceOwnership() bool {
-	return ur.ResourceOwnership == "user"
+	return ur.ResourceOwnership == UserOwnership
 }
