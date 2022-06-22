@@ -479,8 +479,9 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 	templates.BadRequestTest(t, rec)
 }
 
-func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
+func TestApplicationTypeListSourceSubcollectionList(t *testing.T) {
 	appTypeId := int64(1)
+	tenantId := int64(1)
 	wantSourcesCount := len(testutils.GetSourcesWithAppType(appTypeId))
 
 	c, rec := request.CreateTestContext(
@@ -491,7 +492,7 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -536,10 +537,75 @@ func TestApplicatioTypeListSourceSubcollectionList(t *testing.T) {
 		}
 	}
 
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
-func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
+// TestApplicationTypeListSourceSubcollectionListTenantNotExists tests that empty list
+// is returned for existing application type and not existing tenant
+func TestApplicationTypeListSourceSubcollectionListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// Check existing application type with not existing tenant id
+	appTypeId := int64(1)
+	tenantId := notExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues(fmt.Sprintf("%d", appTypeId))
+
+	err := ApplicationTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestApplicationTypeListSourceSubcollectionListEmptySubcollection tests that empty list
+// is returned for existing application type without existing sources for given tenant
+func TestApplicationTypeListSourceSubcollectionListEmptySubcollection(t *testing.T) {
+	appTypeId := int64(100)
+	tenantId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types/1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_type_id")
+	c.SetParamValues(fmt.Sprintf("%d", appTypeId))
+
+	err := ApplicationTypeListSource(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+func TestApplicationTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/398748974/sources",
@@ -564,7 +630,7 @@ func TestApplicatioTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
+func TestApplicationTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_types/xxx/sources",
@@ -589,7 +655,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *tes
 	templates.BadRequestTest(t, rec)
 }
 
-func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
+func TestApplicationTypeListSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
@@ -619,6 +685,7 @@ func TestApplicatioTypeListSourceSubcollectionListBadRequestInvalidFilter(t *tes
 }
 
 func TestSourceList(t *testing.T) {
+	tenantId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources",
@@ -627,7 +694,7 @@ func TestSourceList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		})
 
 	err := SourceList(c)
@@ -653,7 +720,14 @@ func TestSourceList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestSourceData) {
+	var wantSourcesCount int
+	for _, s := range fixtures.TestSourceData {
+		if s.TenantID == tenantId {
+			wantSourcesCount++
+		}
+	}
+
+	if len(out.Data) != wantSourcesCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -677,7 +751,65 @@ func TestSourceList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestSourceListTenantNotExists tests that empty list is returned for not existing tenant
+func TestSourceListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// For not existing tenant is expected that returned value
+	// will be empty list and return code 200
+	tenantId := notExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		})
+
+	err := SourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestSourceListTenantWithoutSources tests that empty list is returned for existing tenant
+// without related sources
+func TestSourceListTenantWithoutSources(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// For tenant without sources is expected that returned value
+	// will be empty list and return code 200
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		})
+
+	err := SourceList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestSourceListSatellite(t *testing.T) {
@@ -751,17 +883,20 @@ func TestSourceListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestSourceGet(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceGet(c)
 	if err != nil {
@@ -781,6 +916,82 @@ func TestSourceGet(t *testing.T) {
 	if *outSrc.Name != "Source1" {
 		t.Error("ghosts infected the return")
 	}
+
+	if outSrc.ID != fmt.Sprintf("%d", sourceId) {
+		t.Errorf("source with wrong ID returned, expected %d, got %s", sourceId, outSrc.ID)
+	}
+
+	// Convert ID from returned source into int64
+	outSrcId, err := strconv.ParseInt(outSrc.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check in fixtures that returned source belongs to the desired tenant
+	for _, src := range fixtures.TestSourceData {
+		if src.ID == outSrcId {
+			if src.TenantID != tenantId {
+				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, src.TenantID)
+			}
+			break
+		}
+	}
+}
+
+// TestSourceGetInvalidTenant tests that not found is returned for
+// existing source id but with tenant that is now owner of this source
+func TestSourceGetInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+	err := notFoundSourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestSourceGetTenantNotExists tests that not found is returned for
+// not existing tenant
+func TestSourceGetTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := notExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+	err := notFoundSourceGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceGetNotFound(t *testing.T) {

@@ -12,4 +12,9 @@ var TestTenantData = []m.Tenant{
 		Id:             2,
 		ExternalTenant: "67890",
 	},
+	{
+		Id:             3,
+		ExternalTenant: "7893720",
+		OrgID:          "tenant without sources",
+	},
 }
