@@ -1786,6 +1786,35 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	}
 }
 
+// TestPauseSourceAndItsApplicationsInvalidTenant tests that not found is returned
+// when tenant tries to pause not owned source
+func TestPauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// The source is not owned by the tenant
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+	err := notFoundSourcePause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestPauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
