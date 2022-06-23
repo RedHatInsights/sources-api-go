@@ -18,7 +18,7 @@ var GetSourceDao func(*SourceDaoParams) SourceDao
 // getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultSourceDao(daoParams *SourceDaoParams) SourceDao {
 	var tenantID *int64
-	if daoParams != nil {
+	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
 	}
 
