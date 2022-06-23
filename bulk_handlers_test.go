@@ -80,7 +80,7 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 	}
 
 	var users []m.User
-	err = dao.DB.Model(&m.User{}).Find(&users).Error
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
 	if err != nil {
 		t.Error(err)
 	}
@@ -93,14 +93,14 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Errorf("expected userid is %s instead of %s", testUserId, users[0].UserID)
 	}
 
-	err = dao.DB.Model(&m.User{}).Delete(&users).Error
-	if err != nil {
-		t.Error(err)
-	}
-
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
 	if err != nil {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
+	}
+
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Delete(&users).Error
+	if err != nil {
+		t.Error(err)
 	}
 }
 
@@ -142,7 +142,7 @@ func TestCreateUserWithoutResourceOwnershipApplicationType(t *testing.T) {
 	}
 
 	var users []m.User
-	err = dao.DB.Model(&m.User{}).Find(&users).Error
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
 	if err != nil {
 		t.Error(err)
 	}
@@ -195,7 +195,7 @@ func TestCreateUserWithoutResourceOwnershipConfig(t *testing.T) {
 	}
 
 	var users []m.User
-	err = dao.DB.Model(&m.User{}).Find(&users).Error
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
 	if err != nil {
 		t.Error(err)
 	}
