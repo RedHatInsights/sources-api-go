@@ -3,8 +3,10 @@ package dao
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
+	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
@@ -99,8 +101,48 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 	count := int64(0)
 	query.Count(&count)
 
+	logMessage := ""
+
+	sourcesWithoutTenant := make([]m.Source, 0, limit)
+	queryWithoutTenant := DB.Debug().Model(&m.Source{}).Select(`sources.id, sources.availability_status, sources.tenant_id`)
+	resultWithoutTenant := queryWithoutTenant.Limit(limit).Offset(offset).Find(&sourcesWithoutTenant)
+	if resultWithoutTenant.Error != nil {
+		logMessage += fmt.Sprintf("[Sources] Error: %v", resultWithoutTenant.Error)
+	}
+
 	sources := make([]m.Source, 0, limit)
 	result := query.Joins("Tenant").Limit(limit).Offset(offset).Find(&sources)
+	logMessage += fmt.Sprintf("Found %v sources with limit %v and offset %v of %v source records. Filters %v. ", len(sources), limit, offset, count, filters)
+	logMessage += "List of source IDs: "
+	for _, source := range sources {
+		logMessage += fmt.Sprintf("[ID:%v TID:%v(%v) S:%v] ", source.ID, source.Tenant.Id, source.Tenant.ExternalTenant, source.AvailabilityStatus)
+	}
+
+	if result.Error != nil {
+		logMessage += fmt.Sprintf("Error: %v", result.Error)
+	} else {
+		logMessage += fmt.Sprintf("Affected records %v", result.RowsAffected)
+	}
+
+	if len(sourcesWithoutTenant) != len(sources) {
+		sourcesWithoutTenantIDs := make([]string, 0)
+		for _, source := range sourcesWithoutTenant {
+			sourcesWithoutTenantIDs = append(sourcesWithoutTenantIDs, strconv.Itoa(int(source.ID)))
+		}
+
+		sourcesIDs := make([]string, 0)
+		for _, source := range sources {
+			sourcesIDs = append(sourcesIDs, strconv.Itoa(int(source.ID)))
+		}
+
+		// returns IDs from sourcesWithoutTenantIDs which are not in sourcesIDs
+		differenceIDs := util.Difference(sourcesWithoutTenantIDs, sourcesIDs)
+		otherDifferenceIDs := util.Difference(sourcesIDs, sourcesWithoutTenantIDs)
+		logMessage += fmt.Sprintf("Different Sources IDs: %v(%v) (All Sources: %v Without Tenant:%v)", differenceIDs, otherDifferenceIDs, len(sourcesWithoutTenant), len(sources))
+	}
+
+	logging.Log.Errorf("[MISSING-242154] %v", logMessage)
+
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
