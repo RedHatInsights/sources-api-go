@@ -187,14 +187,17 @@ func SourceDelete(c echo.Context) (err error) {
 		return util.NewErrBadRequest(err)
 	}
 
-	// Check if the source exists before proceeding.
-	sourceExists, err := sourcesDB.Exists(id)
-	if err != nil {
-		return util.NewErrBadRequest(err)
-	}
+	s, err := sourcesDB.GetById(&id)
 
-	if !sourceExists {
-		return util.NewErrNotFound("source")
+	if err != nil {
+		return err
+	}
+	if c.Get("cert-auth") != nil {
+		satelliteId := dao.Static.GetSourceTypeId("satellite")
+		if s.SourceTypeID != satelliteId {
+			//We only allow delete with cert auth if source type is Satellite
+			return util.NewErrBadRequest("Unauthorized.")
+		}
 	}
 
 	c.Logger().Infof("Deleting Source Id %v", id)
