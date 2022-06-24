@@ -105,13 +105,13 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 
 	sourcesWithoutTenant := make([]m.Source, 0, limit)
 	queryWithoutTenant := DB.Debug().Model(&m.Source{}).Select(`sources.id, sources.availability_status, sources.tenant_id`)
-	resultWithoutTenant := queryWithoutTenant.Limit(limit).Offset(offset).Find(&sourcesWithoutTenant)
+	resultWithoutTenant := queryWithoutTenant.Limit(limit).Offset(offset).Order("sources.id ASC").Find(&sourcesWithoutTenant)
 	if resultWithoutTenant.Error != nil {
 		logMessage += fmt.Sprintf("[Sources] Error: %v", resultWithoutTenant.Error)
 	}
 
 	sources := make([]m.Source, 0, limit)
-	result := query.Joins("Tenant").Limit(limit).Offset(offset).Find(&sources)
+	result := query.Joins("Tenant").Limit(limit).Offset(offset).Order("sources.id ASC").Find(&sources)
 	logMessage += fmt.Sprintf("Found %v sources with limit %v and offset %v of %v source records. Filters %v. ", len(sources), limit, offset, count, filters)
 	logMessage += "List of source IDs: "
 	for _, source := range sources {
