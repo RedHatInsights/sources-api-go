@@ -1,5 +1,7 @@
 package model
 
+const UserOwnership = "user"
+
 type UserResource struct {
 	SourceNames           []string
 	ApplicationTypesNames []string

@@ -11,8 +11,6 @@ import (
 	"gorm.io/datatypes"
 )
 
-const UserOwnership = "user"
-
 type ApplicationType struct {
 	//fields for gorm
 	Id        int64     `gorm:"primarykey" json:"id"`
