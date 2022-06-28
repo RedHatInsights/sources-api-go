@@ -46,7 +46,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		}
 
 		userDao := dao.GetUserDao(&tenant.Id)
-		err = userDao.CreateIfResourceOwnershipActive(userResource)
+		err = userDao.FindOrCreateUserIfResourceOwnershipActive(userResource)
 		if err != nil {
 			return err
 		}

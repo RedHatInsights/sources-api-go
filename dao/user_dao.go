@@ -22,35 +22,40 @@ type userDaoImpl struct {
 	TenantID *int64
 }
 
-func (u *userDaoImpl) create(user *m.User) error {
-	var userExists bool
+func (u *userDaoImpl) findOrCreate(user *m.User) (*m.User, error) {
+	var foundUser m.User
 
 	err := DB.Model(&m.User{}).
-		Select("1").
 		Where("user_id = ?", user.UserID).
 		Where("tenant_id = ?", *u.TenantID).
-		Scan(&userExists).
+		Find(&foundUser).
 		Error
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if !userExists {
+	if foundUser.Id == 0 {
 		user.TenantID = *u.TenantID
-		result := DB.Debug().Create(user)
-		return result.Error
+		resultError := DB.Debug().Create(user).Error
+		if resultError != nil {
+			return nil, resultError
+		}
+
+		return user, nil
 	} else {
-		return nil
+		return &foundUser, nil
 	}
 }
 
-func (u *userDaoImpl) CreateIfResourceOwnershipActive(userResource *m.UserResource) error {
+func (u *userDaoImpl) FindOrCreateUserIfResourceOwnershipActive(userResource *m.UserResource) error {
 	if userResource.UserOwnershipActive() {
-		err := u.create(userResource.User)
+		user, err := u.findOrCreate(userResource.User)
 		if err != nil {
 			return err
 		}
+
+		userResource.User = user
 	}
 
 	return nil
