@@ -205,6 +205,31 @@ func TestSystemDelete(t *testing.T) {
 	}
 }
 
+func TestSystemDeleteSource(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/sources/1235",
+		nil,
+		map[string]interface{}{
+			"x-rh-identity": "dummy",
+			"identity": &identity.XRHID{
+				Identity: identity.Identity{
+					System: map[string]interface{}{"cn": "test_cert"},
+				},
+			},
+		},
+	)
+
+	err := permCheckOrElse204(c)
+	if err != nil {
+		t.Errorf("caught an error when there should not have been one")
+	}
+
+	if rec.Code != 204 {
+		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	}
+}
+
 // yay dummy structs!
 type dummyRbac struct {
 	access bool

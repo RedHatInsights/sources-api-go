@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/RedHatInsights/rbac-client-go"
@@ -60,7 +61,13 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			// org_admin/rbac/psk
 			if identity.Identity.System != nil {
 				// system-auth only allows GET and POST requests.
-				if c.Request().Method != http.MethodGet && c.Request().Method != http.MethodPost {
+				method := c.Request().Method
+				if method != http.MethodGet && method != http.MethodPost && method != http.MethodDelete {
+					c.Response().Header().Set("Allow", "GET, POST, DELETE")
+					return c.JSON(http.StatusMethodNotAllowed, util.ErrorDoc("Method not allowed", "405"))
+				}
+				// Secondary check for delete - we could move this to middleware
+				if method == http.MethodDelete && !certDeleteAllowed(c) {
 					c.Response().Header().Set("Allow", "GET, POST")
 					return c.JSON(http.StatusMethodNotAllowed, util.ErrorDoc("Method not allowed", "405"))
 				}
@@ -101,6 +108,13 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return next(c)
 	}
+}
+
+func certDeleteAllowed(c echo.Context) bool {
+	//Cant get c.Path() to work (returns "")
+	//Limit to "sources" endpoint - further filtering done by source handler
+	allowed := strings.HasPrefix(c.Request().URL.Path, "/sources/")
+	return allowed
 }
 
 func pskMatches(psk string) bool {
