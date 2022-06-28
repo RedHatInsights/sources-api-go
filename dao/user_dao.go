@@ -1,6 +1,8 @@
 package dao
 
 import (
+	"fmt"
+
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
 
@@ -22,35 +24,39 @@ type userDaoImpl struct {
 	TenantID *int64
 }
 
-func (u *userDaoImpl) create(user *m.User) error {
-	var userExists bool
+func (u *userDaoImpl) FindOrCreate(userID string) (*m.User, error) {
+	var user m.User
+
+	if u.TenantID == nil {
+		return nil, fmt.Errorf("tenant id is missing to call FindOrCreate")
+	}
 
 	err := DB.Model(&m.User{}).
-		Select("1").
-		Where("user_id = ?", user.UserID).
+		Where("user_id = ?", userID).
 		Where("tenant_id = ?", *u.TenantID).
-		Scan(&userExists).
+		First(&user).
 		Error
 
 	if err != nil {
-		return err
+		user.TenantID = *u.TenantID
+		user.UserID = userID
+		err = DB.Debug().Create(&user).Error
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if !userExists {
-		user.TenantID = *u.TenantID
-		result := DB.Debug().Create(user)
-		return result.Error
-	} else {
-		return nil
-	}
+	return &user, nil
 }
 
 func (u *userDaoImpl) CreateIfResourceOwnershipActive(userResource *m.UserResource) error {
 	if userResource.UserOwnershipActive() {
-		err := u.create(userResource.User)
+		user, err := u.FindOrCreate(userResource.User.UserID)
 		if err != nil {
 			return err
 		}
+
+		userResource.User = user
 	}
 
 	return nil
