@@ -93,6 +93,16 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Errorf("expected userid is %s instead of %s", testUserId, users[0].UserID)
 	}
 
+	var sources []m.Source
+	err = dao.DB.Model(&m.Source{}).Where("name = ?", nameSource).Find(&sources).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if *(sources[0].UserID) != users[0].Id {
+		t.Error(err)
+	}
+
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
 	if err != nil {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
@@ -151,6 +161,16 @@ func TestCreateUserWithoutResourceOwnershipApplicationType(t *testing.T) {
 		t.Errorf("0 user expected instead of %d", len(users))
 	}
 
+	var sources []m.Source
+	err = dao.DB.Model(&m.Source{}).Where("name = ?", nameSource).Find(&sources).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if sources[0].UserID != nil {
+		t.Error(err)
+	}
+
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
 	if err != nil {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
@@ -202,6 +222,16 @@ func TestCreateUserWithoutResourceOwnershipConfig(t *testing.T) {
 
 	if len(users) != 0 {
 		t.Errorf("0 users expected instead of %d", len(users))
+	}
+
+	var sources []m.Source
+	err = dao.DB.Model(&m.Source{}).Where("name = ?", nameSource).Find(&sources).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if sources[0].UserID != nil {
+		t.Error(err)
 	}
 
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)

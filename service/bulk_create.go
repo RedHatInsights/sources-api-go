@@ -52,7 +52,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		}
 
 		// parse the sources, then save them in the transaction.
-		output.Sources, err = parseSources(req.Sources, tenant)
+		output.Sources, err = parseSources(req.Sources, tenant, userResource)
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 	return &output, err
 }
 
-func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant) ([]m.Source, error) {
+func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResource *m.UserResource) ([]m.Source, error) {
 	sources := make([]m.Source, len(reqSources))
 
 	for i, source := range reqSources {
@@ -172,6 +172,10 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant) ([]m.Source
 		s.Endpoints = make([]m.Endpoint, 0)
 		s.Applications = make([]m.Application, 0)
 		s.Authentications = make([]m.Authentication, 0)
+
+		if userResource.OwnershipPresentForSource(s.Name) {
+			s.UserID = &userResource.User.Id
+		}
 
 		// add it to the list
 		sources[i] = s
