@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
+	"regexp"
 	"time"
 
 	"github.com/RedHatInsights/rbac-client-go"
@@ -111,9 +111,10 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func certDeleteAllowed(c echo.Context) bool {
-	//Cant get c.Path() to work (returns "")
+
 	//Limit to "sources" endpoint - further filtering done by source handler
-	allowed := strings.HasPrefix(c.Request().URL.Path, "/sources/")
+	m := regexp.MustCompile(`/sources/\d+$`)
+	allowed := m.MatchString(c.Request().URL.Path)
 	return allowed
 }
 
