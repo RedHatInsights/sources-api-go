@@ -115,6 +115,32 @@ func TestRhcConnectionListTenantNotExists(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+func TestRhcConnectionListTenantWithoutRhcConnections(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// For the tenant without rhc connections is expected that returned value
+	// will be empty list and return code 200
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := RhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestRhcConnectionListInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
