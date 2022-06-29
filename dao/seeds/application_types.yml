@@ -61,8 +61,6 @@
   supported_authentication_types:
     amazon:
     - cloud-meter-arn
-    azure:
-    - lighthouse_subscription_id
 "/insights/platform/fifi":
   display_name: Remediations
   dependent_applications: []
