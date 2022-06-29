@@ -284,6 +284,34 @@ func TestRhcConnectionGetByIdInvalidTenant(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestRhcConnectionGetByIdTenantNotExists tests that not found is returned for
+// not existing tenant
+func TestRhcConnectionGetByIdTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	rhcId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d", rhcId),
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcId))
+
+	notFoundRhcConnectionGetByUuid := ErrorHandlingContext(RhcConnectionGetById)
+	err := notFoundRhcConnectionGetByUuid(c)
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestRhcConnectionGetByIdNotFound(t *testing.T) {
 	nonExistingId := "12345"
 
