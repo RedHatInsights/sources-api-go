@@ -583,6 +583,44 @@ func TestRhcConnectionEdit(t *testing.T) {
 	}
 }
 
+// TestRhcConnectionEditInvalidTenant tests situation when the tenant tries to
+// edit existing not owned rhc connection
+func TestRhcConnectionEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	rhcId := fixtures.TestRhcConnectionData[2].ID
+	requestBody := model.RhcConnectionEditRequest{
+		Extra: nil,
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d", rhcId),
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcId))
+
+	notFoundRhcConnectionEdit := ErrorHandlingContext(RhcConnectionEdit)
+	err = notFoundRhcConnectionEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestRhcConnectionEditInvalidParam(t *testing.T) {
 	invalidId := "xxx"
 
