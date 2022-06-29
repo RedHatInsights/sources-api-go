@@ -538,6 +538,8 @@ func TestRhcConnectionCreateRelationExists(t *testing.T) {
 }
 
 func TestRhcConnectionEdit(t *testing.T) {
+	tenantId := int64(1)
+	rhcId := fixtures.TestRhcConnectionData[2].ID
 	requestBody := model.RhcConnectionEditRequest{
 		Extra: nil,
 	}
@@ -547,21 +549,19 @@ func TestRhcConnectionEdit(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	id := strconv.FormatInt(fixtures.TestRhcConnectionData[2].ID, 10)
-
 	c, rec := request.CreateTestContext(
 		http.MethodPatch,
-		"/api/sources/v3.1/rhc_connections/"+id,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d", rhcId),
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	c.SetParamNames("id")
-	c.SetParamValues(id)
+	c.SetParamValues(fmt.Sprintf("%d", rhcId))
 
 	err = RhcConnectionEdit(c)
 	if err != nil {
@@ -570,6 +570,16 @@ func TestRhcConnectionEdit(t *testing.T) {
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusOK, rec.Code, rec.Body.String())
+	}
+
+	// check in fixtures that changed rhc connection belongs to the desired tenant
+	for _, srcRhc := range fixtures.TestSourceRhcConnectionData {
+		if srcRhc.RhcConnectionId == rhcId {
+			if srcRhc.TenantId != tenantId {
+				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, srcRhc.TenantId)
+			}
+			break
+		}
 	}
 }
 
