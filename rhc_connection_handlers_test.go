@@ -406,6 +406,43 @@ func TestRhcConnectionCreateTenantNotExists(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestRhcConnectionCreateTenantNotOwnsSource tests that not found is returned for
+// existing tenant who doesn't own the source
+func TestRhcConnectionCreateTenantNotOwnsSource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+
+	requestBody := model.RhcConnectionCreateRequest{
+		Extra:       nil,
+		SourceIdRaw: fixtures.TestSourceData[1].ID,
+		RhcId:       "12345",
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/rhc_connections",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+	err = notFoundRhcConnectionCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestRhcConnectionCreateInvalidInput(t *testing.T) {
 	requestBody := model.RhcConnectionCreateRequest{
 		Extra:    nil,
