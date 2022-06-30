@@ -62,7 +62,7 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, _ := request.CreateTestContext(
+	c, res := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/bulk_create",
 		bytes.NewReader(body),
@@ -103,6 +103,22 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
+	var response m.BulkCreateResponse
+	err = json.Unmarshal(res.Body.Bytes(), &response)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var applications []m.Application
+	err = dao.DB.Model(&m.Application{}).Where("id = ?", response.Applications[0].ID).Find(&applications).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if *(applications[0].UserID) != users[0].Id {
+		t.Error(err)
+	}
+
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
 	if err != nil {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
@@ -134,7 +150,7 @@ func TestCreateUserWithoutResourceOwnershipApplicationType(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, _ := request.CreateTestContext(
+	c, res := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/bulk_create",
 		bytes.NewReader(body),
@@ -168,6 +184,22 @@ func TestCreateUserWithoutResourceOwnershipApplicationType(t *testing.T) {
 	}
 
 	if sources[0].UserID != nil {
+		t.Error(err)
+	}
+
+	var response m.BulkCreateResponse
+	err = json.Unmarshal(res.Body.Bytes(), &response)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var applications []m.Application
+	err = dao.DB.Model(&m.Application{}).Where("id = ?", response.Applications[0].ID).Find(&applications).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if applications[0].UserID != nil {
 		t.Error(err)
 	}
 

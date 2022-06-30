@@ -61,7 +61,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 			return err
 		}
 
-		output.Applications, err = parseApplications(req.Applications, &output, tenant)
+		output.Applications, err = parseApplications(req.Applications, &output, tenant, userResource)
 		if err != nil {
 			return err
 		}
@@ -184,7 +184,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 	return sources, nil
 }
 
-func parseApplications(reqApplications []m.BulkCreateApplication, current *m.BulkCreateOutput, tenant *m.Tenant) ([]m.Application, error) {
+func parseApplications(reqApplications []m.BulkCreateApplication, current *m.BulkCreateOutput, tenant *m.Tenant, userResource *m.UserResource) ([]m.Application, error) {
 	applications := make([]m.Application, 0)
 
 	for _, app := range reqApplications {
@@ -210,6 +210,10 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 			a.SourceID = src.ID
 			a.Tenant = *tenant
 			a.TenantID = tenant.Id
+
+			if userResource.OwnershipPresentForSourceAndApplication(app.SourceName, app.ApplicationTypeName) {
+				a.UserID = &userResource.User.Id
+			}
 
 			applications = append(applications, *a)
 		}
