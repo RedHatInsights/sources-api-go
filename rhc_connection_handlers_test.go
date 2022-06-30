@@ -579,6 +579,35 @@ func TestRhcConnectionDeleteInvalidTenant(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestRhcConnectionDeleteTenantNotExists tests that not found err is returned
+// when tenant doesn't exist
+func TestRhcConnectionDeleteTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(98304983)
+	rhcId := fixtures.TestRhcConnectionData[2].ID
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d", rhcId),
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcId))
+
+	notFoundRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+	err := notFoundRhcConnectionDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestRhcConnectionDeleteNotFound(t *testing.T) {
 	nonExistingId := "12345"
 
