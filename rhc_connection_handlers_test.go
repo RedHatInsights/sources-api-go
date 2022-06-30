@@ -829,6 +829,7 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 }
 
 func TestRhcConnectionGetRelatedSources(t *testing.T) {
+	tenantId := int64(1)
 	rhcConnectionId := "2"
 
 	c, rec := request.CreateTestContext(
@@ -839,7 +840,7 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -885,7 +886,12 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 		if !ok {
 			t.Error("model did not deserialize as a source")
 		}
+	}
 
+	// Check that all sources belong to our tenant
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
