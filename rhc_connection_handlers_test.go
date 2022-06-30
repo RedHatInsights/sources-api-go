@@ -973,3 +973,34 @@ func TestRhcConnectionGetRelatedSourcesNotFound(t *testing.T) {
 
 	templates.NotFoundTest(t, rec)
 }
+
+// TestRhcConnectionGetRelatedSourcesInvalidTenant tests that not found err is returned
+// when tenant tries to list sources for not owned rhc connection
+func TestRhcConnectionGetRelatedSourcesInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+	rhcConnectionId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d/sources", rhcConnectionId),
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcConnectionId))
+
+	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+	err := notFoundRhcConnectionSourcesList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
