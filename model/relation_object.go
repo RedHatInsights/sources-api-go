@@ -117,7 +117,20 @@ func (relationObject *RelationObject) setRelationObjectID() error {
 
 func (relationObject *RelationObject) checkIfPrimaryRecordExists(query *gorm.DB) error {
 	result := map[string]interface{}{}
-	query.Model(relationObject.baseObject).Find(&result, relationObject.Id)
+
+	switch relationObject.baseObject.(type) {
+	case Source:
+		query.Model(relationObject.baseObject).
+			Where("tenant_id = ?", relationObject.CurrentTenantID).
+			Find(&result, relationObject.Id)
+
+	case SourceType, ApplicationType:
+		query.Model(relationObject.baseObject).
+			Find(&result, relationObject.Id)
+
+	default:
+		return fmt.Errorf("unexpected primary record type")
+	}
 
 	if len(result) == 0 {
 		return fmt.Errorf("record not found")
