@@ -129,6 +129,18 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
+	var applicationAuthentications []m.ApplicationAuthentication
+	err = dao.DB.Model(&m.ApplicationAuthentication{}).
+		Where("application_id = ? AND authentication_id = ?", response.Applications[0].ID, response.Authentications[0].ID).
+		Find(&applicationAuthentications).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if *(authentications[0].UserID) != users[0].Id {
+		t.Error(err)
+	}
+
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
 	if err != nil {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
@@ -215,6 +227,19 @@ func TestCreateUserWithoutResourceOwnershipApplicationType(t *testing.T) {
 
 	var authentications []m.Authentication
 	err = dao.DB.Model(&m.Authentication{}).Where("id = ?", response.Authentications[0].ID).Find(&authentications).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if authentications[0].UserID != nil {
+		t.Error(err)
+	}
+
+	var applicationAuthentications []m.ApplicationAuthentication
+	err = dao.DB.Model(&m.ApplicationAuthentication{}).
+		Where("application_id = ? AND authentication_id = ?", response.Applications[0].ID, response.Authentications[0].ID).
+		Find(&applicationAuthentications).Error
+
 	if err != nil {
 		t.Error(err)
 	}
