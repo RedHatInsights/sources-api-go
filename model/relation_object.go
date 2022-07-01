@@ -151,7 +151,7 @@ func NewRelationObject(objectModel interface{}, currentTenantID int64, query *go
 		return object, err
 	}
 
-	return object, err
+	return object, nil
 }
 
 func (relationObject *RelationObject) StringBaseObject() string {
