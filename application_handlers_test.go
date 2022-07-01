@@ -31,6 +31,7 @@ import (
 )
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {
+	tenantId := int64(1)
 	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -41,7 +42,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -79,7 +80,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 
 	var wantData []m.Application
 	for _, app := range fixtures.TestApplicationData {
-		if app.SourceID == int64(sourceId) {
+		if app.SourceID == sourceId {
 			wantData = append(wantData, app)
 		}
 	}
@@ -104,6 +105,11 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 
 	if a2["id"] != fmt.Sprintf("%d", wantData[1].ID) {
 		t.Error("ghosts infected the return")
+	}
+
+	err = checkAllApplicationsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -1487,4 +1493,26 @@ func TestApplicationEditPausedUnitInvalidFields(t *testing.T) {
 
 	// Restore the binder to not affect any other tests.
 	c.Echo().Binder = backupBinder
+}
+
+// HELPERS:
+
+// checkAllApplicationsBelongToTenant checks that all returned apps belongs to given tenant
+func checkAllApplicationsBelongToTenant(tenantId int64, apps []interface{}) error {
+	// For every returned app
+	for _, appOut := range apps {
+		appOutId, err := strconv.ParseInt(appOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			return err
+		}
+		// find the app in fixtures and check the tenant id
+		for _, app := range fixtures.TestApplicationData {
+			if appOutId == app.ID {
+				if app.TenantID != tenantId {
+					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, app.TenantID)
+				}
+			}
+		}
+	}
+	return nil
 }
