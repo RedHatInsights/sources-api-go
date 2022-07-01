@@ -240,6 +240,35 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 	templates.BadRequestTest(t, rec)
 }
 
+func TestSourceApplicationSubcollectionListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(30984093843908490)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListApplications := ErrorHandlingContext(SourceListApplications)
+	err := notFoundSourceListApplications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationList(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
