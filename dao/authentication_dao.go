@@ -640,6 +640,7 @@ func (a *authenticationDaoImpl) ListIdsForResource(resourceType string, resource
 
 	return authentications, nil
 }
+
 func (a *authenticationDaoImpl) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
 	var deletedAuthentications []m.Authentication
 	for _, auth := range authentications {

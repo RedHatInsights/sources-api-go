@@ -35,7 +35,7 @@ func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 	applications := make([]m.Application, 0, limit)
 	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, util.NewErrNotFound("source")
+		return nil, 0, err
 	}
 
 	query := relationObject.HasMany(&m.Application{}, DB.Debug())
