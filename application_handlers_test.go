@@ -138,29 +138,7 @@ func TestSourceApplicationSubcollectionListEmptyList(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
-		t.Error("Did not return 200")
-	}
-
-	var out util.Collection
-	err = json.Unmarshal(rec.Body.Bytes(), &out)
-	if err != nil {
-		t.Error("Failed unmarshaling output")
-	}
-
-	if out.Meta.Limit != 100 {
-		t.Error("limit not set correctly")
-	}
-
-	if out.Meta.Offset != 0 {
-		t.Error("offset not set correctly")
-	}
-
-	if len(out.Data) != 0 {
-		t.Error("not enough objects passed back from DB")
-	}
-
-	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
