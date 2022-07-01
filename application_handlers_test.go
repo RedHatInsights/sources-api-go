@@ -246,9 +246,11 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 	templates.BadRequestTest(t, rec)
 }
 
+// TestSourceApplicationSubcollectionListTenantNotExists tests that not found err is
+// returned for not existing tenant
 func TestSourceApplicationSubcollectionListTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	tenantId := int64(30984093843908490)
+	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(
