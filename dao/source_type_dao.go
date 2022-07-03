@@ -64,7 +64,7 @@ func (st *sourceTypeDaoImpl) GetByName(name string) (*m.SourceType, error) {
 	return sourceType, nil
 }
 
-func (a *sourceTypeDaoImpl) Create(_ *m.SourceType) error {
+func (st *sourceTypeDaoImpl) Create(_ *m.SourceType) error {
 	panic("not needed (yet) due to seeding.")
 }
 

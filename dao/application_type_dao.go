@@ -27,12 +27,12 @@ type applicationTypeDaoImpl struct {
 	TenantID *int64
 }
 
-func (a *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
+func (at *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	applicationTypes := make([]m.ApplicationType, 0, limit)
 
-	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
+	relationObject, err := m.NewRelationObject(primaryCollection, *at.TenantID, DB.Debug())
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
@@ -57,7 +57,7 @@ func (a *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}
 	return applicationTypes, count, nil
 }
 
-func (a *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
+func (at *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
 	// allocating a slice of application types, initial length of
 	// 0, size of limit (since we will not be returning more than that)
 	appTypes := make([]m.ApplicationType, 0, limit)
@@ -81,7 +81,7 @@ func (a *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter) 
 	return appTypes, count, nil
 }
 
-func (a *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
+func (at *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
 	appType := &m.ApplicationType{Id: *id}
 	result := DB.Debug().First(appType)
 	if result.Error != nil {
@@ -91,7 +91,7 @@ func (a *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) 
 	return appType, nil
 }
 
-func (a *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, error) {
+func (at *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, error) {
 	appType := &m.ApplicationType{}
 	result := DB.Debug().Where("name LIKE ?", "%"+name+"%").First(&appType)
 	if result.Error != nil {
@@ -101,15 +101,15 @@ func (a *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, err
 	return appType, nil
 }
 
-func (a *applicationTypeDaoImpl) Create(_ *m.ApplicationType) error {
+func (at *applicationTypeDaoImpl) Create(_ *m.ApplicationType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (a *applicationTypeDaoImpl) Update(_ *m.ApplicationType) error {
+func (at *applicationTypeDaoImpl) Update(_ *m.ApplicationType) error {
 	panic("not needed (yet) due to seeding.")
 }
 
-func (a *applicationTypeDaoImpl) Delete(_ *int64) error {
+func (at *applicationTypeDaoImpl) Delete(_ *int64) error {
 	panic("not needed (yet) due to seeding.")
 }
 
