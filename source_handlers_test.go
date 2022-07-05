@@ -31,8 +31,6 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-var notExistingTenantId = int64(309832948930)
-
 func TestSourceListAuthentications(t *testing.T) {
 	originalSecretStore := conf.SecretStore
 	tenantId := int64(1)
@@ -161,7 +159,7 @@ func TestSourceListAuthenticationsEmptyList(t *testing.T) {
 // for not existing tenant
 func TestSourceListAuthenticationsTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	tenantId := notExistingTenantId
+	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -347,7 +345,7 @@ func TestSourceTypeSourceSubcollectionListTenantNotExists(t *testing.T) {
 	// Check existing source type with not existing tenant id
 	// Expected is empty list
 	sourceTypeId := int64(1)
-	tenantId := notExistingTenantId
+	tenantId := fixtures.NotExistingTenantId
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -551,7 +549,7 @@ func TestApplicationTypeListSourceSubcollectionListTenantNotExists(t *testing.T)
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	// Check existing application type with not existing tenant id
 	appTypeId := int64(1)
-	tenantId := notExistingTenantId
+	tenantId := fixtures.NotExistingTenantId
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -764,7 +762,7 @@ func TestSourceListTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	// For not existing tenant is expected that returned value
 	// will be empty list and return code 200
-	tenantId := notExistingTenantId
+	tenantId := fixtures.NotExistingTenantId
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -970,7 +968,7 @@ func TestSourceGetInvalidTenant(t *testing.T) {
 // not existing tenant
 func TestSourceGetTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	tenantId := notExistingTenantId
+	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(

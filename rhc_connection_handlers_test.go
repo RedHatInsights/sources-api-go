@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"testing"
@@ -17,6 +18,8 @@ import (
 )
 
 func TestRhcConnectionList(t *testing.T) {
+	tenantId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/rhc_connections",
@@ -25,7 +28,7 @@ func TestRhcConnectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -52,20 +55,90 @@ func TestRhcConnectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestRhcConnectionData) {
-		t.Error("not enough objects passed back from DB")
+	var wantCount int
+	for _, rhc := range fixtures.TestRhcConnectionData {
+		for _, srcRhc := range fixtures.TestSourceRhcConnectionData {
+			if srcRhc.RhcConnectionId == rhc.ID && srcRhc.TenantId == tenantId {
+				wantCount++
+				break
+			}
+		}
+	}
+
+	if len(out.Data) != wantCount {
+		t.Errorf("not enough objects passed back from DB, expected %d, got %d", wantCount, len(out.Data))
 	}
 
 	for _, rhcConnection := range out.Data {
-		_, ok := rhcConnection.(map[string]interface{})
+		rhc, ok := rhcConnection.(map[string]interface{})
 
 		if !ok {
 			t.Error("model did not deserialize as a source")
 		}
-
+		// Check that rhc connection belongs to correct tenant
+		for _, srcRhc := range fixtures.TestSourceRhcConnectionData {
+			if rhc["ID"] == fmt.Sprintf("%d", srcRhc.RhcConnectionId) {
+				if srcRhc.TenantId != tenantId {
+					t.Errorf("wrong tenant id in returned object, expected %d, got %d", tenantId, srcRhc.TenantId)
+				}
+				break
+			}
+		}
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+func TestRhcConnectionListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// For not existing tenant is expected that returned value
+	// will be empty list and return code 200
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := RhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+func TestRhcConnectionListTenantWithoutRhcConnections(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// For the tenant without rhc connections is expected that returned value
+	// will be empty list and return code 200
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := RhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestRhcConnectionListInvalidFilter(t *testing.T) {
