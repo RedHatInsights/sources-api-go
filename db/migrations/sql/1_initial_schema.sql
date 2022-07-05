@@ -652,7 +652,7 @@ DO
 
 $$
 BEGIN
-    IF NOT "table_exists"('ar_internal_metadata') THEN
+    IF NOT "table_exists"('schema_migrations') THEN
         CREATE TABLE "schema_migrations" (
             "version" CHARACTER VARYING NOT NULL
         );
