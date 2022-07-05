@@ -24,6 +24,7 @@ var migrationsCollection = []*gormigrate.Migration{
 	AddUserIdColumnIntoTables(),
 	AddResourceOwnershipToApplicationTypes(),
 	RemoveOldMigrationsTable(),
+	RenameForeignKeysIndexes(),
 }
 
 var ctx = context.Background()
