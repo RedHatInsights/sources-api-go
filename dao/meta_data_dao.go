@@ -32,7 +32,7 @@ func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limi
 	metadatas := make([]m.MetaData, 0, limit)
 	relationObject, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
-		return nil, 0, util.NewErrNotFound("application type")
+		return nil, 0, err
 	}
 
 	query := relationObject.HasMany(&m.MetaData{}, DB.Debug())

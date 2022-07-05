@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/RedHatInsights/sources-api-go/util"
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 	"gorm.io/gorm"
@@ -120,7 +121,7 @@ func (relationObject *RelationObject) checkIfPrimaryRecordExists(query *gorm.DB)
 	query.Model(relationObject.baseObject).Find(&result, relationObject.Id)
 
 	if len(result) == 0 {
-		return fmt.Errorf("record not found")
+		return util.NewErrNotFound(relationObject.StringBaseObject())
 	}
 
 	return nil

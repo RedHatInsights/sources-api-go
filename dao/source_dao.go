@@ -38,7 +38,7 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 	relationObject, err := m.NewRelationObject(primaryCollection, *s.TenantID, DB.Debug())
 	if err != nil {
-		return nil, 0, util.NewErrNotFound(relationObject.StringBaseObject())
+		return nil, 0, err
 	}
 	query := relationObject.HasMany(&m.Source{}, DB.Debug())
 
