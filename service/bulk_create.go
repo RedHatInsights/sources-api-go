@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
@@ -31,13 +32,24 @@ import (
 	3. Saving the Authentications
 	4. Saving the ApplicationAuthentications if necessary
 */
-func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant) (*m.BulkCreateOutput, error) {
+func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.BulkCreateOutput, error) {
 	// the output from this request.
 	var output m.BulkCreateOutput
 
 	// initiate a transaction that we'll rollback if anything bad happens.
 	err := dao.DB.Transaction(func(tx *gorm.DB) error {
 		var err error
+
+		userResource, err := userResourceFromBulkCreateApplications(user, req.Applications, tenant)
+		if err != nil {
+			return err
+		}
+
+		userDao := dao.GetUserDao(&tenant.Id)
+		err = userDao.CreateIfResourceOwnershipActive(userResource)
+		if err != nil {
+			return err
+		}
 
 		// parse the sources, then save them in the transaction.
 		output.Sources, err = parseSources(req.Sources, tenant)
@@ -455,4 +467,28 @@ func applicationFromBulkCreateApplication(reqApplication *m.BulkCreateApplicatio
 	}
 
 	return &a, nil
+}
+
+func loadUserResourceSettingFromBulkCreateApplication(userResource *m.UserResource, bulkCreateApplication *m.BulkCreateApplication, tenant *m.Tenant) error {
+	app, err := applicationFromBulkCreateApplication(bulkCreateApplication, tenant)
+	if err != nil {
+		return err
+	} else if app.ApplicationType.UserResourceOwnership() {
+		userResource.AddSourceAndApplicationTypeNames(bulkCreateApplication.SourceName, bulkCreateApplication.ApplicationTypeName)
+	}
+
+	return nil
+}
+
+func userResourceFromBulkCreateApplications(user *m.User, applications []m.BulkCreateApplication, tenant *m.Tenant) (*m.UserResource, error) {
+	userResource := &m.UserResource{User: user, ResourceOwnership: config.Get().ResourceOwnership}
+
+	for _, reqApp := range applications {
+		err := loadUserResourceSettingFromBulkCreateApplication(userResource, &reqApp, tenant)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return userResource, nil
 }

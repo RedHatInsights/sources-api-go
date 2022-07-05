@@ -67,3 +67,10 @@ func (at *ApplicationType) AvailabilityCheckURL() *url.URL {
 
 	return url
 }
+
+func (at *ApplicationType) UserResourceOwnership() bool {
+	if at.ResourceOwnership == nil {
+		return false
+	}
+	return *at.ResourceOwnership == UserOwnership
+}
