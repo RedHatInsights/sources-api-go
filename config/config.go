@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -74,7 +75,18 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
-		options.SetDefault("KafkaBrokers", []string{fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port)})
+
+		// [Kafka]
+		if len(cfg.Kafka.Brokers) < 1 {
+			log.Fatalf(`No Kafka brokers were found in the Clowder configuration`)
+		}
+
+		// Grab the first broker
+		kafkaBroker := cfg.Kafka.Brokers[0]
+
+		options.SetDefault("KafkaBrokers", []string{fmt.Sprintf("%s:%v", kafkaBroker.Hostname, *kafkaBroker.Port)})
+		// [/Kafka]
+
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
 		options.SetDefault("MetricsPort", cfg.MetricsPort)
 
