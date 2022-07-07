@@ -33,11 +33,11 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/bulk_create", BulkCreate, permissionMiddleware...)
 
 		// Sources
-		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
-		r.GET("/sources/:id", SourceGet, middleware.Tenancy)
+		r.GET("/sources", SourceList, append(tenancyWithListMiddleware, middleware.ResourceOwnership)...)
+		r.GET("/sources/:id", SourceGet, middleware.Tenancy, middleware.ResourceOwnership)
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
-		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
-		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
+		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier, middleware.ResourceOwnership)...)
+		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource, middleware.ResourceOwnership)...)
 		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy)
 		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
