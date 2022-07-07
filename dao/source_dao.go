@@ -34,10 +34,12 @@ func init() {
 
 type SourceDaoParams struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 type sourceDaoImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
