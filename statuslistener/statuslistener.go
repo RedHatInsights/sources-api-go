@@ -64,7 +64,7 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 	<-shutdown
 	l.Log.Infof("Closing Kafka Consumer...")
 
-	if err := kf.Consumer().Close(); err != nil {
+	if err := kf.CloseConsumer(); err != nil {
 		l.Log.Warn(err)
 	}
 	shutdown <- struct{}{}

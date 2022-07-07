@@ -29,6 +29,24 @@ func (manager *Manager) Produce(message *Message) error {
 	return nil
 }
 
+// CloseConsumer attempts to close the consumer.
+func (manager *Manager) CloseConsumer() error {
+	if manager.consumer != nil {
+		return manager.consumer.Close()
+	}
+
+	return nil
+}
+
+// CloseProducer attempts to close the producer.
+func (manager *Manager) CloseProducer() error {
+	if manager.producer != nil {
+		return manager.producer.Close()
+	}
+
+	return nil
+}
+
 func (manager *Manager) Producer() (*kafka.Writer, error) {
 	if manager.producer != nil {
 		return manager.producer, nil
