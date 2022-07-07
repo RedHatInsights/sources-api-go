@@ -1132,6 +1132,9 @@ func TestSourceCreate(t *testing.T) {
 }
 
 func TestSourceEdit(t *testing.T) {
+	tenant := fixtures.TestTenantData[0]
+	source := fixtures.TestSourceData[0]
+
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
@@ -1148,14 +1151,14 @@ func TestSourceEdit(t *testing.T) {
 		"/api/sources/v3.1/sources/1",
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenant.Id,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", source.ID))
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(SourceEdit)
 	err := sourceEditHandlerWithNotifier(c)
@@ -1191,8 +1194,8 @@ func TestSourceEdit(t *testing.T) {
 		CurrentAvailabilityStatus:  "unavailable",
 		PreviousAvailabilityStatus: "available",
 		SourceName:                 newSourceName,
-		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
-		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),
+		SourceID:                   strconv.FormatInt(source.ID, 10),
+		TenantID:                   strconv.FormatInt(source.TenantID, 10),
 	}
 
 	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
@@ -1201,6 +1204,43 @@ func TestSourceEdit(t *testing.T) {
 	}
 
 	service.NotificationProducer = backupNotificationProducer
+}
+
+// TestSourceEditInvalidTenant tests situation when the tenant tries to
+// edit existing not owned source
+func TestSourceEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	newSourceName := "New source name"
+	req := m.SourceEditRequest{
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/8937498374",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSourceEdit := ErrorHandlingContext(SourceEdit)
+	err := notFoundSourceEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceEditNotFound(t *testing.T) {
@@ -1312,6 +1352,34 @@ func TestSourceDelete(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestSourceDeleteInvalidTenant tests situation when the tenant tries to
+// delete existing but not owned source
+func TestSourceDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/9038049384",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceDelete := ErrorHandlingContext(SourceDelete)
+	err := notFoundSourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourceDeleteNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
@@ -1379,6 +1447,34 @@ func TestAvailabilityStatusCheck(t *testing.T) {
 	}
 }
 
+// TestAvailabilityStatusCheckInvalidTenant tests availability status check
+// with a tenant who doesn't own the source
+func TestAvailabilityStatusCheckInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/183209745/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	err := notFoundSourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
@@ -1423,7 +1519,7 @@ func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
-func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
+func TestSourcesGetRelatedRhcConnections(t *testing.T) {
 	sourceId := "1"
 
 	c, rec := request.CreateTestContext(
@@ -1483,7 +1579,68 @@ func TestSourcesGetRelatedRhcConnectionsTest(t *testing.T) {
 	}
 }
 
-func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
+// TestSourcesGetRelatedRhcConnectionsEmptyList tests that you get empty list
+// for source without rhc-connections
+func TestSourcesGetRelatedRhcConnectionsEmptyList(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	sourceId := int64(4)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/4/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	err := SourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestSourcesGetRelatedRhcConnectionsInvalidTenant tests scenario with existing source
+// (with existing rhc-connections) but tenant is not owner of this source
+func TestSourcesGetRelatedRhcConnectionsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/rhc_connections",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+	err := notFoundSourcesRhcConnectionList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestSourcesGetRelatedRhcConnectionsNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/0394830498/rhc_connections",
@@ -1508,7 +1665,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T) {
+func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidSyntax(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/xxx/rhc_connections",
@@ -1533,7 +1690,7 @@ func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidSyntax(t *testing.T
 	templates.BadRequestTest(t, rec)
 }
 
-func TestSourcesGetRelatedRhcConnectionsTestBadRequestInvalidFilter(t *testing.T) {
+func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
