@@ -100,10 +100,24 @@ func Get() *SourcesApiConfig {
 			}
 
 			options.SetDefault("KafkaSaslCaPath", caPath)
-			options.SetDefault("KafkaSaslMechanism", *kafkaBroker.Sasl.SaslMechanism)
-			options.SetDefault("KafkaSaslSecurityProtocol", *kafkaBroker.Sasl.SecurityProtocol)
-			options.SetDefault("KafkaSaslPassword", *kafkaBroker.Sasl.Password)
-			options.SetDefault("KafkaSaslUsername", *kafkaBroker.Sasl.Username)
+
+			if kafkaBroker.Sasl != nil {
+				if kafkaBroker.Sasl.SaslMechanism != nil {
+					options.SetDefault("KafkaSaslMechanism", *kafkaBroker.Sasl.SaslMechanism)
+				}
+
+				if kafkaBroker.Sasl.SecurityProtocol != nil {
+					options.SetDefault("KafkaSaslSecurityProtocol", *kafkaBroker.Sasl.SecurityProtocol)
+				}
+
+				if kafkaBroker.Sasl.Password != nil {
+					options.SetDefault("KafkaSaslPassword", *kafkaBroker.Sasl.Password)
+				}
+
+				if kafkaBroker.Sasl.Username != nil {
+					options.SetDefault("KafkaSaslUsername", *kafkaBroker.Sasl.Username)
+				}
+			}
 		}
 		// [/Kafka]
 
