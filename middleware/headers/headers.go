@@ -7,4 +7,5 @@ const (
 	XRHID           = "x-rh-identity"
 	PARSED_IDENTITY = "identity"
 	TENANTID        = "tenantID"
+	USERID          = "userID"
 )
