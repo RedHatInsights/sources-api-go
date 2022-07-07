@@ -2,18 +2,21 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/segmentio/kafka-go"
 )
 
 func (manager *Manager) Produce(message *Message) error {
-	if manager.Producer() == nil {
-		return fmt.Errorf("producer is not initialized")
+	producer, err := manager.Producer()
+	if err != nil {
+		return err
 	}
 
 	if !message.isEmpty() {
-		err := manager.Producer().WriteMessages(context.Background(),
+		err = producer.WriteMessages(context.Background(),
 			kafka.Message{
 				Headers: message.Headers,
 				Value:   message.Value,
@@ -26,30 +29,53 @@ func (manager *Manager) Produce(message *Message) error {
 	return nil
 }
 
-func (manager *Manager) Producer() *kafka.Writer {
+func (manager *Manager) Producer() (*kafka.Writer, error) {
 	if manager.producer != nil {
-		return manager.producer
+		return manager.producer, nil
 	}
 
 	if len(manager.Config.KafkaBrokers) == 0 {
-		return nil
+		return nil, errors.New("there are no Kafka brokers to create a producer from")
 	}
 
-	manager.producer = &kafka.Writer{
+	kafkaWriter := &kafka.Writer{
 		Addr:  kafka.TCP(manager.Config.KafkaBrokers...),
 		Topic: manager.Config.ProducerConfig.Topic,
 	}
 
-	return manager.producer
+	// When using managed Kafka, Clowder will add some Sasl authentication details so that the services can connect to
+	// it. The following code block sets up "kafka-go" to work with these settings.
+	if config.Get().KafkaSaslEnabled {
+		var conf = config.Get()
+
+		tls, err := CreateTLSConfig(conf.KafkaSaslCaPath)
+		if err != nil {
+			return nil, fmt.Errorf(`unable to create Kafka producer's TLS configuration: %w`, err)
+		}
+
+		mechanism, err := CreateSaslMechanism(conf.KafkaSaslMechanism, conf.KafkaSaslUsername, conf.KafkaSaslPassword)
+		if err != nil {
+			return nil, fmt.Errorf(`unable to create Kafka producer's mechanism: %s`, err)
+		}
+
+		kafkaWriter.Transport = &kafka.Transport{
+			SASL: mechanism,
+			TLS:  tls,
+		}
+	}
+
+	manager.producer = kafkaWriter
+	return manager.producer, nil
 }
 
 func (manager *Manager) Consume(consumerHandler func(Message)) error {
-	if manager.Consumer() == nil {
-		return fmt.Errorf("consumer is not initialized")
+	consumer, err := manager.Consumer()
+	if err != nil {
+		return err
 	}
 
 	for {
-		message, err := manager.Consumer().ReadMessage(context.Background())
+		message, err := consumer.ReadMessage(context.Background())
 		if err != nil {
 			continue
 		}
@@ -58,15 +84,29 @@ func (manager *Manager) Consume(consumerHandler func(Message)) error {
 	}
 }
 
-func (manager *Manager) Consumer() *kafka.Reader {
+func (manager *Manager) Consumer() (*kafka.Reader, error) {
 	if manager.consumer != nil {
-		return manager.consumer
+		return manager.consumer, nil
 	}
 
-	manager.consumer = kafka.NewReader(kafka.ReaderConfig{
+	readerConfig := kafka.ReaderConfig{
 		Brokers: manager.Config.KafkaBrokers,
 		GroupID: manager.ConsumerConfig.GroupID,
 		Topic:   manager.ConsumerConfig.Topic,
-	})
-	return manager.consumer
+	}
+
+	// When using managed Kafka, Clowder will add some Sasl authentication details so that the services can connect to
+	// it. The following code block sets up "kafka-go" to work with these settings.
+	if config.Get().KafkaSaslEnabled {
+		var conf = config.Get()
+		dialer, err := CreateDialer(conf.KafkaSaslCaPath, conf.KafkaSaslMechanism, conf.KafkaSaslUsername, conf.KafkaSaslPassword)
+		if err != nil {
+			return nil, fmt.Errorf(`unable to create the dialer for the Kafka reader: %w`, err)
+		}
+
+		readerConfig.Dialer = dialer
+	}
+
+	manager.consumer = kafka.NewReader(readerConfig)
+	return manager.consumer, nil
 }
