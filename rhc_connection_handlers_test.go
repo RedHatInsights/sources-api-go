@@ -168,6 +168,7 @@ func TestRhcConnectionListInvalidFilter(t *testing.T) {
 }
 
 func TestRhcConnectionGetById(t *testing.T) {
+	tenantId := int64(1)
 	id := strconv.FormatInt(fixtures.TestRhcConnectionData[0].ID, 10)
 
 	c, rec := request.CreateTestContext(
@@ -175,7 +176,7 @@ func TestRhcConnectionGetById(t *testing.T) {
 		"/api/sources/v3.1/rhc_connections/"+id,
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -199,6 +200,22 @@ func TestRhcConnectionGetById(t *testing.T) {
 
 	if *outRhcConnectionResponse.RhcId != fixtures.TestRhcConnectionData[0].RhcId {
 		t.Error("ghosts infected the return")
+	}
+
+	var outRhcId int64
+	outRhcId, err = strconv.ParseInt(*outRhcConnectionResponse.Id, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// check in fixtures that returned rhc connection belongs to the desired tenant
+	for _, srcRhc := range fixtures.TestSourceRhcConnectionData {
+		if srcRhc.RhcConnectionId == outRhcId {
+			if srcRhc.TenantId != tenantId {
+				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, srcRhc.TenantId)
+			}
+			break
+		}
 	}
 }
 
@@ -237,6 +254,62 @@ func TestRhcConnectionGetByIdInvalidParam(t *testing.T) {
 	}
 
 	templates.BadRequestTest(t, rec)
+}
+
+// TestRhcConnectionGetByIdInvalidTenant tests that not found is returned for
+// existing rhc connection but when tenant is not owner of rhc connection
+func TestRhcConnectionGetByIdInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+	rhcId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d", rhcId),
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcId))
+
+	notFoundRhcConnectionGetByUuid := ErrorHandlingContext(RhcConnectionGetById)
+	err := notFoundRhcConnectionGetByUuid(c)
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestRhcConnectionGetByIdTenantNotExists tests that not found is returned for
+// not existing tenant
+func TestRhcConnectionGetByIdTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	rhcId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d", rhcId),
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcId))
+
+	notFoundRhcConnectionGetByUuid := ErrorHandlingContext(RhcConnectionGetById)
+	err := notFoundRhcConnectionGetByUuid(c)
+	if err != nil {
+		t.Errorf(`want nil error, got "%s"`, err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestRhcConnectionGetByIdNotFound(t *testing.T) {
