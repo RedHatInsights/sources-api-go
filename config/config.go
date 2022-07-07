@@ -20,6 +20,12 @@ type SourcesApiConfig struct {
 	KafkaBrokers              []string
 	KafkaTopics               map[string]string
 	KafkaGroupID              string
+	KafkaSaslCaPath           string
+	KafkaSaslEnabled          bool
+	KafkaSaslMechanism        string
+	KafkaSaslSecurityProtocol string
+	KafkaSaslPassword         string
+	KafkaSaslUsername         string
 	MetricsPort               int
 	LogLevel                  string
 	LogLevelForMiddlewareLogs string
@@ -83,8 +89,22 @@ func Get() *SourcesApiConfig {
 
 		// Grab the first broker
 		kafkaBroker := cfg.Kafka.Brokers[0]
-
 		options.SetDefault("KafkaBrokers", []string{fmt.Sprintf("%s:%v", kafkaBroker.Hostname, *kafkaBroker.Port)})
+
+		if kafkaBroker.Authtype != nil {
+			options.SetDefault("KafkaSaslEnabled", true)
+
+			caPath, err := cfg.KafkaCa(kafkaBroker)
+			if err != nil {
+				log.Fatalf(`Could not write the Kafka broker's CA to a temporary directory: %s`, err)
+			}
+
+			options.SetDefault("KafkaSaslCaPath", caPath)
+			options.SetDefault("KafkaSaslMechanism", *kafkaBroker.Sasl.SaslMechanism)
+			options.SetDefault("KafkaSaslSecurityProtocol", *kafkaBroker.Sasl.SecurityProtocol)
+			options.SetDefault("KafkaSaslPassword", *kafkaBroker.Sasl.Password)
+			options.SetDefault("KafkaSaslUsername", *kafkaBroker.Sasl.Username)
+		}
 		// [/Kafka]
 
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
@@ -206,6 +226,12 @@ func Get() *SourcesApiConfig {
 		KafkaBrokers:              options.GetStringSlice("KafkaBrokers"),
 		KafkaTopics:               options.GetStringMapString("KafkaTopics"),
 		KafkaGroupID:              options.GetString("KafkaGroupID"),
+		KafkaSaslCaPath:           options.GetString("KafkaSaslCaPath"),
+		KafkaSaslEnabled:          options.GetBool("KafkaSaslEnabled"),
+		KafkaSaslMechanism:        options.GetString("KafkaSaslMechanism"),
+		KafkaSaslSecurityProtocol: options.GetString("KafkaSaslSecurityProtocol"),
+		KafkaSaslPassword:         options.GetString("KafkaSaslPassword"),
+		KafkaSaslUsername:         options.GetString("KafkaSaslUsername"),
 		MetricsPort:               options.GetInt("MetricsPort"),
 		LogLevel:                  options.GetString("LogLevel"),
 		LogLevelForMiddlewareLogs: options.GetString("LogLevelForMiddlewareLogs"),
