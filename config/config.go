@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -19,6 +20,12 @@ type SourcesApiConfig struct {
 	KafkaBrokers              []string
 	KafkaTopics               map[string]string
 	KafkaGroupID              string
+	KafkaSaslCaPath           string
+	KafkaSaslEnabled          bool
+	KafkaSaslMechanism        string
+	KafkaSaslSecurityProtocol string
+	KafkaSaslPassword         string
+	KafkaSaslUsername         string
 	MetricsPort               int
 	LogLevel                  string
 	LogLevelForMiddlewareLogs string
@@ -74,7 +81,46 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
-		options.SetDefault("KafkaBrokers", []string{fmt.Sprintf("%s:%v", cfg.Kafka.Brokers[0].Hostname, *cfg.Kafka.Brokers[0].Port)})
+
+		// [Kafka]
+		if len(cfg.Kafka.Brokers) < 1 {
+			log.Fatalf(`No Kafka brokers were found in the Clowder configuration`)
+		}
+
+		// Grab the first broker
+		kafkaBroker := cfg.Kafka.Brokers[0]
+		options.SetDefault("KafkaBrokers", []string{fmt.Sprintf("%s:%v", kafkaBroker.Hostname, *kafkaBroker.Port)})
+
+		if kafkaBroker.Authtype != nil {
+			options.SetDefault("KafkaSaslEnabled", true)
+
+			caPath, err := cfg.KafkaCa(kafkaBroker)
+			if err != nil {
+				log.Fatalf(`Could not write the Kafka broker's CA to a temporary directory: %s`, err)
+			}
+
+			options.SetDefault("KafkaSaslCaPath", caPath)
+
+			if kafkaBroker.Sasl != nil {
+				if kafkaBroker.Sasl.SaslMechanism != nil {
+					options.SetDefault("KafkaSaslMechanism", *kafkaBroker.Sasl.SaslMechanism)
+				}
+
+				if kafkaBroker.Sasl.SecurityProtocol != nil {
+					options.SetDefault("KafkaSaslSecurityProtocol", *kafkaBroker.Sasl.SecurityProtocol)
+				}
+
+				if kafkaBroker.Sasl.Password != nil {
+					options.SetDefault("KafkaSaslPassword", *kafkaBroker.Sasl.Password)
+				}
+
+				if kafkaBroker.Sasl.Username != nil {
+					options.SetDefault("KafkaSaslUsername", *kafkaBroker.Sasl.Username)
+				}
+			}
+		}
+		// [/Kafka]
+
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
 		options.SetDefault("MetricsPort", cfg.MetricsPort)
 
@@ -194,6 +240,12 @@ func Get() *SourcesApiConfig {
 		KafkaBrokers:              options.GetStringSlice("KafkaBrokers"),
 		KafkaTopics:               options.GetStringMapString("KafkaTopics"),
 		KafkaGroupID:              options.GetString("KafkaGroupID"),
+		KafkaSaslCaPath:           options.GetString("KafkaSaslCaPath"),
+		KafkaSaslEnabled:          options.GetBool("KafkaSaslEnabled"),
+		KafkaSaslMechanism:        options.GetString("KafkaSaslMechanism"),
+		KafkaSaslSecurityProtocol: options.GetString("KafkaSaslSecurityProtocol"),
+		KafkaSaslPassword:         options.GetString("KafkaSaslPassword"),
+		KafkaSaslUsername:         options.GetString("KafkaSaslUsername"),
 		MetricsPort:               options.GetInt("MetricsPort"),
 		LogLevel:                  options.GetString("LogLevel"),
 		LogLevelForMiddlewareLogs: options.GetString("LogLevelForMiddlewareLogs"),

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/config"
@@ -135,9 +136,14 @@ func produceSuperkeyRequest(m *kafka.Message) error {
 
 	err := mgr.Produce(m)
 	if err != nil {
-		mgr.Producer().Close()
-		return err
+		producingErr := fmt.Errorf(`unable to produce a Kafka message for the superkey request: %w`, err)
+
+		if producerClosingErr := mgr.CloseProducer(); producerClosingErr != nil {
+			return fmt.Errorf(`%s. unable to close Kafka producer when sending a superkey request: %w`, producingErr, producerClosingErr)
+		}
+
+		return producingErr
 	}
 
-	return mgr.Producer().Close()
+	return mgr.CloseProducer()
 }

@@ -174,9 +174,9 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 		l.Log.Warnf("Failed to produce kafka message for Source %v, error: %v", source.ID, err)
 	}
 
-	err = mgr.Producer().Close()
+	err = mgr.CloseProducer()
 	if err != nil {
-		l.Log.Warnf("Failed to close kafka producer: %v", err)
+		l.Log.Errorf(`unable to close the Kafka producer when publishing a Satellite availability status check message: %s`, err)
 	}
 }
 

@@ -51,7 +51,7 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 
 	logging.Log.Debugf("publishing message %v to topic %q...Complete", eventType, EventStreamTopic)
 
-	return kf.Producer().Close()
+	return kf.CloseProducer()
 }
 
 func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, payload []byte, headers []kafka.Header) error {
