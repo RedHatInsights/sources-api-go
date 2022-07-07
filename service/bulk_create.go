@@ -226,6 +226,18 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 	for _, endpt := range reqEndpoints {
 		e := m.Endpoint{}
 
+		// The source ID needs to be set before validating the endpoint, since otherwise the validation always fails.
+		for _, src := range current.Sources {
+			if src.Name != endpt.SourceName {
+				continue
+			}
+
+			// "IDRaw" is the one validated by the validator.
+			endpt.EndpointCreateRequest.SourceIDRaw = src.ID
+			// We will pick this one, however, to assign it to the endpoint struct.
+			endpt.SourceID = src.ID
+		}
+
 		err := ValidateEndpointCreateRequest(dao.GetEndpointDao(&tenant.Id), &endpt.EndpointCreateRequest)
 		if err != nil {
 			return nil, err
@@ -236,17 +248,11 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 		e.Path = &endpt.Path
 		e.Port = endpt.Port
 		e.VerifySsl = endpt.VerifySsl
+		e.SourceID = endpt.SourceID
 		e.Tenant = *tenant
 		e.TenantID = tenant.Id
 
-		for _, src := range current.Sources {
-			if src.Name != endpt.SourceName {
-				continue
-			}
-
-			e.SourceID = src.ID
-			endpoints = append(endpoints, e)
-		}
+		endpoints = append(endpoints, e)
 	}
 
 	// if all of the endpoints did not get linked up - there was a problem
