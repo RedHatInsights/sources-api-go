@@ -298,7 +298,7 @@ func updateRhcStatus(source *m.Source, status string, errstr string, rhcConnecti
 		rhcConnection.AvailabilityStatusError = errstr
 	}
 
-	err := dao.GetSourceDao(&source.TenantID).Update(source)
+	err := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &source.TenantID}).Update(source)
 	if err != nil {
 		l.Log.Warnf("failed to update source availability status: %v", err)
 		return

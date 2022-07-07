@@ -13,18 +13,27 @@ import (
 
 // GetSourceDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
-var GetSourceDao func(*int64) SourceDao
+var GetSourceDao func(*SourceDaoParams) SourceDao
 
 // getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
-func getDefaultSourceDao(tenantId *int64) SourceDao {
+func getDefaultSourceDao(daoParams *SourceDaoParams) SourceDao {
+	var tenantID *int64
+	if daoParams != nil && daoParams.TenantID != nil {
+		tenantID = daoParams.TenantID
+	}
+
 	return &sourceDaoImpl{
-		TenantID: tenantId,
+		TenantID: tenantID,
 	}
 }
 
 // init sets the default DAO implementation so that other packages can request it easily.
 func init() {
 	GetSourceDao = getDefaultSourceDao
+}
+
+type SourceDaoParams struct {
+	TenantID *int64
 }
 
 type sourceDaoImpl struct {
@@ -64,8 +73,7 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
-	query := DB.Debug().Model(&m.Source{}).
-		Where("sources.tenant_id = ?", s.TenantID)
+	query := DB.Debug().Model(&m.Source{}).Where("sources.tenant_id = ?", s.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {

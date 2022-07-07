@@ -211,7 +211,7 @@ func TestCreateUserWithoutResourceOwnershipConfig(t *testing.T) {
 }
 
 func cleanSourceForTenant(sourceName string, tenantID *int64) error {
-	sourceDao := dao.GetSourceDao(tenantID)
+	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantID})
 
 	source := &m.Source{Name: sourceName}
 	err := dao.DB.Model(&m.Source{}).Where("name = ?", source.Name).Find(&source).Error

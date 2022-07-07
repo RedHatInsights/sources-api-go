@@ -176,7 +176,7 @@ func AuthenticationEdit(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	sourceDao := dao.GetSourceDao(authDao.Tenant())
+	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: authDao.Tenant()})
 	source, err := sourceDao.GetById(&auth.SourceID)
 	if err != nil {
 		return err

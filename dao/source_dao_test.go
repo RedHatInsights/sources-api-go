@@ -68,7 +68,7 @@ func TestPausingSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	sourceDao := GetSourceDao(&testSource.TenantID)
+	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &testSource.TenantID})
 	err := sourceDao.Pause(testSource.ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -98,7 +98,7 @@ func TestResumingSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	sourceDao := GetSourceDao(&testSource.TenantID)
+	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &testSource.TenantID})
 	err := sourceDao.Unpause(fixtures.TestSourceData[0].ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -128,7 +128,7 @@ func TestDeleteSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)
+	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	source := fixtures.TestSourceData[0]
 	// Set the ID to 0 to let GORM know it should insert a new source and not update an existing one.
@@ -173,7 +173,7 @@ func TestDeleteSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	sourceDao := GetSourceDao(&fixtures.TestSourceData[0].TenantID)
+	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	nonExistentId := int64(12345)
 	_, err := sourceDao.Delete(&nonExistentId)
@@ -204,7 +204,7 @@ func TestDeleteSourceNotExists(t *testing.T) {
 // 	}
 
 // 	// Try inserting the source in the database.
-// 	sourceDao := GetSourceDao(&fixtures.TestTenantData[0].Id)
+// 	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
 // 	err := sourceDao.Create(&fixtureSource)
 // 	if err != nil {
 // 		t.Errorf(`error creating a fixture source: %s`, err)
@@ -634,7 +634,7 @@ func TestSourceExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("exists")
 
-	sourceDao := GetSourceDao(&fixtures.TestTenantData[0].Id)
+	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	got, err := sourceDao.Exists(fixtures.TestSourceData[0].ID)
 	if err != nil {
@@ -653,7 +653,7 @@ func TestSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("exists")
 
-	sourceDao := GetSourceDao(&fixtures.TestTenantData[0].Id)
+	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	got, err := sourceDao.Exists(12345)
 	if err != nil {

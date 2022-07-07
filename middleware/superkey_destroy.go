@@ -33,7 +33,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 			return util.NewErrBadRequest(err)
 		}
 
-		s := dao.GetSourceDao(&tenantId)
+		s := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId})
 
 		if s.IsSuperkey(id) {
 			xrhid, ok := c.Get(h.XRHID).(string)
