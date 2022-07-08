@@ -104,7 +104,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		return
 	}
 
-	authentications, _, err := dao.GetAuthenticationDao(&app.TenantID).ListForApplication(app.ID, 100, 0, []util.Filter{})
+	authentications, _, err := dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &app.TenantID}).ListForApplication(app.ID, 100, 0, []util.Filter{})
 	if err != nil {
 		l.Log.Warnf("Error listing authentications for application %v: %v", applicationId, err)
 		return

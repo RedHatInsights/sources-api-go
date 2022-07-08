@@ -25,17 +25,22 @@ const vaultSecretPathFormat = "secret/data/%d/%s_%d_%s"
 
 // GetAuthenticationDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
-var GetAuthenticationDao func(*int64) AuthenticationDao
+var GetAuthenticationDao func(daoParams *AuthenticationDaoParams) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
-func getDefaultAuthenticationDao(tenantId *int64) AuthenticationDao {
+func getDefaultAuthenticationDao(daoParams *AuthenticationDaoParams) AuthenticationDao {
+	var tenantID *int64
+	if daoParams != nil && daoParams.TenantID != nil {
+		tenantID = daoParams.TenantID
+	}
+
 	if config.IsVaultOn() {
 		return &authenticationDaoImpl{
-			TenantID: tenantId,
+			TenantID: tenantID,
 		}
 	} else {
 		return &authenticationDaoDbImpl{
-			TenantID: tenantId,
+			TenantID: tenantID,
 		}
 	}
 }

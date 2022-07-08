@@ -272,7 +272,7 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 		}
 
 		conf.SecretStore = secretStore
-		authenticationDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+		authenticationDao := GetAuthenticationDao(&AuthenticationDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 		for _, d := range fixtures.TestDataOffsetLimit {
 			authentications, gotCount, err := authenticationDao.List(d.Limit, d.Offset, []util.Filter{})

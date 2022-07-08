@@ -749,7 +749,7 @@ func TestApplicationDelete(t *testing.T) {
 	}
 
 	// Create an authentication
-	authenticationDao := dao.GetAuthenticationDao(&tenantID)
+	authenticationDao := dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &tenantID})
 
 	authName := "authentication for TestApplicationDelete()"
 	auth := m.Authentication{
