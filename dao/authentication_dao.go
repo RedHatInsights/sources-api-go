@@ -45,6 +45,10 @@ func init() {
 	GetAuthenticationDao = getDefaultAuthenticationDao
 }
 
+type AuthenticationDaoParams struct {
+	TenantID *int64
+}
+
 type authenticationDaoImpl struct {
 	TenantID *int64
 }
