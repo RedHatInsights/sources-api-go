@@ -1955,6 +1955,35 @@ func TestUnpauseSourceAndItsApplications(t *testing.T) {
 	}
 }
 
+// TestUnpauseSourceAndItsApplicationsInvalidTenant tests that not found is returned
+// when tenant tries to unpause not owned source
+func TestUnpauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// The source is not owned by the tenant
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+	err := notFoundSourceUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestUnpauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	tenantId := int64(1)
 	sourceId := int64(1789896785)
