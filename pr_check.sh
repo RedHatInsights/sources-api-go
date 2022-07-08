@@ -26,7 +26,7 @@ source $CICD_ROOT/deploy_ephemeral_env.sh
 if [[ $? != 0 ]]; then
     exit 1
 fi
-source $CICD_ROOT/smoke_test.sh
+source $CICD_ROOT/cji_smoke_test.sh
 if [[ $? != 0 ]]; then
     exit 1
 fi
