@@ -45,28 +45,20 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 		panic("logging is not initialized")
 	}
 
-	kafkaConfig := kafka.Config{
-		KafkaBrokers: config.KafkaBrokers,
-		ConsumerConfig: kafka.ConsumerConfig{
-			Topic:   config.KafkaTopic(sourcesStatusTopic),
-			GroupID: groupID},
+	kf, err := kafka.GetReader(&config.KafkaBrokerConfig, groupID, sourcesStatusTopic)
+	if err != nil {
+		l.Log.Errorf(`could not get a Kafka reader: %s`, err)
+		return
 	}
 
-	kf := &kafka.Manager{Config: kafkaConfig}
+	defer kafka.CloseReader(kf, "subscribe availability status. Shutdown signal received")
 
 	// run async for graceful shutdown handling
 	go func() {
-		if err := kf.Consume(avs.ConsumeStatusMessage); err != nil {
-			l.Log.Errorf("Consumer kafka message error: %s", err.Error())
-		}
+		kafka.Consume(kf, avs.ConsumeStatusMessage)
 	}()
 
 	<-shutdown
-	l.Log.Infof("Closing Kafka Consumer...")
-
-	if err := kf.CloseConsumer(); err != nil {
-		l.Log.Warn(err)
-	}
 	shutdown <- struct{}{}
 }
 

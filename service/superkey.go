@@ -129,21 +129,17 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 }
 
 func produceSuperkeyRequest(m *kafka.Message) error {
-	mgr := kafka.Manager{
-		Config: kafka.Config{
-			KafkaBrokers:   config.Get().KafkaBrokers,
-			ProducerConfig: kafka.ProducerConfig{Topic: config.Get().KafkaTopic(SUPERKEY_REQUEST_QUEUE)}}}
-
-	err := mgr.Produce(m)
+	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, SUPERKEY_REQUEST_QUEUE)
 	if err != nil {
-		producingErr := fmt.Errorf(`unable to produce a Kafka message for the superkey request: %w`, err)
-
-		if producerClosingErr := mgr.CloseProducer(); producerClosingErr != nil {
-			return fmt.Errorf(`%s. unable to close Kafka producer when sending a superkey request: %w`, producingErr, producerClosingErr)
-		}
-
-		return producingErr
+		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
 	}
 
-	return mgr.CloseProducer()
+	defer kafka.CloseWriter(writer, "produce superkey request")
+
+	err = kafka.Produce(writer, m)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

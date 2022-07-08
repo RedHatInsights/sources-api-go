@@ -1,6 +1,8 @@
 package events
 
 import (
+	"fmt"
+
 	c "github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
@@ -27,12 +29,14 @@ type EventStreamSender struct {
 func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
 	logging.Log.Debugf("publishing message %v to topic %q...", eventType, EventStreamTopic)
 
-	producerConfig := kafka.ProducerConfig{Topic: config.KafkaTopic(EventStreamTopic)}
-	kafkaConfig := kafka.Config{KafkaBrokers: config.KafkaBrokers, ProducerConfig: producerConfig}
-	kf := &kafka.Manager{Config: kafkaConfig}
+	kf, err := kafka.GetWriter(&config.KafkaBrokerConfig, EventStreamTopic)
+	if err != nil {
+		return fmt.Errorf(`unable to create a Kafka writer to raise an event: %w`, err)
+	}
+
+	defer kafka.CloseWriter(kf, "raise event")
 
 	m := &kafka.Message{}
-
 	for index, header := range headers {
 		if header.Key == "event_type" {
 			headers[index] = kafka.Header{Key: "event_type", Value: []byte(eventType)}
@@ -44,14 +48,13 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 	m.AddHeaders(headers)
 	m.AddValue(payload)
 
-	err := kf.Produce(m)
-	if err != nil {
+	if err := kafka.Produce(kf, m); err != nil {
 		return err
 	}
 
 	logging.Log.Debugf("publishing message %v to topic %q...Complete", eventType, EventStreamTopic)
 
-	return kf.CloseProducer()
+	return nil
 }
 
 func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, payload []byte, headers []kafka.Header) error {

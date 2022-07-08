@@ -25,13 +25,6 @@ var conf = config.Get()
 func main() {
 	logging.InitLogger(conf)
 
-	if conf.KafkaSaslEnabled {
-		logging.Log.Infof(`Sasl settings detected, using managed Kafka`)
-		logging.Log.Infof(`Kafka Sasl certificate path: %s`, conf.KafkaSaslCaPath)
-		logging.Log.Infof(`Kafka Sasl mechanism: %s`, conf.KafkaSaslMechanism)
-		logging.Log.Infof(`Kafka Sasl security protocol: %s`, conf.KafkaSaslSecurityProtocol)
-	}
-
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
 	// a time can run the migrations.
 	redis.Init()
