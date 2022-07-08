@@ -1815,6 +1815,34 @@ func TestPauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestPauseSourceAndItsApplicationsTenantNotExists tests that not found is returned
+// for not existing tenant
+func TestPauseSourceAndItsApplicationsTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+	err := notFoundSourcePause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestPauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
