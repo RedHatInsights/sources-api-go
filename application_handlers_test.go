@@ -414,6 +414,32 @@ func TestApplicationListTenantNotExists(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestApplicationListTenantWithoutApplications tests that empty list is returned for a tenant
+// without applications
+func TestApplicationListTenantWithoutApplications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := ApplicationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestApplicationGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
