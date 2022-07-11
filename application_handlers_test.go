@@ -389,6 +389,31 @@ func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+// TestApplicationListTenantNotExists tests that empty list is returned for not existing tenant
+func TestApplicationListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := ApplicationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestApplicationGet(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
