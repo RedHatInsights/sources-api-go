@@ -32,6 +32,7 @@ import (
 )
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {
+	tenantId := int64(1)
 	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -42,7 +43,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -80,7 +81,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 
 	var wantData []m.Application
 	for _, app := range fixtures.TestApplicationData {
-		if app.SourceID == int64(sourceId) {
+		if app.SourceID == sourceId {
 			wantData = append(wantData, app)
 		}
 	}
@@ -105,6 +106,11 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 
 	if a2["id"] != fmt.Sprintf("%d", wantData[1].ID) {
 		t.Error("ghosts infected the return")
+	}
+
+	err = checkAllApplicationsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -133,29 +139,7 @@ func TestSourceApplicationSubcollectionListEmptyList(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
-		t.Error("Did not return 200")
-	}
-
-	var out util.Collection
-	err = json.Unmarshal(rec.Body.Bytes(), &out)
-	if err != nil {
-		t.Error("Failed unmarshaling output")
-	}
-
-	if out.Meta.Limit != 100 {
-		t.Error("limit not set correctly")
-	}
-
-	if out.Meta.Offset != 0 {
-		t.Error("offset not set correctly")
-	}
-
-	if len(out.Data) != 0 {
-		t.Error("not enough objects passed back from DB")
-	}
-
-	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
@@ -241,9 +225,42 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 	templates.BadRequestTest(t, rec)
 }
 
+// TestSourceApplicationSubcollectionListTenantNotExists tests that not found err is
+// returned for not existing tenant
 func TestSourceApplicationSubcollectionListTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	tenantId := int64(30984093843908490)
+	tenantId := fixtures.NotExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListApplications := ErrorHandlingContext(SourceListApplications)
+	err := notFoundSourceListApplications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestSourceApplicationSubcollectionListInvalidTenant tests that not found err is
+// returned existing tenant who doesn't own the source
+func TestSourceApplicationSubcollectionListInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
 	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -1495,4 +1512,26 @@ func TestApplicationEditPausedUnitInvalidFields(t *testing.T) {
 
 	// Restore the binder to not affect any other tests.
 	c.Echo().Binder = backupBinder
+}
+
+// HELPERS:
+
+// checkAllApplicationsBelongToTenant checks that all returned apps belongs to given tenant
+func checkAllApplicationsBelongToTenant(tenantId int64, apps []interface{}) error {
+	// For every returned app
+	for _, appOut := range apps {
+		appOutId, err := strconv.ParseInt(appOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			return err
+		}
+		// find the app in fixtures and check the tenant id
+		for _, app := range fixtures.TestApplicationData {
+			if appOutId == app.ID {
+				if app.TenantID != tenantId {
+					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, app.TenantID)
+				}
+			}
+		}
+	}
+	return nil
 }
