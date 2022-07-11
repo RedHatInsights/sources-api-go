@@ -518,6 +518,34 @@ func TestApplicationGetInvalidTenant(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestApplicationGetTenantNotExists tests that not found is returned for
+// not existing tenant
+func TestApplicationGetTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+	err := notFoundApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationGetNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
