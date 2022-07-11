@@ -11,10 +11,13 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/graph"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
 	l "github.com/RedHatInsights/sources-api-go/logger"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -61,6 +64,24 @@ func GraphQLQuery(c echo.Context) error {
 		return err
 	}
 
+	userID, err := util.GetUserFromEchoContext(c)
+	if err != nil {
+		return err
+	}
+
+	var user m.User
+	result := dao.DB.Model(&m.User{}).Where("tenant_id = ? and user_id = ?", tenant, userID).Find(&user)
+	if result.Error != nil {
+		return err
+	}
+
+	var userIDFromDB int64
+	if result.RowsAffected == 0 {
+		userIDFromDB = 0
+	} else {
+		userIDFromDB = user.Id
+	}
+
 	// locking the initial sourceID mutex in order to load sources before
 	// fetching any and all subresources
 	sourceIdMutex := sync.Mutex{}
@@ -76,6 +97,7 @@ func GraphQLQuery(c echo.Context) error {
 			&graph.RequestData{
 				// the current tenant
 				TenantID: tenant,
+				UserID:   userIDFromDB,
 				// using a buffered channel so it does not block whens ending if
 				// the count wasn't requested. it will be GC'd when the request
 				// is done.

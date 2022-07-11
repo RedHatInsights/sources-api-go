@@ -69,7 +69,7 @@ func (r *applicationTypeResolver) SupportedAuthenticationTypes(ctx context.Conte
 }
 
 func (r *applicationTypeResolver) Sources(ctx context.Context, obj *model.ApplicationType) ([]*model.Source, error) {
-	srces, _, err := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantIdFromCtx(ctx)}).SubCollectionList(model.ApplicationType{Id: obj.Id}, 500, 0, []util.Filter{})
+	srces, _, err := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantIdFromCtx(ctx), UserID: userIdFromCtx(ctx)}).SubCollectionList(model.ApplicationType{Id: obj.Id}, 500, 0, []util.Filter{})
 	out := make([]*model.Source, len(srces))
 	for i := range srces {
 		out[i] = &srces[i]
@@ -131,7 +131,7 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 	f := parseArgs(sortBy, filter)
 
 	// list the sources with filters en tote!
-	srces, count, err := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantIdFromCtx(ctx)}).List(*limit, *offset, f)
+	srces, count, err := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantIdFromCtx(ctx), UserID: userIdFromCtx(ctx)}).List(*limit, *offset, f)
 	sendCount(ctx, count)
 
 	// storing the IDs of relevant sources on the request context for later subresources
