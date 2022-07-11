@@ -86,7 +86,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		}
 
 		for i := 0; i < len(output.Authentications); i++ {
-			err = dao.GetAuthenticationDao(&tenant.Id).BulkCreate(&output.Authentications[i])
+			err = dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &tenant.Id}).BulkCreate(&output.Authentications[i])
 			if err != nil {
 				return err
 			}

@@ -266,7 +266,7 @@ func TestDeleteSourceNotExists(t *testing.T) {
 // 	// Grab the DAOs which we will use to create the subresources.
 // 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
 // 	applicationsDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
-// 	authenticationDao := GetAuthenticationDao(&fixtures.TestTenantData[0].Id)
+// 	authenticationDao := GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
 // 	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
 // 	rhcConnectionsDao := GetRhcConnectionDao(&fixtures.TestTenantData[0].Id)
 

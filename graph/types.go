@@ -109,7 +109,7 @@ func (rd *RequestData) EnsureAuthenticationsAreLoaded() error {
 	defer rd.SourceMutex.Unlock()
 
 	if rd.authenticationMap == nil {
-		auths, _, err := dao.GetAuthenticationDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
+		auths, _, err := dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &rd.TenantID}).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}

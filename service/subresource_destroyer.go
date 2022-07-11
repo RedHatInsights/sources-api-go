@@ -32,7 +32,7 @@ import (
 // Finally, those authentications are safely encrypted so they can stay in their datastores until we manually remove
 // them.
 func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, headers []kafka.Header) error {
-	authenticationsDao := dao.GetAuthenticationDao(tenantId)
+	authenticationsDao := dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: tenantId})
 	var authentications []model.Authentication
 
 	switch resourceType {
