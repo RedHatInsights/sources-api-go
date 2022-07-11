@@ -107,7 +107,7 @@ func setupRoutes(e *echo.Echo) {
 		if os.Getenv("PROXY_GRAPHQL") == "true" {
 			r.POST("/graphql", ProxyGraphqlToLegacySources, middleware.Tenancy)
 		} else {
-			r.POST("/graphql", GraphQLQuery, middleware.Tenancy)
+			r.POST("/graphql", GraphQLQuery, middleware.Tenancy, middleware.UserCatcher)
 
 			// run the graphQL playground if running locally or in ephemeral. really handy for development!
 			// https://github.com/graphql/graphiql

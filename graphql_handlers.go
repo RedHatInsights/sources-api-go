@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -11,11 +12,11 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/graph"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/service"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -57,9 +58,9 @@ func init() {
 }
 
 func GraphQLQuery(c echo.Context) error {
-	tenant, err := util.GetTenantFromEchoContext(c)
-	if err != nil {
-		return err
+	requestParams, err := dao.NewRequestParamsFromContext(c)
+	if requestParams == nil || err != nil {
+		return fmt.Errorf("unable to process user id or tenant id from request")
 	}
 
 	// locking the initial sourceID mutex in order to load sources before
@@ -76,7 +77,8 @@ func GraphQLQuery(c echo.Context) error {
 			graph.RequestData{},
 			&graph.RequestData{
 				// the current tenant
-				TenantID: tenant,
+				TenantID: *requestParams.TenantID,
+				UserID:   requestParams.UserID,
 				// using a buffered channel so it does not block whens ending if
 				// the count wasn't requested. it will be GC'd when the request
 				// is done.
