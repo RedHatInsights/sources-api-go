@@ -18,12 +18,33 @@ var getAuthenticationDao func(c echo.Context) (dao.AuthenticationDao, error)
 
 func getAuthenticationDaoWithTenant(c echo.Context) (dao.AuthenticationDao, error) {
 	tenantId, err := getTenantFromEchoContext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	userID, err := getUserFromEchoContext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	var user m.User
+	result := dao.DB.Model(&m.User{}).Where("tenant_id = ? and user_id = ?", tenantId, userID).Find(&user)
+	if result.Error != nil {
+		return nil, err
+	}
+
+	var userIDFromDB *int64
+	if result.RowsAffected == 0 {
+		userIDFromDB = nil
+	} else {
+		userIDFromDB = &user.Id
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	return dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &tenantId}), nil
+	return dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &tenantId, UserID: userIDFromDB}), nil
 }
 
 func AuthenticationList(c echo.Context) error {
