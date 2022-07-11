@@ -11,6 +11,7 @@ import (
 
 type authenticationDaoDbImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 func (add *authenticationDaoDbImpl) List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
