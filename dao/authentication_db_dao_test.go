@@ -14,6 +14,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/uuid"
 )
 
 // TestAuthType is an authentication type used in the fixtures to perform checks.
@@ -267,10 +268,13 @@ func TestListForSource(t *testing.T) {
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	uuidRaw, _ := uuid.NewUUID()
+	uuidStr := uuidRaw.String()
 	source := model.Source{
 		Name:         "new source in new tenant",
 		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
 		TenantID:     fixtures.TestTenantData[1].Id,
+		Uid:          &uuidStr,
 	}
 
 	err := sourceDao.Create(&source)
@@ -352,10 +356,13 @@ func TestListForApplication(t *testing.T) {
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	uuidRaw, _ := uuid.NewUUID()
+	uuidStr := uuidRaw.String()
 	source := model.Source{
 		Name:         "new source in new tenant",
 		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
 		TenantID:     fixtures.TestTenantData[1].Id,
+		Uid:          &uuidStr,
 	}
 
 	err := sourceDao.Create(&source)
@@ -448,10 +455,13 @@ func TestListForApplicationAuthentication(t *testing.T) {
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	uuidRaw, _ := uuid.NewUUID()
+	uuidStr := uuidRaw.String()
 	source := model.Source{
 		Name:         "new source in new tenant",
 		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
 		TenantID:     fixtures.TestTenantData[1].Id,
+		Uid:          &uuidStr,
 	}
 
 	err := sourceDao.Create(&source)
@@ -551,10 +561,13 @@ func TestListForEndpoint(t *testing.T) {
 
 	// Create a new source the new fixtures will be attached to.
 	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	uuidRaw, _ := uuid.NewUUID()
+	uuidStr := uuidRaw.String()
 	source := model.Source{
 		Name:         "new source in new tenant",
 		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
 		TenantID:     fixtures.TestTenantData[1].Id,
+		Uid:          &uuidStr,
 	}
 
 	err := sourceDao.Create(&source)

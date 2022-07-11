@@ -11,13 +11,13 @@ AS $fk_exists$
 BEGIN
     RETURN EXISTS (
         SELECT 1 FROM "information_schema"."table_constraints"
-        WHERE "table_schema" = 'public' AND "table_name" = tn AND "constraint_name" = cn
+        WHERE "table_schema" = "current_schema"() AND "table_name" = tn AND "constraint_name" = cn
     );
 END
 $fk_exists$ LANGUAGE plpgsql;
 
 -- table_exists(string) takes a table name as an argument and
--- checks if it exists in the "public" schema.
+-- checks if it exists in the current schema.
 --
 -- Returns true if it exists.
 CREATE OR REPLACE FUNCTION "table_exists"(tn TEXT) RETURNS BOOLEAN
@@ -25,7 +25,7 @@ AS $table_exists$
 BEGIN
 	RETURN EXISTS (
 		SELECT 1 FROM "information_schema"."tables"
-		WHERE "table_schema" = 'public' AND "table_name" = tn
+		WHERE "table_schema" = "current_schema"() AND "table_name" = tn
 	);
 END
 $table_exists$ LANGUAGE plpgsql;
@@ -48,7 +48,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('application_authentications') THEN
-        CREATE TABLE public."application_authentications" (
+        CREATE TABLE "application_authentications" (
             "id" BIGINT NOT NULL,
             "tenant_id" BIGINT NOT NULL,
             "application_id" BIGINT NOT NULL,
@@ -58,25 +58,25 @@ BEGIN
             "paused_at" TIMESTAMP WITHOUT TIME ZONE
         );
 
-        CREATE SEQUENCE public."application_authentications_id_seq"
+        CREATE SEQUENCE "application_authentications_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."application_authentications_id_seq" OWNED BY public."application_authentications"."id";
+        ALTER SEQUENCE "application_authentications_id_seq" OWNED BY "application_authentications"."id";
 
-        ALTER TABLE ONLY public."application_authentications" ALTER COLUMN "id" SET DEFAULT nextval('public.application_authentications_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "application_authentications" ALTER COLUMN "id" SET DEFAULT nextval('application_authentications_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."application_authentications"
+        ALTER TABLE ONLY "application_authentications"
             ADD CONSTRAINT "application_authentications_pkey" PRIMARY KEY ("id");
 
-        CREATE INDEX "index_application_authentications_on_application_id" ON public."application_authentications" USING btree ("application_id");
-        CREATE INDEX "index_application_authentications_on_authentication_id" ON public."application_authentications" USING btree ("authentication_id");
-        CREATE INDEX "index_application_authentications_on_paused_at" ON public."application_authentications" USING btree ("paused_at");
-        CREATE INDEX "index_application_authentications_on_tenant_id" ON public."application_authentications" USING btree ("tenant_id");
-        CREATE UNIQUE INDEX "index_on_tenant_application_authentication" ON public."application_authentications" USING btree ("tenant_id", "application_id", "authentication_id");
+        CREATE INDEX "index_application_authentications_on_application_id" ON "application_authentications" USING btree ("application_id");
+        CREATE INDEX "index_application_authentications_on_authentication_id" ON "application_authentications" USING btree ("authentication_id");
+        CREATE INDEX "index_application_authentications_on_paused_at" ON "application_authentications" USING btree ("paused_at");
+        CREATE INDEX "index_application_authentications_on_tenant_id" ON "application_authentications" USING btree ("tenant_id");
+        CREATE UNIQUE INDEX "index_on_tenant_application_authentication" ON "application_authentications" USING btree ("tenant_id", "application_id", "authentication_id");
 
         RAISE NOTICE '"application_authentications": table, sequences and indexes created.';
     END IF;
@@ -91,7 +91,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('application_types') THEN
-        CREATE TABLE public."application_types" (
+        CREATE TABLE "application_types" (
             "id" BIGINT NOT NULL,
             "name" CHARACTER VARYING NOT NULL,
             "created_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -102,21 +102,21 @@ BEGIN
             "supported_authentication_types" JSONB
         );
 
-        CREATE SEQUENCE public."application_types_id_seq"
+        CREATE SEQUENCE "application_types_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."application_types_id_seq" OWNED BY public."application_types"."id";
+        ALTER SEQUENCE "application_types_id_seq" OWNED BY "application_types"."id";
 
-        ALTER TABLE ONLY public."application_types" ALTER COLUMN "id" SET DEFAULT nextval('public.application_types_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "application_types" ALTER COLUMN "id" SET DEFAULT nextval('application_types_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."application_types"
+        ALTER TABLE ONLY "application_types"
             ADD CONSTRAINT "application_types_pkey" PRIMARY KEY ("id");
 
-        CREATE UNIQUE INDEX "index_application_types_on_name" ON public."application_types" USING btree ("name");
+        CREATE UNIQUE INDEX "index_application_types_on_name" ON "application_types" USING btree ("name");
 
         RAISE NOTICE '"application_types": table, sequences and indexes created.';
     END IF;
@@ -131,7 +131,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('applications') THEN
-        CREATE TABLE public."applications" (
+        CREATE TABLE "applications" (
             "id" BIGINT NOT NULL,
             "tenant_id" BIGINT NOT NULL,
             "source_id" BIGINT NOT NULL,
@@ -147,24 +147,24 @@ BEGIN
             "paused_at" TIMESTAMP WITHOUT TIME ZONE
         );
 
-        CREATE SEQUENCE public."applications_id_seq"
+        CREATE SEQUENCE "applications_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."applications_id_seq" OWNED BY public."applications"."id";
+        ALTER SEQUENCE "applications_id_seq" OWNED BY "applications"."id";
 
-        ALTER TABLE ONLY public."applications" ALTER COLUMN "id" SET DEFAULT nextval('public.applications_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "applications" ALTER COLUMN "id" SET DEFAULT nextval('applications_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."applications"
+        ALTER TABLE ONLY "applications"
             ADD CONSTRAINT "applications_pkey" PRIMARY KEY ("id");
 
-        CREATE INDEX "index_applications_on_application_type_id" ON public."applications" USING btree ("application_type_id");
-        CREATE INDEX "index_applications_on_paused_at" ON public."applications" USING btree ("paused_at");
-        CREATE INDEX "index_applications_on_source_id" ON public."applications" USING btree ("source_id");
-        CREATE INDEX "index_applications_on_tenant_id" ON public."applications" USING btree ("tenant_id");
+        CREATE INDEX "index_applications_on_application_type_id" ON "applications" USING btree ("application_type_id");
+        CREATE INDEX "index_applications_on_paused_at" ON "applications" USING btree ("paused_at");
+        CREATE INDEX "index_applications_on_source_id" ON "applications" USING btree ("source_id");
+        CREATE INDEX "index_applications_on_tenant_id" ON "applications" USING btree ("tenant_id");
 
         RAISE NOTICE '"applications": table, sequences and indexes created.';
     END IF;
@@ -179,7 +179,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('authentications') THEN
-        CREATE TABLE public."authentications" (
+        CREATE TABLE "authentications" (
             "id" BIGINT NOT NULL,
             "resource_type" CHARACTER VARYING,
             "resource_id" integer,
@@ -198,23 +198,23 @@ BEGIN
             "password_hash" CHARACTER VARYING
         );
 
-        CREATE SEQUENCE public."authentications_id_seq"
+        CREATE SEQUENCE "authentications_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."authentications_id_seq" OWNED BY public."authentications"."id";
+        ALTER SEQUENCE "authentications_id_seq" OWNED BY "authentications"."id";
 
-        ALTER TABLE ONLY public."authentications" ALTER COLUMN "id" SET DEFAULT nextval('public.authentications_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "authentications" ALTER COLUMN "id" SET DEFAULT nextval('authentications_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."authentications"
+        ALTER TABLE ONLY "authentications"
             ADD CONSTRAINT "authentications_pkey" PRIMARY KEY ("id");
 
-        CREATE INDEX "index_authentications_on_paused_at" ON public."authentications" USING btree ("paused_at");
-        CREATE INDEX "index_authentications_on_resource_type_and_resource_id" ON public."authentications" USING btree ("resource_type", "resource_id");
-        CREATE INDEX "index_authentications_on_tenant_id" ON public."authentications" USING btree ("tenant_id");
+        CREATE INDEX "index_authentications_on_paused_at" ON "authentications" USING btree ("paused_at");
+        CREATE INDEX "index_authentications_on_resource_type_and_resource_id" ON "authentications" USING btree ("resource_type", "resource_id");
+        CREATE INDEX "index_authentications_on_tenant_id" ON "authentications" USING btree ("tenant_id");
 
         RAISE NOTICE '"authentications": table, sequences and indexes created.';
     END IF;
@@ -229,7 +229,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('endpoints') THEN
-        CREATE TABLE public."endpoints" (
+        CREATE TABLE "endpoints" (
             "id" BIGINT NOT NULL,
             "role" CHARACTER VARYING,
             "port" integer,
@@ -251,23 +251,23 @@ BEGIN
             "paused_at" TIMESTAMP WITHOUT TIME ZONE
         );
 
-        CREATE SEQUENCE public."endpoints_id_seq"
+        CREATE SEQUENCE "endpoints_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."endpoints_id_seq" OWNED BY public."endpoints"."id";
+        ALTER SEQUENCE "endpoints_id_seq" OWNED BY "endpoints"."id";
 
-        ALTER TABLE ONLY public."endpoints" ALTER COLUMN "id" SET DEFAULT nextval('public.endpoints_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "endpoints" ALTER COLUMN "id" SET DEFAULT nextval('endpoints_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."endpoints"
+        ALTER TABLE ONLY "endpoints"
             ADD CONSTRAINT "endpoints_pkey" PRIMARY KEY ("id");
 
-        CREATE INDEX "index_endpoints_on_paused_at" ON public."endpoints" USING btree ("paused_at");
-        CREATE INDEX "index_endpoints_on_source_id" ON public."endpoints" USING btree ("source_id");
-        CREATE INDEX "index_endpoints_on_tenant_id" ON public."endpoints" USING btree ("tenant_id");
+        CREATE INDEX "index_endpoints_on_paused_at" ON "endpoints" USING btree ("paused_at");
+        CREATE INDEX "index_endpoints_on_source_id" ON "endpoints" USING btree ("source_id");
+        CREATE INDEX "index_endpoints_on_tenant_id" ON "endpoints" USING btree ("tenant_id");
 
         RAISE NOTICE '"endpoints": table, sequences and indexes created.';
     END IF;
@@ -282,7 +282,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('meta_data') THEN
-        CREATE TABLE public."meta_data" (
+        CREATE TABLE "meta_data" (
             "id" BIGINT NOT NULL,
             "application_type_id" integer,
             "step" integer,
@@ -294,18 +294,18 @@ BEGIN
             "type" CHARACTER VARYING
         );
 
-        CREATE SEQUENCE public."meta_data_id_seq"
+        CREATE SEQUENCE "meta_data_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."meta_data_id_seq" OWNED BY public."meta_data"."id";
+        ALTER SEQUENCE "meta_data_id_seq" OWNED BY "meta_data"."id";
 
-        ALTER TABLE ONLY public."meta_data" ALTER COLUMN "id" SET DEFAULT nextval('public.meta_data_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "meta_data" ALTER COLUMN "id" SET DEFAULT nextval('meta_data_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."meta_data"
+        ALTER TABLE ONLY "meta_data"
             ADD CONSTRAINT "meta_data_pkey" PRIMARY KEY ("id");
 
         RAISE NOTICE '"meta_data": table, sequences and indexes created.';
@@ -321,7 +321,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('rhc_connections') THEN
-        CREATE TABLE public."rhc_connections" (
+        CREATE TABLE "rhc_connections" (
             "id" BIGINT NOT NULL,
             "rhc_id" CHARACTER VARYING,
             "extra" JSONB DEFAULT '{}'::JSONB,
@@ -333,21 +333,21 @@ BEGIN
             "updated_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL
         );
 
-        CREATE SEQUENCE public."rhc_connections_id_seq"
+        CREATE SEQUENCE "rhc_connections_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."rhc_connections_id_seq" OWNED BY public."rhc_connections"."id";
+        ALTER SEQUENCE "rhc_connections_id_seq" OWNED BY "rhc_connections"."id";
 
-        ALTER TABLE ONLY public."rhc_connections" ALTER COLUMN "id" SET DEFAULT nextval('public.rhc_connections_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "rhc_connections" ALTER COLUMN "id" SET DEFAULT nextval('rhc_connections_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."rhc_connections"
+        ALTER TABLE ONLY "rhc_connections"
             ADD CONSTRAINT "rhc_connections_pkey" PRIMARY KEY ("id");
 
-        CREATE UNIQUE INDEX "index_rhc_connections_on_rhc_id" ON public."rhc_connections" USING btree ("rhc_id");
+        CREATE UNIQUE INDEX "index_rhc_connections_on_rhc_id" ON "rhc_connections" USING btree ("rhc_id");
 
         RAISE NOTICE '"rhc_connections": table, sequences and indexes created.';
     END IF;
@@ -362,13 +362,13 @@ DO
 $$
     BEGIN
         IF NOT "table_exists"('source_rhc_connections') THEN
-            CREATE TABLE public."source_rhc_connections" (
+            CREATE TABLE "source_rhc_connections" (
                 "source_id" INTEGER,
                 "rhc_connection_id" INTEGER,
                 "tenant_id" BIGINT
             );
 
-            CREATE UNIQUE INDEX "index_source_rhc_connections_on_source_id_and_rhc_connection_id" ON public."source_rhc_connections" USING btree ("source_id", "rhc_connection_id");
+            CREATE UNIQUE INDEX "index_source_rhc_connections_on_source_id_and_rhc_connection_id" ON "source_rhc_connections" USING btree ("source_id", "rhc_connection_id");
 
             RAISE NOTICE '"source_rhc_connections": table and index created.';
         END IF;
@@ -383,7 +383,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('source_types') THEN
-        CREATE TABLE public."source_types" (
+        CREATE TABLE "source_types" (
             "id" BIGINT NOT NULL,
             "name" CHARACTER VARYING NOT NULL,
             "product_name" CHARACTER VARYING NOT NULL,
@@ -394,21 +394,21 @@ BEGIN
             "icon_url" CHARACTER VARYING
         );
 
-        CREATE SEQUENCE public."source_types_id_seq"
+        CREATE SEQUENCE "source_types_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."source_types_id_seq" OWNED BY public."source_types"."id";
+        ALTER SEQUENCE "source_types_id_seq" OWNED BY "source_types"."id";
 
-        ALTER TABLE ONLY public."source_types" ALTER COLUMN "id" SET DEFAULT nextval('public.source_types_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "source_types" ALTER COLUMN "id" SET DEFAULT nextval('source_types_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."source_types"
+        ALTER TABLE ONLY "source_types"
             ADD CONSTRAINT "source_types_pkey" PRIMARY KEY ("id");
 
-        CREATE UNIQUE INDEX "index_source_types_on_name" ON public."source_types" USING btree ("name");
+        CREATE UNIQUE INDEX "index_source_types_on_name" ON "source_types" USING btree ("name");
 
         RAISE NOTICE '"source_types": table, sequences and indexes created.';
     END IF;
@@ -423,7 +423,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('sources') THEN
-        CREATE TABLE public."sources" (
+        CREATE TABLE "sources" (
             "id" BIGINT NOT NULL,
             "name" CHARACTER VARYING NOT NULL,
             "uid" CHARACTER VARYING NOT NULL,
@@ -441,24 +441,24 @@ BEGIN
             "paused_at" TIMESTAMP WITHOUT TIME ZONE
         );
 
-        CREATE SEQUENCE public."sources_id_seq"
+        CREATE SEQUENCE "sources_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."sources_id_seq" OWNED BY public."sources"."id";
+        ALTER SEQUENCE "sources_id_seq" OWNED BY "sources"."id";
 
-        ALTER TABLE ONLY public."sources" ALTER COLUMN "id" SET DEFAULT nextval('public.sources_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "sources" ALTER COLUMN "id" SET DEFAULT nextval('sources_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."sources"
+        ALTER TABLE ONLY "sources"
             ADD CONSTRAINT "sources_pkey" PRIMARY KEY ("id");
 
-        CREATE INDEX "index_sources_on_paused_at" ON public."sources" USING btree ("paused_at");
-        CREATE INDEX index_sources_on_source_type_id ON public."sources" USING btree ("source_type_id");
-        CREATE INDEX index_sources_on_tenant_id ON public."sources" USING btree ("tenant_id");
-        CREATE UNIQUE INDEX index_sources_on_uid ON public."sources" USING btree ("uid");
+        CREATE INDEX "index_sources_on_paused_at" ON "sources" USING btree ("paused_at");
+        CREATE INDEX index_sources_on_source_type_id ON "sources" USING btree ("source_type_id");
+        CREATE INDEX index_sources_on_tenant_id ON "sources" USING btree ("tenant_id");
+        CREATE UNIQUE INDEX index_sources_on_uid ON "sources" USING btree ("uid");
 
         RAISE NOTICE '"sources": table, sequences and indexes created.';
     END IF;
@@ -473,7 +473,7 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('tenants') THEN
-        CREATE TABLE public."tenants" (
+        CREATE TABLE "tenants" (
             "id" BIGINT NOT NULL,
             "name" CHARACTER VARYING,
             "description" TEXT,
@@ -482,18 +482,18 @@ BEGIN
             "updated_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL
         );
 
-        CREATE SEQUENCE public."tenants_id_seq"
+        CREATE SEQUENCE "tenants_id_seq"
             START WITH 1
             INCREMENT BY 1
             NO MINVALUE
             NO MAXVALUE
             CACHE 1;
 
-        ALTER SEQUENCE public."tenants_id_seq" OWNED BY public."tenants"."id";
+        ALTER SEQUENCE "tenants_id_seq" OWNED BY "tenants"."id";
 
-        ALTER TABLE ONLY public."tenants" ALTER COLUMN "id" SET DEFAULT nextval('public.tenants_id_seq'::REGCLASS);
+        ALTER TABLE ONLY "tenants" ALTER COLUMN "id" SET DEFAULT nextval('tenants_id_seq'::REGCLASS);
 
-        ALTER TABLE ONLY public."tenants"
+        ALTER TABLE ONLY "tenants"
             ADD CONSTRAINT "tenants_pkey" PRIMARY KEY ("id");
 
         RAISE NOTICE '"tenants": table, sequences and indexes created.';
@@ -516,14 +516,14 @@ DO
 $$
 BEGIN
     IF NOT "fk_exists"('fk_rails_85a04922b1', 'application_authentications') THEN
-        ALTER TABLE ONLY public."application_authentications"
-            ADD CONSTRAINT "fk_rails_85a04922b1" FOREIGN KEY ("tenant_id") REFERENCES public."tenants"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "application_authentications"
+            ADD CONSTRAINT "fk_rails_85a04922b1" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE;
 
-        ALTER TABLE ONLY public."application_authentications"
-            ADD CONSTRAINT "fk_rails_d709bbbff3" FOREIGN KEY ("authentication_id") REFERENCES public."authentications"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "application_authentications"
+            ADD CONSTRAINT "fk_rails_d709bbbff3" FOREIGN KEY ("authentication_id") REFERENCES "authentications"("id") ON DELETE CASCADE;
 
-        ALTER TABLE ONLY public."application_authentications"
-            ADD CONSTRAINT "fk_rails_a051188e10" FOREIGN KEY ("application_id") REFERENCES public."applications"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "application_authentications"
+            ADD CONSTRAINT "fk_rails_a051188e10" FOREIGN KEY ("application_id") REFERENCES "applications"("id") ON DELETE CASCADE;
 
         RAISE NOTICE '"application_authentications": foreign keys created.';
     END IF;
@@ -538,14 +538,14 @@ DO
 $$
 BEGIN
     IF NOT "fk_exists"('fk_rails_ad5ea13d24', 'applications') THEN
-        ALTER TABLE ONLY public."applications"
-            ADD CONSTRAINT "fk_rails_ad5ea13d24" FOREIGN KEY ("application_type_id") REFERENCES public."application_types"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "applications"
+            ADD CONSTRAINT "fk_rails_ad5ea13d24" FOREIGN KEY ("application_type_id") REFERENCES "application_types"("id") ON DELETE CASCADE;
 
-        ALTER TABLE ONLY public."applications"
-            ADD CONSTRAINT "fk_rails_cbcddd5826" FOREIGN KEY ("tenant_id") REFERENCES public."tenants"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "applications"
+            ADD CONSTRAINT "fk_rails_cbcddd5826" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE;
 
-        ALTER TABLE ONLY public.applications
-            ADD CONSTRAINT "fk_rails_064e03ae58" FOREIGN KEY ("source_id") REFERENCES public."sources"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY applications
+            ADD CONSTRAINT "fk_rails_064e03ae58" FOREIGN KEY ("source_id") REFERENCES "sources"("id") ON DELETE CASCADE;
 
         RAISE NOTICE '"applications": foreign keys created.';
     END IF;
@@ -560,8 +560,8 @@ DO
 $$
 BEGIN
     IF NOT "fk_exists"('fk_rails_28143f952b', 'authentications') THEN
-        ALTER TABLE ONLY public.authentications
-            ADD CONSTRAINT "fk_rails_28143f952b" FOREIGN KEY ("tenant_id") REFERENCES public."tenants"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY authentications
+            ADD CONSTRAINT "fk_rails_28143f952b" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE;
 
         RAISE NOTICE '"authentications": foreign keys created.';
     END IF;
@@ -576,11 +576,11 @@ DO
 $$
 BEGIN
     IF NOT "fk_exists"('fk_rails_430e742d27', 'endpoints') THEN
-        ALTER TABLE ONLY public."endpoints"
-            ADD CONSTRAINT "fk_rails_430e742d27" FOREIGN KEY ("tenant_id") REFERENCES public."tenants"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "endpoints"
+            ADD CONSTRAINT "fk_rails_430e742d27" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE;
 
-        ALTER TABLE ONLY public."endpoints"
-            ADD CONSTRAINT "fk_rails_67ee0f0d63" FOREIGN KEY ("source_id") REFERENCES public."sources"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "endpoints"
+            ADD CONSTRAINT "fk_rails_67ee0f0d63" FOREIGN KEY ("source_id") REFERENCES "sources"("id") ON DELETE CASCADE;
 
         RAISE NOTICE '"endpoints": foreign keys created.';
     END IF;
@@ -595,14 +595,14 @@ DO
 $$
 BEGIN
     IF NOT "fk_exists"('fk_rhc_connection_id', 'source_rhc_connections') THEN
-        ALTER TABLE ONLY public."source_rhc_connections"
-            ADD CONSTRAINT "fk_rhc_connection_id" FOREIGN KEY ("rhc_connection_id") REFERENCES public."rhc_connections"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "source_rhc_connections"
+            ADD CONSTRAINT "fk_rhc_connection_id" FOREIGN KEY ("rhc_connection_id") REFERENCES "rhc_connections"("id") ON DELETE CASCADE;
 
-        ALTER TABLE ONLY public."source_rhc_connections"
-            ADD CONSTRAINT "fk_source_id" FOREIGN KEY ("source_id") REFERENCES public."sources"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "source_rhc_connections"
+            ADD CONSTRAINT "fk_source_id" FOREIGN KEY ("source_id") REFERENCES "sources"("id") ON DELETE CASCADE;
 
-        ALTER TABLE ONLY public."source_rhc_connections"
-            ADD CONSTRAINT "fk_tenant_id" FOREIGN KEY ("tenant_id") REFERENCES public."tenants"("id");
+        ALTER TABLE ONLY "source_rhc_connections"
+            ADD CONSTRAINT "fk_tenant_id" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id");
     END IF;
 END
 $$;
@@ -615,12 +615,12 @@ DO
 $$
 BEGIN
     IF NOT "fk_exists"('fk_rails_e7365b4f5b', 'sources') THEN
-        ALTER TABLE ONLY public."sources"
-            ADD CONSTRAINT "fk_rails_e7365b4f5b" FOREIGN KEY ("source_type_id") REFERENCES public."source_types"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "sources"
+            ADD CONSTRAINT "fk_rails_e7365b4f5b" FOREIGN KEY ("source_type_id") REFERENCES "source_types"("id") ON DELETE CASCADE;
 
 
-        ALTER TABLE ONLY public."sources"
-            ADD CONSTRAINT "fk_rails_f830a376e4" FOREIGN KEY ("tenant_id") REFERENCES public."tenants"("id") ON DELETE CASCADE;
+        ALTER TABLE ONLY "sources"
+            ADD CONSTRAINT "fk_rails_f830a376e4" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE;
 
         RAISE NOTICE '"sources": foreign keys created.';
     END IF;
@@ -635,14 +635,14 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('ar_internal_metadata') THEN
-        CREATE TABLE public."ar_internal_metadata" (
+        CREATE TABLE "ar_internal_metadata" (
             "key" CHARACTER VARYING NOT NULL,
             "value" CHARACTER VARYING,
             "created_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL,
             "updated_at" TIMESTAMP WITHOUT TIME ZONE NOT NULL
         );
 
-        ALTER TABLE ONLY public."ar_internal_metadata"
+        ALTER TABLE ONLY "ar_internal_metadata"
             ADD CONSTRAINT "ar_internal_metadata_pkey" PRIMARY KEY ("key");
     END IF;
 END
@@ -653,11 +653,11 @@ DO
 $$
 BEGIN
     IF NOT "table_exists"('ar_internal_metadata') THEN
-        CREATE TABLE public."schema_migrations" (
+        CREATE TABLE "schema_migrations" (
             "version" CHARACTER VARYING NOT NULL
         );
 
-        ALTER TABLE ONLY public."schema_migrations"
+        ALTER TABLE ONLY "schema_migrations"
             ADD CONSTRAINT "schema_migrations_pkey" PRIMARY KEY ("version");
     END IF;
 END

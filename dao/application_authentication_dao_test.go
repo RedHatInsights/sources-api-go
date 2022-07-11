@@ -18,25 +18,13 @@ func TestDeleteApplicationAuthentication(t *testing.T) {
 
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestSourceData[0].TenantID)
 
-	applicationAuthentication := fixtures.TestApplicationAuthenticationData[0]
-	// Set the ID to 0 to let GORM know it should insert a new applicationAuthentication and not update an existing one.
-	applicationAuthentication.ID = 0
-	// Set some data to compare the returned applicationAuthentication.
-	applicationAuthentication.AuthenticationUID = "complex uuid"
-
-	// Create the test applicationAuthentication.
-	err := applicationAuthenticationDao.Create(&applicationAuthentication)
-	if err != nil {
-		t.Errorf("error creating applicationAuthentication: %s", err)
-	}
-
-	deletedApplicationAuthentication, err := applicationAuthenticationDao.Delete(&applicationAuthentication.ID)
+	deletedApplicationAuthentication, err := applicationAuthenticationDao.Delete(&fixtures.TestApplicationAuthenticationData[0].ID)
 	if err != nil {
 		t.Errorf("error deleting an applicationAuthentication: %s", err)
 	}
 
 	{
-		want := applicationAuthentication.ID
+		want := fixtures.TestApplicationAuthenticationData[0].ID
 		got := deletedApplicationAuthentication.ID
 
 		if want != got {
@@ -250,6 +238,7 @@ func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
 // and correct count of returned objects
 func TestApplicationAuthenticationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("offset_limit")
 
 	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)

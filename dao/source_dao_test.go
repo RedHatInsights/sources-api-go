@@ -135,6 +135,8 @@ func TestDeleteSource(t *testing.T) {
 	source.ID = 0
 	// Set some data to compare the returned source.
 	source.Name = "cool source"
+	sourceUid := "abcde-fghij"
+	source.Uid = &sourceUid
 
 	// Create the test source.
 	err := sourceDao.Create(&source)

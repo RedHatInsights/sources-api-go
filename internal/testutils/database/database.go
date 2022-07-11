@@ -3,14 +3,13 @@ package database
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/db/migrations"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
-	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/go-gormigrate/gormigrate/v2"
 	"github.com/labstack/gommon/log"
-	"gorm.io/datatypes"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -28,6 +27,10 @@ func ConnectToTestDB(dbSchema string) {
 		log.Fatalf("db does not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
 	}
 
+	// Set the database's search path to the schema, so that no prefix needs to be added by default to the tables in
+	// the queries.
+	db.Exec(fmt.Sprintf(`SET search_path TO %s`, dbSchema))
+
 	rawDB, err := db.DB()
 	if err != nil {
 		log.Fatal(err)
@@ -38,15 +41,10 @@ func ConnectToTestDB(dbSchema string) {
 	dao.DB = db
 }
 
-// CreateFixtures creates the following fixtures for the database —listed in order—:
-// - Tenant
-// - SourceType
-// - ApplicationType
-// - Source
-// - Application
-// - Endpoint
-// - MetaData
-func CreateFixtures() {
+// CreateFixtures creates a new schema, migrates the schema and adds the required fixtures for the tests.
+func CreateFixtures(schema string) {
+	ConnectToTestDB(schema)
+
 	dao.DB.Create(&fixtures.TestTenantData)
 
 	dao.DB.Create(&fixtures.TestSourceTypeData)
@@ -84,6 +82,13 @@ func CreateTestDB() {
 	os.Exit(0)
 }
 
+// DoneWithFixtures drops the schema and returns the "DB" object back to the "public" schema, in case any other tests need
+// the database in the previous schema.
+func DoneWithFixtures(schema string) {
+	DropSchema(schema)
+	ConnectToTestDB("public")
+}
+
 // DropSchema drops the database schema entirely.
 func DropSchema(dbSchema string) {
 	result := dao.DB.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", dbSchema))
@@ -95,51 +100,12 @@ func DropSchema(dbSchema string) {
 
 // MigrateSchema migrates all the models.
 func MigrateSchema() {
-	// Use a custom "authentication" table to avoid Gorm creating FKs when the real databases don't have them.
-	type authentication struct {
-		Id                      int64          `gorm:"primaryKey"`
-		Name                    string         `gorm:"column:name"`
-		AuthType                string         `gorm:"column:authtype"`
-		Username                string         `gorm:"column:username"`
-		MiqPassword             string         `gorm:"column:password"`
-		Password                string         `gorm:"column:password_hash"`
-		Extra                   datatypes.JSON `gorm:"column:extra"`
-		Version                 string         `gorm:"column:version"`
-		AvailabilityStatus      string         `gorm:"column:availability_status"`
-		AvailabilityStatusError string         `gorm:"column:availability_status_error"`
-		LastCheckedAt           time.Time      `gorm:"column:last_checked_at"`
-		LastAvailableAt         time.Time      `gorm:"column:last_available_at"`
-		SourceId                int64          `gorm:"column:source_id"`
-		TenantId                int64          `gorm:"column:tenant_id"`
-		UserID                  *int64         `gorm:"column:user_id"`
-		ResourceType            string         `gorm:"column:resource_type"`
-		ResourceId              int64          `gorm:"column:resource_id"`
-		CreatedAt               time.Time      `gorm:"column:created_at"`
-		UpdatedAt               time.Time      `gorm:"column:updated_at"`
-	}
-
-	err := dao.DB.AutoMigrate(
-		&m.Tenant{},
-		&m.User{},
-
-		&m.SourceType{},
-		&m.ApplicationType{},
-
-		&m.Source{},
-		&m.Application{},
-
-		&authentication{},
-		&m.ApplicationAuthentication{},
-
-		&m.RhcConnection{},
-		&m.SourceRhcConnection{},
-
-		&m.Endpoint{},
-		&m.MetaData{},
-	)
+	// Perform the migrations and store the error for a proper return.
+	migrateTool := gormigrate.New(dao.DB, gormigrate.DefaultOptions, migrations.MigrationsCollection)
+	err := migrateTool.Migrate()
 
 	if err != nil {
-		log.Fatalf("Error automigrating the schema: %s", err)
+		log.Fatalf(`error migrating the schema: %s`, err)
 	}
 }
 
