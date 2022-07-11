@@ -1019,6 +1019,34 @@ func TestApplicationDelete(t *testing.T) {
 	}
 }
 
+// TestApplicationDeleteInvalidTenant tests situation when the tenant tries to
+// delete existing but not owned application
+func TestApplicationDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/applications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationDelete)
+	err := notFoundApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationDeleteNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
