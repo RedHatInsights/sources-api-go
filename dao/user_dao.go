@@ -55,3 +55,20 @@ func (u *userDaoImpl) CreateIfResourceOwnershipActive(userResource *m.UserResour
 
 	return nil
 }
+
+func (u *userDaoImpl) GetIdByUserID(userID string) (*int64, error) {
+	var user m.User
+	result := DB.Model(&m.User{}).Where("tenant_id = ? and user_id = ?", u.TenantID, userID).Find(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	var userIDFromDB *int64
+	if result.RowsAffected == 0 {
+		userIDFromDB = nil
+	} else {
+		userIDFromDB = &user.Id
+	}
+
+	return userIDFromDB, nil
+}

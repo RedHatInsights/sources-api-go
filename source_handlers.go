@@ -27,17 +27,11 @@ func getSourceDaoWithTenant(c echo.Context) (dao.SourceDao, error) {
 		return nil, err
 	}
 
-	var user m.User
-	result := dao.DB.Model(&m.User{}).Where("tenant_id = ? and user_id = ?", tenantId, userID).Find(&user)
-	if result.Error != nil {
-		return nil, err
-	}
+	userDao := dao.GetUserDao(&tenantId)
+	userIDFromDB, err := userDao.GetIdByUserID(userID)
 
-	var userIDFromDB *int64
-	if result.RowsAffected == 0 {
-		userIDFromDB = nil
-	} else {
-		userIDFromDB = &user.Id
+	if err != nil {
+		return nil, err
 	}
 
 	return dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId, UserID: userIDFromDB}), nil
