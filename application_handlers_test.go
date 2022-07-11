@@ -288,6 +288,7 @@ func TestSourceApplicationSubcollectionListInvalidTenant(t *testing.T) {
 }
 
 func TestApplicationList(t *testing.T) {
+	tenantId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/applications",
@@ -296,7 +297,7 @@ func TestApplicationList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -353,6 +354,11 @@ func TestApplicationList(t *testing.T) {
 
 	if a2["extra"] == nil {
 		t.Error("ghosts infected the return")
+	}
+
+	err = checkAllApplicationsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
