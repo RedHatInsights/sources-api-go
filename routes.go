@@ -16,6 +16,7 @@ var listMiddleware = []echo.MiddlewareFunc{
 var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{middleware.Tenancy}, listMiddleware...)
 var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.PermissionCheck, middleware.RaiseEvent}
 var permissionWithListMiddleware = append(listMiddleware, middleware.PermissionCheck)
+var userTenancyWithListMiddleware = append(tenancyWithListMiddleware, middleware.ResourceOwnership)
 
 func setupRoutes(e *echo.Echo) {
 	e.GET("/health", func(c echo.Context) error {
@@ -33,7 +34,7 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/bulk_create", BulkCreate, permissionMiddleware...)
 
 		// Sources
-		r.GET("/sources", SourceList, append(tenancyWithListMiddleware, middleware.ResourceOwnership)...)
+		r.GET("/sources", SourceList, userTenancyWithListMiddleware...)
 		r.GET("/sources/:id", SourceGet, middleware.Tenancy, middleware.ResourceOwnership)
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
 		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier, middleware.ResourceOwnership)...)
