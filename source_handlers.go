@@ -22,7 +22,7 @@ func getSourceDaoWithTenant(c echo.Context) (dao.SourceDao, error) {
 		return nil, err
 	}
 
-	userID, err := getUserFromEchoContext(c)
+	userID, err := util.GetUserFromEchoContext(c)
 	if err != nil {
 		return nil, err
 	}

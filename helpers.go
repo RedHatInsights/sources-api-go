@@ -102,24 +102,6 @@ func getTenantFromEchoContext(c echo.Context) (int64, error) {
 	}
 }
 
-func getUserFromEchoContext(c echo.Context) (string, error) {
-	userValue := c.Get(h.USERID)
-
-	if userValue == nil {
-		return "", nil
-	}
-
-	if userId, ok := userValue.(string); ok {
-		if userId == "" {
-			return "", errors.New("incorrect user value provided")
-		}
-
-		return userId, nil
-	} else {
-		return "", errors.New("the user was provided in an invalid format")
-	}
-}
-
 func getAccountNumberFromEchoContext(c echo.Context) (string, error) {
 	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
 	if !ok {
