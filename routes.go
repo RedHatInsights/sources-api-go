@@ -58,11 +58,11 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy)
 
 		// Authentications
-		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
-		r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
+		r.GET("/authentications", AuthenticationList, append(tenancyWithListMiddleware, middleware.ResourceOwnership)...)
+		r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.ResourceOwnership)
 		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
-		r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier)...)
-		r.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
+		r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier, middleware.ResourceOwnership)...)
+		r.DELETE("/authentications/:uid", AuthenticationDelete, append(permissionMiddleware, middleware.ResourceOwnership)...)
 
 		// ApplicationTypes
 		r.GET("/application_types", ApplicationTypeList, listMiddleware...)
