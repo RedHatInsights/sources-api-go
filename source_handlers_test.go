@@ -1723,19 +1723,20 @@ func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidFilter(t *testing.T) {
 // itself as paused, by modifying their "paused_at" column.
 func TestPauseSourceAndItsApplications(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	sourceId := int64(1)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/sources/1/pause",
 		nil,
 		map[string]interface{}{
-			"tenantID":      int64(1),
-			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourcePause(c)
 	if err != nil {
@@ -1744,6 +1745,36 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 
 	if rec.Code != http.StatusNoContent {
 		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Check that the source is paused
+	daoParams := dao.SourceDaoParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&daoParams)
+	src, err := sourceDao.GetById(&sourceId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if src.PausedAt == nil {
+		t.Error("the source is not paused => 'paused_at' is nil and the opposite is expected")
+	}
+
+	// Check that relation applications are paused
+	appDao := dao.GetApplicationDao(&tenantId)
+	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, a := range apps {
+		if a.PausedAt == nil {
+			t.Errorf("application with id = %d is not paused and the opposite is expected", a.ID)
+		}
+	}
+
+	// Unpause the Source and its applications to not have affected test data for next tests
+	err = sourceDao.Unpause(sourceId)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
@@ -1769,31 +1800,85 @@ func TestPauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-// TestResumeSourceAndItsApplications tests that the "unpause source" endpoint sets all the applications and the source
-// itself as resumed, by setting their "paused_at" column as "NULL".
-func TestResumeSourceAndItsApplications(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
+func TestPauseSourceAndItsApplicationsBadRequest(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/xxx/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
 
+	c.SetParamNames("source_id")
+	c.SetParamValues("xxx")
+
+	badRequestSourcePause := ErrorHandlingContext(SourcePause)
+	err := badRequestSourcePause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+// TestUnpauseSourceAndItsApplications tests that the "unpause source" endpoint sets all the applications and the source
+// itself as not paused, by setting their "paused_at" column as "NULL".
+func TestUnpauseSourceAndItsApplications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	sourceId := int64(1)
+
+	// Test data preparation = pause the source and its apps
+	daoParams := dao.SourceDaoParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&daoParams)
+	err := sourceDao.Pause(sourceId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Unpause the source and its applications
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID":      int64(1),
-			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
-	err := SourceUnpause(c)
+	err = SourceUnpause(c)
 	if err != nil {
 		t.Error(err)
 	}
 
 	if rec.Code != http.StatusNoContent {
 		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Check that the source is not paused
+	src, err := sourceDao.GetById(&sourceId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if src.PausedAt != nil {
+		t.Error("the source is paused and the opposite is expected")
+	}
+
+	// Check that related applications are not paused
+	appDao := dao.GetApplicationDao(&tenantId)
+	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	for _, a := range apps {
+		if a.PausedAt != nil {
+			t.Errorf("application with id = %d is paused and the opposite is expected", a.ID)
+		}
 	}
 }
 
@@ -1820,6 +1905,31 @@ func TestUnpauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	}
 
 	templates.NotFoundTest(t, rec)
+}
+
+func TestUnpauseSourceAndItsApplicationsBadRequest(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/xxx/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(sourceId)
+
+	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+	err := notFoundSourceUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
 }
 
 // MockSender is just a mock which will allow us to control how the "RaiseEvent" function gets executed.
