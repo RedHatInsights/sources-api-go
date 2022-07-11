@@ -623,32 +623,32 @@ func TestRhcConnectionEditNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-// func TestRhcConnectionDelete(t *testing.T) {
-// 	id := strconv.FormatInt(fixtures.TestRhcConnectionData[2].ID, 10)
+func TestRhcConnectionDelete(t *testing.T) {
+	id := strconv.FormatInt(fixtures.TestRhcConnectionData[2].ID, 10)
 
-// 	c, rec := request.CreateTestContext(
-// 		http.MethodDelete,
-// 		"/api/sources/v3.1/rhc_connections/"+id,
-// 		nil,
-// 		map[string]interface{}{
-// 			"tenantID": int64(1),
-// 		},
-// 	)
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/rhc_connections/"+id,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
 
-// 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-// 	c.SetParamNames("id")
-// 	c.SetParamValues(id)
+	c.SetParamNames("id")
+	c.SetParamValues(id)
 
-// 	err := RhcConnectionDelete(c)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	err := RhcConnectionDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
 
-// 	if rec.Code != http.StatusNoContent {
-// 		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusNoContent, rec.Code, rec.Body.String())
-// 	}
-// }
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("Want status code %d. Got %d. Body: %s", http.StatusNoContent, rec.Code, rec.Body.String())
+	}
+}
 
 func TestRhcConnectionDeleteInvalidParam(t *testing.T) {
 	invalidId := "xxx"
