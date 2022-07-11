@@ -798,6 +798,43 @@ func TestApplicationEdit(t *testing.T) {
 	service.NotificationProducer = backupNotificationProducer
 }
 
+// TestApplicationEditInvalidTenant tests situation when the tenant tries to
+// edit existing not owned application
+func TestApplicationEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appId := int64(1)
+
+	req := m.ApplicationEditRequest{
+		Extra:                   map[string]interface{}{"thing": true},
+		AvailabilityStatus:      util.StringRef("available"),
+		AvailabilityStatusError: util.StringRef(""),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/applications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+	err := notFoundApplicationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationEditNotFound(t *testing.T) {
 	req := m.ApplicationEditRequest{
 		Extra:                   map[string]interface{}{"thing": true},
