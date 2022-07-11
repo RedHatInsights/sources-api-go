@@ -182,6 +182,10 @@ func (s *sourceDaoImpl) Delete(id *int64) (*m.Source, error) {
 	return &source, nil
 }
 
+func (s *sourceDaoImpl) User() *int64 {
+	return s.UserID
+}
+
 func (s *sourceDaoImpl) Tenant() *int64 {
 	return s.TenantID
 }
