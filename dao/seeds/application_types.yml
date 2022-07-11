@@ -20,14 +20,6 @@
     quay:
       - quay-encrypted-password
 
-"/insights/platform/catalog":
-  display_name: Automation Services Catalog
-  dependent_applications: []
-  supported_source_types:
-  - ansible-tower
-  supported_authentication_types:
-    ansible-tower:
-    - username_password
 "/insights/platform/cost-management":
   display_name: Cost Management
   dependent_applications: []
