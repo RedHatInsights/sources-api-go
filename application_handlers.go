@@ -235,7 +235,7 @@ func ApplicationDelete(c echo.Context) error {
 		return err
 	}
 
-	err = service.DeleteCascade(applicationDB.Tenant(), "Application", id, forwardableHeaders)
+	err = service.DeleteCascade(applicationDB.Tenant(), nil, "Application", id, forwardableHeaders)
 	if err != nil {
 		return err
 	}
