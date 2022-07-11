@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
+	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -33,7 +34,25 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 			return util.NewErrBadRequest(err)
 		}
 
-		s := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId})
+		userID, err := util.GetUserFromEchoContext(c)
+		if err != nil {
+			return err
+		}
+
+		var user m.User
+		result := dao.DB.Model(&m.User{}).Where("tenant_id = ? and user_id = ?", tenantId, userID).Find(&user)
+		if result.Error != nil {
+			return err
+		}
+
+		var userIDFromDB *int64
+		if result.RowsAffected == 0 {
+			userIDFromDB = nil
+		} else {
+			userIDFromDB = &user.Id
+		}
+
+		s := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId, UserID: userIDFromDB})
 
 		if s.IsSuperkey(id) {
 			xrhid, ok := c.Get(h.XRHID).(string)
