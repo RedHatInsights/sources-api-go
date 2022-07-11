@@ -440,7 +440,7 @@ func TestApplicationAuthenticationCreate(t *testing.T) {
 	}
 
 	// Delete the created test data
-	err = service.DeleteCascade(&tenantId, "Source", src.ID, []kafka.Header{})
+	err = service.DeleteCascade(&tenantId, nil, "Source", src.ID, []kafka.Header{})
 	if err != nil {
 		t.Error(err)
 	}

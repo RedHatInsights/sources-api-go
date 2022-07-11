@@ -315,7 +315,7 @@ func cleanSourceForTenant(sourceName string, tenantID *int64) error {
 		return err
 	}
 
-	err = service.DeleteCascade(tenantID, "Source", source.ID, []kafka.Header{})
+	err = service.DeleteCascade(tenantID, nil, "Source", source.ID, []kafka.Header{})
 
 	return err
 }
