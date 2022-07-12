@@ -1307,21 +1307,158 @@ func TestSourceEditBadRequest(t *testing.T) {
 
 func TestSourceDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	// SourceDelete() uses cascade delete - this test creates own data
+	// and checks that all related objects were deleted (app auths, apps,
+	// endpoints, rhc connections and source itself)
+
+	// List for all created authentications
+	var auths []m.Authentication
+
+	// Create a source
+
+	tenantID := int64(1)
+	sourceDaoParams := dao.SourceDaoParams{TenantID: &tenantID}
+	sourceDao := dao.GetSourceDao(&sourceDaoParams)
+
+	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
+	src := m.Source{
+		Name:         "Source for TestApplicationDelete()",
+		SourceTypeID: 1,
+		Uid:          &uid,
+	}
+
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create and authentication for source
+	authDaoParmas := dao.AuthenticationDaoParams{TenantID: &tenantID}
+	authenticationDao := dao.GetAuthenticationDao(&authDaoParmas)
+
+	authNameForSource := "authentication for source"
+	auth := m.Authentication{
+		Name:         &authNameForSource,
+		ResourceType: "Source",
+		ResourceID:   src.ID,
+		TenantID:     tenantID,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for source not created correctly: %s", err)
+	}
+
+	auths = append(auths, auth)
+
+	// Create an application
+	applicationDao := dao.GetApplicationDao(&tenantID)
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: 1,
+		Extra:             []byte(`{"Name": "app for TestApplicationDelete()"}`),
+	}
+
+	err = applicationDao.Create(&app)
+	if err != nil {
+		t.Errorf("application not created correctly: %s", err)
+	}
+
+	// Create an authentication for application
+	authNameForApp := "authentication for application"
+	auth = m.Authentication{
+		Name:         &authNameForApp,
+		ResourceType: "Application",
+		ResourceID:   app.ID,
+		TenantID:     tenantID,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for application not created correctly: %s", err)
+	}
+
+	auths = append(auths, auth)
+
+	// Create an application authentication
+	appAuthDao := dao.GetApplicationAuthenticationDao(&tenantID)
+	appAuth := m.ApplicationAuthentication{
+		ApplicationID:    app.ID,
+		AuthenticationID: auth.DbID,
+	}
+
+	err = appAuthDao.Create(&appAuth)
+	if err != nil {
+		t.Errorf("application authentication not created correctly: %s", err)
+	}
+
+	// Create an endpoint
+	endpointDao := dao.GetEndpointDao(&tenantID)
+
+	role := "new role"
+	endpoint := m.Endpoint{
+		SourceID: src.ID,
+		TenantID: tenantID,
+		Role:     &role,
+	}
+
+	err = endpointDao.Create(&endpoint)
+	if err != nil {
+		t.Errorf("endpoint not created correctly: %s", err)
+	}
+
+	// Create an authentication for endpoint
+	authNameForEndpoint := "authentication for endpoint"
+	auth = m.Authentication{
+		Name:         &authNameForEndpoint,
+		ResourceType: "Endpoint",
+		ResourceID:   endpoint.ID,
+		TenantID:     tenantID,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for endpoint not created correctly: %s", err)
+	}
+
+	auths = append(auths, auth)
+
+	// Create a rhc connection
+	rhcConnectionDao := dao.GetRhcConnectionDao(&tenantID)
+
+	rhc := &m.RhcConnection{
+		RhcId:   "123e4567-e89b-12d3-a456-426614174000",
+		Sources: []m.Source{src},
+	}
+
+	rhc, err = rhcConnectionDao.Create(rhc)
+	if err != nil {
+		t.Errorf("rhc connection not created correctly: %s", err)
+	}
+
+	// Create test context and call the SourceDelete()
+	id := fmt.Sprintf("%d", src.ID)
 
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
-		"/api/sources/v3.1/sources/100",
+		"/api/sources/v3.1/sources/"+id,
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantID,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("100")
+	c.SetParamValues(id)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := SourceDelete(c)
+	err = SourceDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -1330,26 +1467,52 @@ func TestSourceDelete(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
 	}
 
-	// Check that source doesn't exist.
-	c, rec = request.CreateTestContext(
-		http.MethodGet,
-		"/api/sources/v3.1/sources/100",
-		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
-	)
-
-	c.SetParamNames("id")
-	c.SetParamValues("100")
-
-	notFoundSourceGet := ErrorHandlingContext(SourceGet)
-	err = notFoundSourceGet(c)
-	if err != nil {
-		t.Error(err)
+	// Check that source doesn't exist
+	_, err = sourceDao.GetById(&src.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'source not found', got %s", err)
 	}
 
-	templates.NotFoundTest(t, rec)
+	// Check that application doesn't exist
+	_, err = applicationDao.GetById(&app.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'application not found', got %s", err)
+	}
+
+	// Check that application authentication doesn't exist
+	_, err = appAuthDao.GetById(&appAuth.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'application authentication not found', got %s", err)
+	}
+
+	// Check that endpoint doesn't exist
+	_, err = endpointDao.GetById(&endpoint.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'endpoint not found', got %s", err)
+	}
+
+	// Check that rhc connection doesn't exist
+	_, err = rhcConnectionDao.GetById(&rhc.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'rhc connection not found', got %s", err)
+	}
+
+	// Check that relation "source - rhc connection" doesn't exist
+	var out []m.RhcConnection
+	out, _, _ = rhcConnectionDao.ListForSource(&src.ID, 100, 0, []util.Filter{})
+	for _, r := range out {
+		if r.ID == rhc.ID {
+			t.Errorf("rhc connection with id = %d should not exist", rhc.ID)
+		}
+	}
+
+	// Check that all authentications don't exist
+	for _, a := range auths {
+		_, err = authenticationDao.GetById(a.ID)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("expected 'authentication not found', got %s", err)
+		}
+	}
 }
 
 // TestSourceDeleteInvalidTenant tests situation when the tenant tries to
