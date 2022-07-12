@@ -81,18 +81,14 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
-	var users []m.User
-	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
+	var user m.User
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).First(&user).Error
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(users) != 1 {
-		t.Errorf("1 user expected instead of %d", len(users))
-	}
-
-	if users[0].UserID != testUserId {
-		t.Errorf("expected userid is %s instead of %s", testUserId, users[0].UserID)
+	if user.UserID != testUserId {
+		t.Errorf("expected userid is %s instead of %s", testUserId, user.UserID)
 	}
 
 	var sources []m.Source
@@ -101,7 +97,7 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
-	if *(sources[0].UserID) != users[0].Id {
+	if *(sources[0].UserID) != user.Id {
 		t.Error(err)
 	}
 
@@ -117,7 +113,7 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
-	if *(applications[0].UserID) != users[0].Id {
+	if *(applications[0].UserID) != user.Id {
 		t.Error(err)
 	}
 
@@ -127,7 +123,7 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
-	if *(authentications[0].UserID) != users[0].Id {
+	if *(authentications[0].UserID) != user.Id {
 		t.Error(err)
 	}
 
@@ -139,7 +135,7 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
-	if *(authentications[0].UserID) != users[0].Id {
+	if *(authentications[0].UserID) != user.Id {
 		t.Error(err)
 	}
 
@@ -148,7 +144,7 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
 	}
 
-	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Delete(&users).Error
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Delete(&user).Error
 	if err != nil {
 		t.Error(err)
 	}
@@ -191,14 +187,10 @@ func TestCreateUserWithoutResourceOwnershipApplicationType(t *testing.T) {
 		t.Error(err)
 	}
 
-	var users []m.User
-	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
-	if err != nil {
+	var user m.User
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).First(&user).Error
+	if err == nil {
 		t.Error(err)
-	}
-
-	if len(users) != 0 {
-		t.Errorf("0 user expected instead of %d", len(users))
 	}
 
 	var sources []m.Source
