@@ -45,7 +45,7 @@ func main() {
 		go runServer(shutdown)
 		go runMetricExporter()
 	}
-
+	logging.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
 	// if/when that comes in
 	s := <-interrupts

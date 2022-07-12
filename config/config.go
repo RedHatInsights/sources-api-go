@@ -53,6 +53,37 @@ type SourcesApiConfig struct {
 	TenantTranslatorUrl       string
 }
 
+//String() returns a string that shows the settings in which the pod is running in
+func (s SourcesApiConfig) String() string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s=%s ", "AppName", parsedConfig.AppName)
+	fmt.Fprintf(&b, "%s=%v ", "Hostname", parsedConfig.Hostname)
+	fmt.Fprintf(&b, "%s=%v ", "KafkaBrokers", parsedConfig.KafkaBrokers)
+	fmt.Fprintf(&b, "%s=%v ", "KafkaTopics", parsedConfig.KafkaTopics)
+	fmt.Fprintf(&b, "%s=%v ", "KafkaGroupID", parsedConfig.KafkaGroupID)
+	fmt.Fprintf(&b, "%s=%v ", "MetricsPort", parsedConfig.MetricsPort)
+	fmt.Fprintf(&b, "%s=%v ", "LogLevel", parsedConfig.LogLevel)
+	fmt.Fprintf(&b, "%s=%v ", "LogLevelForMiddlewareLogs", parsedConfig.LogLevelForMiddlewareLogs)
+	fmt.Fprintf(&b, "%s=%v ", "LogGroup", parsedConfig.LogGroup)
+	fmt.Fprintf(&b, "%s=%v ", "LogHandler", parsedConfig.LogHandler)
+	fmt.Fprintf(&b, "%s=%v ", "LogLevelForSqlLogs", parsedConfig.LogLevelForSqlLogs)
+	fmt.Fprintf(&b, "%s=%v ", "MarketplaceHost", parsedConfig.MarketplaceHost)
+	fmt.Fprintf(&b, "%s=%v ", "AwsRegion", parsedConfig.AwsRegion)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseHost", parsedConfig.DatabaseHost)
+	fmt.Fprintf(&b, "%s=%v ", "DatabasePort", parsedConfig.DatabasePort)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseName", parsedConfig.DatabaseName)
+	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsEnvironment", parsedConfig.FeatureFlagsEnvironment)
+	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsUrl", parsedConfig.FeatureFlagsUrl)
+	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsService", parsedConfig.FeatureFlagsService)
+	fmt.Fprintf(&b, "%s=%v ", "CacheHost", parsedConfig.CacheHost)
+	fmt.Fprintf(&b, "%s=%v ", "CachePort", parsedConfig.CachePort)
+	fmt.Fprintf(&b, "%s=%v ", "SlowSQLThreshold", parsedConfig.SlowSQLThreshold)
+	fmt.Fprintf(&b, "%s=%v ", "BypassRbac", parsedConfig.BypassRbac)
+	fmt.Fprintf(&b, "%s=%v ", "SecretStore", parsedConfig.SecretStore)
+	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", parsedConfig.TenantTranslatorUrl)
+	return b.String()
+}
+
 // Get - returns the config parsed from runtime vars
 func Get() *SourcesApiConfig {
 	// check if we have already parsed the config - otherwise populate it.
