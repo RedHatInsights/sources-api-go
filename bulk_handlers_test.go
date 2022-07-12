@@ -10,7 +10,9 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -318,15 +320,13 @@ func TestCreateUserWithoutResourceOwnershipConfig(t *testing.T) {
 }
 
 func cleanSourceForTenant(sourceName string, tenantID *int64) error {
-	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantID})
-
 	source := &m.Source{Name: sourceName}
 	err := dao.DB.Model(&m.Source{}).Where("name = ?", source.Name).Find(&source).Error
 	if err != nil {
 		return err
 	}
 
-	_, _, _, _, _, err = sourceDao.DeleteCascade(source.ID)
+	err = service.DeleteCascade(tenantID, "Source", source.ID, []kafka.Header{})
 
 	return err
 }
