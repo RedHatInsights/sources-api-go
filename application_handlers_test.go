@@ -288,6 +288,7 @@ func TestSourceApplicationSubcollectionListInvalidTenant(t *testing.T) {
 }
 
 func TestApplicationList(t *testing.T) {
+	tenantId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/applications",
@@ -296,7 +297,7 @@ func TestApplicationList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -355,6 +356,11 @@ func TestApplicationList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
+	err = checkAllApplicationsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
@@ -381,6 +387,57 @@ func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
 	}
 
 	templates.BadRequestTest(t, rec)
+}
+
+// TestApplicationListTenantNotExists tests that empty list is returned for not existing tenant
+func TestApplicationListTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := ApplicationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestApplicationListTenantWithoutApplications tests that empty list is returned for a tenant
+// without applications
+func TestApplicationListTenantWithoutApplications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := ApplicationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestApplicationGet(t *testing.T) {
