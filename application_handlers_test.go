@@ -441,12 +441,13 @@ func TestApplicationListTenantWithoutApplications(t *testing.T) {
 }
 
 func TestApplicationGet(t *testing.T) {
+	tenantId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/applications/1",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -471,6 +472,78 @@ func TestApplicationGet(t *testing.T) {
 	if outApplication.Extra == nil {
 		t.Error("ghosts infected the return")
 	}
+
+	// Convert ID from returned application into int64
+	outAppId, err := strconv.ParseInt(outApplication.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check in fixtures that returned application belongs to the desired tenant
+	for _, app := range fixtures.TestApplicationData {
+		if app.ID == outAppId {
+			if app.TenantID != tenantId {
+				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, app.TenantID)
+			}
+			break
+		}
+	}
+}
+
+// TestApplicationGetInvalidTenant tests that not found is returned for
+// existing app id but the tenant doesn't own the app
+func TestApplicationGetInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+	err := notFoundApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestApplicationGetTenantNotExists tests that not found is returned for
+// not existing tenant
+func TestApplicationGetTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+	err := notFoundApplicationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationGetNotFound(t *testing.T) {
