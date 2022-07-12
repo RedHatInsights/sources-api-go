@@ -734,7 +734,7 @@ func TestApplicationEdit(t *testing.T) {
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
-	sourceDao := dao.GetSourceDao(&fixtures.TestTenantData[0].Id)
+	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	fixtureSource := m.Source{
 		SourceTypeID:       fixtures.TestSourceTypeData[0].Id,
