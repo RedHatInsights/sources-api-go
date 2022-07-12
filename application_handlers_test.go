@@ -831,13 +831,13 @@ func TestApplicationEdit(t *testing.T) {
 	}
 
 	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
-		t.Errorf("Invalid email notification data:")
+		t.Errorf("Invalid email notification data")
 		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
 	}
 
 	application, _ = applicationDao.GetById(&applicationID)
 	if application.AvailabilityStatus == previousApplicationStatus {
-		t.Errorf("Invalid email notification data:")
+		t.Errorf("Invalid application availability status.")
 	}
 
 	src, err = sourceDao.GetById(&application.SourceID)
@@ -846,7 +846,7 @@ func TestApplicationEdit(t *testing.T) {
 	}
 
 	if src.AvailabilityStatus == previousSourceStatus {
-		t.Errorf("Invalid email notification data:")
+		t.Errorf("Invalid source availability status.")
 	}
 
 	_, err = applicationDao.Delete(&application.ID)
