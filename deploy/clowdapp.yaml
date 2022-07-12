@@ -144,6 +144,10 @@ objects:
           value: ${FEATURE_FLAGS_SERVICE}
         - name: RESOURCE_OWNERSHIP
           value: ${RESOURCE_OWNERSHIP}
+        - name: SOURCE_TYPE_SKIP_LIST
+          value: ${SOURCE_TYPE_SKIP_LIST}
+        - name: APPLICATION_TYPE_SKIP_LIST
+          value: ${APPLICATION_TYPE_SKIP_LIST}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -331,4 +335,9 @@ parameters:
 - description: Specify name to select strategy to ensure resource ownership
   name: RESOURCE_OWNERSHIP
   value: ''
-
+- description: Specify any source_types to not seed into the database
+  name: SOURCE_TYPE_SKIP_LIST
+  value: ''
+- description: Specify any application_types to not seed into the database
+  name: APPLICATION_TYPE_SKIP_LIST
+  value: ''
