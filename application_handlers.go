@@ -375,6 +375,17 @@ func ApplicationUnpause(c echo.Context) error {
 		return err
 	}
 
+	// Check if the application exists
+	appExists, err := applicationDao.Exists(applicationId)
+	if err != nil {
+		return err
+	}
+
+	if !appExists {
+		return util.NewErrNotFound("application")
+	}
+
+	// Unpause the existing application
 	err = applicationDao.Unpause(applicationId)
 	if err != nil {
 		return util.NewErrBadRequest(err)
