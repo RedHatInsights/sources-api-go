@@ -13,6 +13,7 @@ import (
 	"testing"
 	time "time"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -1156,6 +1157,7 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 }
 
 func TestApplicationListAuthentications(t *testing.T) {
+	tenantId := int64(1)
 	appId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -1166,7 +1168,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -1198,7 +1200,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 
 	var wantData []m.Authentication
 	for _, auth := range fixtures.TestAuthenticationData {
-		if auth.ResourceType == "Application" && auth.ResourceID == appId {
+		if auth.ResourceType == "Application" && auth.ResourceID == appId && auth.TenantID == tenantId {
 			wantData = append(wantData, auth)
 		}
 	}
@@ -1214,6 +1216,24 @@ func TestApplicationListAuthentications(t *testing.T) {
 	if conf.SecretStore == "database" {
 		if auth["id"] != fmt.Sprintf("%d", wantData[0].DbID) {
 			t.Error("ghosts infected the return")
+		}
+	}
+
+	// Check the tenancy of returned authentications
+	if !config.IsVaultOn() {
+		for _, authOut := range out.Data {
+			authOutId, err := strconv.ParseInt(authOut.(map[string]interface{})["id"].(string), 10, 64)
+			if err != nil {
+				t.Error(err)
+			}
+
+			for _, authFixtures := range fixtures.TestAuthenticationData {
+				if authOutId == authFixtures.DbID {
+					if authFixtures.TenantID != tenantId {
+						t.Errorf("expected tenant id = %d, got %d", tenantId, authFixtures.TenantID)
+					}
+				}
+			}
 		}
 	}
 
