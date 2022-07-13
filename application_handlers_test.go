@@ -1171,6 +1171,31 @@ func TestPauseApplication(t *testing.T) {
 	}
 }
 
+func TestPauseApplicationNotFound(t *testing.T) {
+	tenantId := int64(1)
+	appId := int64(809897868745)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/809897868745/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationPause := ErrorHandlingContext(ApplicationPause)
+	err := notFoundApplicationPause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 // TestResumeApplication tests that an application gets successfully resumed.
 func TestResumeApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
