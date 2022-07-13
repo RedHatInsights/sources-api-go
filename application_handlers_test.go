@@ -1240,6 +1240,35 @@ func TestApplicationListAuthentications(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestApplicationListAuthenticationsEmptyList tests that an empty list is returned
+// when the application doesn't have an authentications
+func TestApplicationListAuthenticationsEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	appId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	err := ApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestApplicationListAuthenticationsNotFound(t *testing.T) {
 	appId := int64(7896785687)
 
