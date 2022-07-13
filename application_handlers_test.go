@@ -1269,6 +1269,37 @@ func TestApplicationListAuthenticationsEmptyList(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestApplicationListAuthenticationsTenantNotExists tests that not found err is returned
+// for not existing tenant
+func TestApplicationListAuthenticationsTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+	err := notFoundApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationListAuthenticationsNotFound(t *testing.T) {
 	appId := int64(7896785687)
 
