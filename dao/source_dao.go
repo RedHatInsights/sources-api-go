@@ -54,7 +54,14 @@ func (s sourceDaoImpl) getDbWithoutModel() *gorm.DB {
 }
 
 func (s sourceDaoImpl) getDb() *gorm.DB {
-	return s.getDbWithoutModel().Model(&m.Source{})
+	query := DB.Debug().Model(&m.Source{})
+	if s.UserID != nil {
+		query = query.Where("user_id = ?", s.UserID)
+	} else {
+		query = query.Where("user_id IS NULL")
+	}
+
+	return query
 }
 
 func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
