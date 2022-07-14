@@ -1390,18 +1390,20 @@ func TestApplicationListAuthenticationsBadRequest(t *testing.T) {
 // TestPauseApplication tests that an application gets successfully paused.
 func TestPauseApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	appId := int64(1)
 
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/applications/1/pause",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	err := ApplicationPause(c)
 	if err != nil {
@@ -1410,6 +1412,23 @@ func TestPauseApplication(t *testing.T) {
 
 	if rec.Code != http.StatusNoContent {
 		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Check that the application is paused
+	applicationDao := dao.GetApplicationDao(&tenantId)
+	app, err := applicationDao.GetById(&appId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if app.PausedAt == nil {
+		t.Error("the application is not paused, 'paused_at' is nil")
+	}
+
+	// Unpause the application, because we want to have not affected test data for next tests
+	err = applicationDao.Unpause(appId)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
