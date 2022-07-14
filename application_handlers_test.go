@@ -1539,29 +1539,49 @@ func TestPauseApplicationTenantNotExists(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-// TestResumeApplication tests that an application gets successfully resumed.
-func TestResumeApplication(t *testing.T) {
+// TestUnpauseApplication tests that an application gets successfully unpaused.
+func TestUnpauseApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	appId := int64(1)
 
+	// Test data preparation = pause the application
+	applicationDao := dao.GetApplicationDao(&tenantId)
+	err := applicationDao.Pause(appId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Unpause the application
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/applications/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
 
-	err := ApplicationUnpause(c)
+	err = ApplicationUnpause(c)
 	if err != nil {
 		t.Error(err)
 	}
 
 	if rec.Code != http.StatusNoContent {
 		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Check that the application is not paused
+	app, err := applicationDao.GetById(&appId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if app.PausedAt != nil {
+		t.Error("the application is paused and the opposite is expected")
 	}
 }
 
