@@ -1635,6 +1635,35 @@ func TestUnpauseApplicationBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+// TestUnpauseApplicationInvalidTenant tests that not found is returned
+// when tenant tries to unpause not owned application
+func TestUnpauseApplicationInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// The application is not owned by the tenant
+	tenantId := int64(2)
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+	err := notFoundApplicationUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 // TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
 func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
