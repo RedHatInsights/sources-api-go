@@ -1,10 +1,10 @@
 package dao
 
 import (
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
 )
 

@@ -48,16 +48,3 @@ func (u *userDaoImpl) FindOrCreate(userID string) (*m.User, error) {
 
 	return &user, nil
 }
-
-func (u *userDaoImpl) CreateIfResourceOwnershipActive(userResource *m.UserResource) error {
-	if userResource.UserOwnershipActive() {
-		user, err := u.FindOrCreate(userResource.User.UserID)
-		if err != nil {
-			return err
-		}
-
-		userResource.User = user
-	}
-
-	return nil
-}

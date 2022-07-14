@@ -45,11 +45,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 			return err
 		}
 
-		userDao := dao.GetUserDao(&tenant.Id)
-		err = userDao.CreateIfResourceOwnershipActive(userResource)
-		if err != nil {
-			return err
-		}
+		userResource.User = user
 
 		// parse the sources, then save them in the transaction.
 		output.Sources, err = parseSources(req.Sources, tenant)
