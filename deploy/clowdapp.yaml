@@ -268,7 +268,7 @@ parameters:
   value: '1'
 - description: The number of replicas to use for the availability status listener
   name: AVAILABILITY_MIN_REPLICAS
-  value: '0'
+  value: '1'
 - description: 'Options can be found in the doc: https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS'
   displayName: Postgres SSL mode
   name: PGSSLMODE
