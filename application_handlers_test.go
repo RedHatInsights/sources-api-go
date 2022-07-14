@@ -1222,6 +1222,31 @@ func TestResumeApplication(t *testing.T) {
 	}
 }
 
+func TestUnpauseApplicationNotFound(t *testing.T) {
+	tenantId := int64(1)
+	appId := int64(809897868745)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/809897868745/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+	err := notFoundApplicationUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 // TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
 func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
