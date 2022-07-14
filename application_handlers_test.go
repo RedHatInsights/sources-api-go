@@ -1610,6 +1610,31 @@ func TestUnpauseApplicationNotFound(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+func TestUnpauseApplicationBadRequest(t *testing.T) {
+	tenantId := int64(1)
+	appId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/xxx/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(appId)
+
+	badRequestApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+	err := badRequestApplicationUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 // TestPauseApplicationPauseRaiseEventCheck tests that a proper "raise event" is raised when a source is paused.
 func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
