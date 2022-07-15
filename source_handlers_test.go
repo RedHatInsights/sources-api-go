@@ -1922,7 +1922,12 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 		t.Error("the source is not paused => 'paused_at' is nil and the opposite is expected")
 	}
 
-	// Check that relation applications are paused
+	// Check that paused source belongs to desired tenant
+	if src.TenantID != tenantId {
+		t.Errorf("expected tenant %d, got %d", tenantId, src.TenantID)
+	}
+
+	// Check that relation applications are paused and belongs to desired tenant
 	appDao := dao.GetApplicationDao(&tenantId)
 	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
 	if err != nil {
@@ -1932,6 +1937,9 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 		if a.PausedAt == nil {
 			t.Errorf("application with id = %d is not paused and the opposite is expected", a.ID)
 		}
+		if a.TenantID != tenantId {
+			t.Errorf("expected tenant %d, got %d", tenantId, a.TenantID)
+		}
 	}
 
 	// Unpause the Source and its applications to not have affected test data for next tests
@@ -1939,6 +1947,63 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+// TestPauseSourceAndItsApplicationsInvalidTenant tests that not found is returned
+// when tenant tries to pause not owned source
+func TestPauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// The source is not owned by the tenant
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+	err := notFoundSourcePause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestPauseSourceAndItsApplicationsTenantNotExists tests that not found is returned
+// for not existing tenant
+func TestPauseSourceAndItsApplicationsTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/pause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+	err := notFoundSourcePause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestPauseSourceAndItsApplicationsNotFound(t *testing.T) {
@@ -2032,7 +2097,12 @@ func TestUnpauseSourceAndItsApplications(t *testing.T) {
 		t.Error("the source is paused and the opposite is expected")
 	}
 
-	// Check that related applications are not paused
+	// Check that the source belongs to desired tenant
+	if src.TenantID != tenantId {
+		t.Errorf("expected tenant %d, got %d", tenantId, src.TenantID)
+	}
+
+	// Check that related applications are not paused and belongs to the desired tenant
 	appDao := dao.GetApplicationDao(&tenantId)
 	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
 	if err != nil {
@@ -2042,7 +2112,67 @@ func TestUnpauseSourceAndItsApplications(t *testing.T) {
 		if a.PausedAt != nil {
 			t.Errorf("application with id = %d is paused and the opposite is expected", a.ID)
 		}
+		if a.TenantID != tenantId {
+			t.Errorf("expected tenant %d, got %d", tenantId, a.TenantID)
+		}
 	}
+}
+
+// TestUnpauseSourceAndItsApplicationsInvalidTenant tests that not found is returned
+// when tenant tries to unpause not owned source
+func TestUnpauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// The source is not owned by the tenant
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+	err := notFoundSourceUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestUnpauseSourceAndItsApplicationsTenantNotExists tests that not found is returned
+// for not existing tenant
+func TestUnpauseSourceAndItsApplicationsTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+	err := notFoundSourceUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestUnpauseSourceAndItsApplicationsNotFound(t *testing.T) {
