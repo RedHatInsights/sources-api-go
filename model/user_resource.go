@@ -1,6 +1,10 @@
 package model
 
-import "github.com/RedHatInsights/sources-api-go/util"
+import (
+	"strings"
+
+	"github.com/RedHatInsights/sources-api-go/util"
+)
 
 const UserOwnership = "user"
 
@@ -39,4 +43,19 @@ func (ur *UserResource) OwnershipPresentForSource(sourceName string) bool {
 	}
 
 	return util.SliceContainsString(ur.SourceNames, sourceName)
+}
+
+func (ur *UserResource) OwnershipPresentForSourceAndApplication(sourceName, applicationTypeName string) bool {
+	return ur.OwnershipPresentForSource(sourceName) && ur.ownershipPresentForApplication(applicationTypeName)
+}
+
+func (ur *UserResource) ownershipPresentForApplication(applicationTypeName string) bool {
+	if len(ur.ApplicationTypesNames) == 0 {
+		return false
+	}
+
+	parts := strings.Split(applicationTypeName, "/")
+	typeName := parts[len(parts)-1]
+
+	return util.SliceContainsString(ur.ApplicationTypesNames, typeName)
 }

@@ -79,7 +79,7 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, _ := request.CreateTestContext(
+	c, res := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/bulk_create",
 		bytes.NewReader(body),
@@ -120,6 +120,22 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 
 	if source.UserID == nil || *source.UserID != user.Id {
 		t.Error("source user id was not populated correctly")
+	}
+
+	var response m.BulkCreateResponse
+	err = json.Unmarshal(res.Body.Bytes(), &response)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var application m.Application
+	err = dao.DB.Model(&m.Application{}).Where("id = ?", response.Applications[0].ID).First(&application).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if application.UserID == nil || *application.UserID != user.Id {
+		t.Error("application user id was not populated correctly")
 	}
 
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
