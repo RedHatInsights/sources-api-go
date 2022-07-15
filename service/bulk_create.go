@@ -76,7 +76,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		}
 
 		// link up the authentications to their polymorphic relations.
-		output.Authentications, err = linkUpAuthentications(req, &output, tenant)
+		output.Authentications, err = linkUpAuthentications(req, &output, tenant, userResource)
 		if err != nil {
 			return err
 		}
@@ -268,7 +268,7 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 	return endpoints, nil
 }
 
-func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput, tenant *m.Tenant) ([]m.Authentication, error) {
+func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput, tenant *m.Tenant, userResource *m.UserResource) ([]m.Authentication, error) {
 	authentications := make([]m.Authentication, 0)
 
 	for _, auth := range req.Authentications {
@@ -322,6 +322,11 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		case "source":
 			a.ResourceID = current.Sources[0].ID
 			a.SourceID = current.Sources[0].ID
+
+			if userResource.OwnershipPresentForSource(current.Sources[0].Name) {
+				a.UserID = &userResource.User.Id
+			}
+
 			l.Log.Infof("Source Authentication does not need linked - continuing")
 
 		case "application":
@@ -332,6 +337,10 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 
 			a.ResourceID = id
 			a.SourceID = current.Sources[0].ID
+
+			if userResource.OwnershipPresentForSourceAndApplication(current.Sources[0].Name, auth.ResourceName) {
+				a.UserID = &userResource.User.Id
+			}
 
 		case "endpoint":
 			id, err := linkupEndpoint(auth.ResourceName, current.Endpoints)
