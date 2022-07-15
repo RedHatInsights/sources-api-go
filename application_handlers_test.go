@@ -734,6 +734,36 @@ func TestApplicationEdit(t *testing.T) {
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
+	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
+
+	fixtureSource := m.Source{
+		SourceTypeID:       fixtures.TestSourceTypeData[0].Id,
+		TenantID:           fixtures.TestTenantData[0].Id,
+		AvailabilityStatus: "",
+	}
+
+	err := sourceDao.Create(&fixtureSource)
+	if err != nil {
+		t.Error(err)
+	}
+
+	sourceID := fixtureSource.ID
+
+	applicationDao := dao.GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	fixtureApp := m.Application{
+		ApplicationTypeID:  fixtures.TestApplicationTypeData[0].Id,
+		SourceID:           sourceID,
+		TenantID:           fixtures.TestTenantData[0].Id,
+		AvailabilityStatus: "",
+	}
+
+	err = applicationDao.Create(&fixtureApp)
+	if err != nil {
+		t.Error(err)
+	}
+
+	applicationID := fixtureApp.ID
+
 	req := m.ApplicationEditRequest{
 		Extra:                   map[string]interface{}{"thing": true},
 		AvailabilityStatus:      util.StringRef("available"),
@@ -744,20 +774,30 @@ func TestApplicationEdit(t *testing.T) {
 
 	c, rec := request.CreateTestContext(
 		http.MethodPatch,
-		"/api/sources/v3.1/applications/1",
+		"/api/sources/v3.1/applications/"+strconv.Itoa(int(applicationID)),
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": fixtures.TestTenantData[0].Id,
 		},
 	)
 
+	application, _ := applicationDao.GetById(&applicationID)
+	previousApplicationStatus := application.AvailabilityStatus
+
+	src, err := sourceDao.GetById(&application.SourceID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	previousSourceStatus := src.AvailabilityStatus
+
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(strconv.Itoa(int(applicationID)))
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	appEditHandlerWithNotifier := middleware.Notifier(ApplicationEdit)
-	err := appEditHandlerWithNotifier(c)
+	err = appEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -785,14 +825,38 @@ func TestApplicationEdit(t *testing.T) {
 	emailNotificationInfo := &m.EmailNotificationInfo{ResourceDisplayName: "Application",
 		CurrentAvailabilityStatus:  "available",
 		PreviousAvailabilityStatus: "unknown",
-		SourceName:                 fixtures.TestSourceData[0].Name,
-		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
+		SourceName:                 src.Name,
+		SourceID:                   strconv.FormatInt(sourceID, 10),
 		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),
 	}
 
 	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
-		t.Errorf("Invalid email notification data:")
+		t.Errorf("Invalid email notification data")
 		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
+	}
+
+	application, _ = applicationDao.GetById(&applicationID)
+	if application.AvailabilityStatus == previousApplicationStatus {
+		t.Errorf("Invalid application availability status.")
+	}
+
+	src, err = sourceDao.GetById(&application.SourceID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if src.AvailabilityStatus == previousSourceStatus {
+		t.Errorf("Invalid source availability status.")
+	}
+
+	_, err = applicationDao.Delete(&application.ID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = sourceDao.Delete(&application.SourceID)
+	if err != nil {
+		t.Error(err)
 	}
 
 	service.NotificationProducer = backupNotificationProducer
