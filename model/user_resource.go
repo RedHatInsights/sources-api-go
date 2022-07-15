@@ -46,10 +46,10 @@ func (ur *UserResource) OwnershipPresentForSource(sourceName string) bool {
 }
 
 func (ur *UserResource) OwnershipPresentForSourceAndApplication(sourceName, applicationTypeName string) bool {
-	return ur.OwnershipPresentForSource(sourceName) && ur.ownershipPresentForApplication(applicationTypeName)
+	return ur.OwnershipPresentForSource(sourceName) && ur.OwnershipPresentForApplication(applicationTypeName)
 }
 
-func (ur *UserResource) ownershipPresentForApplication(applicationTypeName string) bool {
+func (ur *UserResource) OwnershipPresentForApplication(applicationTypeName string) bool {
 	if len(ur.ApplicationTypesNames) == 0 {
 		return false
 	}

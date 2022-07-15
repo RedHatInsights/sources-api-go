@@ -148,6 +148,18 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 		t.Error("authentication user id was not populated correctly")
 	}
 
+	var applicationAuthentication m.ApplicationAuthentication
+	err = dao.DB.Model(&m.ApplicationAuthentication{}).
+		Where("application_id = ? AND authentication_id = ?", response.Applications[0].ID, response.Authentications[0].ID).
+		Find(&applicationAuthentication).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if applicationAuthentication.UserID == nil || *applicationAuthentication.UserID != user.Id {
+		t.Error(err)
+	}
+
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
 	if err != nil {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)

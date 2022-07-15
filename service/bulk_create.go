@@ -88,14 +88,26 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 			}
 
 			if strings.ToLower(output.Authentications[i].ResourceType) == "application" {
-				output.ApplicationAuthentications = append(output.ApplicationAuthentications, m.ApplicationAuthentication{
+				applicationAuthentication := m.ApplicationAuthentication{
 					// TODO: After vault migration.
 					// VaultPath:         output.Authentications[i].Path(),
 					ApplicationID:    output.Authentications[i].ResourceID,
 					AuthenticationID: output.Authentications[i].DbID,
 					TenantID:         tenant.Id,
 					Tenant:           *tenant,
-				})
+				}
+
+				applicationFromAuthentication := &m.Application{ID: output.Authentications[i].ResourceID}
+				tx.Debug().Preload("ApplicationType").Find(&applicationFromAuthentication)
+
+				applicationType := &m.ApplicationType{Id: applicationFromAuthentication.ApplicationTypeID}
+				if tx.Debug().First(&applicationType).Error == nil {
+					if userResource.OwnershipPresentForApplication(applicationType.Name) {
+						applicationAuthentication.UserID = &userResource.User.Id
+					}
+				}
+
+				output.ApplicationAuthentications = append(output.ApplicationAuthentications, applicationAuthentication)
 			}
 		}
 
