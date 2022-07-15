@@ -210,6 +210,79 @@ func TestCreateUserWithoutResourceOwnershipConfig(t *testing.T) {
 	}
 }
 
+func TestBulkCreate(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	conf.ResourceOwnership = ""
+
+	testUserId := "testUser"
+	identityHeader := testutils.IdentityHeaderForUser(testUserId)
+
+	nameSource := "test source"
+	sourceTypeName := "bitbucket"
+	applicationTypeName := "app-studio"
+	authenticationResourceType := "application"
+
+	requestBody := testutils.SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType)
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, res := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/bulk_create",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("identity", &identity.XRHID{Identity: identityHeader})
+
+	err = BulkCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var response m.BulkCreateResponse
+	err = json.Unmarshal(res.Body.Bytes(), &response)
+	if err != nil {
+		t.Error(err)
+	}
+
+	source := response.Sources[0]
+	if *source.Name != nameSource {
+		t.Errorf("expected source: %v, got %v", nameSource, source.Name)
+	}
+
+	application := response.Applications[0]
+	if application.SourceID != source.ID {
+		t.Errorf("expected source id in application: %v, got %v", source.ID, application.SourceID)
+	}
+
+	endpoint := response.Endpoints[0]
+	if endpoint.SourceID != source.ID {
+		t.Errorf("expected source id in endpoint: %v, got %v", source.ID, endpoint.SourceID)
+	}
+
+	authentication := response.Authentications[0]
+	if authentication.ResourceID != application.ID {
+		t.Errorf("expected resource id in authentication: %v, got %v", application.ID, authentication.ResourceID)
+	}
+
+	if authentication.ResourceType != "Application" {
+		t.Errorf("expected resource type in authentication: Application, got %v", authentication.ResourceType)
+	}
+
+	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
+	if err != nil {
+		t.Errorf(`unexpected error received when deleting the source: %s`, err)
+	}
+}
+
 func cleanSourceForTenant(sourceName string, tenantID *int64) error {
 	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantID})
 
