@@ -736,10 +736,12 @@ func TestApplicationEdit(t *testing.T) {
 
 	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
 
+	uuid := uuid.New().String()
+
 	fixtureSource := m.Source{
 		SourceTypeID:       fixtures.TestSourceTypeData[0].Id,
-		TenantID:           fixtures.TestTenantData[0].Id,
 		AvailabilityStatus: "",
+		Uid:                &uuid,
 	}
 
 	err := sourceDao.Create(&fixtureSource)
