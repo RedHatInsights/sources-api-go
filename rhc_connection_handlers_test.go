@@ -829,6 +829,7 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 }
 
 func TestRhcConnectionGetRelatedSources(t *testing.T) {
+	tenantId := int64(1)
 	rhcConnectionId := "2"
 
 	c, rec := request.CreateTestContext(
@@ -839,7 +840,7 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -885,7 +886,12 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 		if !ok {
 			t.Error("model did not deserialize as a source")
 		}
+	}
 
+	// Check that all sources belong to our tenant
+	err = checkAllSourcesBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 }
 
@@ -964,6 +970,68 @@ func TestRhcConnectionGetRelatedSourcesNotFound(t *testing.T) {
 
 	c.SetParamNames("id")
 	c.SetParamValues(rhcConnectionId)
+
+	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+	err := notFoundRhcConnectionSourcesList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestRhcConnectionGetRelatedSourcesInvalidTenant tests that not found err is returned
+// when tenant tries to list sources for not owned rhc connection
+func TestRhcConnectionGetRelatedSourcesInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+	rhcConnectionId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d/sources", rhcConnectionId),
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcConnectionId))
+
+	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+	err := notFoundRhcConnectionSourcesList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestRhcConnectionGetRelatedSourcesTenantNotExists tests that not found err is returned
+// when tenant doesn't exist
+func TestRhcConnectionGetRelatedSourcesTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	rhcConnectionId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		fmt.Sprintf("/api/sources/v3.1/rhc_connections/%d/sources", rhcConnectionId),
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", rhcConnectionId))
 
 	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
 	err := notFoundRhcConnectionSourcesList(c)
