@@ -13,6 +13,7 @@ import (
 	"testing"
 	time "time"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -1156,6 +1157,7 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 }
 
 func TestApplicationListAuthentications(t *testing.T) {
+	tenantId := int64(1)
 	appId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -1166,7 +1168,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -1198,7 +1200,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 
 	var wantData []m.Authentication
 	for _, auth := range fixtures.TestAuthenticationData {
-		if auth.ResourceType == "Application" && auth.ResourceID == appId {
+		if auth.ResourceType == "Application" && auth.ResourceID == appId && auth.TenantID == tenantId {
 			wantData = append(wantData, auth)
 		}
 	}
@@ -1217,7 +1219,116 @@ func TestApplicationListAuthentications(t *testing.T) {
 		}
 	}
 
+	// Check the tenancy of returned authentications
+	if !config.IsVaultOn() {
+		for _, authOut := range out.Data {
+			authOutId, err := strconv.ParseInt(authOut.(map[string]interface{})["id"].(string), 10, 64)
+			if err != nil {
+				t.Error(err)
+			}
+
+			for _, authFixtures := range fixtures.TestAuthenticationData {
+				if authOutId == authFixtures.DbID {
+					if authFixtures.TenantID != tenantId {
+						t.Errorf("expected tenant id = %d, got %d", tenantId, authFixtures.TenantID)
+					}
+				}
+			}
+		}
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestApplicationListAuthenticationsEmptyList tests that an empty list is returned
+// when the application doesn't have an authentications
+func TestApplicationListAuthenticationsEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	appId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	err := ApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestApplicationListAuthenticationsTenantNotExists tests that not found err is returned
+// for not existing tenant
+func TestApplicationListAuthenticationsTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+	err := notFoundApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestApplicationListAuthenticationsInvalidTenant tests that not found err is returned
+// for a tenant who doesn't own the application
+func TestApplicationListAuthenticationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/applications/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+	err := notFoundApplicationListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationListAuthenticationsNotFound(t *testing.T) {
