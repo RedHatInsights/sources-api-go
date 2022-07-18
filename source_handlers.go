@@ -438,9 +438,13 @@ func SourcePause(c echo.Context) error {
 	}
 
 	// Check if the source exists
-	_, err = sourceDao.GetById(&sourceId)
+	srcExists, err := sourceDao.Exists(sourceId)
 	if err != nil {
 		return err
+	}
+
+	if !srcExists {
+		return util.NewErrNotFound("source")
 	}
 
 	// Pause the existing source
@@ -492,9 +496,13 @@ func SourceUnpause(c echo.Context) error {
 	}
 
 	// Check if the source exists
-	_, err = sourceDao.GetById(&sourceId)
+	srcExists, err := sourceDao.Exists(sourceId)
 	if err != nil {
 		return err
+	}
+
+	if !srcExists {
+		return util.NewErrNotFound("source")
 	}
 
 	// Unpause the existing source
