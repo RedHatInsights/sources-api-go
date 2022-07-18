@@ -29,3 +29,7 @@ Here lies the source code for the Sources API re-write, based on the [original R
     - `make tidy` to check go files for new imports and add them to `go.sum`
     - `make lint` to run the same linters as the PR action, and print errors.
 - Tests are currently in the same package adjacent to the source file. ex: `source_handlers.go` -> `source_handlers_test.go`, just using the standard library testing library. May change in the future. 
+
+## License
+
+This project is available as open source under the terms of the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
