@@ -13,7 +13,7 @@ var listMiddleware = []echo.MiddlewareFunc{
 	middleware.SortAndFilter, middleware.Pagination,
 }
 
-var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{middleware.Tenancy}, listMiddleware...)
+var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{middleware.Tenancy, middleware.UserCatcher}, listMiddleware...)
 var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.PermissionCheck, middleware.RaiseEvent}
 var permissionWithListMiddleware = append(listMiddleware, middleware.PermissionCheck)
 
@@ -30,7 +30,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/openapi.json", PublicOpenApi(version))
 
 		// Bulk Create
-		r.POST("/bulk_create", BulkCreate, append(permissionMiddleware, middleware.UserCatcher)...)
+		r.POST("/bulk_create", BulkCreate, permissionMiddleware...)
 
 		// Sources
 		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
