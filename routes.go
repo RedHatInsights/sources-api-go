@@ -30,7 +30,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/openapi.json", PublicOpenApi(version))
 
 		// Bulk Create
-		r.POST("/bulk_create", BulkCreate, permissionMiddleware...)
+		r.POST("/bulk_create", BulkCreate, append(permissionMiddleware, middleware.UserCatcher)...)
 
 		// Sources
 		r.GET("/sources", SourceList, tenancyWithListMiddleware...)

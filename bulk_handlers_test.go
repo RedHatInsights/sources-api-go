@@ -10,6 +10,8 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/middleware"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -19,6 +21,7 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 	nameSource := "test"
 	bulkCreateSource := m.BulkCreateSource{SourceCreateRequest: m.SourceCreateRequest{Name: &nameSource}}
 	requestBody := m.BulkCreateRequest{Sources: []m.BulkCreateSource{bulkCreateSource}}
+	testUserId := "testUser"
 
 	body, err := json.Marshal(requestBody)
 	if err != nil {
@@ -36,16 +39,26 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
+	user, err := dao.GetUserDao(&fixtures.TestTenantData[0].Id).FindOrCreate(testUserId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c.Set(h.USERID, user.Id)
+
 	err = BulkCreate(c)
 	if err.Error() != "no source type present, need either [source_type_name] or [source_type_id]" {
 		t.Error(err)
 	}
+
+	err = dao.DB.Delete(&m.User{}, "user_id = ?", testUserId).Error
+	if err != nil {
+		t.Error(err)
+	}
 }
 
-func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
+func TestBulkCreateWithUserCreation(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-
-	conf.ResourceOwnership = "user"
 
 	testUserId := "testUser"
 	identityHeader := testutils.IdentityHeaderForUser(testUserId)
@@ -72,25 +85,27 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set("identity", &identity.XRHID{Identity: identityHeader})
+	c.Set("identity", identityHeader)
 
-	err = BulkCreate(c)
+	var user m.User
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).First(&user).Error
+	if err.Error() != "record not found" {
+		t.Error(err)
+	}
+
+	bulkCreate := middleware.UserCatcher(BulkCreate)
+	err = bulkCreate(c)
 	if err != nil {
 		t.Error(err)
 	}
 
-	var users []m.User
-	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
+	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).First(&user).Error
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(users) != 1 {
-		t.Errorf("1 user expected instead of %d", len(users))
-	}
-
-	if users[0].UserID != testUserId {
-		t.Errorf("expected userid is %s instead of %s", testUserId, users[0].UserID)
+	if user.UserID != testUserId {
+		t.Errorf("expected userid is %s instead of %s", testUserId, user.UserID)
 	}
 
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
@@ -98,115 +113,9 @@ func TestCreateUserWithResourceOwnershipApplicationType(t *testing.T) {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
 	}
 
-	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Delete(&users).Error
+	err = dao.DB.Delete(&m.User{}, "user_id = ?", testUserId).Error
 	if err != nil {
 		t.Error(err)
-	}
-}
-
-func TestCreateUserWithoutResourceOwnershipApplicationType(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
-
-	conf.ResourceOwnership = "user"
-
-	testUserId := "testUser"
-	identityHeader := testutils.IdentityHeaderForUser(testUserId)
-
-	nameSource := "test source"
-	sourceTypeName := "amazon"
-	applicationTypeName := "cost-management"
-	authenticationResourceType := "application"
-
-	requestBody := testutils.SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType)
-
-	body, err := json.Marshal(requestBody)
-	if err != nil {
-		t.Error("Could not marshal JSON")
-	}
-
-	c, _ := request.CreateTestContext(
-		http.MethodPost,
-		"/api/sources/v3.1/bulk_create",
-		bytes.NewReader(body),
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
-	)
-
-	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set("identity", &identity.XRHID{Identity: identityHeader})
-
-	err = BulkCreate(c)
-	if err != nil {
-		t.Error(err)
-	}
-
-	var users []m.User
-	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(users) != 0 {
-		t.Errorf("0 user expected instead of %d", len(users))
-	}
-
-	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
-	if err != nil {
-		t.Errorf(`unexpected error received when deleting the source: %s`, err)
-	}
-}
-
-func TestCreateUserWithoutResourceOwnershipConfig(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
-
-	conf.ResourceOwnership = ""
-
-	testUserId := "testUser"
-	identityHeader := testutils.IdentityHeaderForUser(testUserId)
-
-	nameSource := "test source"
-	sourceTypeName := "bitbucket"
-	applicationTypeName := "app-studio"
-	authenticationResourceType := "application"
-
-	requestBody := testutils.SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType)
-
-	body, err := json.Marshal(requestBody)
-	if err != nil {
-		t.Error("Could not marshal JSON")
-	}
-
-	c, _ := request.CreateTestContext(
-		http.MethodPost,
-		"/api/sources/v3.1/bulk_create",
-		bytes.NewReader(body),
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
-	)
-
-	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set("identity", &identity.XRHID{Identity: identityHeader})
-
-	err = BulkCreate(c)
-	if err != nil {
-		t.Error(err)
-	}
-
-	var users []m.User
-	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).Find(&users).Error
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(users) != 0 {
-		t.Errorf("0 users expected instead of %d", len(users))
-	}
-
-	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
-	if err != nil {
-		t.Errorf(`unexpected error received when deleting the source: %s`, err)
 	}
 }
 

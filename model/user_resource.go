@@ -16,17 +16,6 @@ func (ur *UserResource) AddSourceAndApplicationTypeNames(sourceName, application
 	}
 }
 
-func (ur *UserResource) UserOwnershipActive() bool {
-	return len(ur.SourceNames) > 0 &&
-		len(ur.ApplicationTypesNames) > 0 &&
-		ur.userIDPresent() &&
-		ur.userResourceOwnership()
-}
-
-func (ur *UserResource) userIDPresent() bool {
-	return ur.User != nil && ur.User.UserID != ""
-}
-
 func (ur *UserResource) userResourceOwnership() bool {
 	return ur.ResourceOwnership == UserOwnership
 }

@@ -173,5 +173,5 @@ type TenantDao interface {
 }
 
 type UserDao interface {
-	CreateIfResourceOwnershipActive(userResource *m.UserResource) error
+	FindOrCreate(userID string) (*m.User, error)
 }
