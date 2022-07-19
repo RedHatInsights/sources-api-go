@@ -149,7 +149,7 @@ func TestBulkCreate(t *testing.T) {
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set("identity", &identity.XRHID{Identity: identityHeader})
+	c.Set("identity", identityHeader)
 
 	err = BulkCreate(c)
 	if err != nil {
