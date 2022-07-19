@@ -13,10 +13,11 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
-	"github.com/RedHatInsights/sources-api-go/kafka"
+	kafka "github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	kafkago "github.com/segmentio/kafka-go"
 )
 
 const (
@@ -135,19 +136,21 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 	}
 
 	// instantiate a producer for this source
-	mgr := &kafka.Manager{Config: kafka.Config{
-		KafkaBrokers:   config.Get().KafkaBrokers,
-		ProducerConfig: kafka.ProducerConfig{Topic: satelliteTopic},
-	}}
+	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, satelliteTopic)
+	if err != nil {
+		l.Log.Errorf(`[source_id: %d] unable to create a Kafka writer for the endpoint availability check: %s`, source.ID, err)
+		return
+	}
 
-	l.Log.Infof("Publishing message for Source [%v] topic [%v] ", source.ID, mgr.ProducerConfig.Topic)
+	l.Log.Infof("Publishing message for Source [%v] topic [%v] ", source.ID, writer.Topic)
 	for _, endpoint := range source.Endpoints {
-		publishSatelliteMessage(mgr, source, &endpoint)
+		publishSatelliteMessage(writer, source, &endpoint)
 	}
 }
 
-func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.Endpoint) {
+func publishSatelliteMessage(writer *kafkago.Writer, source *m.Source, endpoint *m.Endpoint) {
 	l.Log.Infof("Requesting Availability Check for Endpoint %v", endpoint.ID)
+	defer kafka.CloseWriter(writer, "publish satellite message")
 
 	msg := &kafka.Message{}
 	err := msg.AddValueAsJSON(map[string]interface{}{
@@ -169,14 +172,8 @@ func publishSatelliteMessage(mgr *kafka.Manager, source *m.Source, endpoint *m.E
 		{Key: "x-rh-sources-account-number", Value: []byte(endpoint.Tenant.ExternalTenant)},
 	})
 
-	err = mgr.Produce(msg)
-	if err != nil {
+	if err = kafka.Produce(writer, msg); err != nil {
 		l.Log.Warnf("Failed to produce kafka message for Source %v, error: %v", source.ID, err)
-	}
-
-	err = mgr.CloseProducer()
-	if err != nil {
-		l.Log.Errorf(`unable to close the Kafka producer when publishing a Satellite availability status check message: %s`, err)
 	}
 }
 
