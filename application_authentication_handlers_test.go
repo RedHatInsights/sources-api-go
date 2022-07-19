@@ -18,6 +18,7 @@ import (
 )
 
 func TestApplicationAuthenticationList(t *testing.T) {
+	tenantId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_authentications",
@@ -26,7 +27,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -53,7 +54,14 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestApplicationAuthenticationData) {
+	var wantAppAuthCount int
+	for _, a := range fixtures.TestApplicationAuthenticationData {
+		if a.TenantID == tenantId {
+			wantAppAuthCount++
+		}
+	}
+
+	if len(out.Data) != wantAppAuthCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -80,6 +88,11 @@ func TestApplicationAuthenticationList(t *testing.T) {
 		if appAuth["authentication_id"].(string) != authID {
 			t.Error("ghosts infected the return")
 		}
+	}
+
+	err = checkAllApplicationAuthenticationsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -473,4 +486,27 @@ func TestApplicationAuthenticationListAuthenticationsBadRequest(t *testing.T) {
 	}
 
 	templates.BadRequestTest(t, rec)
+}
+
+// HELPERS:
+
+// checkAllApplicationAuthenticationsBelongToTenant checks that all returned application authentications
+// belongs to given tenant
+func checkAllApplicationAuthenticationsBelongToTenant(tenantId int64, appAuths []interface{}) error {
+	// For every returned application authentication
+	for _, appAuthOut := range appAuths {
+		appAuthOutId, err := strconv.ParseInt(appAuthOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			return err
+		}
+		// find application authentication in fixtures and check the tenant id
+		for _, appAuth := range fixtures.TestApplicationAuthenticationData {
+			if appAuthOutId == appAuth.ID {
+				if appAuth.TenantID != tenantId {
+					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, appAuth.TenantID)
+				}
+			}
+		}
+	}
+	return nil
 }
