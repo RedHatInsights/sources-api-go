@@ -4,7 +4,7 @@
 # Options that must be configured by app owner
 # --------------------------------------------
 APP_NAME="sources"  # name of app-sre "application" folder this component lives in
-COMPONENT_NAME="sources-api-go"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
+COMPONENT_NAME="sources-api"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/sources-api-go"
 
 IQE_PLUGINS="sources"  # name of the IQE plugin for this app.
@@ -26,7 +26,7 @@ source $CICD_ROOT/deploy_ephemeral_env.sh
 if [[ $? != 0 ]]; then
     exit 1
 fi
-source $CICD_ROOT/smoke_test.sh
+source $CICD_ROOT/cji_smoke_test.sh
 if [[ $? != 0 ]]; then
     exit 1
 fi
