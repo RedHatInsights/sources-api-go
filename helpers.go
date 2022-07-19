@@ -80,6 +80,23 @@ func setEventStreamResource(c echo.Context, model m.Event) {
 	c.Set("resource", model)
 }
 
+func getUserFromEchoContext(c echo.Context) (*int64, error) {
+	userValue := c.Get(h.USERID)
+	if userValue == nil {
+		return nil, nil
+	}
+
+	if userId, ok := userValue.(int64); ok {
+		if userId == 0 {
+			return nil, nil
+		}
+
+		return &userId, nil
+	} else {
+		return nil, errors.New("the user was provided in an invalid format")
+	}
+}
+
 // getTenantFromEchoContext tries to extract the tenant from the echo context. If the "tenantID" is missing from the
 // context, then a default value and nil are returned as the int64 and error values.
 func getTenantFromEchoContext(c echo.Context) (int64, error) {

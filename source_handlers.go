@@ -18,12 +18,16 @@ var getSourceDao func(c echo.Context) (dao.SourceDao, error)
 
 func getSourceDaoWithTenant(c echo.Context) (dao.SourceDao, error) {
 	tenantId, err := getTenantFromEchoContext(c)
-
 	if err != nil {
 		return nil, err
 	}
 
-	return dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId}), nil
+	userID, err := getUserFromEchoContext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId, UserID: userID}), nil
 }
 
 func SourceList(c echo.Context) error {
