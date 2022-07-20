@@ -71,13 +71,16 @@ func TestDeleteApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestSourceData[0].TenantID})
+	tenantId := fixtures.TestTenantData[0].Id
+	daoParams := RequestParams{TenantID: &tenantId}
+	applicationDao := GetApplicationDao(&daoParams)
 
-	application := fixtures.TestApplicationData[0]
-	// Set the ID to 0 to let GORM know it should insert a new application and not update an existing one.
-	application.ID = 0
-	// Set some data to compare the returned application.
-	application.Extra = []byte(`{"hello": "world"}`)
+	application := m.Application{
+		Extra:             []byte(`{"hello": "world"}`),
+		SourceID:          fixtures.TestSourceData[1].ID,
+		TenantID:          tenantId,
+		ApplicationTypeID: fixtures.TestApplicationTypeData[1].Id,
+	}
 
 	// Create the test application.
 	err := applicationDao.Create(&application)
