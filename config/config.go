@@ -116,8 +116,7 @@ func Get() *SourcesApiConfig {
 		}
 
 		// Grab the first broker
-		kafkaBroker := cfg.Kafka.Brokers[0]
-		options.SetDefault("KafkaBrokerConfig", kafkaBroker)
+		options.SetDefault("KafkaBrokerConfig", cfg.Kafka.Brokers[0])
 		// [/Kafka]
 
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
@@ -160,7 +159,7 @@ func Get() *SourcesApiConfig {
 				log.Fatalf(`the provided "QUEUE_PORT", "%s",  is not a valid integer: %s`, kafkaPort, err)
 			}
 
-			brokerConfig := &clowder.BrokerConfig{
+			brokerConfig := clowder.BrokerConfig{
 				Hostname: os.Getenv("QUEUE_HOST"),
 				Port:     &port,
 			}
@@ -248,17 +247,17 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("psks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
 	// Grab the Kafka Sasl Settings.
-	var brokerConifg clowder.BrokerConfig
+	var brokerConfig clowder.BrokerConfig
 	bcRaw, ok := options.Get("KafkaBrokerConfig").(clowder.BrokerConfig)
 	if ok {
-		brokerConifg = bcRaw
+		brokerConfig = bcRaw
 	}
 
 	options.AutomaticEnv()
 	parsedConfig = &SourcesApiConfig{
 		AppName:                   options.GetString("AppName"),
 		Hostname:                  options.GetString("Hostname"),
-		KafkaBrokerConfig:         brokerConifg,
+		KafkaBrokerConfig:         brokerConfig,
 		KafkaTopics:               options.GetStringMapString("KafkaTopics"),
 		KafkaGroupID:              options.GetString("KafkaGroupID"),
 		MetricsPort:               options.GetInt("MetricsPort"),
