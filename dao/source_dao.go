@@ -17,13 +17,15 @@ var GetSourceDao func(*SourceDaoParams) SourceDao
 
 // getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultSourceDao(daoParams *SourceDaoParams) SourceDao {
-	var tenantID *int64
+	var tenantID, userID *int64
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
+		userID = daoParams.UserID
 	}
 
 	return &sourceDaoImpl{
 		TenantID: tenantID,
+		UserID:   userID,
 	}
 }
 
@@ -34,10 +36,12 @@ func init() {
 
 type SourceDaoParams struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 type sourceDaoImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
