@@ -97,13 +97,13 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 					Tenant:           *tenant,
 				}
 
-				applicationFromAuthentication := &m.Application{ID: output.Authentications[i].ResourceID}
-				tx.Debug().Preload("ApplicationType").Find(&applicationFromAuthentication)
-
-				applicationType := &m.ApplicationType{Id: applicationFromAuthentication.ApplicationTypeID}
-				if tx.Debug().First(&applicationType).Error == nil {
-					if userResource.OwnershipPresentForApplication(applicationType.Name) {
-						applicationAuthentication.UserID = &userResource.User.Id
+				applicationTypeID := findApplicationTypeIdByApplicationID(output.Authentications[i].ResourceID, output.Applications)
+				if applicationTypeID != nil {
+					applicationType := &m.ApplicationType{}
+					if tx.Debug().Where("application_types.id = ?", applicationTypeID).First(&applicationType).Error == nil {
+						if userResource.OwnershipPresentForApplication(applicationType.Name) {
+							applicationAuthentication.UserID = &userResource.User.Id
+						}
 					}
 				}
 
@@ -120,6 +120,16 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 	})
 
 	return &output, err
+}
+
+func findApplicationTypeIdByApplicationID(applicationID int64, applications []m.Application) *int64 {
+	for _, currentApplication := range applications {
+		if currentApplication.ID == applicationID {
+			return &currentApplication.ApplicationTypeID
+		}
+	}
+
+	return nil
 }
 
 func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResource *m.UserResource) ([]m.Source, error) {
