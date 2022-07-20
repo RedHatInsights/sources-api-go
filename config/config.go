@@ -116,8 +116,7 @@ func Get() *SourcesApiConfig {
 		}
 
 		// Grab the first broker
-		kafkaBroker := cfg.Kafka.Brokers[0]
-		options.SetDefault("KafkaBrokerConfig", kafkaBroker)
+		options.SetDefault("KafkaBrokerConfig", cfg.Kafka.Brokers[0])
 		// [/Kafka]
 
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
