@@ -10,9 +10,11 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -60,6 +62,8 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 func TestBulkCreateWithUserCreation(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
+	conf.ResourceOwnership = "user"
+
 	testUserId := "testUser"
 	identityHeader := testutils.IdentityHeaderForUser(testUserId)
 
@@ -75,7 +79,7 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 		t.Error("Could not marshal JSON")
 	}
 
-	c, _ := request.CreateTestContext(
+	c, res := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/bulk_create",
 		bytes.NewReader(body),
@@ -106,6 +110,54 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 
 	if user.UserID != testUserId {
 		t.Errorf("expected userid is %s instead of %s", testUserId, user.UserID)
+	}
+
+	var source m.Source
+	err = dao.DB.Model(&m.Source{}).Where("name = ?", nameSource).First(&source).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if source.UserID == nil || *source.UserID != user.Id {
+		t.Error("source user id was not populated correctly")
+	}
+
+	var response m.BulkCreateResponse
+	err = json.Unmarshal(res.Body.Bytes(), &response)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var application m.Application
+	err = dao.DB.Model(&m.Application{}).Where("id = ?", response.Applications[0].ID).First(&application).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if application.UserID == nil || *application.UserID != user.Id {
+		t.Error("application user id was not populated correctly")
+	}
+
+	var authentication m.Authentication
+	err = dao.DB.Model(&m.Authentication{}).Where("id = ?", response.Authentications[0].ID).First(&authentication).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if authentication.UserID == nil || *authentication.UserID != user.Id {
+		t.Error("authentication user id was not populated correctly")
+	}
+
+	var applicationAuthentication m.ApplicationAuthentication
+	err = dao.DB.Model(&m.ApplicationAuthentication{}).
+		Where("application_id = ? AND authentication_id = ?", response.Applications[0].ID, response.Authentications[0].ID).
+		Find(&applicationAuthentication).Error
+	if err != nil {
+		t.Error(err)
+	}
+
+	if applicationAuthentication.UserID == nil || *applicationAuthentication.UserID != user.Id {
+		t.Error(err)
 	}
 
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
@@ -193,15 +245,13 @@ func TestBulkCreate(t *testing.T) {
 }
 
 func cleanSourceForTenant(sourceName string, tenantID *int64) error {
-	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: tenantID})
-
 	source := &m.Source{Name: sourceName}
 	err := dao.DB.Model(&m.Source{}).Where("name = ?", source.Name).Find(&source).Error
 	if err != nil {
 		return err
 	}
 
-	_, _, _, _, _, err = sourceDao.DeleteCascade(source.ID)
+	err = service.DeleteCascade(tenantID, "Source", source.ID, []kafka.Header{})
 
 	return err
 }
