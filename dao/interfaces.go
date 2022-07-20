@@ -18,6 +18,7 @@ type SourceDao interface {
 	Update(src *m.Source) error
 	Delete(id *int64) (*m.Source, error)
 	Tenant() *int64
+	User() *int64
 	NameExistsInCurrentTenant(name string) bool
 	GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error)
 	// ListForRhcConnection gets all the sources that are related to a given rhcConnection id.

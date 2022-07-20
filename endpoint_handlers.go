@@ -243,7 +243,7 @@ func EndpointDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = service.DeleteCascade(endpointDao.Tenant(), "Endpoint", id, forwardableHeaders)
+	err = service.DeleteCascade(endpointDao.Tenant(), nil, "Endpoint", id, forwardableHeaders)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}

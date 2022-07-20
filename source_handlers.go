@@ -18,12 +18,29 @@ var getSourceDao func(c echo.Context) (dao.SourceDao, error)
 
 func getSourceDaoWithTenant(c echo.Context) (dao.SourceDao, error) {
 	tenantId, err := getTenantFromEchoContext(c)
-
 	if err != nil {
 		return nil, err
 	}
 
-	return dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId}), nil
+	userID, err := util.GetUserFromEchoContext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	var user m.User
+	result := dao.DB.Model(&m.User{}).Where("tenant_id = ? and user_id = ?", tenantId, userID).Find(&user)
+	if result.Error != nil {
+		return nil, err
+	}
+
+	var userIDFromDB *int64
+	if result.RowsAffected == 0 {
+		userIDFromDB = nil
+	} else {
+		userIDFromDB = &user.Id
+	}
+
+	return dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantId, UserID: userIDFromDB}), nil
 }
 
 func SourceList(c echo.Context) error {
@@ -208,7 +225,7 @@ func SourceDelete(c echo.Context) (err error) {
 		return err
 	}
 
-	err = service.DeleteCascade(sourcesDB.Tenant(), "Source", id, forwardableHeaders)
+	err = service.DeleteCascade(sourcesDB.Tenant(), sourcesDB.User(), "Source", id, forwardableHeaders)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
