@@ -160,7 +160,7 @@ func Get() *SourcesApiConfig {
 				log.Fatalf(`the provided "QUEUE_PORT", "%s",  is not a valid integer: %s`, kafkaPort, err)
 			}
 
-			brokerConfig := &clowder.BrokerConfig{
+			brokerConfig := clowder.BrokerConfig{
 				Hostname: os.Getenv("QUEUE_HOST"),
 				Port:     &port,
 			}
