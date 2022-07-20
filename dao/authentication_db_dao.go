@@ -11,6 +11,7 @@ import (
 
 type authenticationDaoDbImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 func (add *authenticationDaoDbImpl) List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
@@ -390,7 +391,7 @@ func (add *authenticationDaoDbImpl) FetchAndUpdateBy(resource util.Resource, upd
 		return nil, err
 	}
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: add.TenantID})
+	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: add.TenantID, UserID: add.UserID})
 	source, err := sourceDao.GetById(&authentication.SourceID)
 	if err != nil {
 		return nil, err

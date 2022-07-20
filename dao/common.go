@@ -13,11 +13,11 @@ const (
 	DEFAULT_OFFSET = 0
 )
 
-func GetFromResourceType(resourceType string) (m.EventModelDao, error) {
+func GetFromResourceType(resourceType string, tenantID int64) (m.EventModelDao, error) {
 	var resource m.EventModelDao
 	switch strings.ToLower(resourceType) {
 	case "source":
-		resource = GetSourceDao(nil)
+		resource = GetSourceDao(&SourceDaoParams{TenantID: &tenantID})
 	case "endpoint":
 		resource = GetEndpointDao(nil)
 	case "application":

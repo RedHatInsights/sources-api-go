@@ -33,11 +33,11 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/bulk_create", BulkCreate, append(permissionMiddleware, middleware.UserCatcher)...)
 
 		// Sources
-		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
-		r.GET("/sources/:id", SourceGet, middleware.Tenancy)
+		r.GET("/sources", SourceList, append(tenancyWithListMiddleware, middleware.ResourceOwnership)...)
+		r.GET("/sources/:id", SourceGet, middleware.Tenancy, middleware.ResourceOwnership)
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
-		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
-		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
+		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier, middleware.ResourceOwnership)...)
+		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource, middleware.ResourceOwnership)...)
 		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy)
 		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
@@ -58,11 +58,11 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy)
 
 		// Authentications
-		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
-		r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy)
+		r.GET("/authentications", AuthenticationList, append(tenancyWithListMiddleware, middleware.ResourceOwnership)...)
+		r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.ResourceOwnership)
 		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
-		r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier)...)
-		r.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
+		r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier, middleware.ResourceOwnership)...)
+		r.DELETE("/authentications/:uid", AuthenticationDelete, append(permissionMiddleware, middleware.ResourceOwnership)...)
 
 		// ApplicationTypes
 		r.GET("/application_types", ApplicationTypeList, listMiddleware...)
@@ -107,7 +107,7 @@ func setupRoutes(e *echo.Echo) {
 		if os.Getenv("PROXY_GRAPHQL") == "true" {
 			r.POST("/graphql", ProxyGraphqlToLegacySources, middleware.Tenancy)
 		} else {
-			r.POST("/graphql", GraphQLQuery, middleware.Tenancy)
+			r.POST("/graphql", GraphQLQuery, middleware.ResourceOwnership, middleware.Tenancy)
 
 			// run the graphQL playground if running locally or in ephemeral. really handy for development!
 			// https://github.com/graphql/graphiql

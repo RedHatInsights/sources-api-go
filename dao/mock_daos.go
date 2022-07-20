@@ -141,6 +141,10 @@ func (src *MockSourceDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
+func (src *MockSourceDao) User() *int64 {
+	user := int64(1)
+	return &user
+}
 
 func (src *MockSourceDao) Exists(sourceId int64) (bool, error) {
 	for _, source := range src.Sources {
