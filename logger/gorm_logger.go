@@ -6,36 +6,31 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
 )
 
-type CustomGORMLogger struct {
+type GormLogger struct {
 	Logger                  *logrus.Logger
 	SlowThreshold           time.Duration
 	SkipErrorRecordNotFound bool
-	LogLevelForSqlLogs      string
 }
 
-func (l *CustomGORMLogger) LogMode(gormLogger.LogLevel) gormLogger.Interface {
-	return l
-}
+func (l *GormLogger) LogMode(gormLogger.LogLevel) gormLogger.Interface { return l }
 
-func (l *CustomGORMLogger) Info(_ context.Context, logMessage string, data ...interface{}) {
-	l.Logger.Info(logMessage, data)
-}
+// Functions implementing the rest of the gorm logger interface - not used
+// unless you were to call `DB.Logger.Info(...)`, which we don't use. Everything
+// else goes through Trace
+func (l *GormLogger) Debug(_ context.Context, logMessage string, data ...interface{}) {}
+func (l *GormLogger) Info(_ context.Context, logMessage string, data ...interface{})  {}
+func (l *GormLogger) Warn(_ context.Context, logMessage string, data ...interface{})  {}
+func (l *GormLogger) Error(_ context.Context, logMessage string, data ...interface{}) {}
 
-func (l *CustomGORMLogger) Warn(_ context.Context, logMessage string, data ...interface{}) {
-	l.Logger.Warn(logMessage, data)
-}
-
-func (l *CustomGORMLogger) Error(_ context.Context, logMessage string, data ...interface{}) {
-	l.Logger.Error(logMessage, data)
-}
-
-func (l *CustomGORMLogger) Trace(_ context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
-	var ErrorRecordNotFound = errors.New("record not found")
-
+// Trace runs a SQL query and logs how long it took as well as the sql executed.
+// By default the log entry is debug, but if the SQL is very slow it will log as
+// warn.
+func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 	duration := float64(elapsed.Nanoseconds()) / 1e6
@@ -50,7 +45,7 @@ func (l *CustomGORMLogger) Trace(_ context.Context, begin time.Time, fc func() (
 
 	switch {
 	case err != nil:
-		if errors.Is(err, ErrorRecordNotFound) && l.SkipErrorRecordNotFound {
+		if l.SkipErrorRecordNotFound && errors.Is(err, gorm.ErrRecordNotFound) {
 			return
 		}
 
@@ -58,19 +53,6 @@ func (l *CustomGORMLogger) Trace(_ context.Context, begin time.Time, fc func() (
 	case elapsed > l.SlowThreshold && l.SlowThreshold != 0:
 		loggerEntry.Warn("SLOW SQL: " + sql)
 	default:
-		l.logByLevelWithFields(loggerEntry, sql)
-	}
-}
-
-func (l *CustomGORMLogger) logByLevelWithFields(loggerWithFields *logrus.Entry, sql string) {
-	switch l.LogLevelForSqlLogs {
-	case "DEBUG":
-		loggerWithFields.Debug(sql)
-	case "ERROR":
-		loggerWithFields.Error(sql)
-	case "WARN":
-		loggerWithFields.Warn(sql)
-	default:
-		loggerWithFields.Info(sql)
+		loggerEntry.Debug(sql)
 	}
 }

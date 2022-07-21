@@ -13,9 +13,6 @@ import (
 	appconf "github.com/RedHatInsights/sources-api-go/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/labstack/echo/v4"
-	echoLog "github.com/labstack/gommon/log"
-	logrusEcho "github.com/neko-neko/echo-logrus/v2/log"
 	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 )
@@ -23,7 +20,6 @@ import (
 const (
 	DefaultType = "default"
 	RequestType = "request"
-	EchoType    = "echo"
 	SQLType     = "sql"
 )
 
@@ -79,11 +75,7 @@ func cloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
 	return nil
 }
 
-func forwardLogsToStderr(logHandler string) bool {
-	return logHandler == "haberdasher"
-}
-
-func LogrusLogLevelFrom(configLogLevel string) logrus.Level {
+func parseLogLevel(configLogLevel string) logrus.Level {
 	var logLevel logrus.Level
 
 	switch strings.ToUpper(configLogLevel) {
@@ -145,11 +137,10 @@ func backtrace() []string {
 	return filenames
 }
 
-type CustomLoggerFormatter struct {
-	Hostname              string
-	AppName               string
-	InjectedToOtherLogger bool
-	LogType               string
+type LogFormatter struct {
+	Hostname string
+	AppName  string
+	LogType  string
 }
 
 //Marshaler is an interface any type can implement to change its output in our production logs.
@@ -157,8 +148,8 @@ type Marshaler interface {
 	MarshalLog() map[string]interface{}
 }
 
-func NewCustomLoggerFormatter(config *appconf.SourcesApiConfig, injectedToOtherLogger bool, logType string) *CustomLoggerFormatter {
-	return &CustomLoggerFormatter{AppName: config.AppName, Hostname: config.Hostname, InjectedToOtherLogger: injectedToOtherLogger, LogType: logType}
+func newLoggerFormatter(config *appconf.SourcesApiConfig, logType string) *LogFormatter {
+	return &LogFormatter{AppName: config.AppName, Hostname: config.Hostname, LogType: logType}
 }
 
 func basicLogFields(logLevel string, appName string, hostName string) map[string]interface{} {
@@ -175,25 +166,22 @@ func basicLogFields(logLevel string, appName string, hostName string) map[string
 	}
 }
 
-func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (f *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	b := &bytes.Buffer{}
 
 	data := basicLogFields(entry.Level.String(), f.AppName, f.Hostname)
 	data["message"] = entry.Message
 
-	if !f.InjectedToOtherLogger {
-		var caller string
-
-		if entry.Caller == nil {
-			caller = ""
-		} else {
-			caller = entry.Caller.Func.Name()
-		}
-
-		data["caller"] = caller
+	var caller string
+	if entry.Caller == nil {
+		caller = ""
+	} else {
+		caller = entry.Caller.Func.Name()
 	}
 
-	if entry.Logger.Level == logrus.DebugLevel && entry.Caller != nil && !f.InjectedToOtherLogger {
+	data["caller"] = caller
+
+	if entry.Logger.Level == logrus.DebugLevel && entry.Caller != nil {
 		data["filename"] = fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line)
 	}
 
@@ -228,23 +216,6 @@ func (f *CustomLoggerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func logLevelToEchoLogLevel(configLogLevel string) echoLog.Lvl {
-	var logLevel echoLog.Lvl
-
-	switch strings.ToUpper(configLogLevel) {
-	case "DEBUG":
-		logLevel = echoLog.DEBUG
-	case "ERROR":
-		logLevel = echoLog.ERROR
-	case "WARN":
-		logLevel = echoLog.WARN
-	default:
-		logLevel = echoLog.INFO
-	}
-
-	return logLevel
-}
-
 func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
 	// fields of default format from (converted to JSON): labstack/echo/v4@v4.4.0/middleware/logger.go
 	defaultFormat := `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}",` +
@@ -261,7 +232,7 @@ func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
 		return defaultFormat
 	}
 
-	for k, v := range basicLogFields(config.LogLevelForMiddlewareLogs, config.AppName, config.Hostname) {
+	for k, v := range basicLogFields(config.LogLevel, config.AppName, config.Hostname) {
 		fieldsDefaultFormat[k] = v
 	}
 
@@ -277,33 +248,11 @@ func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
 	return string(j)
 }
 
-func InitEchoLogger(e *echo.Echo, config *appconf.SourcesApiConfig) {
-	logger := logrusEcho.Logger()
-	logger.SetOutput(LogOutputFrom(config.LogHandler))
-	logger.SetFormatter(NewCustomLoggerFormatter(config, true, EchoType))
-
-	AddHooksTo(logger.Logger, config)
-	e.Logger = logger
-	e.Logger.SetLevel(logLevelToEchoLogLevel(config.LogLevel))
-}
-
-func LogOutputFrom(logHandler string) *os.File {
-	var logOutput *os.File
-
-	if forwardLogsToStderr(logHandler) {
-		logOutput = os.Stderr
-	} else {
-		logOutput = os.Stdout
-	}
-
-	return logOutput
-}
-
 func InitLogger(config *appconf.SourcesApiConfig) {
 	Log = &logrus.Logger{
-		Out:          LogOutputFrom(config.LogHandler),
-		Level:        LogrusLogLevelFrom(config.LogLevel),
-		Formatter:    NewCustomLoggerFormatter(config, false, DefaultType),
+		Out:          os.Stdout,
+		Level:        parseLogLevel(config.LogLevel),
+		Formatter:    newLoggerFormatter(config, DefaultType),
 		Hooks:        make(logrus.LevelHooks),
 		ReportCaller: true,
 	}
