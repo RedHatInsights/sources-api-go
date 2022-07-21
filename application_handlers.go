@@ -17,7 +17,7 @@ import (
 var getApplicationDao func(c echo.Context) (dao.ApplicationDao, error)
 
 func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
-	tenantId, err := getTenantFromEchoContext(c)
+	tenantId, err := util.GetTenantFromEchoContext(c)
 
 	if err != nil {
 		return nil, err
