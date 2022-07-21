@@ -17,7 +17,7 @@ import (
 var getAuthenticationDao func(c echo.Context) (dao.AuthenticationDao, error)
 
 func getAuthenticationDaoWithTenant(c echo.Context) (dao.AuthenticationDao, error) {
-	tenantId, err := getTenantFromEchoContext(c)
+	tenantId, err := util.GetTenantFromEchoContext(c)
 
 	if err != nil {
 		return nil, err
