@@ -34,11 +34,6 @@ func init() {
 	GetSourceDao = getDefaultSourceDao
 }
 
-type RequestParams struct {
-	TenantID *int64
-	UserID   *int64
-}
-
 type sourceDaoImpl struct {
 	TenantID *int64
 	UserID   *int64
