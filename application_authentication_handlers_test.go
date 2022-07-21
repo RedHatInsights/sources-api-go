@@ -123,6 +123,31 @@ func TestApplicationAuthenticationListTenantNotExist(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestApplicationAuthenticationListTenantWithoutAppAuths tests that empty list is returned
+// for tenant without application authentication
+func TestApplicationAuthenticationListTenantWithoutAppAuths(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := ApplicationAuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
