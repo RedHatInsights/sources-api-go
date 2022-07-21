@@ -82,7 +82,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		}
 
 		for i := 0; i < len(output.Authentications); i++ {
-			err = dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &tenant.Id}).BulkCreate(&output.Authentications[i])
+			err = dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &tenant.Id}).BulkCreate(&output.Authentications[i])
 			if err != nil {
 				return err
 			}
@@ -169,7 +169,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 		s.SourceType = *sourceType
 
 		// validate the source request
-		err = ValidateSourceCreationRequest(dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenant.Id}), &source.SourceCreateRequest)
+		err = ValidateSourceCreationRequest(dao.GetSourceDao(&dao.RequestParams{TenantID: &tenant.Id}), &source.SourceCreateRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -313,7 +313,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 			var err error
 			switch strings.ToLower(auth.ResourceType) {
 			case "source":
-				_, err = dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenant.Id}).GetById(&id)
+				_, err = dao.GetSourceDao(&dao.RequestParams{TenantID: &tenant.Id}).GetById(&id)
 				if err == nil {
 					l.Log.Debugf("Found existing Source with id %v, adding to list and continuing", id)
 					a.ResourceID = id

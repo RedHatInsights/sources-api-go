@@ -70,7 +70,7 @@ func TestPausingSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &testSource.TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &testSource.TenantID})
 	err := sourceDao.Pause(testSource.ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -100,7 +100,7 @@ func TestResumingSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &testSource.TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &testSource.TenantID})
 	err := sourceDao.Unpause(fixtures.TestSourceData[0].ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -130,7 +130,7 @@ func TestDeleteSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestSourceData[0].TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	source := fixtures.TestSourceData[0]
 	// Set the ID to 0 to let GORM know it should insert a new source and not update an existing one.
@@ -177,7 +177,7 @@ func TestDeleteSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestSourceData[0].TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	nonExistentId := int64(12345)
 	_, err := sourceDao.Delete(&nonExistentId)
@@ -208,7 +208,7 @@ func TestDeleteCascade(t *testing.T) {
 	}
 
 	// Try inserting the source in the database.
-	sourceDaoParams := SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id}
+	sourceDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
 	sourceDao := GetSourceDao(&sourceDaoParams)
 	err := sourceDao.Create(&fixtureSource)
 	if err != nil {
@@ -271,7 +271,7 @@ func TestDeleteCascade(t *testing.T) {
 	// Grab the DAOs which we will use to create the subresources.
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
 	applicationsDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
-	authDaoParams := AuthenticationDaoParams{TenantID: &fixtures.TestTenantData[0].Id}
+	authDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
 	authenticationDao := GetAuthenticationDao(&authDaoParams)
 	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
 	rhcConnectionsDao := GetRhcConnectionDao(&fixtures.TestTenantData[0].Id)
@@ -640,7 +640,7 @@ func TestSourceExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("exists")
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	got, err := sourceDao.Exists(fixtures.TestSourceData[0].ID)
 	if err != nil {
@@ -659,7 +659,7 @@ func TestSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("exists")
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	got, err := sourceDao.Exists(12345)
 	if err != nil {

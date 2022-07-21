@@ -577,7 +577,7 @@ func TestEndpointDelete(t *testing.T) {
 
 	// Create a source
 	tenantID := fixtures.TestTenantData[0].Id
-	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantID})
+	sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &tenantID})
 
 	uid, err := uuid.NewUUID()
 	if err != nil {
@@ -612,7 +612,7 @@ func TestEndpointDelete(t *testing.T) {
 	}
 
 	// Create an authentication for endpoint
-	authenticationDao := dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &tenantID})
+	authenticationDao := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &tenantID})
 
 	authName3 := "authentication for endpoint"
 	auth := m.Authentication{

@@ -25,10 +25,10 @@ const vaultSecretPathFormat = "secret/data/%d/%s_%d_%s"
 
 // GetAuthenticationDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
-var GetAuthenticationDao func(daoParams *AuthenticationDaoParams) AuthenticationDao
+var GetAuthenticationDao func(daoParams *RequestParams) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
-func getDefaultAuthenticationDao(daoParams *AuthenticationDaoParams) AuthenticationDao {
+func getDefaultAuthenticationDao(daoParams *RequestParams) AuthenticationDao {
 	var tenantID *int64
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
@@ -48,10 +48,6 @@ func getDefaultAuthenticationDao(daoParams *AuthenticationDaoParams) Authenticat
 // init sets the default DAO implementation so that other packages can request it easily.
 func init() {
 	GetAuthenticationDao = getDefaultAuthenticationDao
-}
-
-type AuthenticationDaoParams struct {
-	TenantID *int64
 }
 
 type authenticationDaoImpl struct {
@@ -101,7 +97,7 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// Check if sourceID exists
-	_, err := GetSourceDao(&SourceDaoParams{TenantID: a.TenantID}).GetById(&sourceID)
+	_, err := GetSourceDao(&RequestParams{TenantID: a.TenantID}).GetById(&sourceID)
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
@@ -575,7 +571,7 @@ func (a *authenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateA
 		return nil, err
 	}
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: a.TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: a.TenantID})
 	source, err := sourceDao.GetById(&authentication.SourceID)
 	if err != nil {
 		return nil, err

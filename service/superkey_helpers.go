@@ -89,7 +89,7 @@ func getExtraValues(application *m.Application, provider string) (map[string]str
 // returns the "super key" e.g. the authentication used to communicate with the
 // provider
 func getSuperKeyAuthentication(application *m.Application) (*m.Authentication, error) {
-	authDao := dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &application.TenantID})
+	authDao := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &application.TenantID})
 
 	// fetch auths for this source
 	auths, _, err := authDao.ListForSource(application.SourceID, 100, 0, nil)

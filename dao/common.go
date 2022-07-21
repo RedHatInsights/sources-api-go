@@ -38,7 +38,7 @@ func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, r
 		if err != nil {
 			return "", err
 		}
-		resource, err := GetSourceDao(&SourceDaoParams{TenantID: &tenantID}).GetById(&recordID)
+		resource, err := GetSourceDao(&RequestParams{TenantID: &tenantID}).GetById(&recordID)
 		if err != nil {
 			return "", err
 		}
@@ -64,7 +64,7 @@ func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, r
 		}
 		return resource.AvailabilityStatus, err
 	case "Authentication":
-		resource, err := GetAuthenticationDao(&AuthenticationDaoParams{TenantID: &tenantID}).GetById(resourceID)
+		resource, err := GetAuthenticationDao(&RequestParams{TenantID: &tenantID}).GetById(resourceID)
 		if err != nil || resource.AvailabilityStatus == nil {
 			return "", err
 		}
@@ -110,7 +110,7 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 
 	bulkMessage["applications"] = applications
 
-	authDao := GetAuthenticationDao(&AuthenticationDaoParams{TenantID: &source.TenantID})
+	authDao := GetAuthenticationDao(&RequestParams{TenantID: &source.TenantID})
 	authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 	if err != nil {
 		return nil, err

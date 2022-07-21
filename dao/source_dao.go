@@ -13,10 +13,10 @@ import (
 
 // GetSourceDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
-var GetSourceDao func(*SourceDaoParams) SourceDao
+var GetSourceDao func(*RequestParams) SourceDao
 
 // getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
-func getDefaultSourceDao(daoParams *SourceDaoParams) SourceDao {
+func getDefaultSourceDao(daoParams *RequestParams) SourceDao {
 	var tenantID, userID *int64
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
@@ -32,11 +32,6 @@ func getDefaultSourceDao(daoParams *SourceDaoParams) SourceDao {
 // init sets the default DAO implementation so that other packages can request it easily.
 func init() {
 	GetSourceDao = getDefaultSourceDao
-}
-
-type SourceDaoParams struct {
-	TenantID *int64
-	UserID   *int64
 }
 
 type sourceDaoImpl struct {
