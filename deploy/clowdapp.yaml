@@ -251,7 +251,7 @@ parameters:
 - name: KOKU_SOURCES_API_APP_CHECK_PATH
   value: /api/cost-management/v1/source-status/
 - name: LOG_LEVEL
-  value: WARN
+  value: INFO
 - name: MEMORY_LIMIT
   value: 1Gi
 - name: MEMORY_REQUEST
