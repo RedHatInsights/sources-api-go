@@ -612,7 +612,7 @@ func TestEndpointDelete(t *testing.T) {
 	}
 
 	// Create an authentication for endpoint
-	authenticationDao := dao.GetAuthenticationDao(&dao.AuthenticationDaoParams{TenantID: &tenantID})
+	authenticationDao := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &tenantID})
 
 	authName3 := "authentication for endpoint"
 	auth := m.Authentication{

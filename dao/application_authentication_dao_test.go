@@ -61,7 +61,7 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 	SwitchSchema("appauthfind")
 
 	// Get all the DAOs we are going to work with.
-	authDao := GetAuthenticationDao(&AuthenticationDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
+	authDao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	appDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
 	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
@@ -158,7 +158,7 @@ func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
 	SwitchSchema("appauthfind")
 
 	// Get all the DAOs we are going to work with.
-	authDao := GetAuthenticationDao(&AuthenticationDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
+	authDao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
 
 	// Maximum of authentications to create.

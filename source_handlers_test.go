@@ -1335,7 +1335,7 @@ func TestSourceDelete(t *testing.T) {
 	}
 
 	// Create and authentication for source
-	authDaoParams := dao.AuthenticationDaoParams{TenantID: &tenantID}
+	authDaoParams := dao.RequestParams{TenantID: &tenantID}
 	authenticationDao := dao.GetAuthenticationDao(&authDaoParams)
 
 	authNameForSource := "authentication for source"
