@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"net/http"
 	"strconv"
 	"testing"
@@ -175,17 +176,20 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestApplicationAuthenticationGet(t *testing.T) {
+	tenantId := int64(1)
+	appAuthId := int64(2)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_authentications/1",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	err := ApplicationAuthenticationGet(c)
 	if err != nil {
@@ -208,14 +212,23 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 	// (auth ID = hash from vault path) and for integration tests (auth ID is db ID because
 	// vault path column is missing in db)
 	if conf.SecretStore == "database" {
-		authID := strconv.Itoa(int(fixtures.TestAuthenticationData[0].DbID))
+		authID := strconv.Itoa(int(fixtures.TestAuthenticationData[3].DbID))
 		if out.AuthenticationID != authID {
 			t.Error("ghosts infected the return")
 		}
 	}
 
-	if out.ApplicationID != "1" {
+	if out.ApplicationID != "5" {
 		t.Error("ghosts infected the return")
+	}
+
+	// Check the tenancy of returned app auth
+	for _, appAuth := range fixtures.TestApplicationAuthenticationData {
+		if fmt.Sprintf("%d", appAuth.ID) == out.ID {
+			if appAuth.TenantID != tenantId {
+				t.Errorf("returned app auth not belong to the tenant, expected tenantd id %d, got %d", tenantId, appAuth.TenantID)
+			}
+		}
 	}
 }
 
