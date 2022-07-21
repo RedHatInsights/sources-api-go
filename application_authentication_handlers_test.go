@@ -232,6 +232,34 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 	}
 }
 
+// TestApplicationAuthenticationGetInvalidTenant tests that not found is returned
+// for existing app auth id but with invalid tenant
+func TestApplicationAuthenticationGetInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appAuthId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+
+	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+	err := notFoundApplicationAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationAuthenticationGetNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
