@@ -8,12 +8,14 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -332,13 +334,61 @@ func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 }
 
 func TestApplicationAuthenticationCreate(t *testing.T) {
-	if parser.RunningIntegrationTests {
-		t.Skip("Test not supported when using db backend")
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	// Create own test data - source with application and authentication
+	// Create a source
+	daoParams := dao.RequestParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&daoParams)
+
+	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
+	src := m.Source{
+		Name:         "Source for TestApplicationAuthenticationCreate()",
+		SourceTypeID: 1,
+		Uid:          &uid,
 	}
 
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create an application
+	applicationDao := dao.GetApplicationDao(&daoParams)
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: 1,
+		Extra:             []byte(`{"Name": "app for TestApplicationAuthenticationCreate()"}`),
+	}
+
+	err = applicationDao.Create(&app)
+	if err != nil {
+		t.Errorf("application not created correctly: %s", err)
+	}
+
+	// Create an authentication for the application
+	authenticationDao := dao.GetAuthenticationDao(&daoParams)
+
+	authNameForApp := "authentication for TestApplicationAuthenticationCreate()"
+	auth := m.Authentication{
+		Name:         &authNameForApp,
+		ResourceType: "Application",
+		ResourceID:   app.ID,
+		TenantID:     tenantId,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for application not created correctly: %s", err)
+	}
+
+	// Create a test context and call the ApplicationAuthenticationCreate()
 	input := m.ApplicationAuthenticationCreateRequest{
-		ApplicationIDRaw:    7,
-		AuthenticationIDRaw: 7,
+		ApplicationIDRaw:    app.ID,
+		AuthenticationIDRaw: auth.DbID,
 	}
 
 	body, _ := json.Marshal(&input)
@@ -348,18 +398,51 @@ func TestApplicationAuthenticationCreate(t *testing.T) {
 		"/api/sources/v3.1/application_authentications",
 		bytes.NewBuffer(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 	c.Request().Header.Add("Content-Type", "application/json")
 
-	err := ApplicationAuthenticationCreate(c)
+	err = ApplicationAuthenticationCreate(c)
 	if err != nil {
 		t.Error(err)
 	}
 
 	if rec.Code != 201 {
 		t.Errorf("Wrong response code, got %v wanted %v", rec.Code, 201)
+	}
+
+	var out m.ApplicationAuthenticationResponse
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	appAuthID, err := strconv.ParseInt(out.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+	appAuthDao := dao.GetApplicationAuthenticationDao(&daoParams)
+	appAuthOut, err := appAuthDao.GetById(&appAuthID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check the tenancy of all related objects
+	if appAuthOut.TenantID != tenantId {
+		t.Errorf("application authentication with id %d should belong to tenant with id %d, but got %d", appAuthOut.ID, tenantId, appAuthOut.TenantID)
+	}
+	if app.TenantID != tenantId {
+		t.Errorf("application with id %d should belong to tenant with id %d, but got %d", app.ID, tenantId, app.TenantID)
+	}
+	if auth.TenantID != tenantId {
+		t.Errorf("authentication with id %d should belong to tenant with id %d, but got %d", auth.DbID, tenantId, auth.TenantID)
+	}
+
+	// Delete the created test data
+	err = service.DeleteCascade(&tenantId, "Source", src.ID, []kafka.Header{})
+	if err != nil {
+		t.Error(err)
 	}
 }
 
