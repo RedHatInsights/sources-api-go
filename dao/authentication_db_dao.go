@@ -390,7 +390,7 @@ func (add *authenticationDaoDbImpl) FetchAndUpdateBy(resource util.Resource, upd
 		return nil, err
 	}
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: add.TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: add.TenantID})
 	source, err := sourceDao.GetById(&authentication.SourceID)
 	if err != nil {
 		return nil, err

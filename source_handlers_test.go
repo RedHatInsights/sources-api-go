@@ -1319,7 +1319,7 @@ func TestSourceDelete(t *testing.T) {
 	// Create a source
 
 	tenantID := int64(1)
-	sourceDaoParams := dao.SourceDaoParams{TenantID: &tenantID}
+	sourceDaoParams := dao.RequestParams{TenantID: &tenantID}
 	sourceDao := dao.GetSourceDao(&sourceDaoParams)
 
 	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
@@ -1911,7 +1911,7 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	}
 
 	// Check that the source is paused
-	daoParams := dao.SourceDaoParams{TenantID: &tenantId}
+	daoParams := dao.RequestParams{TenantID: &tenantId}
 	sourceDao := dao.GetSourceDao(&daoParams)
 	src, err := sourceDao.GetById(&sourceId)
 	if err != nil {
@@ -2058,7 +2058,7 @@ func TestUnpauseSourceAndItsApplications(t *testing.T) {
 	sourceId := int64(1)
 
 	// Test data preparation = pause the source and its apps
-	daoParams := dao.SourceDaoParams{TenantID: &tenantId}
+	daoParams := dao.RequestParams{TenantID: &tenantId}
 	sourceDao := dao.GetSourceDao(&daoParams)
 	err := sourceDao.Pause(sourceId)
 	if err != nil {

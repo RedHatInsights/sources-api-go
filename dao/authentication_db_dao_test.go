@@ -267,7 +267,7 @@ func TestListForSource(t *testing.T) {
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
 	uuidRaw, _ := uuid.NewUUID()
 	uuidStr := uuidRaw.String()
 	source := model.Source{
@@ -355,7 +355,7 @@ func TestListForApplication(t *testing.T) {
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
 	uuidRaw, _ := uuid.NewUUID()
 	uuidStr := uuidRaw.String()
 	source := model.Source{
@@ -454,7 +454,7 @@ func TestListForApplicationAuthentication(t *testing.T) {
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
 	uuidRaw, _ := uuid.NewUUID()
 	uuidStr := uuidRaw.String()
 	source := model.Source{
@@ -560,7 +560,7 @@ func TestListForEndpoint(t *testing.T) {
 	SwitchSchema("authentications_db")
 
 	// Create a new source the new fixtures will be attached to.
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[1].Id})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
 	uuidRaw, _ := uuid.NewUUID()
 	uuidStr := uuidRaw.String()
 	source := model.Source{
@@ -810,7 +810,7 @@ func TestBulkMessage(t *testing.T) {
 	if err != nil {
 		t.Errorf(`could not fetch the authentication from the database: %s`, err)
 	}
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	source, err := sourceDao.GetById(&authFixture.SourceID)
 	if err != nil {
 		t.Errorf(`could not fetch source: %s`, err)

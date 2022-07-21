@@ -101,7 +101,7 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// Check if sourceID exists
-	_, err := GetSourceDao(&SourceDaoParams{TenantID: a.TenantID}).GetById(&sourceID)
+	_, err := GetSourceDao(&RequestParams{TenantID: a.TenantID}).GetById(&sourceID)
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
@@ -575,7 +575,7 @@ func (a *authenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateA
 		return nil, err
 	}
 
-	sourceDao := GetSourceDao(&SourceDaoParams{TenantID: a.TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: a.TenantID})
 	source, err := sourceDao.GetById(&authentication.SourceID)
 	if err != nil {
 		return nil, err

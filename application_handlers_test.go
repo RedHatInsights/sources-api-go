@@ -735,7 +735,7 @@ func TestApplicationEdit(t *testing.T) {
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
-	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &fixtures.TestTenantData[0].Id})
+	sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	uuid := uuid.New().String()
 
@@ -974,7 +974,7 @@ func TestApplicationDelete(t *testing.T) {
 
 	// Create a source
 	tenantID := fixtures.TestTenantData[0].Id
-	sourceDao := dao.GetSourceDao(&dao.SourceDaoParams{TenantID: &tenantID})
+	sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &tenantID})
 
 	uid, err := uuid.NewUUID()
 	if err != nil {
