@@ -15,7 +15,7 @@ import (
 var getRhcConnectionDao func(c echo.Context) (dao.RhcConnectionDao, error)
 
 func getDefaultRhcConnectionDao(c echo.Context) (dao.RhcConnectionDao, error) {
-	tenantId, err := getTenantFromEchoContext(c)
+	tenantId, err := util.GetTenantFromEchoContext(c)
 
 	if err != nil {
 		return nil, err

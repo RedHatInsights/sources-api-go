@@ -15,6 +15,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/service"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -56,7 +57,7 @@ func init() {
 }
 
 func GraphQLQuery(c echo.Context) error {
-	tenant, err := getTenantFromEchoContext(c)
+	tenant, err := util.GetTenantFromEchoContext(c)
 	if err != nil {
 		return err
 	}
