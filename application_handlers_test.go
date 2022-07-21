@@ -1539,29 +1539,49 @@ func TestPauseApplicationTenantNotExists(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
-// TestResumeApplication tests that an application gets successfully resumed.
-func TestResumeApplication(t *testing.T) {
+// TestUnpauseApplication tests that an application gets successfully unpaused.
+func TestUnpauseApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	appId := int64(1)
 
+	// Test data preparation = pause the application
+	applicationDao := dao.GetApplicationDao(&tenantId)
+	err := applicationDao.Pause(appId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Unpause the application
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/applications/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
 
-	err := ApplicationUnpause(c)
+	err = ApplicationUnpause(c)
 	if err != nil {
 		t.Error(err)
 	}
 
 	if rec.Code != http.StatusNoContent {
 		t.Errorf(`want status "%d", got "%d"`, http.StatusNoContent, rec.Code)
+	}
+
+	// Check that the application is not paused
+	app, err := applicationDao.GetById(&appId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if app.PausedAt != nil {
+		t.Error("the application is paused and the opposite is expected")
 	}
 }
 
@@ -1572,6 +1592,88 @@ func TestUnpauseApplicationNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/api/sources/v3.1/applications/809897868745/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+	err := notFoundApplicationUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestUnpauseApplicationBadRequest(t *testing.T) {
+	tenantId := int64(1)
+	appId := "xxx"
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/xxx/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(appId)
+
+	badRequestApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+	err := badRequestApplicationUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+// TestUnpauseApplicationInvalidTenant tests that not found is returned
+// when tenant tries to unpause not owned application
+func TestUnpauseApplicationInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// The application is not owned by the tenant
+	tenantId := int64(2)
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/1/unpause",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appId))
+
+	notFoundApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+	err := notFoundApplicationUnpause(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestUnpauseApplicationTenantNotExists tests that not found is returned
+// for not existing tenant
+func TestUnpauseApplicationTenantNotExists(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications/1/unpause",
 		nil,
 		map[string]interface{}{
 			"tenantID": tenantId,
