@@ -123,7 +123,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 
 	previousStatus, err := dao.GetAvailabilityStatusFromStatusMessage(tenant.Id, statusMessage.ResourceID, statusMessage.ResourceType)
 	if err != nil {
-		l.Log.Errorf("unable to get status availability: %s", err)
+		l.Log.Errorf("[tenant_id: %d][resource_type: %s][resource_id: %s] unable to get status availability: %s", tenant.Id, statusMessage.ResourceType, statusMessage.ResourceID, err)
 		return
 	}
 
@@ -131,7 +131,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	resource.AccountNumber = tenant.ExternalTenant
 	resultRecord, err := modelEventDao.FetchAndUpdateBy(*resource, updateAttributes)
 	if err != nil {
-		l.Log.Errorf("unable to update availability status: %s", err)
+		l.Log.Errorf("[tenant_id: %d][resource_type: %s][resource_id: %d][resource_uuid: %s] unable to update availability status: %s", resource.TenantID, resource.ResourceType, resource.ResourceID, resource.ResourceUID, err)
 		return
 	}
 
@@ -140,7 +140,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 			appDao := dao.GetApplicationDao(&tenant.Id)
 			app, err := appDao.GetById(&resource.ResourceID)
 			if err != nil {
-				l.Log.Errorf("unable to fetch application: %s", err)
+				l.Log.Errorf("[tenant_id: %d][application_id: %d] unable to fetch application: %s", tenant.Id, resource.ResourceID, err)
 				return
 			}
 
@@ -158,7 +158,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		if emailInfo != nil {
 			err = service.EmitAvailabilityStatusNotification(id, emailInfo.ToEmail(previousStatus))
 			if err != nil {
-				l.Log.Errorf("unable to emit notification: %v", err)
+				l.Log.Errorf("[tenant_id: %d][resource_type: %s][resource_id: %d][resource_uuid: %s] unable to emit notification: %v", resource.TenantID, resource.ResourceType, resource.ResourceID, resource.ResourceUID, err)
 			}
 		}
 	}

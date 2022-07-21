@@ -47,7 +47,7 @@ var (
 
 // requests both types of availability checks for a source
 func RequestAvailabilityCheck(source *m.Source, headers []kafka.Header) {
-	l.Log.Infof("Requesting Availability Check for Source [%v]", source.ID)
+	l.Log.Infof("[source_id: %d] Requesting availability check for source", source.ID)
 
 	if len(source.Applications) != 0 {
 		ac.ApplicationAvailabilityCheck(source)
@@ -68,11 +68,11 @@ func RequestAvailabilityCheck(source *m.Source, headers []kafka.Header) {
 // applications
 func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source) {
 	for _, app := range source.Applications {
-		l.Log.Infof("Requesting Availability Check for Application %v", app.ID)
+		l.Log.Infof("[source_id :%d][application_id: %d] Requesting availability check for application", source.ID, app.ID)
 
 		uri := app.ApplicationType.AvailabilityCheckURL()
 		if uri == nil {
-			l.Log.Warnf("Failed to fetch availability check url for [%v] - continuing", app.ApplicationType.Name)
+			l.Log.Errorf("[source_id: %d][application_id: %d][application_type: %s] Failed to fetch availability check url - continuing", source.ID, app.ID, app.ApplicationType.Name)
 			continue
 		}
 
@@ -84,7 +84,7 @@ func httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
 	body := map[string]string{"source_id": strconv.FormatInt(app.SourceID, 10)}
 	raw, err := json.Marshal(body)
 	if err != nil {
-		l.Log.Warnf("Failed to marshal source body for [%v] - continuing", app.SourceID)
+		l.Log.Errorf("[source_id: %d] Failed to marshal source body: %s", app.SourceID, err)
 		return
 	}
 
@@ -94,7 +94,7 @@ func httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uri.String(), bytes.NewBuffer(raw))
 	if err != nil {
-		l.Log.Warnf("Failed to make request for application [%v], uri [%v]", app.ID, uri.String())
+		l.Log.Errorf("[source_id: %d][application_id: %d][uri: %s] Failed to make request for application: %s", source.ID, app.ID, uri.String(), err)
 		return
 	}
 
@@ -105,14 +105,14 @@ func httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		l.Log.Warnf("Error requesting availability status for application [%v], error: %v", app.ID, err)
+		l.Log.Errorf("[source_id: %d][application_id: %d] Error requesting availability status for application: %s", source.ID, app.ID, err)
 		return
 	}
 	defer resp.Body.Close()
 
 	// anything greater than 299 is bad, right??? right????
 	if resp.StatusCode/100 > 2 {
-		l.Log.Warnf("Bad response from client: %v", resp.StatusCode)
+		l.Log.Errorf("[source_id: %d][application_id: %d] Bad response from client: %d", source.ID, app.ID, resp.StatusCode)
 	}
 }
 
@@ -149,7 +149,7 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 }
 
 func publishSatelliteMessage(writer *kafkago.Writer, source *m.Source, endpoint *m.Endpoint) {
-	l.Log.Infof("Requesting Availability Check for Endpoint %v", endpoint.ID)
+	l.Log.Infof("[source_id: %d] Requesting Availability Check for Endpoint %v", source.ID, endpoint.ID)
 	defer kafka.CloseWriter(writer, "publish satellite message")
 
 	msg := &kafka.Message{}
