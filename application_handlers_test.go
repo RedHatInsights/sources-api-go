@@ -1025,7 +1025,7 @@ func TestApplicationDelete(t *testing.T) {
 	}
 
 	// Create an application authentication
-	appAuthDao := dao.GetApplicationAuthenticationDao(&tenantID)
+	appAuthDao := dao.GetApplicationAuthenticationDao(&dao.RequestParams{TenantID: &tenantID})
 	appAuth := m.ApplicationAuthentication{
 		ApplicationID:    app.ID,
 		AuthenticationID: auth.DbID,
