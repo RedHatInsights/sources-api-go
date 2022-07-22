@@ -53,6 +53,52 @@ func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
 	DropSchema("delete")
 }
 
+// TestApplicationAuthenticationsByApplicationsDatabase tests that when using a database datastore, the function under
+// test only fetches the application authentications related to the given list of applications.
+func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	SwitchSchema("appauthfind")
+
+	tenantId := int64(1)
+
+	var apps []model.Application
+	var appAuthsWant []model.ApplicationAuthentication
+
+	for _, appAuth := range fixtures.TestApplicationAuthenticationData {
+		if appAuth.TenantID == tenantId {
+			apps = append(apps, model.Application{ID: appAuth.ApplicationID})
+			appAuthsWant = append(appAuthsWant, model.ApplicationAuthentication{ID: appAuth.ID})
+		}
+	}
+
+	appAuthDao := GetApplicationAuthenticationDao(&tenantId)
+	appAuthsOut, err := appAuthDao.ApplicationAuthenticationsByResource("Source", apps, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(appAuthsOut) != len(appAuthsWant) {
+		t.Errorf("wrong count of returned app auths, wanted %d, got %d", len(appAuthsWant), len(appAuthsOut))
+	}
+
+	// Check the IDs of returned app auths
+	for _, aaOut := range appAuthsOut {
+		var aaFound bool
+		for _, aaWant := range appAuthsWant {
+			if aaWant.ID == aaOut.ID {
+				aaFound = true
+				break
+			}
+		}
+		if !aaFound {
+			t.Errorf("application authentication with id = %d returned as output but was not expected", aaOut.ID)
+		}
+	}
+
+	DropSchema("appauthfind")
+}
+
 // TestApplicationAuthenticationsByAuthenticationsDatabase tests that when using a database datastore, the function under
 // test only fetches the application authentications related to the given list of authentications.
 func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
