@@ -44,10 +44,6 @@ func UuidValidation(next echo.HandlerFunc) echo.HandlerFunc {
 func validateId(c echo.Context, idParamName string) error {
 	idRaw := c.Param(idParamName)
 
-	if idRaw == "" {
-		return errors.New("the provided ID cannot be empty or missing")
-	}
-
 	id, err := strconv.ParseInt(idRaw, 10, 64)
 	if err != nil {
 		return fmt.Errorf("could not parse the provided ID: %s", err)

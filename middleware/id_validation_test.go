@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -48,33 +47,6 @@ func TestExtractValidateId(t *testing.T) {
 
 	if want != got {
 		t.Errorf(`unexpected status code received. Want "%d", got "%d"`, want, got)
-	}
-}
-
-// TestExtractValidateIdEmpty tests that a bad request response is returned when the set ID is empty.
-func TestExtractValidateIdEmpty(t *testing.T) {
-	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, nil)
-
-	fmt.Println(rec)
-
-	paramName := "id"
-	paramValue := ""
-
-	c.SetParamNames(paramName)
-	c.SetParamValues(paramValue)
-
-	err := idValidationFunc(c)
-	if err != nil {
-		t.Errorf(`unexpected error received when a validating an empty ID: %s`, err)
-	}
-
-	templates.BadRequestTest(t, rec)
-
-	want := "the provided ID cannot be empty or missing"
-	got := rec.Body.String()
-
-	if !strings.Contains(got, want) {
-		t.Errorf(`unexpected error received when testing for an empty ID. Want "%s", got "%s"`, want, got)
 	}
 }
 
