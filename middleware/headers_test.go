@@ -27,6 +27,7 @@ func TestParseAll(t *testing.T) {
 	c.Request().Header.Set(h.XRHID, xrhid)
 	c.Request().Header.Set(h.PSK, "1234")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "1a2b3c4d5e")
+	c.Request().Header.Set(h.PSK_USER, "55555")
 	c.Request().Header.Set(h.ORGID, "abcde")
 
 	err := parseOrElse204(c)
@@ -44,6 +45,10 @@ func TestParseAll(t *testing.T) {
 
 	if c.Get(h.ACCOUNT_NUMBER).(string) != "1a2b3c4d5e" {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
+	}
+
+	if c.Get(h.PSK_USER).(string) != "55555" {
+		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "55555")
 	}
 
 	if c.Get(h.ORGID).(string) != "abcde" {
@@ -145,6 +150,7 @@ func TestOnlyPskHeaders(t *testing.T) {
 
 	c.Request().Header.Set(h.PSK, "1234")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "9876")
+	c.Request().Header.Set(h.PSK_USER, "555555")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -161,5 +167,9 @@ func TestOnlyPskHeaders(t *testing.T) {
 
 	if c.Get(h.ACCOUNT_NUMBER).(string) != "9876" {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
+	}
+
+	if c.Get(h.PSK_USER).(string) != "555555" {
+		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "555555")
 	}
 }

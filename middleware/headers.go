@@ -38,6 +38,10 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.ORGID, c.Request().Header.Get(h.ORGID))
 		}
 
+		if c.Request().Header.Get(h.PSK_USER) != "" {
+			c.Set(h.PSK_USER, c.Request().Header.Get(h.PSK_USER))
+		}
+
 		// parsing the base64-encoded identity header if present
 		if c.Request().Header.Get(h.XRHID) != "" {
 			// store it raw first.
