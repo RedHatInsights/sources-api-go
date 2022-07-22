@@ -22,7 +22,7 @@ func TestPausingApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	err := applicationDao.Pause(testApplication.ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -46,7 +46,7 @@ func TestResumeApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	applicationDao := GetApplicationDao(&testApplication.TenantID)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &testApplication.TenantID})
 	err := applicationDao.Unpause(testApplication.ID)
 
 	if err != nil {
@@ -71,7 +71,7 @@ func TestDeleteApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	application := fixtures.TestApplicationData[0]
 	// Set the ID to 0 to let GORM know it should insert a new application and not update an existing one.
@@ -117,7 +117,7 @@ func TestDeleteApplicationNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	nonExistentId := int64(12345)
 	_, err := applicationDao.Delete(&nonExistentId)
@@ -134,7 +134,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 	SwitchSchema("delete")
 
 	// Create a new application on the database to cleanly test the function under test.
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	fixtureApp := m.Application{
 		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
 		SourceID:          fixtures.TestSourceData[0].ID,
@@ -287,7 +287,7 @@ func TestApplicationExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("exists")
 
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	got, err := applicationDao.Exists(fixtures.TestApplicationData[0].ID)
 	if err != nil {
@@ -306,7 +306,7 @@ func TestApplicationNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("exists")
 
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	got, err := applicationDao.Exists(12345)
 	if err != nil {
@@ -326,7 +326,7 @@ func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
 
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	sourceId := fixtures.TestSourceData[0].ID
 
 	var wantCount int64
@@ -368,7 +368,7 @@ func TestApplicationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
 
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	wantCount := int64(len(fixtures.TestApplicationData))
 
 	for _, d := range fixtures.TestDataOffsetLimit {

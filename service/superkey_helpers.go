@@ -14,7 +14,7 @@ import (
 // loads up the application as well as the associates we need for the superkey
 // request
 func loadApplication(application *m.Application) (*m.Application, error) {
-	appDao := dao.GetApplicationDao(&application.TenantID)
+	appDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &application.TenantID})
 
 	// re-pulling it from the db to make sure we have the full-version, as well
 	// as preloading any relations necessary.
