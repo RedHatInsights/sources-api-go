@@ -48,7 +48,7 @@ func TestParseAll(t *testing.T) {
 	}
 
 	if c.Get(h.PSK_USER).(string) != "55555" {
-		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
+		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "55555")
 	}
 
 	if c.Get(h.ORGID).(string) != "abcde" {
@@ -170,6 +170,6 @@ func TestOnlyPskHeaders(t *testing.T) {
 	}
 
 	if c.Get(h.PSK_USER).(string) != "555555" {
-		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
+		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "555555")
 	}
 }
