@@ -596,7 +596,7 @@ func TestApplicationCreateGood(t *testing.T) {
 
 	req := m.ApplicationCreateRequest{
 		SourceIDRaw:          "2",
-		ApplicationTypeIDRaw: "1",
+		ApplicationTypeIDRaw: "2",
 		Extra:                nil,
 	}
 

@@ -23,6 +23,7 @@ var MigrationsCollection = []*gormigrate.Migration{
 	AddTenantsExternalTenantOrgIdUniqueIndex(),
 	AddUserIdColumnIntoTables(),
 	AddResourceOwnershipToApplicationTypes(),
+	AddApplicationConstraint(),
 }
 
 var ctx = context.Background()

@@ -71,13 +71,15 @@ func TestDeleteApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	applicationDao := GetApplicationDao(&fixtures.TestSourceData[0].TenantID)
+	tenantId := fixtures.TestTenantData[0].Id
+	applicationDao := GetApplicationDao(&tenantId)
 
-	application := fixtures.TestApplicationData[0]
-	// Set the ID to 0 to let GORM know it should insert a new application and not update an existing one.
-	application.ID = 0
-	// Set some data to compare the returned application.
-	application.Extra = []byte(`{"hello": "world"}`)
+	application := m.Application{
+		Extra:             []byte(`{"hello": "world"}`),
+		SourceID:          fixtures.TestSourceData[1].ID,
+		TenantID:          tenantId,
+		ApplicationTypeID: fixtures.TestApplicationTypeData[1].Id,
+	}
 
 	// Create the test application.
 	err := applicationDao.Create(&application)
@@ -134,11 +136,12 @@ func TestApplicationDeleteCascade(t *testing.T) {
 	SwitchSchema("delete")
 
 	// Create a new application on the database to cleanly test the function under test.
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	tenantId := int64(1)
+	applicationDao := GetApplicationDao(&tenantId)
 	fixtureApp := m.Application{
-		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
-		SourceID:          fixtures.TestSourceData[0].ID,
-		TenantID:          fixtures.TestTenantData[0].Id,
+		ApplicationTypeID: fixtures.TestApplicationTypeData[1].Id,
+		SourceID:          fixtures.TestSourceData[1].ID,
+		TenantID:          tenantId,
 	}
 
 	err := applicationDao.Create(&fixtureApp)
@@ -148,8 +151,9 @@ func TestApplicationDeleteCascade(t *testing.T) {
 
 	// Create the authentications and the application authentications. The former are needed to avoid the foreign key
 	// constraints.
-	authenticationDao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+
+	authenticationDao := GetAuthenticationDao(&RequestParams{TenantID: &tenantId})
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&tenantId)
 
 	// Set the maximum amount of authentications we will create.
 	maxAuthenticationsCreated := 5
@@ -169,7 +173,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 
 		// Create the association between the application and its authentication.
 		appAuth := m.ApplicationAuthentication{
-			TenantID:          fixtures.TestTenantData[0].Id,
+			TenantID:          tenantId,
 			ApplicationID:     fixtureApp.ID,
 			AuthenticationID:  authentication.DbID,
 			AuthenticationUID: fmt.Sprintf("%d", i),
@@ -194,7 +198,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 		Debug().
 		Model(m.ApplicationAuthentication{}).
 		Where("application_id = ?", fixtureApp.ID).
-		Where("tenant_id = ?", fixtures.TestTenantData[0].Id).
+		Where("tenant_id = ?", tenantId).
 		Count(&appAuthCount).
 		Error
 
@@ -239,7 +243,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 		Debug().
 		Model(m.Application{}).
 		Where(`id = ?`, fixtureApp.ID).
-		Where(`tenant_id = ?`, fixtures.TestTenantData[0].Id).
+		Where(`tenant_id = ?`, tenantId).
 		Find(&deletedApplicationCheck).
 		Error
 
