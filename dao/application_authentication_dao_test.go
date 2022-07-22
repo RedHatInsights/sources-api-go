@@ -16,7 +16,7 @@ func TestDeleteApplicationAuthentication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestSourceData[0].TenantID)
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	deletedApplicationAuthentication, err := applicationAuthenticationDao.Delete(&fixtures.TestApplicationAuthenticationData[0].ID)
 	if err != nil {
@@ -41,7 +41,7 @@ func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestSourceData[0].TenantID)
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	nonExistentId := int64(12345)
 	_, err := applicationAuthenticationDao.Delete(&nonExistentId)
@@ -63,7 +63,7 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 	// Get all the DAOs we are going to work with.
 	authDao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	appDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	appAuthDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	// Maximum of resources to create.
 	maxCreatedResources := 5
@@ -159,7 +159,7 @@ func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
 
 	// Get all the DAOs we are going to work with.
 	authDao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	appAuthDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	// Maximum of authentications to create.
 	maxCreatedAuths := 5
@@ -241,7 +241,7 @@ func TestApplicationAuthenticationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("offset_limit")
 
-	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	appAuthDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	wantCount := int64(len(fixtures.TestApplicationAuthenticationData))
 
 	for _, d := range fixtures.TestDataOffsetLimit {

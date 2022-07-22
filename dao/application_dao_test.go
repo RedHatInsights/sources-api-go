@@ -149,7 +149,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 	// Create the authentications and the application authentications. The former are needed to avoid the foreign key
 	// constraints.
 	authenticationDao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	// Set the maximum amount of authentications we will create.
 	maxAuthenticationsCreated := 5
