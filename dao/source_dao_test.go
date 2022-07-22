@@ -191,89 +191,35 @@ func TestDeleteSourceNotExists(t *testing.T) {
 
 // TestDeleteCascade is a long test function, but very simple in essence. Essentially what it does is:
 //
-//- It checks that when a source with no subresources is deleted, only that particular source is deleted.
-//- It creates N applications, endpoints and rhcConnections for a fixture source.
+//- It creates source with applications, endpoints and rhcConnections.
 //- Cascade deletes the source with the function under test.
 //- Checks that the deleted subresources and source are the ones that have been created in this very same test.
 func TestDeleteCascade(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
+	tenantId := int64(1)
 
 	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
 	fixtureSource := m.Source{
 		Name:         "fixture-source",
 		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
-		TenantID:     fixtures.TestTenantData[0].Id,
+		TenantID:     tenantId,
 		Uid:          util.StringRef("new-shiny-source"),
 	}
 
 	// Try inserting the source in the database.
-	sourceDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
+	sourceDaoParams := RequestParams{TenantID: &tenantId}
 	sourceDao := GetSourceDao(&sourceDaoParams)
 	err := sourceDao.Create(&fixtureSource)
 	if err != nil {
 		t.Errorf(`error creating a fixture source: %s`, err)
 	}
 
-	// Check that the only deleted resource should be the source itself, since it doesn't have any subresources.
-	applicationAuthentications, applications, endpoints, rhcConnections, deletedSource, err := sourceDao.DeleteCascade(fixtureSource.ID)
-	if err != nil {
-		t.Errorf(`unexpected error received when cascade deleting the source: %s`, err)
-	}
-
-	// Double-check the "deleted" resources and the source itself.
-	{
-		want := 0
-		got := len(applicationAuthentications)
-		if want != got {
-			t.Errorf(`unexpected application authentications deleted. Want "%d", got "%d"`, want, got)
-		}
-	}
-
-	{
-		want := 0
-		got := len(applications)
-		if want != got {
-			t.Errorf(`unexpected applications deleted. Want "%d", got "%d"`, want, got)
-		}
-	}
-	{
-		want := 0
-		got := len(endpoints)
-		if len(endpoints) != 0 {
-			t.Errorf(`unexpected endpoints deleted. Want "%d", got "%d"`, want, got)
-		}
-	}
-
-	{
-		want := 0
-		got := len(rhcConnections)
-		if len(rhcConnections) != 0 {
-			t.Errorf(`unexpected rhcConnections deleted. Want "%d", got "%d"`, want, got)
-		}
-	}
-
-	{
-		want := fixtureSource.ID
-		got := deletedSource.ID
-		if want != got {
-			t.Errorf(`wrong source deleted. Want source with ID "%d", got ID "%d"`, want, got)
-		}
-	}
-
-	// Reinsert the source.
-	fixtureSource.ID = 0
-	err = sourceDao.Create(&fixtureSource)
-	if err != nil {
-		t.Errorf(`error creating a fixture source: %s`, err)
-	}
-
-	// Grab the DAOs which we will use to create the subresources
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	applicationsDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-
-	authDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
-	authenticationDao := GetAuthenticationDao(&authDaoParams)
+	// Grab the DAOs which we will use to create the subresources.
+	daoParams := RequestParams{TenantID: &tenantId}
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&daoParams)
+	applicationsDao := GetApplicationDao(&daoParams)
+	authenticationDao := GetAuthenticationDao(&daoParams)
 	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
 	rhcConnectionsDao := GetRhcConnectionDao(&fixtures.TestTenantData[0].Id)
 
@@ -631,6 +577,78 @@ func TestDeleteCascade(t *testing.T) {
 
 	if want != got {
 		t.Errorf(`the source doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
+	}
+
+	DropSchema("delete")
+}
+
+// TestDeleteCascadeSourceWithoutSubresources tests the deletion of source that doesn't have subresources
+func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("delete")
+	tenantId := int64(1)
+
+	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
+	fixtureSource := m.Source{
+		Name:         "fixture-source",
+		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
+		TenantID:     tenantId,
+		Uid:          util.StringRef("new-shiny-source"),
+	}
+
+	// Try inserting the source in the database.
+	sourceDaoParams := RequestParams{TenantID: &tenantId}
+	sourceDao := GetSourceDao(&sourceDaoParams)
+	err := sourceDao.Create(&fixtureSource)
+	if err != nil {
+		t.Errorf(`error creating a fixture source: %s`, err)
+	}
+
+	// Check that the only deleted resource should be the source itself, since it doesn't have any subresources.
+	applicationAuthentications, applications, endpoints, rhcConnections, deletedSource, err := sourceDao.DeleteCascade(fixtureSource.ID)
+	if err != nil {
+		t.Errorf(`unexpected error received when cascade deleting the source: %s`, err)
+	}
+
+	// Double-check the "deleted" resources and the source itself.
+	{
+		want := 0
+		got := len(applicationAuthentications)
+		if want != got {
+			t.Errorf(`unexpected application authentications deleted. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	{
+		want := 0
+		got := len(applications)
+		if want != got {
+			t.Errorf(`unexpected applications deleted. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	{
+		want := 0
+		got := len(endpoints)
+		if len(endpoints) != 0 {
+			t.Errorf(`unexpected endpoints deleted. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	{
+		want := 0
+		got := len(rhcConnections)
+		if len(rhcConnections) != 0 {
+			t.Errorf(`unexpected rhcConnections deleted. Want "%d", got "%d"`, want, got)
+		}
+	}
+
+	{
+		want := fixtureSource.ID
+		got := deletedSource.ID
+		if want != got {
+			t.Errorf(`wrong source deleted. Want source with ID "%d", got ID "%d"`, want, got)
+		}
 	}
 
 	DropSchema("delete")

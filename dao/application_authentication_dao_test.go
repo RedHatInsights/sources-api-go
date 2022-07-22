@@ -72,7 +72,8 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 		}
 	}
 
-	appAuthDao := GetApplicationAuthenticationDao(&tenantId)
+	daoParams := RequestParams{TenantID: &tenantId}
+	appAuthDao := GetApplicationAuthenticationDao(&daoParams)
 	appAuthsOut, err := appAuthDao.ApplicationAuthenticationsByResource("Source", apps, nil)
 	if err != nil {
 		t.Error(err)
