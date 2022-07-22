@@ -315,16 +315,16 @@ func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}
 			return nil, 0, util.NewErrNotFound("source")
 		}
 
-		var appTypeIdList []int
+		appTypes := make(map[int64]int)
 		for _, app := range fixtures.TestApplicationData {
 			if app.SourceID == object.ID {
-				appTypeIdList = append(appTypeIdList, int(app.ApplicationTypeID))
+				appTypes[app.ApplicationTypeID]++
 			}
 		}
 
 		for _, appType := range a.ApplicationTypes {
-			for _, id := range appTypeIdList {
-				if appType.Id == int64(id) {
+			for id := range appTypes {
+				if appType.Id == id {
 					appTypesOut = append(appTypesOut, appType)
 					break
 				}
