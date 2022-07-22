@@ -497,7 +497,7 @@ func TestListForApplicationAuthentication(t *testing.T) {
 	}
 
 	// Create the application authentication.
-	appAuthDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[1].Id)
+	appAuthDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
 	appAuth := model.ApplicationAuthentication{
 		TenantID:         fixtures.TestTenantData[1].Id,
 		ApplicationID:    application.ID,

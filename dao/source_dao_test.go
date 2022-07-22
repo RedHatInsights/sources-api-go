@@ -269,7 +269,7 @@ func TestDeleteCascade(t *testing.T) {
 	}
 
 	// Grab the DAOs which we will use to create the subresources.
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	applicationsDao := GetApplicationDao(&fixtures.TestTenantData[0].Id)
 	authDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
 	authenticationDao := GetAuthenticationDao(&authDaoParams)
