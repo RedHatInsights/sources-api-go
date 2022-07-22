@@ -13,6 +13,7 @@ const defaultLimit = 500
 // Struct to track any information on the current GraphQL request
 type RequestData struct {
 	TenantID  int64
+	UserID    *int64
 	CountChan chan int
 
 	// Mutex + pointer to a collection so that we only load applications or

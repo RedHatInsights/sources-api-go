@@ -37,12 +37,12 @@ func (ad AsyncDestroyJob) Name() string {
 func (ad AsyncDestroyJob) Run() error {
 	switch strings.ToLower(ad.Model) {
 	case "source":
-		err := service.DeleteCascade(&ad.Tenant, "Source", ad.Id, ad.Headers)
+		err := service.DeleteCascade(&ad.Tenant, nil, "Source", ad.Id, ad.Headers)
 		if err != nil {
 			return err
 		}
 	case "application":
-		err := service.DeleteCascade(&ad.Tenant, "Application", ad.Id, ad.Headers)
+		err := service.DeleteCascade(&ad.Tenant, nil, "Application", ad.Id, ad.Headers)
 		if err != nil {
 			return err
 		}

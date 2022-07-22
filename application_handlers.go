@@ -17,7 +17,7 @@ import (
 var getApplicationDao func(c echo.Context) (dao.ApplicationDao, error)
 
 func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
-	tenantId, err := getTenantFromEchoContext(c)
+	tenantId, err := util.GetTenantFromEchoContext(c)
 
 	if err != nil {
 		return nil, err
@@ -235,7 +235,7 @@ func ApplicationDelete(c echo.Context) error {
 		return err
 	}
 
-	err = service.DeleteCascade(applicationDB.Tenant(), "Application", id, forwardableHeaders)
+	err = service.DeleteCascade(applicationDB.Tenant(), nil, "Application", id, forwardableHeaders)
 	if err != nil {
 		return err
 	}

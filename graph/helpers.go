@@ -16,6 +16,10 @@ func getRequestDataFromCtx(ctx context.Context) *RequestData {
 	return r
 }
 
+func userIdFromCtx(ctx context.Context) *int64 {
+	return getRequestDataFromCtx(ctx).UserID
+}
+
 func tenantIdFromCtx(ctx context.Context) *int64 {
 	return &getRequestDataFromCtx(ctx).TenantID
 }

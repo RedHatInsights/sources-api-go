@@ -29,17 +29,20 @@ var GetAuthenticationDao func(daoParams *RequestParams) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultAuthenticationDao(daoParams *RequestParams) AuthenticationDao {
-	var tenantID *int64
-	if daoParams != nil && daoParams.TenantID != nil {
+	var tenantID, userID *int64
+	if daoParams != nil {
 		tenantID = daoParams.TenantID
+		userID = daoParams.UserID
 	}
 
 	if config.IsVaultOn() {
 		return &authenticationDaoImpl{
+			UserID:   userID,
 			TenantID: tenantID,
 		}
 	} else {
 		return &authenticationDaoDbImpl{
+			UserID:   userID,
 			TenantID: tenantID,
 		}
 	}
@@ -52,6 +55,7 @@ func init() {
 
 type authenticationDaoImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 /*
@@ -97,7 +101,7 @@ func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filte
 
 func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// Check if sourceID exists
-	_, err := GetSourceDao(&RequestParams{TenantID: a.TenantID}).GetById(&sourceID)
+	_, err := GetSourceDao(&RequestParams{TenantID: a.TenantID, UserID: a.UserID}).GetById(&sourceID)
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
@@ -571,7 +575,7 @@ func (a *authenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateA
 		return nil, err
 	}
 
-	sourceDao := GetSourceDao(&RequestParams{TenantID: a.TenantID})
+	sourceDao := GetSourceDao(&RequestParams{TenantID: a.TenantID, UserID: a.UserID})
 	source, err := sourceDao.GetById(&authentication.SourceID)
 	if err != nil {
 		return nil, err
