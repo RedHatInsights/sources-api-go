@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -14,6 +15,9 @@ import (
 )
 
 func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/application_types",
@@ -22,12 +26,12 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceListApplicationTypes(c)
 	if err != nil {
@@ -52,7 +56,16 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	// We are looking for source's applications and then application
+	// types of these applications
+	appTypes := make(map[int64]int)
+	for _, app := range fixtures.TestApplicationData {
+		if app.SourceID == sourceId {
+			appTypes[app.ApplicationTypeID]++
+		}
+	}
+
+	if len(out.Data) != len(appTypes) {
 		t.Error("not enough objects passed back from DB")
 	}
 
