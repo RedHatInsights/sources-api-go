@@ -3,12 +3,15 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
+
+var idValidationRegex = regexp.MustCompile(`^\d+$`)
 
 // IdValidation takes all the parameters which end with "id" and checks for their validity. Returns a bad request if
 // they're not valid.
@@ -44,12 +47,17 @@ func UuidValidation(next echo.HandlerFunc) echo.HandlerFunc {
 func validateId(c echo.Context, idParamName string) error {
 	idRaw := c.Param(idParamName)
 
+	if !idValidationRegex.MatchString(idRaw) {
+		return errors.New("the provided ID must be a greater than zero, positive number")
+	}
+
+	// This check is required for the edge case of an out of range error.
 	id, err := strconv.ParseInt(idRaw, 10, 64)
 	if err != nil {
 		return fmt.Errorf("could not parse the provided ID: %s", err)
 	}
 
-	if !(id > 0) {
+	if id == 0 {
 		return errors.New("the provided ID must be greater than zero")
 	}
 

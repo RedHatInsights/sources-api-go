@@ -50,28 +50,54 @@ func TestExtractValidateId(t *testing.T) {
 	}
 }
 
-// TestExtractValidateIdNonParseable tests that a bad request response is returned when a non-parseable ID is set.
-func TestExtractValidateIdNonParseable(t *testing.T) {
+// TestExtractValidateIdInvalidFormats tests that a bad request response is returned when an ID which is in an invalid
+// format is given.
+func TestExtractValidateIdInvalidFormats(t *testing.T) {
+	testValues := []string{"-14", "xxx", "+1232"}
+	paramName := "id"
+
+	for _, tv := range testValues {
+		c, rec := request.CreateTestContext(http.MethodGet, "/", nil, nil)
+
+		c.SetParamNames(paramName)
+		c.SetParamValues(tv)
+
+		err := idValidationFunc(c)
+		if err != nil {
+			t.Errorf(`unexpected error received when a validating an invalidly formatted ID: %s`, err)
+		}
+
+		templates.BadRequestTest(t, rec)
+
+		want := "the provided ID must be a greater than zero, positive number"
+		got := rec.Body.String()
+
+		if !strings.Contains(got, want) {
+			t.Errorf(`unexpected error received when testing for an invalidly formatted ID. Want "%s", got "%s"`, want, got)
+		}
+	}
+}
+
+// TestExtractValidateIdInvalidFormats tests that a bad request response is returned when an ID which is in an invalid
+// format is given.
+func TestExtractValidateIdOutOfRange(t *testing.T) {
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, nil)
 
-	paramName := "id"
-	paramValue := "abcde"
-
-	c.SetParamNames(paramName)
-	c.SetParamValues(paramValue)
+	c.SetParamNames("id")
+	c.SetParamValues("10000000000000000000000000000000000000000000000000")
 
 	err := idValidationFunc(c)
 	if err != nil {
-		t.Errorf(`unexpected error received when a validating a non parseable ID: %s`, err)
+		t.Errorf(`unexpected error received when a validating an out of range ID: %s`, err)
 	}
 
 	templates.BadRequestTest(t, rec)
 
-	want := "could not parse the provided ID"
+	want := "value out of range"
 	got := rec.Body.String()
 
 	if !strings.Contains(got, want) {
-		t.Errorf(`unexpected error received when testing for a non parseable ID. Want an error containing "%s", got "%s"`, want, got)
+		t.Errorf(`unexpected error received when testing for an out of range ID. Want "%s", got "%s"`, want, got)
 	}
 }
 
