@@ -26,11 +26,10 @@ var (
 )
 
 func Init() {
-	l := &logging.CustomGORMLogger{
+	l := &logging.GormLogger{
 		SkipErrorRecordNotFound: true,
 		Logger:                  logging.Log,
 		SlowThreshold:           time.Duration(conf.SlowSQLThreshold) * time.Second,
-		LogLevelForSqlLogs:      conf.LogLevelForSqlLogs,
 	}
 
 	// Reset the database if the command flag was provided.
@@ -155,7 +154,7 @@ func dbStringDefaultDb() string {
 // connection. A new connection needs to be opened because Postgres doesn't allow deleting the database you are
 // connected too. You can search for "cannot drop the currently open database" error for more information. It is
 // expected to exit the program once you've finished with the database management operations.
-func openPostgresConnection(logger *logging.CustomGORMLogger) {
+func openPostgresConnection(logger *logging.GormLogger) {
 	db, err := gorm.Open(postgres.Open(dbStringDefaultDb()), &gorm.Config{Logger: logger})
 	if err != nil {
 		log.Fatalln(err)
