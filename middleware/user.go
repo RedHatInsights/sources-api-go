@@ -16,13 +16,13 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
 
-		userIDFromContext := ""
+		var userIDFromContext string
 
 		switch {
 		case c.Get(h.PSK_USER) != nil:
 			userID, ok := c.Get(h.PSK_USER).(string)
 			if !ok {
-				return fmt.Errorf("failed to pull tenant from request")
+				return fmt.Errorf("failed to pull user id from request")
 			}
 
 			userIDFromContext = userID
