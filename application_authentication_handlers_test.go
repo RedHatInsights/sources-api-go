@@ -676,6 +676,8 @@ func TestApplicationAuthenticationDeleteBadRequest(t *testing.T) {
 
 func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 	testutils.SkipIfNotSecretStoreDatabase(t)
+	tenantId := int64(1)
+	appAuthId := int64(2)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -685,12 +687,12 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("application_authentication_id")
-	c.SetParamValues("2")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	err := ApplicationAuthenticationListAuthentications(c)
 	if err != nil {
@@ -735,6 +737,15 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 
 	if auth["resource_id"] != fmt.Sprintf("%d", authWant.ResourceID) {
 		t.Errorf("wrong authentication resource type, want %d, got %s", authWant.ResourceID, auth["resource_id"])
+	}
+
+	// Check the tenancy of returned authentication
+	for _, a := range fixtures.TestAuthenticationData {
+		if fmt.Sprintf("%d", a.DbID) == auth["id"] {
+			if a.TenantID != tenantId {
+				t.Errorf("expected tenant id = %d, got tenant id = %d for authentication DbId = %d", tenantId, a.TenantID, a.DbID)
+			}
+		}
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
