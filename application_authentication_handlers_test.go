@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -501,19 +502,83 @@ func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
 }
 
 func TestApplicationAuthenticationDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	// Create own test data - to be independent on fixtures
+	// Create a source
+	daoParams := dao.RequestParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&daoParams)
+
+	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
+	src := m.Source{
+		Name:         "Source for TestApplicationAuthenticationDelete()",
+		SourceTypeID: 1,
+		Uid:          &uid,
+	}
+
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create an application
+	applicationDao := dao.GetApplicationDao(&daoParams)
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: 1,
+		Extra:             []byte(`{"Name": "app for TestApplicationAuthenticationDelete()"}`),
+	}
+
+	err = applicationDao.Create(&app)
+	if err != nil {
+		t.Errorf("application not created correctly: %s", err)
+	}
+
+	// Create an authentication for the application
+	authDaoParams := dao.RequestParams{TenantID: &tenantId}
+	authenticationDao := dao.GetAuthenticationDao(&authDaoParams)
+
+	authNameForApp := "authentication for TestApplicationAuthenticationDelete()"
+	auth := m.Authentication{
+		Name:         &authNameForApp,
+		ResourceType: "Application",
+		ResourceID:   app.ID,
+		TenantID:     tenantId,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for application not created correctly: %s", err)
+	}
+
+	// Create an application authentication
+	appAuthDao := dao.GetApplicationAuthenticationDao(&daoParams)
+	appAuth := m.ApplicationAuthentication{
+		ApplicationID: app.ID,
+		AuthenticationID: auth.DbID,
+	}
+	err = appAuthDao.Create(&appAuth)
+	if err != nil {
+		t.Errorf("application authentication not created correctly: %s", err)
+	}
+
+	// Create text context and call the ApplicationAuthenticationDelete() handler
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
 		"/api/sources/v3.1/application_authentications/300",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 	c.SetParamNames("id")
-	c.SetParamValues("300")
+	c.SetParamValues(fmt.Sprintf("%d", appAuth.ID))
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := ApplicationAuthenticationDelete(c)
+	err = ApplicationAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -524,6 +589,18 @@ func TestApplicationAuthenticationDelete(t *testing.T) {
 
 	if rec.Body.Len() != 0 {
 		t.Errorf("Response body is not nil")
+	}
+
+	// Check that application authentication doesn't exist
+	_, err = appAuthDao.GetById(&appAuth.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected Not found error, got %s", err)
+	}
+
+	// Delete the created test data
+	err = service.DeleteCascade(&tenantId, "Source", src.ID, []kafka.Header{})
+	if err != nil {
+		t.Error(err)
 	}
 }
 
