@@ -3,17 +3,20 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -175,17 +178,20 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestApplicationAuthenticationGet(t *testing.T) {
+	tenantId := int64(1)
+	appAuthId := int64(2)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/application_authentications/1",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	err := ApplicationAuthenticationGet(c)
 	if err != nil {
@@ -208,15 +214,80 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 	// (auth ID = hash from vault path) and for integration tests (auth ID is db ID because
 	// vault path column is missing in db)
 	if conf.SecretStore == "database" {
-		authID := strconv.Itoa(int(fixtures.TestAuthenticationData[0].DbID))
+		authID := strconv.Itoa(int(fixtures.TestAuthenticationData[3].DbID))
 		if out.AuthenticationID != authID {
 			t.Error("ghosts infected the return")
 		}
 	}
 
-	if out.ApplicationID != "1" {
+	if out.ApplicationID != "5" {
 		t.Error("ghosts infected the return")
 	}
+
+	// Check the tenancy of returned app auth
+	for _, appAuth := range fixtures.TestApplicationAuthenticationData {
+		if fmt.Sprintf("%d", appAuth.ID) == out.ID {
+			if appAuth.TenantID != tenantId {
+				t.Errorf("returned app auth not belong to the tenant, expected tenantd id %d, got %d", tenantId, appAuth.TenantID)
+			}
+		}
+	}
+}
+
+// TestApplicationAuthenticationGetInvalidTenant tests that not found is returned
+// for existing app auth id but with invalid tenant
+func TestApplicationAuthenticationGetInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appAuthId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+
+	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+	err := notFoundApplicationAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestApplicationAuthenticationGetTenantNotExist tests that not found is returned
+// for not existing tenant
+func TestApplicationAuthenticationGetTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appAuthId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+
+	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+	err := notFoundApplicationAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationAuthenticationGetNotFound(t *testing.T) {
@@ -264,13 +335,62 @@ func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 }
 
 func TestApplicationAuthenticationCreate(t *testing.T) {
-	if parser.RunningIntegrationTests {
-		t.Skip("Test not supported when using db backend")
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	// Create own test data - source with application and authentication
+	// Create a source
+	sourceDaoParams := dao.RequestParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&sourceDaoParams)
+
+	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
+	src := m.Source{
+		Name:         "Source for TestApplicationAuthenticationCreate()",
+		SourceTypeID: 1,
+		Uid:          &uid,
 	}
 
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create an application
+	applicationDao := dao.GetApplicationDao(&tenantId)
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: 1,
+		Extra:             []byte(`{"Name": "app for TestApplicationAuthenticationCreate()"}`),
+	}
+
+	err = applicationDao.Create(&app)
+	if err != nil {
+		t.Errorf("application not created correctly: %s", err)
+	}
+
+	// Create an authentication for the application
+	authDaoParams := dao.RequestParams{TenantID: &tenantId}
+	authenticationDao := dao.GetAuthenticationDao(&authDaoParams)
+
+	authNameForApp := "authentication for TestApplicationAuthenticationCreate()"
+	auth := m.Authentication{
+		Name:         &authNameForApp,
+		ResourceType: "Application",
+		ResourceID:   app.ID,
+		TenantID:     tenantId,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for application not created correctly: %s", err)
+	}
+
+	// Create a test context and call the ApplicationAuthenticationCreate()
 	input := m.ApplicationAuthenticationCreateRequest{
-		ApplicationIDRaw:    7,
-		AuthenticationIDRaw: 7,
+		ApplicationIDRaw:    app.ID,
+		AuthenticationIDRaw: auth.DbID,
 	}
 
 	body, _ := json.Marshal(&input)
@@ -280,18 +400,51 @@ func TestApplicationAuthenticationCreate(t *testing.T) {
 		"/api/sources/v3.1/application_authentications",
 		bytes.NewBuffer(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 	c.Request().Header.Add("Content-Type", "application/json")
 
-	err := ApplicationAuthenticationCreate(c)
+	err = ApplicationAuthenticationCreate(c)
 	if err != nil {
 		t.Error(err)
 	}
 
 	if rec.Code != 201 {
 		t.Errorf("Wrong response code, got %v wanted %v", rec.Code, 201)
+	}
+
+	var out m.ApplicationAuthenticationResponse
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	appAuthID, err := strconv.ParseInt(out.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+	appAuthDao := dao.GetApplicationAuthenticationDao(&tenantId)
+	appAuthOut, err := appAuthDao.GetById(&appAuthID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check the tenancy of all related objects
+	if appAuthOut.TenantID != tenantId {
+		t.Errorf("application authentication with id %d should belong to tenant with id %d, but got %d", appAuthOut.ID, tenantId, appAuthOut.TenantID)
+	}
+	if app.TenantID != tenantId {
+		t.Errorf("application with id %d should belong to tenant with id %d, but got %d", app.ID, tenantId, app.TenantID)
+	}
+	if auth.TenantID != tenantId {
+		t.Errorf("authentication with id %d should belong to tenant with id %d, but got %d", auth.DbID, tenantId, auth.TenantID)
+	}
+
+	// Delete the created test data
+	err = service.DeleteCascade(&tenantId, "Source", src.ID, []kafka.Header{})
+	if err != nil {
+		t.Error(err)
 	}
 }
 
@@ -350,19 +503,83 @@ func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
 }
 
 func TestApplicationAuthenticationDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	// Create own test data - to be independent on fixtures
+	// Create a source
+	sourceDaoParams := dao.RequestParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&sourceDaoParams)
+
+	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
+	src := m.Source{
+		Name:         "Source for TestApplicationAuthenticationDelete()",
+		SourceTypeID: 1,
+		Uid:          &uid,
+	}
+
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create an application
+	applicationDao := dao.GetApplicationDao(&tenantId)
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: 1,
+		Extra:             []byte(`{"Name": "app for TestApplicationAuthenticationDelete()"}`),
+	}
+
+	err = applicationDao.Create(&app)
+	if err != nil {
+		t.Errorf("application not created correctly: %s", err)
+	}
+
+	// Create an authentication for the application
+	authDaoParams := dao.RequestParams{TenantID: &tenantId}
+	authenticationDao := dao.GetAuthenticationDao(&authDaoParams)
+
+	authNameForApp := "authentication for TestApplicationAuthenticationDelete()"
+	auth := m.Authentication{
+		Name:         &authNameForApp,
+		ResourceType: "Application",
+		ResourceID:   app.ID,
+		TenantID:     tenantId,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for application not created correctly: %s", err)
+	}
+
+	// Create an application authentication
+	appAuthDao := dao.GetApplicationAuthenticationDao(&tenantId)
+	appAuth := m.ApplicationAuthentication{
+		ApplicationID:    app.ID,
+		AuthenticationID: auth.DbID,
+	}
+	err = appAuthDao.Create(&appAuth)
+	if err != nil {
+		t.Errorf("application authentication not created correctly: %s", err)
+	}
+
+	// Create text context and call the ApplicationAuthenticationDelete() handler
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
 		"/api/sources/v3.1/application_authentications/300",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 	c.SetParamNames("id")
-	c.SetParamValues("300")
+	c.SetParamValues(fmt.Sprintf("%d", appAuth.ID))
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := ApplicationAuthenticationDelete(c)
+	err = ApplicationAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -374,6 +591,46 @@ func TestApplicationAuthenticationDelete(t *testing.T) {
 	if rec.Body.Len() != 0 {
 		t.Errorf("Response body is not nil")
 	}
+
+	// Check that application authentication doesn't exist
+	_, err = appAuthDao.GetById(&appAuth.ID)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected Not found error, got %s", err)
+	}
+
+	// Delete the created test data
+	err = service.DeleteCascade(&tenantId, "Source", src.ID, []kafka.Header{})
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+// TestApplicationAuthenticationDeleteInvalidTenant tests that not found is returned
+// for tenant who doesn't own the app auth
+func TestApplicationAuthenticationDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appAuthId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/application_authentications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
+	err := notFoundApplicationAuthenticationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
@@ -420,6 +677,8 @@ func TestApplicationAuthenticationDeleteBadRequest(t *testing.T) {
 
 func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 	testutils.SkipIfNotSecretStoreDatabase(t)
+	tenantId := int64(1)
+	appAuthId := int64(2)
 
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -429,12 +688,12 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("application_authentication_id")
-	c.SetParamValues("2")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	err := ApplicationAuthenticationListAuthentications(c)
 	if err != nil {
@@ -481,7 +740,78 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 		t.Errorf("wrong authentication resource type, want %d, got %s", authWant.ResourceID, auth["resource_id"])
 	}
 
+	// Check the tenancy of returned authentication
+	for _, a := range fixtures.TestAuthenticationData {
+		if fmt.Sprintf("%d", a.DbID) == auth["id"] {
+			if a.TenantID != tenantId {
+				t.Errorf("expected tenant id = %d, got tenant id = %d for authentication DbId = %d", tenantId, a.TenantID, a.DbID)
+			}
+		}
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestApplicationAuthenticationListAuthenticationsTenantNotExist tests that not found
+// is returned for not existing tenant
+func TestApplicationAuthenticationListAuthenticationsTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appAuthId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/2/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_authentication_id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+
+	notFoundAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+	err := notFoundAppAuthListAuths(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestApplicationAuthenticationListAuthenticationsInvalidTenant tests that not found
+// is returned for valid tenant who doesn't own the app auth
+func TestApplicationAuthenticationListAuthenticationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appAuthId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/2/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_authentication_id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+
+	notFoundAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+	err := notFoundAppAuthListAuths(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationAuthenticationListAuthenticationsNotFound(t *testing.T) {
