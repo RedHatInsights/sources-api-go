@@ -29,17 +29,20 @@ var GetAuthenticationDao func(daoParams *RequestParams) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultAuthenticationDao(daoParams *RequestParams) AuthenticationDao {
-	var tenantID *int64
-	if daoParams != nil && daoParams.TenantID != nil {
+	var tenantID, userID *int64
+	if daoParams != nil {
 		tenantID = daoParams.TenantID
+		userID = daoParams.UserID
 	}
 
 	if config.IsVaultOn() {
 		return &authenticationDaoImpl{
+			UserID:   userID,
 			TenantID: tenantID,
 		}
 	} else {
 		return &authenticationDaoDbImpl{
+			UserID:   userID,
 			TenantID: tenantID,
 		}
 	}
