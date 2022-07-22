@@ -143,6 +143,37 @@ func TestSourceApplicationTypeSubcollectionListTenantNotExist(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestSourceApplicationTypeSubcollectionListInvalidTenant tests that not found is returned
+// for tenant who doesn't own the source
+func TestSourceApplicationTypeSubcollectionListInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+	err := notFoundSourceListApplicationTypes(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
