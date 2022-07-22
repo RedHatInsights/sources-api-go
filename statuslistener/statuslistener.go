@@ -137,7 +137,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 
 	if previousStatus != statusMessage.Status {
 		if statusMessage.ResourceType == "Application" {
-			appDao := dao.GetApplicationDao(&tenant.Id)
+			appDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenant.Id})
 			app, err := appDao.GetById(&resource.ResourceID)
 			if err != nil {
 				l.Log.Errorf("[tenant_id: %d][application_id: %d] unable to fetch application: %s", tenant.Id, resource.ResourceID, err)

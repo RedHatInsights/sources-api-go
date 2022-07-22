@@ -57,7 +57,7 @@ func (sk SuperkeyDestroyJob) Run() error {
 func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 	l.Log.Infof("Sending SuperKey Delete request for source %v", sk.Id)
 
-	a := dao.GetApplicationDao(&sk.Tenant)
+	a := dao.GetApplicationDao(&dao.RequestParams{TenantID: &sk.Tenant})
 
 	apps, _, err := a.SubCollectionList(m.Source{ID: id}, 100, 0, make([]util.Filter, 0))
 	if err != nil {

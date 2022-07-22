@@ -752,7 +752,7 @@ func TestApplicationEdit(t *testing.T) {
 
 	sourceID := fixtureSource.ID
 
-	applicationDao := dao.GetApplicationDao(&fixtures.TestTenantData[0].Id)
+	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	fixtureApp := m.Application{
 		ApplicationTypeID:  fixtures.TestApplicationTypeData[0].Id,
 		SourceID:           sourceID,
@@ -994,7 +994,7 @@ func TestApplicationDelete(t *testing.T) {
 	}
 
 	// Create an application
-	applicationDao := dao.GetApplicationDao(&tenantID)
+	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantID})
 
 	app := m.Application{
 		SourceID:          src.ID,
@@ -1415,7 +1415,7 @@ func TestPauseApplication(t *testing.T) {
 	}
 
 	// Check that the application is paused
-	applicationDao := dao.GetApplicationDao(&tenantId)
+	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
 	app, err := applicationDao.GetById(&appId)
 	if err != nil {
 		t.Error(err)
@@ -1546,7 +1546,7 @@ func TestUnpauseApplication(t *testing.T) {
 	appId := int64(1)
 
 	// Test data preparation = pause the application
-	applicationDao := dao.GetApplicationDao(&tenantId)
+	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
 	err := applicationDao.Pause(appId)
 	if err != nil {
 		t.Error(err)

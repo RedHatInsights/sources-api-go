@@ -1355,7 +1355,7 @@ func TestSourceDelete(t *testing.T) {
 	auths = append(auths, auth)
 
 	// Create an application
-	applicationDao := dao.GetApplicationDao(&tenantID)
+	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantID})
 
 	app := m.Application{
 		SourceID:          src.ID,
@@ -1928,7 +1928,7 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	}
 
 	// Check that relation applications are paused and belongs to desired tenant
-	appDao := dao.GetApplicationDao(&tenantId)
+	appDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
 	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
 	if err != nil {
 		t.Error(err)
@@ -2103,7 +2103,7 @@ func TestUnpauseSourceAndItsApplications(t *testing.T) {
 	}
 
 	// Check that related applications are not paused and belongs to the desired tenant
-	appDao := dao.GetApplicationDao(&tenantId)
+	appDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
 	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
 	if err != nil {
 		t.Error(err)

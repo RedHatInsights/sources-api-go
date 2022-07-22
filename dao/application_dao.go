@@ -13,12 +13,17 @@ import (
 
 // GetApplicationDao is a function definition that can be replaced in runtime in case some other DAO
 // provider is needed.
-var GetApplicationDao func(*int64) ApplicationDao
+var GetApplicationDao func(*RequestParams) ApplicationDao
 
 // getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
-func getDefaultApplicationDao(tenantId *int64) ApplicationDao {
+func getDefaultApplicationDao(daoParams *RequestParams) ApplicationDao {
+	var tenantID *int64
+	if daoParams != nil && daoParams.TenantID != nil {
+		tenantID = daoParams.TenantID
+	}
+
 	return &applicationDaoImpl{
-		TenantID: tenantId,
+		TenantID: tenantID,
 	}
 }
 

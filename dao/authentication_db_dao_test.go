@@ -371,7 +371,7 @@ func TestListForApplication(t *testing.T) {
 	}
 
 	// Create an application fixture.
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[1].Id)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
 	application := model.Application{
 		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
 		SourceID:          source.ID,
@@ -470,7 +470,7 @@ func TestListForApplicationAuthentication(t *testing.T) {
 	}
 
 	// Create an application fixture.
-	applicationDao := GetApplicationDao(&fixtures.TestTenantData[1].Id)
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
 	application := model.Application{
 		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
 		SourceID:          source.ID,

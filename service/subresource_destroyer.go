@@ -105,7 +105,7 @@ func DeleteCascade(tenantId *int64, resourceType string, resourceId int64, heade
 		}
 
 	case "Application":
-		applicationsDao := dao.GetApplicationDao(tenantId)
+		applicationsDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: tenantId})
 		applicationAuthentications, application, err := applicationsDao.DeleteCascade(resourceId)
 		if err != nil {
 			return fmt.Errorf(`could not completely delete the application: %s`, err)
