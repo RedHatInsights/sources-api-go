@@ -22,7 +22,7 @@ func setupRoutes(e *echo.Echo) {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1"}
+	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1", "v1", "v2", "v3"}
 	for _, version := range apiVersions {
 		r := e.Group("/api/sources/"+version, middleware.Timing, middleware.HandleErrors, middleware.ParseHeaders)
 
