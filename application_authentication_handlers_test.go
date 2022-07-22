@@ -557,7 +557,7 @@ func TestApplicationAuthenticationDelete(t *testing.T) {
 	// Create an application authentication
 	appAuthDao := dao.GetApplicationAuthenticationDao(&daoParams)
 	appAuth := m.ApplicationAuthentication{
-		ApplicationID: app.ID,
+		ApplicationID:    app.ID,
 		AuthenticationID: auth.DbID,
 	}
 	err = appAuthDao.Create(&appAuth)
@@ -602,6 +602,34 @@ func TestApplicationAuthenticationDelete(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+// TestApplicationAuthenticationDeleteInvalidTenant tests that not found is returned
+// for tenant who doesn't own the app auth
+func TestApplicationAuthenticationDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	appAuthId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/application_authentications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
+	err := notFoundApplicationAuthenticationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
