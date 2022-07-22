@@ -751,6 +751,37 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestApplicationAuthenticationListAuthenticationsTenantNotExist tests that not found
+// is returned for not existing tenant
+func TestApplicationAuthenticationListAuthenticationsTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	appAuthId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_authentications/2/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("application_authentication_id")
+	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
+
+	notFoundAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+	err := notFoundAppAuthListAuths(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestApplicationAuthenticationListAuthenticationsNotFound(t *testing.T) {
 	testutils.SkipIfNotSecretStoreDatabase(t)
 
