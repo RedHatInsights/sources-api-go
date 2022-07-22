@@ -44,10 +44,11 @@ func (add *authenticationDaoDbImpl) List(limit, offset int, filters []util.Filte
 }
 
 func (add *authenticationDaoDbImpl) GetById(id string) (*m.Authentication, error) {
-	authentication := &m.Authentication{}
+	var authentication m.Authentication
 
 	err := DB.
 		Debug().
+		Model(&m.Authentication{}).
 		Where("id = ?", id).
 		Where("tenant_id = ?", add.TenantID).
 		First(&authentication).
@@ -57,7 +58,7 @@ func (add *authenticationDaoDbImpl) GetById(id string) (*m.Authentication, error
 		return nil, util.NewErrNotFound("authentication")
 	}
 
-	return authentication, nil
+	return &authentication, nil
 }
 
 func (add *authenticationDaoDbImpl) ListForSource(sourceID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
@@ -168,10 +169,11 @@ func (add *authenticationDaoDbImpl) ListForApplication(applicationID int64, limi
 
 func (add *authenticationDaoDbImpl) ListForApplicationAuthentication(appAuthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// Get application authentication
-	appAuth := &m.ApplicationAuthentication{ID: appAuthID}
+	var appAuth m.ApplicationAuthentication
 
 	err := DB.
 		Debug().
+		Where("id = ?", appAuthID).
 		Where("tenant_id = ?", add.TenantID).
 		First(&appAuth).
 		Error
@@ -246,21 +248,33 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 }
 
 func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) error {
-	query := DB.Debug().Select("source_id").Where("tenant_id = ?", *add.TenantID)
+	query := DB.Debug().
+		Select("source_id").
+		Where("tenant_id = ?", *add.TenantID)
 
 	switch strings.ToLower(authentication.ResourceType) {
 	case "application":
-		app := m.Application{ID: authentication.ResourceID}
-		result := query.Model(&app).First(&app)
-		if result.Error != nil {
+		var app m.Application
+		err := query.
+			Model(&m.Application{}).
+			Where("id = ?", authentication.ResourceID).
+			First(&app).
+			Error
+
+		if err != nil {
 			return fmt.Errorf("resource not found with type [%v], id [%v]", authentication.ResourceType, authentication.ResourceID)
 		}
 
 		authentication.SourceID = app.SourceID
 	case "endpoint":
-		endpoint := m.Endpoint{ID: authentication.ResourceID}
-		result := query.Model(&endpoint).First(&endpoint)
-		if result.Error != nil {
+		var endpoint m.Endpoint
+		err := query.
+			Model(&m.Endpoint{}).
+			Where("id = ?", authentication.ResourceID).
+			First(&endpoint).
+			Error
+
+		if err != nil {
 			return fmt.Errorf("resource not found with type [%v], id [%v]", authentication.ResourceType, authentication.ResourceID)
 		}
 
@@ -328,7 +342,7 @@ func (add *authenticationDaoDbImpl) Delete(id string) (*m.Authentication, error)
 	err = DB.
 		Debug().
 		Where("tenant_id = ?", add.TenantID).
-		Delete(authentication).
+		Delete(&authentication).
 		Error
 
 	if err != nil {
