@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
@@ -241,6 +242,69 @@ func TestBulkCreate(t *testing.T) {
 	err = cleanSourceForTenant(nameSource, &fixtures.TestTenantData[0].Id)
 	if err != nil {
 		t.Errorf(`unexpected error received when deleting the source: %s`, err)
+	}
+}
+
+func TestBulkCreateSourceValidationBadRequest(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	// Create a source
+	reqParams := dao.RequestParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&reqParams)
+
+	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
+	nameSource := "Source for TestBulkCreateSourceValidationBadRequest()"
+	src := m.Source{
+		Name:         nameSource,
+		SourceTypeID: 1,
+		Uid:          &uid,
+	}
+
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Try to create same source via bulk create
+	sourceTypeName := "bitbucket"
+	applicationTypeName := "app-studio"
+	authenticationResourceType := "application"
+
+	requestBody := testutils.SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType)
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, res := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/bulk_create",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+
+	badRequestBulkCreate := ErrorHandlingContext(BulkCreate)
+	err = badRequestBulkCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, res)
+
+	// Delete created source
+	deletedSource, err := sourceDao.Delete(&src.ID)
+	if err != nil {
+		t.Error(err)
+	}
+	if deletedSource.ID != src.ID {
+		t.Error("wrong source deleted")
 	}
 }
 
