@@ -306,6 +306,32 @@ func TestApplicationTypeList(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestApplicationTypeListWithTenant tests that list of application types is returned
+// even when tenant is provided (this request doesn't need a tenant)
+func TestApplicationTypeListWithTenant(t *testing.T) {
+	tenantId := int64(1)
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":   100,
+			"offset":  0,
+			"filters": []util.Filter{},
+			"tenant": tenantId,
+		},
+	)
+
+	err := ApplicationTypeList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 200 {
+		t.Error("Did not return 200")
+	}
+}
+
 func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
