@@ -99,19 +99,9 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
-	// Check the tenancy of returned endpoints
-	for _, endpointOut := range out.Data {
-		id, err := strconv.ParseInt(endpointOut.(map[string]interface{})["id"].(string), 10, 64)
-		if err != nil {
-			t.Error(err)
-		}
-		for _, e := range fixtures.TestEndpointData {
-			if e.ID == id {
-				if e.TenantID != tenantId {
-					t.Errorf("for endpoint with id %d was expected tenant id %d, got %d", id, tenantId, e.TenantID)
-				}
-			}
-		}
+	err = checkAllEndpointsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
@@ -1101,4 +1091,25 @@ func TestEndpointListAuthenticationsNotFound(t *testing.T) {
 	}
 
 	templates.NotFoundTest(t, rec)
+}
+
+// HELPERS:
+
+// checkAllEndpointsBelongToTenant checks that all returned endpoints belong to given tenant
+func checkAllEndpointsBelongToTenant(tenantId int64, endpoints []interface{}) error {
+	// Check the tenancy of returned endpoints
+	for _, endpointOut := range endpoints {
+		endpointOutId, err := strconv.ParseInt(endpointOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			return err
+		}
+		for _, e := range fixtures.TestEndpointData {
+			if e.ID == endpointOutId {
+				if e.TenantID != tenantId {
+					return fmt.Errorf("for endpoint with id %d was expected tenant id %d, got %d", endpointOutId, tenantId, e.TenantID)
+				}
+			}
+		}
+	}
+	return nil
 }
