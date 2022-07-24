@@ -177,6 +177,37 @@ func TestSourceEndpointSubcollectionListTenantNotExist(t *testing.T) {
 	templates.NotFoundTest(t, rec)
 }
 
+// TestSourceEndpointSubcollectionListInvalidTenant tests that not found is returned
+// for existing tenant who doesnt't own the source
+func TestSourceEndpointSubcollectionListInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/983749387/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+	err := notFoundSourceListEndpoint(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestSourceEndpointSubcollectionListNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
