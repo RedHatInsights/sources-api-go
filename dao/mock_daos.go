@@ -523,24 +523,35 @@ func (src *MockApplicationDao) IsSuperkey(id int64) bool {
 }
 
 func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
-	var endpoints []m.Endpoint
-
-	for index, i := range a.Endpoints {
-		switch object := primaryCollection.(type) {
-		case m.Source:
-			if i.SourceID == object.ID {
-				endpoints = append(endpoints, a.Endpoints[index])
+	// Return not found err when the source doesn't exist
+	var sourceExist bool
+	var sourceId int64
+	switch object := primaryCollection.(type) {
+	case m.Source:
+		for _, source := range fixtures.TestSourceData {
+			if object.ID == source.ID {
+				sourceExist = true
+				sourceId = object.ID
+				break
 			}
-		default:
-			return nil, 0, fmt.Errorf("unexpected primary collection type")
+		}
+	default:
+		return nil, 0, fmt.Errorf("unexpected primary collection type")
+	}
+
+	if !sourceExist {
+		return nil, 0, util.NewErrNotFound("source")
+	}
+
+	// Get list of endpoints for existing source
+	var endpointsOut []m.Endpoint
+	for _, e := range a.Endpoints {
+		if e.SourceID == sourceId {
+			endpointsOut = append(endpointsOut, e)
 		}
 	}
-	count := int64(len(endpoints))
-	if count == 0 {
-		return nil, count, util.NewErrNotFound("endpoint")
-	}
 
-	return endpoints, count, nil
+	return endpointsOut, int64(len(endpointsOut)), nil
 }
 
 func (a *MockEndpointDao) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
