@@ -28,6 +28,8 @@ import (
 )
 
 func TestSourceEndpointSubcollectionList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/endpoints",
@@ -36,12 +38,12 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceListEndpoint(c)
 	if err != nil {
@@ -66,7 +68,14 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	var wantCount int
+	for _, e := range fixtures.TestEndpointData {
+		if e.TenantID == tenantId && e.SourceID == sourceId {
+			wantCount++
+		}
+	}
+
+	if len(out.Data) != wantCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -88,6 +97,21 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 
 	if e2["id"] != "2" {
 		t.Error("ghosts infected the return")
+	}
+
+	// Check the tenancy of returned endpoints
+	for _, endpointOut := range out.Data {
+		id, err := strconv.ParseInt(endpointOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			t.Error(err)
+		}
+		for _, e := range fixtures.TestEndpointData {
+			if e.ID == id {
+				if e.TenantID != tenantId {
+					t.Errorf("for endpoint with id %d was expected tenant id %d, got %d", id, tenantId, e.TenantID)
+				}
+			}
+		}
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
