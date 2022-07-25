@@ -32,6 +32,7 @@ func init() {
 
 type applicationAuthenticationDaoImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplications(applications []m.Application) ([]m.ApplicationAuthentication, error) {
