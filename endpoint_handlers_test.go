@@ -579,6 +579,10 @@ func TestEndpointGetBadRequest(t *testing.T) {
 
 // Tests that the endpoint is properly creating "endpoints" and returning a 201 code.
 func TestEndpointCreate(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	sourceId := int64(1)
+
 	receptorNode := "receptorNode"
 	scheme := "scheme"
 	port := 443
@@ -596,7 +600,7 @@ func TestEndpointCreate(t *testing.T) {
 		VerifySsl:            &verifySsl,
 		CertificateAuthority: &certificateAuthority,
 		AvailabilityStatus:   m.Available,
-		SourceIDRaw:          fixtures.TestSourceData[0].ID,
+		SourceIDRaw:          sourceId,
 	}
 
 	body, err := json.Marshal(requestBody)
@@ -609,7 +613,7 @@ func TestEndpointCreate(t *testing.T) {
 		"/api/sources/v3.1/endpoints",
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -621,6 +625,37 @@ func TestEndpointCreate(t *testing.T) {
 
 	if rec.Code != 201 {
 		t.Errorf("want 201, got %d", rec.Code)
+	}
+
+	var endpointOut m.EndpointResponse
+	err = json.Unmarshal(rec.Body.Bytes(), &endpointOut)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if *endpointOut.ReceptorNode != receptorNode {
+		t.Error("ghosts infected the return")
+	}
+
+	if endpointOut.SourceID != fmt.Sprintf("%d", sourceId) {
+		t.Error("shosts infected the return")
+	}
+
+	endpointOutId, err := strconv.ParseInt(endpointOut.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Delete the created endpoint
+	endpointDao := dao.GetEndpointDao(&tenantId)
+	deletedEndpoint, err := endpointDao.Delete(&endpointOutId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check the tenancy of deleted endpoint
+	if deletedEndpoint.TenantID != tenantId {
+		t.Errorf("expected tenant id %d, got %d for deleted endpoint", tenantId, deletedEndpoint.TenantID)
 	}
 }
 
