@@ -98,7 +98,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 	}
 
 	// if we're good, load up the required fields
-	app, err := dao.GetApplicationDao(&tenantId).GetByIdWithPreload(&applicationId, "Source", "Tenant", "ApplicationAuthentications")
+	app, err := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId}).GetByIdWithPreload(&applicationId, "Source", "Tenant", "ApplicationAuthentications")
 	if err != nil {
 		l.Log.Warnf("Error fetching application %v from db: %v", applicationId, err)
 		return

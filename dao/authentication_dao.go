@@ -125,7 +125,7 @@ func (a *authenticationDaoImpl) ListForSource(sourceID int64, _, _ int, _ []util
 
 func (a *authenticationDaoImpl) ListForApplication(applicationID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// checking if application exists first
-	_, err := GetApplicationDao(a.TenantID).GetById(&applicationID)
+	_, err := GetApplicationDao(&RequestParams{TenantID: a.TenantID}).GetById(&applicationID)
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("application")
 	}
