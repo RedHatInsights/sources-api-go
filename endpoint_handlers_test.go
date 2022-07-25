@@ -28,6 +28,8 @@ import (
 )
 
 func TestSourceEndpointSubcollectionList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(1)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/endpoints",
@@ -36,12 +38,12 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceListEndpoint(c)
 	if err != nil {
@@ -66,7 +68,14 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	var wantCount int
+	for _, e := range fixtures.TestEndpointData {
+		if e.TenantID == tenantId && e.SourceID == sourceId {
+			wantCount++
+		}
+	}
+
+	if len(out.Data) != wantCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -90,7 +99,103 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
+	err = checkAllEndpointsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestSourceEndpointSubcollectionListEmptyList tests that empty list is
+// returned for source id without endpoints
+func TestSourceEndpointSubcollectionListEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(101)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	err := SourceListEndpoint(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestSourceEndpointSubcollectionListTenantNotExist tests that not found is returned
+// for not existing tenant
+func TestSourceEndpointSubcollectionListTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/983749387/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+	err := notFoundSourceListEndpoint(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestSourceEndpointSubcollectionListInvalidTenant tests that not found is returned
+// for existing tenant who doesnt't own the source
+func TestSourceEndpointSubcollectionListInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/983749387/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+	err := notFoundSourceListEndpoint(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceEndpointSubcollectionListNotFound(t *testing.T) {
@@ -986,4 +1091,25 @@ func TestEndpointListAuthenticationsNotFound(t *testing.T) {
 	}
 
 	templates.NotFoundTest(t, rec)
+}
+
+// HELPERS:
+
+// checkAllEndpointsBelongToTenant checks that all returned endpoints belong to given tenant
+func checkAllEndpointsBelongToTenant(tenantId int64, endpoints []interface{}) error {
+	// Check the tenancy of returned endpoints
+	for _, endpointOut := range endpoints {
+		endpointOutId, err := strconv.ParseInt(endpointOut.(map[string]interface{})["id"].(string), 10, 64)
+		if err != nil {
+			return err
+		}
+		for _, e := range fixtures.TestEndpointData {
+			if e.ID == endpointOutId {
+				if e.TenantID != tenantId {
+					return fmt.Errorf("for endpoint with id %d was expected tenant id %d, got %d", endpointOutId, tenantId, e.TenantID)
+				}
+			}
+		}
+	}
+	return nil
 }
