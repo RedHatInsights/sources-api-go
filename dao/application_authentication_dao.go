@@ -15,13 +15,15 @@ var GetApplicationAuthenticationDao func(*RequestParams) ApplicationAuthenticati
 
 // getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultApplicationAuthenticationDao(daoParams *RequestParams) ApplicationAuthenticationDao {
-	var tenantID *int64
+	var tenantID, userID *int64
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
+		userID = daoParams.UserID
 	}
 
 	return &applicationAuthenticationDaoImpl{
 		TenantID: tenantID,
+		UserID:   userID,
 	}
 }
 
