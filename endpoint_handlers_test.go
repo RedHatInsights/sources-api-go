@@ -278,6 +278,8 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestEndpointList(t *testing.T) {
+	tenantId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/endpoints",
@@ -286,7 +288,7 @@ func TestEndpointList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -313,7 +315,13 @@ func TestEndpointList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestEndpointData) {
+	var wantCount int
+	for _, e := range fixtures.TestEndpointData {
+		if e.TenantID == tenantId {
+			wantCount++
+		}
+	}
+	if len(out.Data) != wantCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -335,6 +343,11 @@ func TestEndpointList(t *testing.T) {
 
 	if e2["id"] != "2" {
 		t.Error("ghosts infected the return")
+	}
+
+	err = checkAllEndpointsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
