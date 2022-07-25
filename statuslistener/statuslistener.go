@@ -101,13 +101,6 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
-	updateAttributes := avs.attributesForUpdate(statusMessage)
-	modelEventDao, err := dao.GetFromResourceType(statusMessage.ResourceType)
-	if err != nil {
-		l.Log.Error(err)
-		return
-	}
-
 	id, err := util.IdentityFromKafkaHeaders(headers)
 	if err != nil {
 		l.Log.Error(err)
@@ -116,6 +109,13 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 
 	tenantDao := dao.GetTenantDao()
 	tenant, err := tenantDao.TenantByIdentity(id)
+	if err != nil {
+		l.Log.Error(err)
+		return
+	}
+
+	updateAttributes := avs.attributesForUpdate(statusMessage)
+	modelEventDao, err := dao.GetFromResourceType(statusMessage.ResourceType, tenant.Id)
 	if err != nil {
 		l.Log.Error(err)
 		return
