@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	c "github.com/RedHatInsights/sources-api-go/config"
-	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -65,13 +64,8 @@ func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, pay
 	return nil
 }
 
-func (esp *EventStreamProducer) RaiseEventForUpdate(resource util.Resource, updateAttributes []string, headers []kafka.Header) error {
+func (esp *EventStreamProducer) RaiseEventForUpdate(eventModelDao m.EventModelDao, resource util.Resource, updateAttributes []string, headers []kafka.Header) error {
 	allowed := esp.RaiseEventAllowed(resource.ResourceType, updateAttributes)
-	eventModelDao, err := dao.GetFromResourceType(resource.ResourceType)
-	if err != nil {
-		return err
-	}
-
 	resourceJSON, err := eventModelDao.ToEventJSON(resource)
 	if err != nil {
 		return err
