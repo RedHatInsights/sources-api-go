@@ -353,6 +353,32 @@ func TestEndpointList(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestEndpointListTenantNotExist tests that empty list is returned for
+// not existing tenant
+func TestEndpointListTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := EndpointList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
