@@ -170,7 +170,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}
 	sort.Strings(updateAttributeKeys)
 
-	err = avs.EventStreamProducer.RaiseEventForUpdate(*resource, updateAttributeKeys, headers)
+	err = avs.EventStreamProducer.RaiseEventForUpdate(modelEventDao, *resource, updateAttributeKeys, headers)
 
 	if err != nil {
 		l.Log.Errorf("Error in raising event for update: %s, resource: %s(%s)", err.Error(), statusMessage.ResourceType, statusMessage.ResourceID)
