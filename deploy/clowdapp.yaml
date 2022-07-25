@@ -90,6 +90,7 @@ objects:
       webServices:
         public:
           enabled: true
+          apiPath: sources
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         env:
