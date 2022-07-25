@@ -268,9 +268,10 @@ func TestDeleteCascade(t *testing.T) {
 		t.Errorf(`error creating a fixture source: %s`, err)
 	}
 
-	// Grab the DAOs which we will use to create the subresources.
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&fixtures.TestTenantData[0].Id)
+	// Grab the DAOs which we will use to create the subresources
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	applicationsDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	authDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
 	authenticationDao := GetAuthenticationDao(&authDaoParams)
 	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)

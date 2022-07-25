@@ -1386,7 +1386,7 @@ func TestSourceDelete(t *testing.T) {
 	auths = append(auths, auth)
 
 	// Create an application authentication
-	appAuthDao := dao.GetApplicationAuthenticationDao(&tenantID)
+	appAuthDao := dao.GetApplicationAuthenticationDao(&dao.RequestParams{TenantID: &tenantID})
 	appAuth := m.ApplicationAuthentication{
 		ApplicationID:    app.ID,
 		AuthenticationID: auth.DbID,
