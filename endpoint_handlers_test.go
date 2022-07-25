@@ -477,6 +477,34 @@ func TestEndpointGet(t *testing.T) {
 	}
 }
 
+// TestEndpointGetInvalidTenant tests that not found is returned for
+// a tenant who doesn't own the endpoint
+func TestEndpointGetInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+	err := notFoundEndpointGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestEndpointGetNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
