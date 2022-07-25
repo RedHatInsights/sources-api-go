@@ -379,6 +379,32 @@ func TestEndpointListTenantNotExist(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestEndpointListInvalidTenant tests that empty list is returned for
+// existing tenant without endpoints
+func TestEndpointListInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := EndpointList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
