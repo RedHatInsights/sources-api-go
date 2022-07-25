@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -14,6 +15,9 @@ import (
 )
 
 func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/sources/1/application_types",
@@ -22,12 +26,12 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("source_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	err := SourceListApplicationTypes(c)
 	if err != nil {
@@ -52,7 +56,16 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 2 {
+	// We are looking for source's applications and then application
+	// types of these applications
+	appTypes := make(map[int64]int)
+	for _, app := range fixtures.TestApplicationData {
+		if app.SourceID == sourceId {
+			appTypes[app.ApplicationTypeID]++
+		}
+	}
+
+	if len(out.Data) != len(appTypes) {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -68,6 +81,97 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestSourceApplicationTypeSubcollectionListEmptyList tests that empty list is
+// returned for a source without related applications
+func TestSourceApplicationTypeSubcollectionListEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	sourceId := int64(101)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	err := SourceListApplicationTypes(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestSourceApplicationTypeSubcollectionListTenantNotExist tests that not found is returned
+// for not existing tenant
+func TestSourceApplicationTypeSubcollectionListTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+	err := notFoundSourceListApplicationTypes(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestSourceApplicationTypeSubcollectionListInvalidTenant tests that not found is returned
+// for tenant who doesn't own the source
+func TestSourceApplicationTypeSubcollectionListInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/sources/1/application_types",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("source_id")
+	c.SetParamValues(fmt.Sprintf("%d", sourceId))
+
+	notFoundSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+	err := notFoundSourceListApplicationTypes(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
