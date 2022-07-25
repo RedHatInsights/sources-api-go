@@ -34,6 +34,7 @@ func init() {
 
 type applicationDaoImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
