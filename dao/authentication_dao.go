@@ -52,6 +52,7 @@ func init() {
 
 type authenticationDaoImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 /*
