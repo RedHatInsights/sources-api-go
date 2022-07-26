@@ -785,6 +785,41 @@ func TestEndpointEdit(t *testing.T) {
 	}
 }
 
+// TestEndpointEditInvalidTenant tests situation when the tenant
+// tries to edit not owned endpoint
+func TestEndpointEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	endpointId := int64(1)
+
+	req := m.EndpointEditRequest{
+		ReceptorNode: util.StringRef("new_receptor_node"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/endpoints/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundApplicationEdit := ErrorHandlingContext(EndpointEdit)
+	err := notFoundApplicationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestEndpointEditNotFound(t *testing.T) {
 	req := m.EndpointEditRequest{
 		AvailabilityStatus:      util.StringRef("available"),
