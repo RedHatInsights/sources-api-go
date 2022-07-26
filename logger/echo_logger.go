@@ -22,7 +22,7 @@ import (
 */
 
 type EchoLogger struct {
-	*logrus.Logger
+	*logrus.Entry
 }
 
 /// Wrapping _level_j methods
@@ -35,7 +35,8 @@ func (el EchoLogger) Fatalj(j log.JSON) { el.Logger.Fatalf("%+v", j) }
 func (el EchoLogger) Panicj(j log.JSON) { el.Logger.Panicf("%+v", j) }
 
 /// output is easy
-func (el EchoLogger) Output() io.Writer { return el.Logger.Out }
+func (el EchoLogger) SetOutput(out io.Writer) { el.Logger.SetOutput(out) }
+func (el EchoLogger) Output() io.Writer       { return el.Logger.Out }
 
 /// we don't use the "set level" on the echo logger since we're using a single unified logger
 func (el EchoLogger) SetLevel(log.Lvl) {
