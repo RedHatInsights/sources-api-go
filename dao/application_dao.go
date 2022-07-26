@@ -189,7 +189,6 @@ func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttr
 		return nil, fmt.Errorf("application not found %v", resource)
 	}
 
-	a.TenantID = &resource.TenantID
 	application, err := a.GetByIdWithPreload(&resource.ResourceID, "Source")
 	if err != nil {
 		return nil, err
