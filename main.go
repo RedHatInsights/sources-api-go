@@ -11,19 +11,20 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
-	logging "github.com/RedHatInsights/sources-api-go/logger"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	echoMetrics "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
 )
 
 var conf = config.Get()
 
 func main() {
-	logging.InitLogger(conf)
+	l.InitLogger(conf)
 
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
 	// a time can run the migrations.
@@ -45,11 +46,11 @@ func main() {
 		go runServer(shutdown)
 		go runMetricExporter()
 	}
-	logging.Log.Info(conf)
+	l.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
 	// if/when that comes in
 	s := <-interrupts
-	logging.Log.Infof("Received %v, exiting", s)
+	l.Log.Infof("Received %v, exiting", s)
 
 	shutdown <- struct{}{}
 	<-shutdown
@@ -60,8 +61,8 @@ func main() {
 func runServer(shutdown chan struct{}) {
 	e := echo.New()
 
-	// set the logger to the wrapper of our main logrus (or maybe someday different) logger
-	e.Logger = logging.EchoLogger{Logger: logging.Log}
+	// set the logger to the wrapper of our main logrus logger, with no fields on it.
+	e.Logger = l.EchoLogger{Entry: l.Log.WithFields(logrus.Fields{})}
 
 	// set the binder to the one that does not allow extra parameters in payload
 	e.Binder = &NoUnknownFieldsBinder{}
@@ -70,11 +71,6 @@ func runServer(shutdown chan struct{}) {
 	e.Pre(middleware.RemoveTrailingSlash())
 	// recover from any `panic()`'s that happen in the handler, so the server doesn't crash.
 	e.Use(middleware.Recover())
-	// set up logging with our custom logger
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: logging.FormatForMiddleware(conf),
-		Output: &logging.LogWriter{Logger: logging.Log},
-	}))
 
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
 	p := echoMetrics.NewPrometheus("sources", nil)
@@ -103,10 +99,10 @@ func runServer(shutdown chan struct{}) {
 			port = "8000"
 		}
 
-		logging.Log.Infof("API Server started on :%v", port)
+		l.Log.Infof("API Server started on :%v", port)
 
 		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {
-			e.Logger.Warn(err)
+			l.Log.Warn(err)
 		}
 	}()
 
@@ -117,7 +113,7 @@ func runServer(shutdown chan struct{}) {
 
 	// shut down the server gracefully, with a timeout of 20 seconds
 	if err := e.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
-		logging.Log.Fatal(err)
+		l.Log.Fatal(err)
 	}
 
 	// let the main goroutine know we're ready to exit
@@ -138,6 +134,6 @@ func runMetricExporter() {
 		port = "9000"
 	}
 
-	logging.Log.Infof("Metrics Server started on :%v", port)
-	e.Logger.Fatal(e.Start(":" + port))
+	l.Log.Infof("Metrics Server started on :%v", port)
+	l.Log.Fatal(e.Start(":" + port))
 }
