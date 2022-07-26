@@ -48,7 +48,7 @@ func LoadJSONContentFrom(resourceType string, resourceID string, prefix string) 
 	fileContent, err := os.ReadFile(fileName)
 
 	if err != nil {
-		panic(fmt.Errorf("unable to read file %s because of %s", fileName, err.Error()))
+		panic(fmt.Errorf("unable to read file %s because of %v", fileName, err))
 	}
 
 	return fileContent
@@ -378,7 +378,7 @@ func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, 
 	}
 
 	if err != nil {
-		streamProducerSender.TestSuite.Errorf("error with parsing JSON: %s", err.Error())
+		streamProducerSender.TestSuite.Errorf("error with parsing JSON: %v", err)
 	}
 
 	return err

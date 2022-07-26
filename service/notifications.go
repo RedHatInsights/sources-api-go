@@ -106,7 +106,7 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 	})
 
 	if err != nil {
-		l.Log.Warnf("Failed to add struct value as json to kafka message: %s", err.Error())
+		l.Log.Warnf("Failed to add struct value as json to kafka message: %v", err)
 		return err
 	}
 
