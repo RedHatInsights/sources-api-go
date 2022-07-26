@@ -31,7 +31,7 @@ var TestApplicationData = []m.Application{
 		ID:                4,
 		Extra:             datatypes.JSON("{\"extra\": false}"),
 		ApplicationTypeID: 1,
-		SourceID:          2,
+		SourceID:          4,
 		TenantID:          1,
 	},
 	{

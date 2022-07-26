@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -191,24 +190,212 @@ func TestDeleteSourceNotExists(t *testing.T) {
 
 // TestDeleteCascade is a long test function, but very simple in essence. Essentially what it does is:
 //
-//- It checks that when a source with no subresources is deleted, only that particular source is deleted.
-//- It creates N applications, endpoints and rhcConnections for a fixture source.
+//- It creates source with subresources (apps, endpoints, rhc-connections ...).
 //- Cascade deletes the source with the function under test.
 //- Checks that the deleted subresources and source are the ones that have been created in this very same test.
 func TestDeleteCascade(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
+	tenantId := int64(1)
 
 	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
 	fixtureSource := m.Source{
 		Name:         "fixture-source",
 		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
-		TenantID:     fixtures.TestTenantData[0].Id,
+		TenantID:     tenantId,
 		Uid:          util.StringRef("new-shiny-source"),
 	}
 
 	// Try inserting the source in the database.
-	sourceDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
+	sourceDaoParams := RequestParams{TenantID: &tenantId}
+	sourceDao := GetSourceDao(&sourceDaoParams)
+	err := sourceDao.Create(&fixtureSource)
+	if err != nil {
+		t.Errorf(`error creating a fixture source: %s`, err)
+	}
+
+	// Grab the DAOs which we will use to create the subresources.
+	daoParams := RequestParams{TenantID: &tenantId}
+	applicationAuthenticationDao := GetApplicationAuthenticationDao(&daoParams)
+	applicationsDao := GetApplicationDao(&daoParams)
+	authenticationDao := GetAuthenticationDao(&daoParams)
+	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
+	rhcConnectionsDao := GetRhcConnectionDao(&fixtures.TestTenantData[0].Id)
+
+	// Create all the subresources.
+	// Create the related application.
+	app := m.Application{
+		SourceID:          fixtureSource.ID,
+		TenantID:          tenantId,
+		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
+	}
+
+	err = applicationsDao.Create(&app)
+	if err != nil {
+		t.Errorf(`error creating the application fixture: %s`, err)
+	}
+
+	// Create an authentication for application.
+	authentication := setUpValidAuthentication()
+	authentication.ResourceType = "Application"
+	authentication.ResourceID = app.ID
+
+	err = authenticationDao.Create(authentication)
+	if err != nil {
+		t.Errorf(`could not create the fixture authentication: %s`, err)
+	}
+
+	// Create the association between the application and its authentication.
+	appAuth := m.ApplicationAuthentication{
+		TenantID:          tenantId,
+		ApplicationID:     app.ID,
+		AuthenticationID:  authentication.DbID,
+		AuthenticationUID: "authentication UID",
+	}
+
+	err = applicationAuthenticationDao.Create(&appAuth)
+	if err != nil {
+		t.Errorf(`could not create the fixture application authentication: %s`, err)
+	}
+
+	// Create the related endpoints.
+	host := "test host"
+	endpoint := m.Endpoint{
+		Host:     &host,
+		SourceID: fixtureSource.ID,
+		TenantID: tenantId,
+	}
+
+	err = endpointDao.Create(&endpoint)
+	if err != nil {
+		t.Errorf(`error creating the endpoint fixture: %s`, err)
+	}
+
+	// Create the related rhcConnections.
+	rhcId := "rhc connection id"
+	rhcConnection := m.RhcConnection{
+		RhcId:   rhcId,
+		Sources: []m.Source{{ID: fixtureSource.ID}},
+	}
+
+	_, err = rhcConnectionsDao.Create(&rhcConnection)
+	if err != nil {
+		t.Errorf(`error creating the rhcConnection fixture: %s`, err)
+	}
+
+	// Call the function under test.
+	deletedApplicationAuthentications, deletedApplications, deletedEndpoints, deletedRhcConnections, deletedSource, err := sourceDao.DeleteCascade(fixtureSource.ID)
+	if err != nil {
+		t.Errorf(`unexpected error when calling source delete cascade: %s`, err)
+	}
+
+	// Check that deleted app auth is not in the database
+	{
+		if len(deletedApplicationAuthentications) != 1 {
+			t.Errorf("different count of app auths deleted, want %d, deleted %d", 1, len(deletedApplicationAuthentications))
+		}
+		id := deletedApplicationAuthentications[0].ID
+		_, err = applicationAuthenticationDao.GetById(&id)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("Expected not found error, got %s", err)
+		}
+	}
+
+	// Check that deleted app is not in the database
+	{
+		if len(deletedApplications) != 1 {
+			t.Errorf("different count of apps deleted, want %d, deleted %d", 1, len(deletedApplications))
+		}
+		id := deletedApplications[0].ID
+		_, err = applicationsDao.GetById(&id)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("Expected not found error, got %s", err)
+		}
+	}
+
+	// Check that deleted endpoint is not in the database
+	{
+		if len(deletedEndpoints) != 1 {
+			t.Errorf("different count of apps deleted, want %d, deleted %d", 1, len(deletedEndpoints))
+		}
+		id := deletedEndpoints[0].ID
+		_, err = endpointDao.GetById(&id)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("Expected not found error, got %s", err)
+		}
+	}
+
+	// Check that deleted rhc connection is not in the database
+	{
+		if len(deletedRhcConnections) != 1 {
+			t.Errorf("different count of apps deleted, want %d, deleted %d", 1, len(deletedRhcConnections))
+		}
+		id := deletedRhcConnections[0].ID
+		_, err = rhcConnectionsDao.GetById(&id)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("Expected not found error, got %s", err)
+		}
+	}
+
+	// Check that deleted source is not in the database
+	{
+		id := deletedSource.ID
+		_, err = sourceDao.GetById(&id)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("Expected not found error, got %s", err)
+		}
+	}
+
+	// Check that created authentication was not deleted
+	id := fmt.Sprintf("%d", authentication.DbID)
+	authOut, err := authenticationDao.GetById(id)
+	if err != nil {
+		t.Error(err)
+	}
+	if authOut.DbID != authentication.DbID {
+		t.Errorf("ghost infected the return")
+	}
+	if authOut.ResourceType != authentication.ResourceType {
+		t.Errorf("ghost infected the return")
+	}
+	if authOut.ResourceID != authentication.ResourceID {
+		t.Errorf("ghost infected the return")
+	}
+	if authOut.SourceID != authentication.SourceID {
+		t.Errorf("ghost infected the return")
+	}
+
+	// Delete the authentication
+	_, err = authenticationDao.Delete(id)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check that the authentication is deleted
+	_, err = authenticationDao.GetById(id)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("Expected not found error, got %s", err)
+	}
+
+	DropSchema("delete")
+}
+
+// TestDeleteCascadeSourceWithoutSubresources tests the deletion of source that doesn't have subresources
+func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("delete")
+	tenantId := int64(1)
+
+	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
+	fixtureSource := m.Source{
+		Name:         "fixture-source",
+		SourceTypeID: fixtures.TestSourceTypeData[0].Id,
+		TenantID:     tenantId,
+		Uid:          util.StringRef("new-shiny-source"),
+	}
+
+	// Try inserting the source in the database.
+	sourceDaoParams := RequestParams{TenantID: &tenantId}
 	sourceDao := GetSourceDao(&sourceDaoParams)
 	err := sourceDao.Create(&fixtureSource)
 	if err != nil {
@@ -237,6 +424,7 @@ func TestDeleteCascade(t *testing.T) {
 			t.Errorf(`unexpected applications deleted. Want "%d", got "%d"`, want, got)
 		}
 	}
+
 	{
 		want := 0
 		got := len(endpoints)
@@ -259,378 +447,6 @@ func TestDeleteCascade(t *testing.T) {
 		if want != got {
 			t.Errorf(`wrong source deleted. Want source with ID "%d", got ID "%d"`, want, got)
 		}
-	}
-
-	// Reinsert the source.
-	fixtureSource.ID = 0
-	err = sourceDao.Create(&fixtureSource)
-	if err != nil {
-		t.Errorf(`error creating a fixture source: %s`, err)
-	}
-
-	// Grab the DAOs which we will use to create the subresources
-	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	applicationsDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-
-	authDaoParams := RequestParams{TenantID: &fixtures.TestTenantData[0].Id}
-	authenticationDao := GetAuthenticationDao(&authDaoParams)
-	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
-	rhcConnectionsDao := GetRhcConnectionDao(&fixtures.TestTenantData[0].Id)
-
-	// Establish a maximum number of subresources we want to insert.
-	maximumSubresourcesToCreate := 5
-
-	// We want the created subresources so that we can compare them later to the deleted ones.
-	var createdApplications []m.Application
-	var createdApplicationAuthentications []m.ApplicationAuthentication
-	var createdEndpoints []m.Endpoint
-	var createdRhcConnections []m.RhcConnection
-
-	// Create all the subresources.
-	for i := 0; i < maximumSubresourcesToCreate; i++ {
-		// Create the related applications.
-		extra := fmt.Sprintf(`{"idx": "%d"}`, i)
-		app := m.Application{
-			Extra:             []byte(extra),
-			SourceID:          fixtureSource.ID,
-			TenantID:          fixtureSource.TenantID,
-			ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
-		}
-
-		err := applicationsDao.Create(&app)
-		if err != nil {
-			t.Errorf(`error creating the application fixture: %s`, err)
-		}
-
-		createdApplications = append(createdApplications, app)
-
-		// Create one authentication per application.
-		authentication := setUpValidAuthentication()
-		authentication.ResourceType = "Application"
-		authentication.ResourceID = app.ID
-
-		err = authenticationDao.Create(authentication)
-		if err != nil {
-			t.Errorf(`could not create the fixture authentication: %s`, err)
-		}
-
-		// Create the association between the application and its authentication.
-		appAuth := m.ApplicationAuthentication{
-			TenantID:          fixtures.TestTenantData[0].Id,
-			ApplicationID:     app.ID,
-			AuthenticationID:  authentication.DbID,
-			AuthenticationUID: fmt.Sprintf("%d", i),
-		}
-
-		err = applicationAuthenticationDao.Create(&appAuth)
-		if err != nil {
-			t.Errorf(`could not create the fixture application authentication: %s`, err)
-		}
-		createdApplicationAuthentications = append(createdApplicationAuthentications, appAuth)
-
-		// Create the related endpoints.
-		host := fmt.Sprintf(`domain%d.com`, i)
-		endpoint := m.Endpoint{
-			Host:     &host,
-			SourceID: fixtureSource.ID,
-			TenantID: fixtureSource.TenantID,
-		}
-
-		err = endpointDao.Create(&endpoint)
-		if err != nil {
-			t.Errorf(`error creating the endpoint fixture: %s`, err)
-		}
-
-		createdEndpoints = append(createdEndpoints, endpoint)
-
-		// Create the related rhcConnections.
-		rhcId := fmt.Sprintf(`rhc-id-%d`, i)
-		rhcConnection := m.RhcConnection{
-			RhcId:   rhcId,
-			Sources: []m.Source{{ID: fixtureSource.ID}},
-		}
-
-		_, err = rhcConnectionsDao.Create(&rhcConnection)
-		if err != nil {
-			t.Errorf(`error creating the rhcConnection fixture: %s`, err)
-		}
-
-		createdRhcConnections = append(createdRhcConnections, rhcConnection)
-	}
-
-	// Call the function under test.
-	deletedApplicationAuthentications, deletedApplications, deletedEndpoints, deletedRhcConnections, deletedSource, err := sourceDao.DeleteCascade(fixtureSource.ID)
-	if err != nil {
-		t.Errorf(`unexpected error when calling source delete cascade: %s`, err)
-	}
-
-	// Count the application authentications from the given source, to check that they were deleted.
-	var appAuthsCount int64
-	err = DB.
-		Debug().
-		Model(m.ApplicationAuthentication{}).
-		Joins(`INNER JOIN "applications" ON "application_authentications"."application_id" = "applications"."id"`).
-		Where(`applications.source_id = ?`, fixtureSource.ID).
-		Where(`applications.tenant_id = ?`, fixtures.TestTenantData[0].Id).
-		Count(&appAuthsCount).
-		Error
-
-	if err != nil {
-		t.Errorf(`error counting the application authentications related to the source: %s`, err)
-	}
-
-	// Check if the application authentications were deleted or not.
-	{
-		want := int64(0)
-		got := appAuthsCount
-		if want != got {
-			t.Errorf(`the application authentications were not deleted. Want a count of "%d", got "%d"`, want, got)
-		}
-	}
-
-	// Check that the expected applicationAuthentications were deleted.
-	for i := 0; i < maximumSubresourcesToCreate; i++ {
-		{
-			want := createdApplicationAuthentications[i].ID
-			got := deletedApplicationAuthentications[i].ID
-
-			if want != got {
-				t.Errorf(`unexpected application authentication deleted. Want application with ID "%d", got ID "%d"`, want, got)
-			}
-		}
-
-		{
-			want := createdApplicationAuthentications[i].ApplicationID
-			got := deletedApplicationAuthentications[i].ApplicationID
-
-			if want != got {
-				t.Errorf(`unexpected application authentication deleted. Want application authentication with application ID "%d", got "%d"`, want, got)
-			}
-		}
-	}
-
-	// Count the applications from the given source, to check that they were deleted.
-	var appCount int64
-	err = DB.
-		Debug().
-		Model(m.Application{}).
-		Where("source_id = ?", fixtureSource.ID).
-		Where("tenant_id = ?", fixtures.TestTenantData[0].Id).
-		Count(&appCount).
-		Error
-
-	if err != nil {
-		t.Errorf(`error counting the applications related to the source: %s`, err)
-	}
-
-	// Check if the applications were deleted or not.
-	{
-		want := int64(0)
-		got := appCount
-		if want != got {
-			t.Errorf(`the applications were not deleted. Want a count of "%d", got "%d"`, want, got)
-		}
-	}
-
-	// Check that the expected applications were deleted.
-	for i := 0; i < maximumSubresourcesToCreate; i++ {
-		{
-			want := createdApplications[i].ID
-			got := deletedApplications[i].ID
-
-			if want != got {
-				t.Errorf(`unexpected application deleted. Want application with ID "%d", got ID "%d"`, want, got)
-			}
-		}
-
-		{
-			want := createdApplications[i].Extra
-			got := deletedApplications[i].Extra
-
-			if !bytes.Equal(want, got) {
-				t.Errorf(`unexpected application deleted. Want application with extra "%s", got extra "%s"`, want, got)
-			}
-		}
-	}
-
-	// Count the endpoints from the given source, to check that they were deleted.
-	var endpointCount int64
-	err = DB.
-		Debug().
-		Model(m.Endpoint{}).
-		Where("source_id = ?", fixtureSource.ID).
-		Where("tenant_id = ?", fixtures.TestTenantData[0].Id).
-		Count(&endpointCount).
-		Error
-
-	if err != nil {
-		t.Errorf(`error counting the endpoints related to the source: %s`, err)
-	}
-
-	// Check if the endpoints were deleted or not.
-	{
-		want := int64(0)
-		got := endpointCount
-		if want != got {
-			t.Errorf(`the endpoints were not deleted. Want a count of "%d", got "%d"`, want, got)
-		}
-	}
-
-	{
-		want := len(createdEndpoints)
-		got := len(deletedEndpoints)
-
-		if want != got {
-			t.Errorf(`unexpected amount of endpoints deleted. Want "%d", got "%d"`, want, got)
-		}
-	}
-
-	// Check that the expected endpoints were deleted.
-	for i := 0; i < maximumSubresourcesToCreate; i++ {
-		{
-			want := createdEndpoints[i].ID
-			got := deletedEndpoints[i].ID
-
-			if want != got {
-				t.Errorf(`unexpected endpoint deleted. Want endpoint with ID "%d", got ID "%d"`, want, got)
-			}
-		}
-
-		{
-			want := *createdEndpoints[i].Host
-			got := *deletedEndpoints[i].Host
-
-			if want != got {
-				t.Errorf(`unexpected endpoint deleted. Want endpoint with host "%s", got host "%s"`, want, got)
-			}
-		}
-	}
-
-	// Count the rhcConnections from the given source, to check that they were deleted.
-	var rhcConnectionsCount int64
-	err = DB.
-		Debug().
-		Model(m.RhcConnection{}).
-		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "rhc_connections"."id" = "sr"."rhc_connection_id"`).
-		Where(`"sr"."source_id" = ?`, fixtureSource.ID).
-		Where(`"sr"."tenant_id" = ?`, fixtures.TestTenantData[0].Id).
-		Count(&rhcConnectionsCount).
-		Error
-
-	if err != nil {
-		t.Errorf(`error counting the rhcConnections related to the source: %s`, err)
-	}
-
-	// Check if the rhcConnections were deleted or not.
-	{
-		want := int64(0)
-		got := rhcConnectionsCount
-		if want != got {
-			t.Errorf(`the rhcConnections were not deleted. Want a count of "%d", got "%d"`, want, got)
-		}
-	}
-
-	{
-		want := len(createdRhcConnections)
-		got := len(deletedRhcConnections)
-
-		if want != got {
-			t.Errorf(`unexpected amount of rhcConnections deleted. Want "%d", got "%d"`, want, got)
-		}
-	}
-
-	// Check that the expected rhcConnections were deleted.
-	for i := 0; i < maximumSubresourcesToCreate; i++ {
-		{
-			want := createdRhcConnections[i].ID
-			got := deletedRhcConnections[i].ID
-
-			if want != got {
-				t.Errorf(`unexpected rhcConnection deleted. Want rhcConnection with ID "%d", got ID "%d"`, want, got)
-			}
-		}
-
-		{
-			want := createdRhcConnections[i].RhcId
-			got := deletedRhcConnections[i].RhcId
-
-			if want != got {
-				t.Errorf(`unexpected rhcConnection deleted. Want rhcConnection with RhcId "%s", got RhcId "%s"`, want, got)
-			}
-		}
-	}
-
-	// Try to fetch the deleted source.
-	var deletedSourceCheck *m.Source
-	err = DB.
-		Debug().
-		Model(m.Source{}).
-		Where(`id = ?`, fixtureSource.ID).
-		Where(`tenant_id = ?`, fixtures.TestTenantData[0].Id).
-		Find(&deletedSourceCheck).
-		Error
-
-	if err != nil {
-		t.Errorf(`unexpected error: %s`, err)
-	}
-
-	// Check that the expected source was deleted.
-	if deletedSourceCheck.ID != 0 {
-		t.Errorf(`unexpected source fetched. It should be deleted, but this source was fetched: %v`, deletedSourceCheck)
-	}
-
-	{
-		want := fixtureSource.Name
-		got := deletedSource.Name
-
-		if want != got {
-			t.Errorf(`wrong source deleted. Want source with name "%s", got "%s"`, want, got)
-		}
-	}
-
-	{
-		want := fixtureSource.ID
-		got := deletedSource.ID
-
-		if want != got {
-			t.Errorf(`wrong source deleted. Want source with id "%d", got "%d"`, want, got)
-		}
-	}
-
-	// Check that the deleted resources come with the related tenant. This is necessary since otherwise the events will
-	// not have the "tenant" key populated.
-	for _, applicationAuthentication := range deletedApplicationAuthentications {
-		want := fixtures.TestTenantData[0].ExternalTenant
-		got := applicationAuthentication.Tenant.ExternalTenant
-
-		if want != got {
-			t.Errorf(`the application authentication doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
-		}
-	}
-
-	for _, application := range deletedApplications {
-		want := fixtures.TestTenantData[0].ExternalTenant
-		got := application.Tenant.ExternalTenant
-
-		if want != got {
-			t.Errorf(`the application doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
-		}
-	}
-
-	for _, endpoint := range deletedEndpoints {
-		want := fixtures.TestTenantData[0].ExternalTenant
-		got := endpoint.Tenant.ExternalTenant
-
-		if want != got {
-			t.Errorf(`the endpoint doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
-		}
-	}
-
-	want := fixtures.TestTenantData[0].ExternalTenant
-	got := deletedSource.Tenant.ExternalTenant
-
-	if want != got {
-		t.Errorf(`the source doesn't come with the related tenant. Want external tenant "%s", got "%s"`, want, got)
 	}
 
 	DropSchema("delete")

@@ -60,90 +60,40 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 	testutils.SkipIfNotSecretStoreDatabase(t)
 	SwitchSchema("appauthfind")
 
-	// Get all the DAOs we are going to work with.
-	authDao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	appDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	appAuthDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+	tenantId := int64(1)
 
-	// Maximum of resources to create.
-	maxCreatedResources := 5
+	var apps []model.Application
+	var appAuthsWant []model.ApplicationAuthentication
 
-	// Store the resources for later.
-	var createdApps = make([]model.Application, 0, maxCreatedResources)
-	var createdAppAuths = make([]model.ApplicationAuthentication, 0, maxCreatedResources)
-	for i := 0; i < maxCreatedResources; i++ {
-		// Create the authentication.
-		auth := setUpValidAuthentication()
-		auth.ResourceID = fixtures.TestApplicationData[0].ID
-		auth.ResourceType = "Application"
-
-		err := authDao.Create(auth)
-		if err != nil {
-			t.Errorf(`could not create fixture authentication: %s`, err)
+	for _, appAuth := range fixtures.TestApplicationAuthenticationData {
+		if appAuth.TenantID == tenantId {
+			apps = append(apps, model.Application{ID: appAuth.ApplicationID})
+			appAuthsWant = append(appAuthsWant, model.ApplicationAuthentication{ID: appAuth.ID})
 		}
-
-		// Create the application.
-		app := model.Application{
-			ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
-			SourceID:          fixtures.TestSourceData[0].ID,
-			TenantID:          fixtures.TestTenantData[0].Id,
-		}
-
-		err = appDao.Create(&app)
-		if err != nil {
-			t.Errorf(`could not create fixture application: %s`, err)
-		}
-
-		createdApps = append(createdApps, app)
-
-		// Create the application authentication.
-		appAuth := model.ApplicationAuthentication{
-			ApplicationID:    app.ID,
-			AuthenticationID: auth.DbID,
-			TenantID:         fixtures.TestTenantData[0].Id,
-		}
-
-		err = appAuthDao.Create(&appAuth)
-		if err != nil {
-			t.Errorf(`could not create fixture application authentication: %s`, err)
-		}
-
-		createdAppAuths = append(createdAppAuths, appAuth)
 	}
 
-	// Call the function under test.
-	dbAppAuths, err := appAuthDao.ApplicationAuthenticationsByResource("Source", createdApps, []model.Authentication{})
+	daoParams := RequestParams{TenantID: &tenantId}
+	appAuthDao := GetApplicationAuthenticationDao(&daoParams)
+	appAuthsOut, err := appAuthDao.ApplicationAuthenticationsByResource("Source", apps, nil)
 	if err != nil {
-		t.Errorf(`unexpected error when fetching the application authentications: %s`, err)
+		t.Error(err)
 	}
 
-	// Check that we fetched the correct amount of application authentications.
-	{
-		want := maxCreatedResources
-		got := len(dbAppAuths)
-
-		if want != got {
-			t.Errorf(`incorrect amount of application authentications fetched. Want "%d", got "%d"`, want, got)
-		}
+	if len(appAuthsOut) != len(appAuthsWant) {
+		t.Errorf("wrong count of returned app auths, wanted %d, got %d", len(appAuthsWant), len(appAuthsOut))
 	}
 
-	// Check that we fetched the correct application authentications.
-	for i := 0; i < maxCreatedResources; i++ {
-		{
-			want := createdAppAuths[i].ID
-			got := dbAppAuths[i].ID
-
-			if want != got {
-				t.Errorf(`incorrect application authentication fetched. Want application authentication with id "%d", got "%d"`, want, got)
+	// Check the IDs of returned app auths
+	for _, aaOut := range appAuthsOut {
+		var aaFound bool
+		for _, aaWant := range appAuthsWant {
+			if aaWant.ID == aaOut.ID {
+				aaFound = true
+				break
 			}
 		}
-		{
-			want := createdApps[i].ID
-			got := dbAppAuths[i].ApplicationID
-
-			if want != got {
-				t.Errorf(`incorrect application authentication fetched. Want application authentication with application id "%d", got "%d"`, want, got)
-			}
+		if !aaFound {
+			t.Errorf("application authentication with id = %d returned as output but was not expected", aaOut.ID)
 		}
 	}
 
