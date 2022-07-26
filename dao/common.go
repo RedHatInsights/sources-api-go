@@ -21,9 +21,9 @@ func GetFromResourceType(resourceType string, tenantID int64) (m.EventModelDao, 
 	case "endpoint":
 		resource = GetEndpointDao(nil)
 	case "application":
-		resource = GetApplicationDao(nil)
+		resource = GetApplicationDao(&RequestParams{TenantID: &tenantID})
 	case "authentication":
-		resource = GetAuthenticationDao(nil)
+		resource = GetAuthenticationDao(&RequestParams{TenantID: &tenantID})
 	default:
 		return nil, fmt.Errorf("invalid resource_type (%s) to get DAO instance", resourceType)
 	}
