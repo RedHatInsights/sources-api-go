@@ -556,7 +556,6 @@ func (a *authenticationDaoImpl) BulkMessage(resource util.Resource) (map[string]
 }
 
 func (a *authenticationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
-	a.TenantID = &resource.TenantID
 	authentication, err := a.GetById(resource.ResourceUID)
 	if err != nil {
 		return nil, err
