@@ -16,13 +16,12 @@ import (
 var getApplicationAuthenticationDao func(c echo.Context) (dao.ApplicationAuthenticationDao, error)
 
 func getApplicationAuthenticationDaoWithTenant(c echo.Context) (dao.ApplicationAuthenticationDao, error) {
-	tenantId, err := util.GetTenantFromEchoContext(c)
-
+	requestParams, err := dao.NewRequestParamsFromContext(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return dao.GetApplicationAuthenticationDao(&dao.RequestParams{TenantID: &tenantId}), nil
+	return dao.GetApplicationAuthenticationDao(requestParams), nil
 }
 
 func ApplicationAuthenticationList(c echo.Context) error {
