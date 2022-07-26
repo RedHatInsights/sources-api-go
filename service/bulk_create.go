@@ -171,7 +171,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 		// validate the source request
 		err = ValidateSourceCreationRequest(dao.GetSourceDao(&dao.RequestParams{TenantID: &tenant.Id}), &source.SourceCreateRequest)
 		if err != nil {
-			return nil, err
+			return nil, util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
 		}
 
 		// copy the fields into the alloc'd source struct
