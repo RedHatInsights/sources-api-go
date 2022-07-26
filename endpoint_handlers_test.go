@@ -1284,6 +1284,35 @@ func TestEndpointListAuthentications(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestEndpointListAuthenticationsEmptyList tests that empty list is returned
+// for an endpoint without authentications
+func TestEndpointListAuthenticationsEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	endpointId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	err := EndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestEndpointListAuthenticationsBadRequestInvalidEndpointId(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
