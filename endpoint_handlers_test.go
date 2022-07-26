@@ -1313,6 +1313,37 @@ func TestEndpointListAuthenticationsEmptyList(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestEndpointListAuthenticationsTenantNotExist tests that not found err is returned
+// for not existing tenant
+func TestEndpointListAuthenticationsTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := notFoundEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestEndpointListAuthenticationsBadRequestInvalidEndpointId(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
