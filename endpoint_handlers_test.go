@@ -432,17 +432,20 @@ func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestEndpointGet(t *testing.T) {
+	tenantId := int64(1)
+	endpointId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/endpoints/1",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
 
 	err := EndpointGet(c)
 	if err != nil {
@@ -458,6 +461,76 @@ func TestEndpointGet(t *testing.T) {
 	if err != nil {
 		t.Error("Failed unmarshaling output")
 	}
+
+	outEndpointId, err := strconv.ParseInt(outEndpoint.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Check the tenancy of returned endpoint
+	for _, e := range fixtures.TestEndpointData {
+		if e.ID == outEndpointId {
+			if e.TenantID != tenantId {
+				t.Errorf("for endpoint with id = %d was expected tenant id = %d, got %d", outEndpointId, tenantId, e.TenantID)
+			}
+		}
+	}
+}
+
+// TestEndpointGetInvalidTenant tests that not found is returned for
+// a tenant who doesn't own the endpoint
+func TestEndpointGetInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+	err := notFoundEndpointGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestEndpointGetTenantNotExist tests that not found is returned for
+// not existing tenant
+func TestEndpointGetTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+	err := notFoundEndpointGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestEndpointGetNotFound(t *testing.T) {
