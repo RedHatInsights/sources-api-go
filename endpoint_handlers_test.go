@@ -1000,6 +1000,34 @@ func TestEndpointDelete(t *testing.T) {
 	}
 }
 
+// TestEndpointDeleteInvalidTenant tests that the tenant tries
+// to delete not owned endpoint
+func TestEndpointDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/endpoints/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointDelete := ErrorHandlingContext(EndpointDelete)
+	err := notFoundEndpointDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestEndpointDeleteBadRequest(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
