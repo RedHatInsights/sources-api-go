@@ -82,7 +82,7 @@ func RhcConnectionCreate(c echo.Context) error {
 
 	err := service.ValidateRhcConnectionRequest(input)
 	if err != nil {
-		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %s", err.Error()))
+		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
 	}
 
 	rhcConnection := &model.RhcConnection{

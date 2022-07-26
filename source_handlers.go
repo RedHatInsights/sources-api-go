@@ -103,7 +103,7 @@ func SourceCreate(c echo.Context) error {
 
 	err = service.ValidateSourceCreationRequest(sourcesDB, input)
 	if err != nil {
-		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %s", err.Error()))
+		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
 	}
 
 	source := &m.Source{
