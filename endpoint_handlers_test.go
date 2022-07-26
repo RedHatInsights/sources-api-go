@@ -278,6 +278,8 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestEndpointList(t *testing.T) {
+	tenantId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/endpoints",
@@ -286,7 +288,7 @@ func TestEndpointList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -313,7 +315,13 @@ func TestEndpointList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestEndpointData) {
+	var wantCount int
+	for _, e := range fixtures.TestEndpointData {
+		if e.TenantID == tenantId {
+			wantCount++
+		}
+	}
+	if len(out.Data) != wantCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -337,7 +345,64 @@ func TestEndpointList(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
+	err = checkAllEndpointsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestEndpointListTenantNotExist tests that empty list is returned for
+// not existing tenant
+func TestEndpointListTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := EndpointList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestEndpointListInvalidTenant tests that empty list is returned for
+// existing tenant without endpoints
+func TestEndpointListInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := EndpointList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
 func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
