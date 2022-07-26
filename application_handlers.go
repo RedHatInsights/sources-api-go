@@ -17,13 +17,12 @@ import (
 var getApplicationDao func(c echo.Context) (dao.ApplicationDao, error)
 
 func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
-	tenantId, err := util.GetTenantFromEchoContext(c)
-
+	requestParams, err := dao.NewRequestParamsFromContext(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId}), nil
+	return dao.GetApplicationDao(requestParams), nil
 }
 
 func ApplicationList(c echo.Context) error {

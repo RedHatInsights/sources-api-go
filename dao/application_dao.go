@@ -17,13 +17,14 @@ var GetApplicationDao func(*RequestParams) ApplicationDao
 
 // getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultApplicationDao(daoParams *RequestParams) ApplicationDao {
-	var tenantID *int64
+	var tenantID, userID *int64
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
 	}
 
 	return &applicationDaoImpl{
 		TenantID: tenantID,
+		UserID:   userID,
 	}
 }
 
@@ -34,6 +35,7 @@ func init() {
 
 type applicationDaoImpl struct {
 	TenantID *int64
+	UserID   *int64
 }
 
 func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
