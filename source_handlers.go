@@ -207,7 +207,7 @@ func SourceDelete(c echo.Context) (err error) {
 		return err
 	}
 
-	err = service.DeleteCascade(sourcesDB.Tenant(), "Source", id, forwardableHeaders)
+	err = service.DeleteCascade(sourcesDB.Tenant(), sourcesDB.User(), "Source", id, forwardableHeaders)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
