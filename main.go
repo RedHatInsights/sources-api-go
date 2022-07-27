@@ -59,7 +59,9 @@ func main() {
 
 func runServer(shutdown chan struct{}) {
 	e := echo.New()
-	logging.InitEchoLogger(e, conf)
+
+	// set the logger to the wrapper of our main logrus (or maybe someday different) logger
+	e.Logger = logging.EchoLogger{Logger: logging.Log}
 
 	// set the binder to the one that does not allow extra parameters in payload
 	e.Binder = &NoUnknownFieldsBinder{}
@@ -71,9 +73,7 @@ func runServer(shutdown chan struct{}) {
 	// set up logging with our custom logger
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: logging.FormatForMiddleware(conf),
-		Output: &logging.LogWriter{Output: logging.LogOutputFrom(conf.LogHandler),
-			Logger:   logging.Log,
-			LogLevel: conf.LogLevelForMiddlewareLogs},
+		Output: &logging.LogWriter{Logger: logging.Log},
 	}))
 
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
