@@ -1,6 +1,8 @@
 package fixtures
 
-import m "github.com/RedHatInsights/sources-api-go/model"
+import (
+	m "github.com/RedHatInsights/sources-api-go/model"
+)
 
 var NotExistingTenantId = int64(309832948930)
 

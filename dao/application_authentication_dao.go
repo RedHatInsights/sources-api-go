@@ -43,7 +43,14 @@ func (a applicationAuthenticationDaoImpl) getDb() *gorm.DB {
 		panic("nil tenant found in applicationAuthentication db DAO")
 	}
 
-	return DB.Debug()
+	query := DB.Debug()
+	query = query.Where("tenant_id = ?", a.TenantID)
+
+	if a.UserID != nil {
+		query = query.Where("user_id IS NULL OR user_id = ?", a.UserID)
+	}
+
+	return query
 }
 
 func (a applicationAuthenticationDaoImpl) getDbWithModel() *gorm.DB {
