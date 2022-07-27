@@ -51,7 +51,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			// first check the identity (already parsed) to see if it contains
 			// the system key and if it does do some extra checks to authorize
 			// based on some internal rules (operator + satellite)
-			identity, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+			id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
 			if !ok {
 				return fmt.Errorf("error casting identity to struct: %+v", c.Get("identity"))
 			}
@@ -59,7 +59,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			// checking to see if we're going to change the results since
 			// system-auth is treated completely differently than
 			// org_admin/rbac/psk
-			if identity.Identity.System != nil {
+			if id.Identity.System != (identity.System{}) {
 				// system-auth only allows GET and POST requests.
 				method := c.Request().Method
 				if method != http.MethodGet && method != http.MethodPost && method != http.MethodDelete {
@@ -77,12 +77,9 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 				// can go through (but only if it's a POST)
 				//
 				// we're returning early because this is easier than a goto.
-				switch {
-				case identity.Identity.System["cluster_id"] != nil:
+				if id.Identity.System.ClusterId != "" || id.Identity.System.CommonName != "" {
 					return next(c)
-				case identity.Identity.System["cn"] != nil:
-					return next(c)
-				default:
+				} else {
 					return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
 				}
 			}

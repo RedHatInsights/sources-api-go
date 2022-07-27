@@ -56,7 +56,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.PARSED_IDENTITY, xRhIdentity)
 
 			// store whether or not this a cert-auth based request
-			if xRhIdentity.Identity.System != nil && xRhIdentity.Identity.System["cn"] != nil {
+			if xRhIdentity.Identity.System.CommonName != "" {
 				c.Set("cert-auth", true)
 			}
 		} else {

@@ -1215,6 +1215,8 @@ github.com/redhatinsights/platform-go-middlewares v0.8.1/go.mod h1:koDaxx4Ht3ZgX
 github.com/redhatinsights/platform-go-middlewares v0.10.0/go.mod h1:i5gVDZJ/quCQhs5AW5CwkRPXlz1HfDBvyNtXHnlXZfM=
 github.com/redhatinsights/platform-go-middlewares v0.12.0 h1:gLFgsqupumRqAKDuYtvrYVNQr53iqfhQYc98VJ/cRUs=
 github.com/redhatinsights/platform-go-middlewares v0.12.0/go.mod h1:i5gVDZJ/quCQhs5AW5CwkRPXlz1HfDBvyNtXHnlXZfM=
+github.com/redhatinsights/platform-go-middlewares v0.19.0 h1:KEOVfDTOE0OpOKSb8HeEuYblFa2bpXvXpHRV/6706RM=
+github.com/redhatinsights/platform-go-middlewares v0.19.0/go.mod h1:i5gVDZJ/quCQhs5AW5CwkRPXlz1HfDBvyNtXHnlXZfM=
 github.com/redhatinsights/sources-superkey-worker v0.0.0-20220110114734-d076299a7d68 h1:YOKTWdW6poVAoL0ds7oB5yJSXNQOUIveCjqQRthzJ30=
 github.com/redhatinsights/sources-superkey-worker v0.0.0-20220110114734-d076299a7d68/go.mod h1:D74VLRhmYd+tGF1eid7+HLUKytgsm9L2dS9CoR+lxXM=
 github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
