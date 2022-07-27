@@ -23,12 +23,10 @@ func (sc *SourcesContext) Logger() echo.Logger {
 	if sc.Get("logger") != nil {
 		if entry, ok := sc.Get("logger").(*logrus.Entry); ok {
 			return l.EchoLogger{Entry: entry}
-		} else {
-			return sc.Echo().Logger
 		}
-	} else {
-		return sc.Echo().Logger
 	}
+
+	return sc.Echo().Logger
 }
 
 func GetUserFromEchoContext(c echo.Context) (*int64, error) {
