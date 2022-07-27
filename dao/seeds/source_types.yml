@@ -364,6 +364,7 @@ rh-marketplace:
   product_name: Red Hat Marketplace
   category: Red Hat
   vendor: Red Hat
+  icon_url: "/apps/frontend-assets/partners-icons/Logo-Red_Hat-Marketplace-A-Red-RGB.svg"
   schema:
     authentication:
     - type: marketplace-token
