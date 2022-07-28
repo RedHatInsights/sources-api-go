@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -25,6 +26,8 @@ import (
 )
 
 func TestAuthenticationList(t *testing.T) {
+	tenantId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/authentications",
@@ -33,7 +36,7 @@ func TestAuthenticationList(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -60,7 +63,18 @@ func TestAuthenticationList(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != len(fixtures.TestAuthenticationData) {
+	var wantCount int
+	for _, a := range fixtures.TestAuthenticationData {
+		if a.TenantID == tenantId {
+			wantCount++
+		}
+	}
+
+	if out.Meta.Count != wantCount {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	if len(out.Data) != wantCount {
 		t.Error("not enough objects passed back from DB")
 	}
 
@@ -89,7 +103,91 @@ func TestAuthenticationList(t *testing.T) {
 		}
 	}
 
+	err = checkAllAuthenticationsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestAuthenticationTenantNotExist tests that empty list is returned
+// for not existing tenant
+func TestAuthenticationTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := AuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestAuthenticationTenantWithoutAuthentications tests that empty list is returned
+// for a tenant without authentications
+func TestAuthenticationTenantWithoutAuthentications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := AuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+func TestAuthenticationListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": tenantId,
+		},
+	)
+
+	badRequestAuthenticationList := ErrorHandlingContext(AuthenticationList)
+	err := badRequestAuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
 }
 
 func TestAuthenticationGet(t *testing.T) {
@@ -458,4 +556,22 @@ func TestAuthenticationDeleteNotFound(t *testing.T) {
 	}
 
 	templates.NotFoundTest(t, rec)
+}
+
+// HELPERS:
+
+// checkAllAuthenticationsBelongToTenant checks that all returned authentications belong to given tenant
+func checkAllAuthenticationsBelongToTenant(tenantId int64, authentications []interface{}) error {
+	for _, authOut := range authentications {
+		authOutId := authOut.(map[string]interface{})["id"].(string)
+		// find authentication in fixtures and check the tenant id
+		for _, auth := range fixtures.TestAuthenticationData {
+			if authOutId == auth.ID {
+				if auth.TenantID != tenantId {
+					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, auth.TenantID)
+				}
+			}
+		}
+	}
+	return nil
 }
