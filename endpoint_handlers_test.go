@@ -690,6 +690,7 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 }
 
 func TestEndpointEdit(t *testing.T) {
+	tenantId := int64(1)
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
@@ -711,7 +712,7 @@ func TestEndpointEdit(t *testing.T) {
 		"/api/sources/v3.1/endpoints/1",
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
@@ -730,15 +731,15 @@ func TestEndpointEdit(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", 200, rec.Code)
 	}
 
-	app := m.EndpointResponse{}
+	endpointOut := m.EndpointResponse{}
 	raw, _ := io.ReadAll(rec.Body)
-	err = json.Unmarshal(raw, &app)
+	err = json.Unmarshal(raw, &endpointOut)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
 	}
 
-	if *app.AvailabilityStatus != "available" {
-		t.Errorf("Wrong availability status, wanted %v got %v", "available", *app.AvailabilityStatus)
+	if *endpointOut.AvailabilityStatus != "available" {
+		t.Errorf("Wrong availability status, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 	notificationProducer, ok := service.NotificationProducer.(*mocks.MockAvailabilityStatusNotificationProducer)
 	if !ok {
@@ -750,7 +751,7 @@ func TestEndpointEdit(t *testing.T) {
 		PreviousAvailabilityStatus: "unavailable",
 		SourceName:                 "",
 		SourceID:                   strconv.FormatInt(fixtures.TestSourceData[0].ID, 10),
-		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),
+		TenantID:                   strconv.FormatInt(tenantId, 10),
 	}
 
 	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
@@ -760,29 +761,78 @@ func TestEndpointEdit(t *testing.T) {
 
 	service.NotificationProducer = backupNotificationProducer
 
-	if *app.ReceptorNode != "receptor_node" {
-		t.Errorf("Wrong receptor node, wanted %v got %v", "available", *app.AvailabilityStatus)
+	if *endpointOut.ReceptorNode != "receptor_node" {
+		t.Errorf("Wrong receptor node, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 
-	if *app.Role != "role" {
-		t.Errorf("Wrong role, wanted %v got %v", "available", *app.AvailabilityStatus)
+	if *endpointOut.Role != "role" {
+		t.Errorf("Wrong role, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 
-	if *app.Scheme != "scheme" {
-		t.Errorf("Wrong scheme, wanted %v got %v", "available", *app.AvailabilityStatus)
+	if *endpointOut.Scheme != "scheme" {
+		t.Errorf("Wrong scheme, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 
-	if *app.Host != "host" {
-		t.Errorf("Wrong host, wanted %v got %v", "available", *app.AvailabilityStatus)
+	if *endpointOut.Host != "host" {
+		t.Errorf("Wrong host, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 
-	if *app.Path != "path" {
-		t.Errorf("Wrong path, wanted %v got %v", "available", *app.AvailabilityStatus)
+	if *endpointOut.Path != "path" {
+		t.Errorf("Wrong path, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 
-	if *app.CertificateAuthority != "cert" {
-		t.Errorf("Wrong certificate authority, wanted %v got %v", "available", *app.AvailabilityStatus)
+	if *endpointOut.CertificateAuthority != "cert" {
+		t.Errorf("Wrong certificate authority, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
+
+	// Check the tenancy of updated endpoint
+	endpointID, err := strconv.ParseInt(endpointOut.ID, 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, e := range fixtures.TestEndpointData {
+		if e.ID == endpointID {
+			if e.TenantID != tenantId {
+				t.Errorf("expected tenant id %d, got %d", tenantId, e.TenantID)
+			}
+		}
+	}
+}
+
+// TestEndpointEditInvalidTenant tests situation when the tenant
+// tries to edit not owned endpoint
+func TestEndpointEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	endpointId := int64(1)
+
+	req := m.EndpointEditRequest{
+		ReceptorNode: util.StringRef("new_receptor_node"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/endpoints/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundApplicationEdit := ErrorHandlingContext(EndpointEdit)
+	err := notFoundApplicationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestEndpointEditNotFound(t *testing.T) {
@@ -948,6 +998,34 @@ func TestEndpointDelete(t *testing.T) {
 	if err != nil {
 		t.Errorf("source not deleted correctly: %s", err)
 	}
+}
+
+// TestEndpointDeleteInvalidTenant tests that the tenant tries
+// to delete not owned endpoint
+func TestEndpointDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/endpoints/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointDelete := ErrorHandlingContext(EndpointDelete)
+	err := notFoundEndpointDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestEndpointDeleteBadRequest(t *testing.T) {
