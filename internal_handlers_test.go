@@ -67,6 +67,7 @@ func TestSourceListInternal(t *testing.T) {
 		}
 
 		responseExternalTenant := s["tenant"].(string)
+		responseOrgId := s["org_id"].(string)
 		responseAvailabilityStatus := s["availability_status"].(string)
 
 		// Check that the expected source data and the received data are the same
@@ -76,6 +77,10 @@ func TestSourceListInternal(t *testing.T) {
 
 		if want := fixtures.TestTenantData[0].ExternalTenant; want != responseExternalTenant {
 			t.Errorf("Tenants don't match. Want %#v, got %#v", want, responseExternalTenant)
+		}
+
+		if want := fixtures.TestTenantData[0].OrgID; want != responseOrgId {
+			t.Errorf("Org Ids don't match. Want %#v, got %#v", want, responseOrgId)
 		}
 
 		if want := fixtures.TestSourceData[i].AvailabilityStatus; want != responseAvailabilityStatus {
