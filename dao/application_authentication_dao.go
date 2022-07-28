@@ -48,6 +48,8 @@ func (a applicationAuthenticationDaoImpl) getDb() *gorm.DB {
 
 	if a.UserID != nil {
 		query = query.Where("user_id IS NULL OR user_id = ?", a.UserID)
+	} else {
+		query = query.Where("user_id IS NULL")
 	}
 
 	return query
