@@ -111,6 +111,32 @@ func TestAuthenticationList(t *testing.T) {
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
+// TestAuthenticationTenantNotExist tests that empty list is returned
+// for not existing tenant
+func TestAuthenticationTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := AuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestAuthenticationGet(t *testing.T) {
 	var id string
 	originalSecretStore := conf.SecretStore
