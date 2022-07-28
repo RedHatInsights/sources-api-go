@@ -82,13 +82,19 @@ func (at *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter)
 }
 
 func (at *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
-	appType := &m.ApplicationType{Id: *id}
-	result := DB.Debug().First(appType)
-	if result.Error != nil {
+	var appType m.ApplicationType
+
+	err := DB.Debug().
+		Model(&m.ApplicationType{}).
+		Where("id = ?", *id).
+		First(&appType).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("application type")
 	}
 
-	return appType, nil
+	return &appType, nil
 }
 
 func (at *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, error) {
@@ -116,9 +122,16 @@ func (at *applicationTypeDaoImpl) Delete(_ *int64) error {
 func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, sourceId int64) error {
 	// Looks up the source ID and then compare's the source-type's name with the
 	// application type's supported source types
-	source := m.Source{ID: sourceId}
-	result := DB.Debug().Preload("SourceType").Find(&source)
-	if result.Error != nil {
+	var source m.Source
+
+	err := DB.Debug().
+		Model(&m.Source{}).
+		Where("id = ?", sourceId).
+		Preload("SourceType").
+		Find(&source).
+		Error
+
+	if err != nil {
 		return fmt.Errorf("source not found")
 	}
 

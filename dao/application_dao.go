@@ -88,32 +88,43 @@ func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 }
 
 func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
-	app := &m.Application{ID: *id}
-	result := DB.Debug().
+	var app m.Application
+
+	err := DB.Debug().
+		Model(&m.Application{}).
+		Where("id = ?", *id).
 		Where("tenant_id = ?", a.TenantID).
-		First(&app)
-	if result.Error != nil {
+		First(&app).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("application")
 	}
 
-	return app, nil
+	return &app, nil
 }
 
-// Function that searches for an application and preloads any specified relations
+// GetByIdWithPreload searches for an application and preloads any specified relations.
 func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
-	app := &m.Application{ID: *id}
-	q := DB.Where("tenant_id = ?", a.TenantID)
+	q := DB.Debug().
+		Model(&m.Application{}).
+		Where("id = ?", *id).
+		Where("tenant_id = ?", a.TenantID)
 
 	for _, preload := range preloads {
 		q = q.Preload(preload)
 	}
 
-	result := q.First(&app)
-	if result.Error != nil {
+	var app m.Application
+	err := q.
+		First(&app).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("application")
 	}
 
-	return app, nil
+	return &app, nil
 }
 
 func (a *applicationDaoImpl) Create(app *m.Application) error {
@@ -171,11 +182,17 @@ func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 }
 
 func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
-	application := &m.Application{ID: resource.ResourceID}
-	result := DB.Debug().Preload("Source").Find(&application)
+	var application m.Application
 
-	if result.Error != nil {
-		return nil, result.Error
+	err := DB.Debug().
+		Model(&m.Application{}).
+		Where("id = ?", resource.ResourceID).
+		Preload("Source").
+		Find(&application).
+		Error
+
+	if err != nil {
+		return nil, err
 	}
 
 	authentication := &m.Authentication{ResourceID: application.ID,
@@ -186,7 +203,11 @@ func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 }
 
 func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
-	result := DB.Debug().Model(&m.Application{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := DB.Debug().
+		Model(&m.Application{}).
+		Where("id = ?", resource.ResourceID).
+		Updates(updateAttributes)
+
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("application not found %v", resource)
 	}
@@ -200,10 +221,16 @@ func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttr
 }
 
 func (a *applicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
-	app := &m.Application{ID: *id}
-	result := DB.Debug().Preload("Tenant").Find(&app)
+	var app m.Application
 
-	return app, result.Error
+	err := DB.Debug().
+		Model(&m.Application{}).
+		Where("id = ?", *id).
+		Preload("Tenant").
+		Find(&app).
+		Error
+
+	return &app, err
 }
 
 func (a *applicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {

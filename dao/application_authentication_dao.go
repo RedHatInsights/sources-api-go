@@ -127,13 +127,20 @@ func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 }
 
 func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
-	appAuth := &m.ApplicationAuthentication{ID: *id}
-	result := DB.Debug().
-		Where("tenant_id = ?", a.TenantID).First(&appAuth)
-	if result.Error != nil {
+	var appAuth m.ApplicationAuthentication
+
+	err := DB.Debug().
+		Model(&m.ApplicationAuthentication{}).
+		Where("id = ?", *id).
+		Where("tenant_id = ?", a.TenantID).
+		First(&appAuth).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("application authentication")
 	}
-	return appAuth, nil
+
+	return &appAuth, nil
 }
 
 func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {

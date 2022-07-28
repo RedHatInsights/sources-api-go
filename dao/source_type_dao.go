@@ -47,12 +47,19 @@ func (st *sourceTypeDaoImpl) List(limit, offset int, filters []util.Filter) ([]m
 }
 
 func (st *sourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
-	sourceType := &m.SourceType{Id: *id}
-	result := DB.Debug().First(sourceType)
-	if result.Error != nil {
+	var sourceType m.SourceType
+
+	err := DB.Debug().
+		Model(&m.SourceType{}).
+		Where("id = ?", *id).
+		First(&sourceType).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("source type")
 	}
-	return sourceType, nil
+
+	return &sourceType, nil
 }
 
 func (st *sourceTypeDaoImpl) GetByName(name string) (*m.SourceType, error) {

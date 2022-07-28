@@ -76,29 +76,40 @@ func (a *endpointDaoImpl) List(limit int, offset int, filters []util.Filter) ([]
 	return endpoints, count, nil
 }
 
-// Function that searches for an application and preloads any specified relations
+// GetByIdWithPreload searches for an application and preloads any specified relations.
 func (a *endpointDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Endpoint, error) {
-	app := &m.Endpoint{ID: *id}
-	q := DB.Where("tenant_id = ?", a.TenantID)
+	q := DB.Debug().
+		Model(&m.Endpoint{}).
+		Where("id = ?", *id).
+		Where("tenant_id = ?", a.TenantID)
 
 	for _, preload := range preloads {
 		q = q.Preload(preload)
 	}
 
-	result := q.First(&app)
-	return app, result.Error
+	var endpoint m.Endpoint
+	err := q.
+		First(&endpoint).
+		Error
+
+	return &endpoint, err
 }
 
 func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
-	app := &m.Endpoint{ID: *id}
-	result := DB.Debug().
+	var endpoint m.Endpoint
+
+	err := DB.Debug().
+		Model(&m.Endpoint{}).
+		Where("id = ?", *id).
 		Where("tenant_id = ?", a.TenantID).
-		First(&app)
-	if result.Error != nil {
+		First(&endpoint).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("endpoint")
 	}
 
-	return app, nil
+	return &endpoint, nil
 }
 
 func (a *endpointDaoImpl) Create(app *m.Endpoint) error {
@@ -163,19 +174,30 @@ func (a *endpointDaoImpl) SourceHasEndpoints(sourceId int64) bool {
 }
 
 func (a *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
-	endpoint := &m.Endpoint{ID: resource.ResourceID}
-	result := DB.Debug().Preload("Source").Find(&endpoint)
+	var endpoint m.Endpoint
 
-	if result.Error != nil {
-		return nil, result.Error
+	err := DB.Debug().
+		Model(&m.Endpoint{}).
+		Where("id = ?", resource.ResourceID).
+		Preload("Source").
+		Find(&endpoint).
+		Error
+
+	if err != nil {
+		return nil, err
 	}
 
 	authentication := &m.Authentication{ResourceID: endpoint.ID, ResourceType: "Endpoint", ApplicationAuthentications: []m.ApplicationAuthentication{}}
+
 	return BulkMessageFromSource(&endpoint.Source, authentication)
 }
 
 func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
-	result := DB.Debug().Model(&m.Endpoint{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := DB.
+		Debug().
+		Model(&m.Endpoint{}).
+		Where("id = ?", resource.ResourceID).
+		Updates(updateAttributes)
 
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("endpoint not found %v", resource)
@@ -191,10 +213,16 @@ func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribu
 }
 
 func (a *endpointDaoImpl) FindWithTenant(id *int64) (*m.Endpoint, error) {
-	endpoint := &m.Endpoint{ID: *id}
-	result := DB.Debug().Preload("Tenant").Find(&endpoint)
+	var endpoint m.Endpoint
 
-	return endpoint, result.Error
+	err := DB.Debug().
+		Model(&m.Endpoint{}).
+		Where("id = ?", *id).
+		Preload("Tenant").
+		Find(&endpoint).
+		Error
+
+	return &endpoint, err
 }
 
 func (a *endpointDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {

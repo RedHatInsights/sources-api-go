@@ -117,31 +117,43 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 }
 
 func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
-	src := &m.Source{ID: *id}
-	result := DB.Debug().
+	var src m.Source
+
+	err := DB.Debug().
+		Model(&m.Source{}).
+		Where("id = ?", *id).
 		Where("tenant_id = ?", s.TenantID).
-		First(src)
-	if result.Error != nil {
+		First(&src).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("source")
 	}
 
-	return src, nil
+	return &src, nil
 }
 
-// Function that searches for a source and preloads any specified relations
+// GetByIdWithPreload searches for a source and preloads any specified relations.
 func (s *sourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
-	src := &m.Source{ID: *id}
-	q := DB.Debug().Where("tenant_id = ?", s.TenantID)
+	q := DB.Debug().
+		Model(&m.Source{}).
+		Where("id = ?", *id).
+		Where("tenant_id = ?", s.TenantID)
 
 	for _, preload := range preloads {
 		q = q.Preload(preload)
 	}
 
-	result := q.First(&src)
-	if result.Error != nil {
+	var src m.Source
+	err := q.
+		First(&src).
+		Error
+
+	if err != nil {
 		return nil, util.NewErrNotFound("source")
 	}
-	return src, nil
+
+	return &src, nil
 }
 
 func (s *sourceDaoImpl) Create(src *m.Source) error {
@@ -185,11 +197,16 @@ func (s *sourceDaoImpl) Tenant() *int64 {
 }
 
 func (s *sourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
-	src := &m.Source{Name: name}
-	result := DB.Debug().Where("name = ? AND tenant_id = ?", name, s.TenantID).First(src)
+	err := DB.
+		Debug().
+		Model(&m.Source{}).
+		Where("name = ?", name).
+		Where("tenant_id = ?", s.TenantID).
+		First(&m.Source{}).
+		Error
 
 	// If the name is found, GORM returns one row and no errors.
-	return result.Error == nil
+	return err == nil
 }
 
 func (s *sourceDaoImpl) IsSuperkey(id int64) bool {
@@ -208,18 +225,28 @@ func (s *sourceDaoImpl) IsSuperkey(id int64) bool {
 }
 
 func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
-	src := m.Source{ID: resource.ResourceID}
-	result := DB.Debug().Find(&src)
-	if result.Error != nil {
-		return nil, result.Error
+	var src m.Source
+
+	err := DB.Debug().
+		Model(&m.Source{}).
+		Where("id = ?", resource.ResourceID).
+		Find(&src).
+		Error
+
+	if err != nil {
+		return nil, err
 	}
 
 	authentication := &m.Authentication{ResourceID: src.ID, ResourceType: "Source"}
+
 	return BulkMessageFromSource(&src, authentication)
 }
 
 func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
-	result := DB.Debug().Model(&m.Source{ID: resource.ResourceID}).Updates(updateAttributes)
+	result := DB.Debug().
+		Model(&m.Source{}).
+		Where("id = ?", resource.ResourceID).
+		Updates(updateAttributes)
 
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("source not found %v", resource)
@@ -234,10 +261,16 @@ func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribute
 }
 
 func (s *sourceDaoImpl) FindWithTenant(id *int64) (*m.Source, error) {
-	src := &m.Source{ID: *id}
-	result := DB.Debug().Preload("Tenant").Find(&src)
+	var src m.Source
 
-	return src, result.Error
+	err := DB.Debug().
+		Model(&m.Source{}).
+		Where("id = ?", *id).
+		Preload("Tenant").
+		Find(&src).
+		Error
+
+	return &src, err
 }
 
 func (s *sourceDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
