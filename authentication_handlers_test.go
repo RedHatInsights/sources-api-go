@@ -163,6 +163,33 @@ func TestAuthenticationTenantWithoutAuthentications(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+func TestAuthenticationListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": tenantId,
+		},
+	)
+
+	badRequestAuthenticationList := ErrorHandlingContext(AuthenticationList)
+	err := badRequestAuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 func TestAuthenticationGet(t *testing.T) {
 	var id string
 	originalSecretStore := conf.SecretStore
