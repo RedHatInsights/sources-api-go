@@ -1211,6 +1211,9 @@ func TestEndpointEditPausedInvalidFields(t *testing.T) {
 }
 
 func TestEndpointListAuthentications(t *testing.T) {
+	tenantId := int64(1)
+	endpointId := int64(1)
+
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/endpoints/1/authentications",
@@ -1219,12 +1222,12 @@ func TestEndpointListAuthentications(t *testing.T) {
 			"limit":    100,
 			"offset":   0,
 			"filters":  []util.Filter{},
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("endpoint_id")
-	c.SetParamValues("1")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
 
 	err := EndpointListAuthentications(c)
 	if err != nil {
@@ -1249,6 +1252,17 @@ func TestEndpointListAuthentications(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
+	var wantCount int
+	for _, a := range fixtures.TestAuthenticationData {
+		if a.ResourceType == "Endpoint" && a.TenantID == tenantId {
+			wantCount++
+		}
+	}
+
+	if out.Meta.Count != wantCount {
+		t.Error("count not set correctly")
+	}
+
 	auth1, ok := out.Data[0].(map[string]interface{})
 	if !ok {
 		t.Error("model did not deserialize as a source")
@@ -1262,7 +1276,103 @@ func TestEndpointListAuthentications(t *testing.T) {
 		t.Error("ghosts infected the return")
 	}
 
+	err = checkAllAuthenticationsBelongToTenant(tenantId, out.Data)
+	if err != nil {
+		t.Error(err)
+	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+}
+
+// TestEndpointListAuthenticationsEmptyList tests that empty list is returned
+// for an endpoint without authentications
+func TestEndpointListAuthenticationsEmptyList(t *testing.T) {
+	tenantId := int64(1)
+	endpointId := int64(2)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	err := EndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
+// TestEndpointListAuthenticationsTenantNotExist tests that not found err is returned
+// for not existing tenant
+func TestEndpointListAuthenticationsTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := notFoundEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+// TestEndpointListAuthenticationsInvalidTenant tests that not found err is returned
+// for tenant who doesn't own the endpoint
+func TestEndpointListAuthenticationsInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	endpointId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/endpoints/1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("endpoint_id")
+	c.SetParamValues(fmt.Sprintf("%d", endpointId))
+
+	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+	err := notFoundEndpointListAuthentications(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestEndpointListAuthenticationsBadRequestInvalidEndpointId(t *testing.T) {
@@ -1358,6 +1468,22 @@ func checkAllEndpointsBelongToTenant(tenantId int64, endpoints []interface{}) er
 			if e.ID == endpointOutId {
 				if e.TenantID != tenantId {
 					return fmt.Errorf("for endpoint with id %d was expected tenant id %d, got %d", endpointOutId, tenantId, e.TenantID)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// checkAllAuthenticationsBelongToTenant checks that all returned authentications belong to given tenant
+func checkAllAuthenticationsBelongToTenant(tenantId int64, authentications []interface{}) error {
+	for _, authOut := range authentications {
+		authOutId := authOut.(map[string]interface{})["id"].(string)
+		// find authentication in fixtures and check the tenant id
+		for _, auth := range fixtures.TestAuthenticationData {
+			if authOutId == auth.ID {
+				if auth.TenantID != tenantId {
+					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, auth.TenantID)
 				}
 			}
 		}
