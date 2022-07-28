@@ -137,6 +137,32 @@ func TestAuthenticationTenantNotExist(t *testing.T) {
 	templates.EmptySubcollectionListTest(t, c, rec)
 }
 
+// TestAuthenticationTenantWithoutAuthentications tests that empty list is returned
+// for a tenant without authentications
+func TestAuthenticationTenantWithoutAuthentications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(3)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/authentications",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err := AuthenticationList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+}
+
 func TestAuthenticationGet(t *testing.T) {
 	var id string
 	originalSecretStore := conf.SecretStore
