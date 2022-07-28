@@ -6,6 +6,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -37,6 +38,27 @@ type applicationAuthenticationDaoImpl struct {
 	UserID   *int64
 }
 
+func (a applicationAuthenticationDaoImpl) getDb() *gorm.DB {
+	if a.TenantID == nil {
+		panic("nil tenant found in applicationAuthentication db DAO")
+	}
+
+	query := DB.Debug()
+	query = query.Where("tenant_id = ?", a.TenantID)
+
+	if a.UserID != nil {
+		query = query.Where("user_id IS NULL OR user_id = ?", a.UserID)
+	} else {
+		query = query.Where("user_id IS NULL")
+	}
+
+	return query
+}
+
+func (a applicationAuthenticationDaoImpl) getDbWithModel() *gorm.DB {
+	return a.getDb().Model(&m.ApplicationAuthentication{})
+}
+
 func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplications(applications []m.Application) ([]m.ApplicationAuthentication, error) {
 	var applicationAuthentications []m.ApplicationAuthentication
 
@@ -45,8 +67,7 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 		applicationIDs = append(applicationIDs, value.ID)
 	}
 
-	err := DB.
-		Debug().
+	err := a.getDb().
 		Preload("Tenant").
 		Where("application_id IN ?", applicationIDs).
 		Where("tenant_id = ?", a.TenantID).
@@ -63,9 +84,7 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentications(authentications []m.Authentication) ([]m.ApplicationAuthentication, error) {
 	var applicationAuthentications []m.ApplicationAuthentication
 
-	query := DB.
-		Debug().
-		Preload("Tenant")
+	query := a.getDb().Preload("Tenant")
 
 	if config.IsVaultOn() {
 		authUuids := make([]string, len(authentications))
@@ -107,9 +126,7 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByResource(
 
 func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationAuthentication, int64, error) {
 	appAuths := make([]m.ApplicationAuthentication, 0, limit)
-	query := DB.Debug().
-		Model(&m.ApplicationAuthentication{}).
-		Where("tenant_id = ?", a.TenantID)
+	query := a.getDbWithModel().Where("tenant_id = ?", a.TenantID)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -129,10 +146,8 @@ func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAuthentication, error) {
 	var appAuth m.ApplicationAuthentication
 
-	err := DB.Debug().
-		Model(&m.ApplicationAuthentication{}).
+	err := a.getDbWithModel().
 		Where("id = ?", *id).
-		Where("tenant_id = ?", a.TenantID).
 		First(&appAuth).
 		Error
 
@@ -153,15 +168,14 @@ func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthenti
 }
 
 func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
-	result := DB.Debug().Updates(appAuth)
+	result := a.getDb().Updates(appAuth)
 	return result.Error
 }
 
 func (a *applicationAuthenticationDaoImpl) Delete(id *int64) (*m.ApplicationAuthentication, error) {
 	var applicationAuthentication m.ApplicationAuthentication
 
-	result := DB.
-		Debug().
+	result := a.getDb().
 		Clauses(clause.Returning{}).
 		Where("id = ?", id).
 		Where("tenant_id = ?", a.TenantID).
