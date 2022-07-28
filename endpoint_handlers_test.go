@@ -1474,19 +1474,3 @@ func checkAllEndpointsBelongToTenant(tenantId int64, endpoints []interface{}) er
 	}
 	return nil
 }
-
-// checkAllAuthenticationsBelongToTenant checks that all returned authentications belong to given tenant
-func checkAllAuthenticationsBelongToTenant(tenantId int64, authentications []interface{}) error {
-	for _, authOut := range authentications {
-		authOutId := authOut.(map[string]interface{})["id"].(string)
-		// find authentication in fixtures and check the tenant id
-		for _, auth := range fixtures.TestAuthenticationData {
-			if authOutId == auth.ID {
-				if auth.TenantID != tenantId {
-					return fmt.Errorf("expected tenant id = %d, got %d", tenantId, auth.TenantID)
-				}
-			}
-		}
-	}
-	return nil
-}
