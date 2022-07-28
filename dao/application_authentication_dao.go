@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/config"
@@ -25,6 +26,7 @@ func getDefaultApplicationAuthenticationDao(daoParams *RequestParams) Applicatio
 	return &applicationAuthenticationDaoImpl{
 		TenantID: tenantID,
 		UserID:   userID,
+		ctx:      daoParams.ctx,
 	}
 }
 
@@ -36,6 +38,7 @@ func init() {
 type applicationAuthenticationDaoImpl struct {
 	TenantID *int64
 	UserID   *int64
+	ctx      context.Context
 }
 
 func (a applicationAuthenticationDaoImpl) getDb() *gorm.DB {
@@ -43,7 +46,7 @@ func (a applicationAuthenticationDaoImpl) getDb() *gorm.DB {
 		panic("nil tenant found in applicationAuthentication db DAO")
 	}
 
-	query := DB.Debug()
+	query := DB.Debug().WithContext(a.ctx)
 	query = query.Where("tenant_id = ?", a.TenantID)
 
 	if a.UserID != nil {
