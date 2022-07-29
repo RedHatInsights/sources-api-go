@@ -49,7 +49,7 @@ func (rd *RequestData) EnsureApplicationsAreLoaded() error {
 	// again due to the fact that multiple threads might have locked this the
 	// first time
 	if rd.applicationMap == nil {
-		apps, _, err := dao.GetApplicationDao(&dao.RequestParams{TenantID: &rd.TenantID}).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
+		apps, _, err := dao.GetApplicationDao(&dao.RequestParams{TenantID: &rd.TenantID, UserID: rd.UserID}).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}
