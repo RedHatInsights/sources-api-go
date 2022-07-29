@@ -308,57 +308,65 @@ func TestAuthenticationGetNotFound(t *testing.T) {
 }
 
 func TestAuthenticationCreate(t *testing.T) {
+	tenantId := int64(1)
+	// Set the encryption key
 	util.OverrideEncryptionKey(strings.Repeat("test", 8))
-	requestBody := m.AuthenticationCreateRequest{
-		Name:          util.StringRef("TestRequest"),
-		AuthType:      "test",
-		Username:      util.StringRef("testUser"),
-		Password:      util.StringRef("123456"),
-		ResourceType:  "Application",
-		ResourceIDRaw: 1,
-	}
 
-	body, err := json.Marshal(requestBody)
-	if err != nil {
-		t.Error("Could not marshal JSON")
-	}
+	// Test the creation of authentication for an application, fpr an endpoint
+	// and for a source
 
-	c, rec := request.CreateTestContext(
-		http.MethodPost,
-		"/api/sources/v3.1/authentications",
-		bytes.NewReader(body),
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
-	)
-	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	for _, resourceType := range []string{"Application", "Endpoint", "Source"} {
+		requestBody := m.AuthenticationCreateRequest{
+			Name:          util.StringRef("TestRequest"),
+			AuthType:      "test",
+			Username:      util.StringRef("testUser"),
+			Password:      util.StringRef("123456"),
+			ResourceType:  resourceType,
+			ResourceIDRaw: 1,
+		}
 
-	err = AuthenticationCreate(c)
-	if err != nil {
-		t.Error(err)
-	}
+		body, err := json.Marshal(requestBody)
+		if err != nil {
+			t.Error("Could not marshal JSON")
+		}
 
-	if rec.Code != http.StatusCreated {
-		t.Errorf("Did not return 201. Body: %s", rec.Body.String())
-	}
+		c, rec := request.CreateTestContext(
+			http.MethodPost,
+			"/api/sources/v3.1/authentications",
+			bytes.NewReader(body),
+			map[string]interface{}{
+				"tenantID": tenantId,
+			},
+		)
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	auth := m.AuthenticationResponse{}
-	raw, _ := io.ReadAll(rec.Body)
-	err = json.Unmarshal(raw, &auth)
-	if err != nil {
-		t.Errorf("Failed to unmarshal application from response: %v", err)
-	}
+		err = AuthenticationCreate(c)
+		if err != nil {
+			t.Error(err)
+		}
 
-	if auth.ResourceType != "Application" {
-		t.Errorf("Wrong resource type, wanted %v got %v", "Application", auth.ResourceType)
-	}
+		if rec.Code != http.StatusCreated {
+			t.Errorf("Did not return 201. Body: %s", rec.Body.String())
+		}
 
-	if auth.Username != "testUser" {
-		t.Errorf("Wrong user name, wanted %v got %v", "testUser", auth.Username)
-	}
+		auth := m.AuthenticationResponse{}
+		raw, _ := io.ReadAll(rec.Body)
+		err = json.Unmarshal(raw, &auth)
+		if err != nil {
+			t.Errorf("Failed to unmarshal application from response: %v", err)
+		}
 
-	if auth.ResourceID != "1" {
-		t.Errorf("Wrong resource ID, wanted %v got %v", 1, auth.ResourceID)
+		if auth.ResourceType != resourceType {
+			t.Errorf("Wrong resource type, wanted %v got %v", "Application", auth.ResourceType)
+		}
+
+		if auth.Username != "testUser" {
+			t.Errorf("Wrong user name, wanted %v got %v", "testUser", auth.Username)
+		}
+
+		if auth.ResourceID != "1" {
+			t.Errorf("Wrong resource ID, wanted %v got %v", 1, auth.ResourceID)
+		}
 	}
 }
 
