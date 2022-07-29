@@ -12,7 +12,9 @@ import (
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 )
 
-const SUPERKEY_REQUEST_QUEUE = "platform.sources.superkey-requests"
+const superkeyRequestedTopic = "platform.sources.superkey-requests"
+
+var superkeyTopic = config.Get().KafkaTopic(superkeyRequestedTopic)
 
 func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
@@ -129,7 +131,7 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 }
 
 func produceSuperkeyRequest(m *kafka.Message) error {
-	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, SUPERKEY_REQUEST_QUEUE)
+	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, superkeyTopic)
 	if err != nil {
 		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
 	}
