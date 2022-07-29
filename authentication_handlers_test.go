@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"io"
 	"net/http"
 	"strconv"
@@ -366,6 +368,27 @@ func TestAuthenticationCreate(t *testing.T) {
 
 		if auth.ResourceID != "1" {
 			t.Errorf("Wrong resource ID, wanted %v got %v", 1, auth.ResourceID)
+		}
+
+		// Check the tenancy (only for integration tests)
+		// and
+		// Delete created authentication (it makes sense only for integration tests, in case of unit tests
+		// the mock for auth create doesn't create new auth in the memory)
+		if parser.RunningIntegrationTests {
+			requestParams := dao.RequestParams{TenantID: &tenantId}
+			authenticationDao := dao.GetAuthenticationDao(&requestParams)
+			authOut, err := authenticationDao.GetById(auth.ID)
+			if err != nil {
+				t.Error(err)
+			}
+			if authOut.TenantID != tenantId {
+				t.Errorf("authentication's tenant id = %d, expected %d", authOut.TenantID, tenantId)
+			}
+
+			_, err = authenticationDao.Delete(auth.ID)
+			if err != nil {
+				t.Error(err)
+			}
 		}
 	}
 }
