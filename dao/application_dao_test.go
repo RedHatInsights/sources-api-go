@@ -12,6 +12,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/go-cmp/cmp"
 )
 
 // testApplication holds a test application in order to avoid having to write the "fixtures..." stuff every time.
@@ -400,4 +401,88 @@ func TestApplicationListOffsetAndLimit(t *testing.T) {
 		}
 	}
 	DropSchema("offset_limit")
+}
+
+func TestApplicationListUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	accountNumber := "112567"
+	userIDWithOwnRecords := "user_based_user"
+	otherUserIDWithOwnRecords := "other_user"
+	userIDWithoutOwnRecords := "another_user"
+
+	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
+	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+	recordsWithUserID, user, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	_, _, err = CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &otherUserIDWithOwnRecords)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	recordsWithoutUserID, _, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, nil)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	requestParams := &RequestParams{TenantID: &user.TenantID, UserID: &user.Id}
+	applicationDao := GetApplicationDao(requestParams)
+
+	applications, _, err := applicationDao.List(100, 0, []util.Filter{})
+	if err != nil {
+		t.Errorf(`unexpected error when listing the application authentications: %s`, err)
+	}
+
+	var applicationIDs []int64
+	for _, application := range applications {
+		applicationIDs = append(applicationIDs, application.ID)
+	}
+
+	var expectedApplicationIDs []int64
+	for _, application := range recordsWithUserID.Applications {
+		expectedApplicationIDs = append(expectedApplicationIDs, application.ID)
+	}
+
+	for _, application := range recordsWithoutUserID.Applications {
+		expectedApplicationIDs = append(expectedApplicationIDs, application.ID)
+	}
+
+	if !cmp.Equal(applicationIDs, expectedApplicationIDs) {
+		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedApplicationIDs, applicationIDs)
+	}
+
+	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
+	if err != nil {
+		t.Errorf(`unable to create user: %v`, err)
+	}
+
+	requestParams = &RequestParams{TenantID: &user.TenantID, UserID: &userWithoutOwnRecords.Id}
+	applicationDao = GetApplicationDao(requestParams)
+
+	applications, _, err = applicationDao.List(100, 0, []util.Filter{})
+	if err != nil {
+		t.Errorf(`unexpected error when listing the application authentications: %s`, err)
+	}
+
+	applicationIDs = []int64{}
+	for _, application := range applications {
+		applicationIDs = append(applicationIDs, application.ID)
+	}
+
+	expectedApplicationIDs = []int64{}
+	for _, application := range recordsWithoutUserID.Applications {
+		expectedApplicationIDs = append(expectedApplicationIDs, application.ID)
+	}
+
+	if !cmp.Equal(applicationIDs, expectedApplicationIDs) {
+		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedApplicationIDs, applicationIDs)
+	}
+
+	DropSchema(schema)
 }

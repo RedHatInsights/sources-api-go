@@ -51,9 +51,24 @@ func (a *applicationDaoImpl) getDbWithTable(query *gorm.DB, table string) *gorm.
 
 	query = query.Where(whereCondition+"tenant_id = ?", a.TenantID)
 
-	return query
+	return a.useUserForDB(query, table)
 }
 
+func (a *applicationDaoImpl) useUserForDB(query *gorm.DB, table string) *gorm.DB {
+	var whereCondition string
+	if table != "" {
+		whereCondition = fmt.Sprintf("%s.", table)
+	}
+
+	if a.UserID != nil {
+		condition := fmt.Sprintf("%[1]vuser_id IS NULL OR %[1]vuser_id = ?", whereCondition)
+		query = query.Where(condition, a.UserID)
+	} else {
+		query = query.Where(whereCondition + "user_id IS NULL")
+	}
+
+	return query
+}
 
 func (a *applicationDaoImpl) getDb() *gorm.DB {
 	return a.getDbWithTable(DB.Debug(), "")
