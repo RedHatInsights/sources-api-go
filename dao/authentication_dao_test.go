@@ -12,6 +12,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/vault/api"
 )
 
@@ -300,4 +301,88 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 	}
 	DropSchema("offset_limit")
 	conf.SecretStore = originalSecretStore
+}
+
+func TestAuthenticationListUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	accountNumber := "112567"
+	userIDWithOwnRecords := "user_based_user"
+	otherUserIDWithOwnRecords := "other_user"
+	userIDWithoutOwnRecords := "another_user"
+
+	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
+	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+	recordsWithUserID, user, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	_, _, err = CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &otherUserIDWithOwnRecords)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	recordsWithoutUserID, _, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, nil)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	requestParams := &RequestParams{TenantID: &user.TenantID, UserID: &user.Id}
+	authenticationDao := GetAuthenticationDao(requestParams)
+
+	authentications, _, err := authenticationDao.List(100, 0, []util.Filter{})
+	if err != nil {
+		t.Errorf(`unexpected error when listing the application authentications: %s`, err)
+	}
+
+	var authenticationIDs []int64
+	for _, authentication := range authentications {
+		authenticationIDs = append(authenticationIDs, authentication.DbID)
+	}
+
+	var expectedAuthenticationIDs []int64
+	for _, authentication := range recordsWithUserID.Authentications {
+		expectedAuthenticationIDs = append(expectedAuthenticationIDs, authentication.DbID)
+	}
+
+	for _, authentication := range recordsWithoutUserID.Authentications {
+		expectedAuthenticationIDs = append(expectedAuthenticationIDs, authentication.DbID)
+	}
+
+	if !cmp.Equal(authenticationIDs, expectedAuthenticationIDs) {
+		t.Errorf("Expected authentication IDs %v are not same with obtained ids: %v", expectedAuthenticationIDs, authenticationIDs)
+	}
+
+	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
+	if err != nil {
+		t.Errorf(`unable to create user: %v`, err)
+	}
+
+	requestParams = &RequestParams{TenantID: &user.TenantID, UserID: &userWithoutOwnRecords.Id}
+	authenticationDao = GetAuthenticationDao(requestParams)
+
+	authentications, _, err = authenticationDao.List(100, 0, []util.Filter{})
+	if err != nil {
+		t.Errorf(`unexpected error when listing the application authentications: %s`, err)
+	}
+
+	authenticationIDs = []int64{}
+	for _, authentication := range authentications {
+		authenticationIDs = append(authenticationIDs, authentication.DbID)
+	}
+
+	expectedAuthenticationIDs = []int64{}
+	for _, authentication := range recordsWithoutUserID.Authentications {
+		expectedAuthenticationIDs = append(expectedAuthenticationIDs, authentication.DbID)
+	}
+
+	if !cmp.Equal(authenticationIDs, expectedAuthenticationIDs) {
+		t.Errorf("Expected authentication IDs %v are not same with obtained ids: %v", expectedAuthenticationIDs, authenticationIDs)
+	}
+
+	DropSchema(schema)
 }

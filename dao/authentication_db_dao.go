@@ -19,8 +19,14 @@ func (add *authenticationDaoDbImpl) getDb() *gorm.DB {
 	if add.TenantID == nil {
 		panic("nil tenant found in sourceDaoImpl DAO")
 	}
-	
+
 	query := DB.Debug().Where("tenant_id = ?", add.TenantID)
+
+	if add.UserID != nil {
+		query = query.Where("user_id IS NULL OR user_id = ?", add.UserID)
+	} else {
+		query = query.Where("user_id IS NULL")
+	}
 
 	return query
 }
