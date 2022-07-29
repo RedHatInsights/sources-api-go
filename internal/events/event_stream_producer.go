@@ -10,9 +10,12 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-const EventStreamTopic = "platform.sources.event-stream"
+const eventStreamRequestedTopic = "platform.sources.event-stream"
 
-var config = c.Get()
+var (
+	config           = c.Get()
+	eventStreamTopic = config.KafkaTopic(eventStreamRequestedTopic)
+)
 
 type EventStreamProducer struct {
 	Sender
@@ -26,9 +29,9 @@ type EventStreamSender struct {
 }
 
 func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
-	logging.Log.Debugf("publishing message %v to topic %q...", eventType, EventStreamTopic)
+	logging.Log.Debugf("publishing message %v to topic %q...", eventType, eventStreamTopic)
 
-	kf, err := kafka.GetWriter(&config.KafkaBrokerConfig, EventStreamTopic)
+	kf, err := kafka.GetWriter(&config.KafkaBrokerConfig, eventStreamTopic)
 	if err != nil {
 		return fmt.Errorf(`unable to create a Kafka writer to raise an event: %w`, err)
 	}
@@ -51,7 +54,7 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 		return err
 	}
 
-	logging.Log.Debugf("publishing message %v to topic %q...Complete", eventType, EventStreamTopic)
+	logging.Log.Debugf("publishing message %v to topic %q...Complete", eventType, eventStreamTopic)
 
 	return nil
 }
