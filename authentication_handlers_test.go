@@ -14,7 +14,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/middleware"
@@ -191,55 +190,53 @@ func TestAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 }
 
 func TestAuthenticationGet(t *testing.T) {
-	var id string
+	tenantId := int64(1)
 	originalSecretStore := conf.SecretStore
 
-	// If we're running integration tests without Vault...
-	if parser.RunningIntegrationTests && !config.IsVaultOn() {
-		id = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
-	} else {
-		// If we're either running unit tests, or integration tests with Vault, we force the secret store to be "vault"
-		// since there are multiple places where this "if config.IsVaultOn()" check is run.
-		conf.SecretStore = "vault"
-		id = fixtures.TestAuthenticationData[0].ID
-	}
+	// Run this test for secret store = [vault, database]
+	for _, s := range []string{"vault", "database"} {
+		conf.SecretStore = s
 
-	c, rec := request.CreateTestContext(
-		http.MethodGet,
-		"/api/sources/v3.1/authentications/"+id,
-		nil,
-		map[string]interface{}{
-			"tenantID": int64(1),
-		},
-	)
-
-	c.SetParamNames("uid")
-	c.SetParamValues(id)
-
-	err := AuthenticationGet(c)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if rec.Code != http.StatusOK {
-		t.Error("Did not return 200")
-	}
-
-	var outAuthentication m.AuthenticationResponse
-	err = json.Unmarshal(rec.Body.Bytes(), &outAuthentication)
-	if err != nil {
-		t.Error("Failed unmarshaling output")
-	}
-
-	if config.IsVaultOn() {
-		if outAuthentication.ID != id {
-			t.Error("ghosts infected the return")
+		var id string
+		if config.IsVaultOn() {
+			conf.SecretStore = "vault"
+			id = fixtures.TestAuthenticationData[0].ID
+		} else {
+			id = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
 		}
-	} else {
+
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/authentications/"+id,
+			nil,
+			map[string]interface{}{
+				"tenantID": tenantId,
+			},
+		)
+
+		c.SetParamNames("uid")
+		c.SetParamValues(id)
+
+		err := AuthenticationGet(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var outAuthentication m.AuthenticationResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &outAuthentication)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
 		if outAuthentication.ID != id {
 			t.Errorf(`wrong authentication fetched. Want "%s", got "%s"`, id, outAuthentication.ID)
 		}
 	}
+
 	conf.SecretStore = originalSecretStore
 }
 
