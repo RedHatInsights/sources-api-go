@@ -235,6 +235,23 @@ func TestAuthenticationGet(t *testing.T) {
 		if outAuthentication.ID != id {
 			t.Errorf(`wrong authentication fetched. Want "%s", got "%s"`, id, outAuthentication.ID)
 		}
+
+		// Check the tenancy of returned authentication
+		for _, a := range fixtures.TestAuthenticationData {
+			var fixturesAuthId string
+			if config.IsVaultOn() {
+				fixturesAuthId = a.ID
+			} else {
+				fixturesAuthId = strconv.FormatInt(a.DbID, 10)
+			}
+
+			if fixturesAuthId == id {
+				if a.TenantID != tenantId {
+					t.Error("ghosts infected the return")
+				}
+				break
+			}
+		}
 	}
 
 	conf.SecretStore = originalSecretStore
