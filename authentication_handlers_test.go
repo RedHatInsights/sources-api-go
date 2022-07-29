@@ -257,6 +257,32 @@ func TestAuthenticationGet(t *testing.T) {
 	conf.SecretStore = originalSecretStore
 }
 
+func TestAuthenticationGetTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := fixtures.NotExistingTenantId
+	uid := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/authentications/"+uid,
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("uid")
+	c.SetParamValues(uid)
+
+	notFoundAuthenticationGet := ErrorHandlingContext(AuthenticationGet)
+	err := notFoundAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestAuthenticationGetNotFound(t *testing.T) {
 	uid := "abcdefg"
 
