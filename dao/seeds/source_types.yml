@@ -273,7 +273,7 @@ oracle-cloud-infrastructure:
   category: Cloud
   product_name: Oracle Cloud Infrastructure
   vendor: Oracle
-  icon_url: "/apps/frontend-assets/partners-icons/oracle-cloud-infra.svg"
+  icon_url: "/apps/frontend-assets/partners-icons/oracle-short.svg"
   schema:
     authentication:
       - type: ocid
