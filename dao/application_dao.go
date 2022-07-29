@@ -165,6 +165,10 @@ func (a *applicationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
+func (a *applicationDaoImpl) User() *int64 {
+	return a.UserID
+}
+
 func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 	var valid bool
 

@@ -477,6 +477,11 @@ func (a *MockApplicationDao) Tenant() *int64 {
 	return &tenant
 }
 
+func (a *MockApplicationDao) User() *int64 {
+	user := int64(1)
+	return &user
+}
+
 func (a *MockApplicationDao) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
 	var application *m.Application
 	for _, app := range fixtures.TestApplicationData {

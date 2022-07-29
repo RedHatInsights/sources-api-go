@@ -46,6 +46,7 @@ type ApplicationDao interface {
 	Update(src *m.Application) error
 	Delete(id *int64) (*m.Application, error)
 	Tenant() *int64
+	User() *int64
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error)
 	ToEventJSON(resource util.Resource) ([]byte, error)
