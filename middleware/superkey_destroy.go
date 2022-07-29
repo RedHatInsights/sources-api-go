@@ -78,7 +78,12 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 			return util.NewErrBadRequest(err)
 		}
 
-		a := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
+		requestParams, err := dao.NewRequestParamsFromContext(c)
+		if err != nil {
+			return fmt.Errorf("unable to process user id or tenant id value from request: %v", err)
+		}
+
+		a := dao.GetApplicationDao(requestParams)
 
 		if a.IsSuperkey(id) {
 			xrhid, ok := c.Get(h.XRHID).(string)
