@@ -26,9 +26,9 @@ func TestParseAll(t *testing.T) {
 
 	c.Request().Header.Set(h.XRHID, xrhid)
 	c.Request().Header.Set(h.PSK, "1234")
-	c.Request().Header.Set(h.ACCOUNT_NUMBER, "1a2b3c4d5e")
+	c.Request().Header.Set(h.ACCOUNT_NUMBER, emptyIdentity.Identity.AccountNumber)
 	c.Request().Header.Set(h.PSK_USER, "55555")
-	c.Request().Header.Set(h.ORGID, "abcde")
+	c.Request().Header.Set(h.ORGID, emptyIdentity.Identity.OrgID)
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -43,15 +43,15 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was set as psk instead of %v", c.Get(h.PSK).(string), "1234")
 	}
 
-	if c.Get(h.ACCOUNT_NUMBER).(string) != "1a2b3c4d5e" {
-		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
+	if c.Get(h.ACCOUNT_NUMBER).(string) != "12345" {
+		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "12345")
 	}
 
 	if c.Get(h.PSK_USER).(string) != "55555" {
 		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "55555")
 	}
 
-	if c.Get(h.ORGID).(string) != "abcde" {
+	if c.Get(h.ORGID).(string) != "23456" {
 		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.ORGID).(string))
 	}
 

@@ -14,7 +14,7 @@ import (
 
 var (
 	xrhid         string
-	emptyIdentity = identity.XRHID{Identity: identity.Identity{AccountNumber: "12345"}}
+	emptyIdentity = identity.XRHID{Identity: identity.Identity{AccountNumber: "12345", OrgID: "23456"}}
 )
 
 func TestMain(t *testing.M) {
