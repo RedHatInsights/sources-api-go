@@ -425,6 +425,31 @@ func TestAuthenticationCreateBadRequestInvalidResourceType(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+// TestAuthenticationCreateBadRequestInvalidRequest tests that bad request err is returned
+// for request that contains wrong field name
+func TestAuthenticationCreateBadRequestInvalidRequest(t *testing.T) {
+	tenantId := int64(1)
+	rawJSON := `{"wrong_field_name": "psw"}`
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/authentications",
+		bytes.NewReader([]byte(rawJSON)),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestAuthenticationCreate := ErrorHandlingContext(AuthenticationCreate)
+	err := badRequestAuthenticationCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 // TestAuthenticationCreateResourceNotFound tests that bad request is returned when
 // you try to create authentication for not existing resource
 func TestAuthenticationCreateResourceNotFound(t *testing.T) {
