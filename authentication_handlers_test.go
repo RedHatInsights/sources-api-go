@@ -425,6 +425,46 @@ func TestAuthenticationCreateBadRequestInvalidResourceType(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+// TestAuthenticationCreateResourceNotFound tests that bad request is returned when
+// you try to create authentication for not existing resource
+func TestAuthenticationCreateResourceNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	for _, resourceType := range []string{"Application", "Endpoint", "Source"} {
+
+		requestBody := m.AuthenticationCreateRequest{
+			Username:      util.StringRef("testUser"),
+			Password:      util.StringRef("123456"),
+			ResourceType:  resourceType,
+			ResourceIDRaw: 54321,
+		}
+
+		body, err := json.Marshal(requestBody)
+		if err != nil {
+			t.Error("Could not marshal JSON")
+		}
+
+		c, rec := request.CreateTestContext(
+			http.MethodPost,
+			"/api/sources/v3.1/authentications",
+			bytes.NewReader(body),
+			map[string]interface{}{
+				"tenantID": tenantId,
+			},
+		)
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+		badRequestAuthenticationCreate := ErrorHandlingContext(AuthenticationCreate)
+		err = badRequestAuthenticationCreate(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		templates.BadRequestTest(t, rec)
+	}
+}
+
 func TestAuthenticationEdit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
