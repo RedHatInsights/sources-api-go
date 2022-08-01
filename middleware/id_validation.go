@@ -18,7 +18,7 @@ var idValidationRegex = regexp.MustCompile(`^\d+$`)
 func IdValidation(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		for _, param := range c.ParamNames() {
-			if strings.HasSuffix(param, "id") {
+			if strings.HasSuffix(param, "id") && param != "uid" {
 				err := validateId(c, param)
 				if err != nil {
 					return util.NewErrBadRequest(err)
