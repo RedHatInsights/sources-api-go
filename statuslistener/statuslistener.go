@@ -17,19 +17,22 @@ import (
 )
 
 const (
-	sourcesStatusTopic      = "platform.sources.status"
-	groupID                 = "sources-api-status-worker"
-	eventAvailabilityStatus = "availability_status"
+	sourcesStatusRequestedTopic = "platform.sources.status"
+	groupID                     = "sources-api-status-worker"
+	eventAvailabilityStatus     = "availability_status"
 )
 
-var config = c.Get()
+var (
+	config             = c.Get()
+	sourcesStatusTopic = config.KafkaTopic(sourcesStatusRequestedTopic)
+)
 
 type AvailabilityStatusListener struct {
 	*events.EventStreamProducer
 }
 
 func Run(shutdown chan struct{}) {
-	l.Log.Infof("Starting Availability Status Listener on topic [%v]", config.KafkaTopic(sourcesStatusTopic))
+	l.Log.Infof("Starting Availability Status Listener on topic [%v]", sourcesStatusTopic)
 
 	avs := AvailabilityStatusListener{EventStreamProducer: NewEventStreamProducer()}
 	avs.subscribeToAvailabilityStatus(shutdown)
