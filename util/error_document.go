@@ -11,11 +11,18 @@ var ErrNotFoundEmpty = NewErrNotFound("")
 var ErrBadRequestEmpty = NewErrBadRequest("")
 
 type Error struct {
-	Detail string `json:"detail"`
-	Status string `json:"status"`
+	Detail    string `json:"detail"`
+	Status    string `json:"status"`
+	RequestId string `json:"request_id,omitempty"`
 }
 type ErrorDocument struct {
 	Errors []Error `json:"errors"`
+}
+
+func ErrorDocWithRequestId(message, status, uuid string) *ErrorDocument {
+	e := ErrorDocWithoutLogging(message, status)
+	e.Errors[0].RequestId = uuid
+	return e
 }
 
 func ErrorDoc(message, status string) *ErrorDocument {

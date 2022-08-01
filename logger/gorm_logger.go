@@ -30,18 +30,28 @@ func (l *GormLogger) Error(_ context.Context, logMessage string, data ...interfa
 // Trace runs a SQL query and logs how long it took as well as the sql executed.
 // By default the log entry is debug, but if the SQL is very slow it will log as
 // warn.
-func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
+func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 	duration := float64(elapsed.Nanoseconds()) / 1e6
 	fileWithLineNum := utils.FileWithLineNum()
 
-	loggerEntry := l.Logger.WithFields(logrus.Fields{
+	var entry *logrus.Entry
+	var ok bool
+	if ctx.Value(EchoLogger{}) != nil {
+		if entry, ok = ctx.Value(EchoLogger{}).(*logrus.Entry); !ok {
+			// falling back to a default logger if the asserion fails
+			entry = Log.WithFields(logrus.Fields{})
+		}
+	} else {
+		entry = Log.WithFields(logrus.Fields{})
+	}
+
+	sqlFields := logrus.Fields{
 		"rows":     rows,
 		"duration": duration,
 		"filename": fileWithLineNum,
-		"log_type": SQLType,
-	})
+	}
 
 	switch {
 	case err != nil:
@@ -49,10 +59,10 @@ func (l *GormLogger) Trace(_ context.Context, begin time.Time, fc func() (sql st
 			return
 		}
 
-		loggerEntry.Warn(sql)
+		entry.WithFields(sqlFields).Warn(sql)
 	case elapsed > l.SlowThreshold && l.SlowThreshold != 0:
-		loggerEntry.Warn("SLOW SQL: " + sql)
+		entry.WithFields(sqlFields).Warn("SLOW SQL: " + sql)
 	default:
-		loggerEntry.Debug(sql)
+		entry.WithFields(sqlFields).Debug(sql)
 	}
 }

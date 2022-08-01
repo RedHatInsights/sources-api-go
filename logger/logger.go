@@ -17,12 +17,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const (
-	DefaultType = "default"
-	RequestType = "request"
-	SQLType     = "sql"
-)
-
 var whiteListForFunctionsInBacktrace = []string{"RedHatInsights", "redhatinsights", "main"}
 var Log *logrus.Logger
 
@@ -148,8 +142,8 @@ type Marshaler interface {
 	MarshalLog() map[string]interface{}
 }
 
-func newLoggerFormatter(config *appconf.SourcesApiConfig, logType string) *LogFormatter {
-	return &LogFormatter{AppName: config.AppName, Hostname: config.Hostname, LogType: logType}
+func newLoggerFormatter(config *appconf.SourcesApiConfig) *LogFormatter {
+	return &LogFormatter{AppName: config.AppName, Hostname: config.Hostname}
 }
 
 func basicLogFields(logLevel string, appName string, hostName string) map[string]interface{} {
@@ -216,43 +210,11 @@ func (f *LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func FormatForMiddleware(config *appconf.SourcesApiConfig) string {
-	// fields of default format from (converted to JSON): labstack/echo/v4@v4.4.0/middleware/logger.go
-	defaultFormat := `{"time":"${time_rfc3339_nano}","id":"${id}","remote_ip":"${remote_ip}",` +
-		`"host":"${host}","method":"${method}","uri":"${uri}","user_agent":"${user_agent}",` +
-		`"status":"${status}","error":"${error}","latency":"${latency}","latency_human":"${latency_human}"` +
-		`,"bytes_in":"${bytes_in}","bytes_out":"${bytes_out}"}` + "\n"
-
-	fieldsDefaultFormat := make(map[string]interface{})
-
-	err := json.Unmarshal([]byte(defaultFormat), &fieldsDefaultFormat)
-
-	if err != nil {
-		Log.Warn("Unmarshalling Error in FormatForMiddleware: " + err.Error())
-		return defaultFormat
-	}
-
-	for k, v := range basicLogFields(config.LogLevel, config.AppName, config.Hostname) {
-		fieldsDefaultFormat[k] = v
-	}
-
-	fieldsDefaultFormat["log_type"] = RequestType
-
-	j, err := json.Marshal(fieldsDefaultFormat)
-
-	if err != nil {
-		Log.Warn("Marshalling Error in FormatForMiddleware: " + err.Error())
-		return defaultFormat
-	}
-
-	return string(j)
-}
-
 func InitLogger(config *appconf.SourcesApiConfig) {
 	Log = &logrus.Logger{
 		Out:          os.Stdout,
 		Level:        parseLogLevel(config.LogLevel),
-		Formatter:    newLoggerFormatter(config, DefaultType),
+		Formatter:    newLoggerFormatter(config),
 		Hooks:        make(logrus.LevelHooks),
 		ReportCaller: true,
 	}

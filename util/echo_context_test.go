@@ -6,7 +6,11 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/labstack/echo/v4"
 )
+
+// (compile-time check to make sure our context behaves like an echo.Context)
+var _ = (echo.Context)(&SourcesContext{})
 
 // TestGetTenantFromEchoContext tests that the tenant id is correctly pulled from the context when the tenant has been
 // passed correctly.
