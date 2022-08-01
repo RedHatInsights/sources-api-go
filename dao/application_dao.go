@@ -20,6 +20,7 @@ func getDefaultApplicationDao(daoParams *RequestParams) ApplicationDao {
 	var tenantID, userID *int64
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
+		userID = daoParams.UserID
 	}
 
 	return &applicationDaoImpl{
@@ -38,6 +39,45 @@ type applicationDaoImpl struct {
 	UserID   *int64
 }
 
+func (a *applicationDaoImpl) getDbWithTable(query *gorm.DB, table string) *gorm.DB {
+	if a.TenantID == nil {
+		panic("nil tenant found in sourceDaoImpl DAO")
+	}
+
+	var whereCondition string
+	if table != "" {
+		whereCondition = fmt.Sprintf("%s.", table)
+	}
+
+	query = query.Where(whereCondition+"tenant_id = ?", a.TenantID)
+
+	return a.useUserForDB(query, table)
+}
+
+func (a *applicationDaoImpl) useUserForDB(query *gorm.DB, table string) *gorm.DB {
+	var whereCondition string
+	if table != "" {
+		whereCondition = fmt.Sprintf("%s.", table)
+	}
+
+	if a.UserID != nil {
+		condition := fmt.Sprintf("%[1]vuser_id IS NULL OR %[1]vuser_id = ?", whereCondition)
+		query = query.Where(condition, a.UserID)
+	} else {
+		query = query.Where(whereCondition + "user_id IS NULL")
+	}
+
+	return query
+}
+
+func (a *applicationDaoImpl) getDb() *gorm.DB {
+	return a.getDbWithTable(DB.Debug(), "")
+}
+
+func (a *applicationDaoImpl) getDbWithModel() *gorm.DB {
+	return a.getDb().Model(&m.Application{})
+}
+
 func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
 	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
@@ -46,7 +86,7 @@ func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 	}
 
 	query := relationObject.HasMany(&m.Application{}, DB.Debug())
-	query = query.Where("applications.tenant_id = ?", a.TenantID)
+	query = a.getDbWithTable(query, "applications")
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
@@ -65,9 +105,7 @@ func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 
 func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
-	query := DB.Debug().
-		Model(&m.Application{}).
-		Where("applications.tenant_id = ?", a.TenantID)
+	query := a.getDbWithModel()
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -90,10 +128,8 @@ func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 	var app m.Application
 
-	err := DB.Debug().
-		Model(&m.Application{}).
+	err := a.getDbWithModel().
 		Where("id = ?", *id).
-		Where("tenant_id = ?", a.TenantID).
 		First(&app).
 		Error
 
@@ -106,10 +142,8 @@ func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 
 // GetByIdWithPreload searches for an application and preloads any specified relations.
 func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
-	q := DB.Debug().
-		Model(&m.Application{}).
-		Where("id = ?", *id).
-		Where("tenant_id = ?", a.TenantID)
+	q := a.getDbWithModel().
+		Where("id = ?", *id)
 
 	for _, preload := range preloads {
 		q = q.Preload(preload)
@@ -135,18 +169,16 @@ func (a *applicationDaoImpl) Create(app *m.Application) error {
 }
 
 func (a *applicationDaoImpl) Update(app *m.Application) error {
-	result := DB.Debug().Updates(app)
+	result := a.getDb().Updates(app)
 	return result.Error
 }
 
 func (a *applicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 	var application m.Application
 
-	result := DB.
-		Debug().
+	result := a.getDb().
 		Clauses(clause.Returning{}).
 		Where("id = ?", id).
-		Where("tenant_id = ?", a.TenantID).
 		Delete(&application)
 
 	if result.Error != nil {
@@ -164,13 +196,16 @@ func (a *applicationDaoImpl) Tenant() *int64 {
 	return a.TenantID
 }
 
+func (a *applicationDaoImpl) User() *int64 {
+	return a.UserID
+}
+
 func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 	var valid bool
 
-	result := DB.Model(&m.Application{}).
+	result := a.getDbWithTable(DB.Debug(), "applications").
 		Select(`"Source".app_creation_workflow = ?`, m.AccountAuth).
 		Where("applications.id = ?", id).
-		Where("applications.tenant_id = ?", a.TenantID).
 		Joins("Source").
 		First(&valid)
 
@@ -184,8 +219,7 @@ func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	var application m.Application
 
-	err := DB.Debug().
-		Model(&m.Application{}).
+	err := a.getDbWithModel().
 		Where("id = ?", resource.ResourceID).
 		Preload("Source").
 		Find(&application).
@@ -203,8 +237,7 @@ func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 }
 
 func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
-	result := DB.Debug().
-		Model(&m.Application{}).
+	result := a.getDbWithModel().
 		Where("id = ?", resource.ResourceID).
 		Updates(updateAttributes)
 
@@ -223,8 +256,7 @@ func (a *applicationDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttr
 func (a *applicationDaoImpl) FindWithTenant(id *int64) (*m.Application, error) {
 	var app m.Application
 
-	err := DB.Debug().
-		Model(&m.Application{}).
+	err := a.getDbWithModel().
 		Where("id = ?", *id).
 		Preload("Tenant").
 		Find(&app).
@@ -241,10 +273,8 @@ func (a *applicationDaoImpl) ToEventJSON(resource util.Resource) ([]byte, error)
 }
 
 func (a *applicationDaoImpl) Pause(id int64) error {
-	err := DB.Debug().
-		Model(&m.Application{}).
+	err := a.getDbWithModel().
 		Where("id = ?", id).
-		Where("tenant_id = ?", a.TenantID).
 		Update("paused_at", time.Now()).
 		Error
 
@@ -252,10 +282,8 @@ func (a *applicationDaoImpl) Pause(id int64) error {
 }
 
 func (a *applicationDaoImpl) Unpause(id int64) error {
-	err := DB.Debug().
-		Model(&m.Application{}).
+	err := a.getDbWithModel().
 		Where("id = ?", id).
-		Where("tenant_id = ?", a.TenantID).
 		Update("paused_at", nil).
 		Error
 
@@ -327,10 +355,9 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 func (a *applicationDaoImpl) Exists(applicationId int64) (bool, error) {
 	var applicationExists bool
 
-	err := DB.Model(&m.Application{}).
+	err := a.getDbWithModel().
 		Select("1").
 		Where("id = ?", applicationId).
-		Where("tenant_id = ?", a.TenantID).
 		Scan(&applicationExists).
 		Error
 

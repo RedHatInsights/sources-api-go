@@ -321,7 +321,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					continue
 				}
 			case "application":
-				_, err = dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenant.Id}).GetById(&id)
+				_, err = dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenant.Id, UserID: &userResource.User.Id}).GetById(&id)
 				if err == nil {
 					l.Log.Debugf("Found existing Application with id %v, adding to list and continuing", id)
 					a.ResourceID = id
