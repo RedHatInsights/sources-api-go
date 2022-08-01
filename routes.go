@@ -129,22 +129,13 @@ func setupRoutes(e *echo.Echo) {
 	/**            **\
 	 * Internal API *
 	\**            **/
-	internalv2 := e.Group("/internal/v2.0", middleware.HandleErrors, middleware.ParseHeaders)
+	internalVersions := []string{"v1.0", "v2.0"}
+	for _, version := range internalVersions {
+		r := e.Group("/internal/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
 
-	// Authentications
-	internalv2.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
-
-	// Sources
-	internalv2.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
-
-	/**            **\
-	 * Internal API *
-	\**            **/
-	internvalv1 := e.Group("/internal/v1.0", middleware.HandleErrors, middleware.ParseHeaders)
-
-	// Authentications
-	internvalv1.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
-
-	// Sources
-	internvalv1.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
+		// Authentications
+		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
+		// Sources
+		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
+	}
 }
