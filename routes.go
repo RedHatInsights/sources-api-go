@@ -31,7 +31,14 @@ func setupRoutes(e *echo.Echo) {
 
 	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1", "v1", "v2", "v3"}
 	for _, version := range apiVersions {
-		r := e.Group("/api/sources/"+version, middleware.Timing, middleware.HandleErrors, middleware.IdValidation, middleware.ParseHeaders, middleware.LoggerFields)
+		// this is the "base" middleware set, used on every call
+		r := e.Group("/api/sources/"+version,
+			middleware.Timing,
+			middleware.HandleErrors,
+			middleware.IdValidation,
+			middleware.ParseHeaders,
+			middleware.LoggerFields,
+		)
 
 		// openapi
 		r.GET("/openapi.json", PublicOpenApi(version))
@@ -41,7 +48,7 @@ func setupRoutes(e *echo.Echo) {
 
 		// Sources
 		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
-		r.GET("/sources/:id", SourceGet, middleware.Tenancy, middleware.UserCatcher)
+		r.GET("/sources/:id", SourceGet, tenancyMiddleware...)
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
 		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
@@ -51,28 +58,28 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/authentications", SourceListAuthentications, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/rhc_connections", SourcesRhcConnectionList, tenancyWithListMiddleware...)
-		r.POST("/sources/:source_id/pause", SourcePause, middleware.Tenancy, middleware.UserCatcher)
-		r.POST("/sources/:source_id/unpause", SourceUnpause, middleware.Tenancy, middleware.UserCatcher)
+		r.POST("/sources/:source_id/pause", SourcePause, tenancyMiddleware...)
+		r.POST("/sources/:source_id/unpause", SourceUnpause, tenancyMiddleware...)
 
 		// Applications
 		r.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
-		r.GET("/applications/:id", ApplicationGet, middleware.Tenancy, middleware.UserCatcher)
+		r.GET("/applications/:id", ApplicationGet, tenancyMiddleware...)
 		r.POST("/applications", ApplicationCreate, permissionMiddleware...)
 		r.PATCH("/applications/:id", ApplicationEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.SuperKeyDestroyApplication)...)
 		r.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
-		r.POST("/applications/:id/pause", ApplicationPause, middleware.Tenancy, middleware.UserCatcher)
-		r.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy, middleware.UserCatcher)
+		r.POST("/applications/:id/pause", ApplicationPause, tenancyMiddleware...)
+		r.POST("/applications/:id/unpause", ApplicationUnpause, tenancyMiddleware...)
 
 		// Authentications
 		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
 		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
 		if config.IsVaultOn() {
-			r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.UserCatcher, middleware.UuidValidation)
+			r.GET("/authentications/:uid", AuthenticationGet, append(tenancyMiddleware, middleware.UuidValidation)...)
 			r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier, middleware.UuidValidation)...)
 			r.DELETE("/authentications/:uid", AuthenticationDelete, append(permissionMiddleware, middleware.UuidValidation)...)
 		} else {
-			r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.UserCatcher)
+			r.GET("/authentications/:uid", AuthenticationGet, tenancyMiddleware...)
 			r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier)...)
 			r.DELETE("/authentications/:uid", AuthenticationDelete, permissionMiddleware...)
 		}
@@ -92,7 +99,7 @@ func setupRoutes(e *echo.Echo) {
 
 		// ApplicationAuthentications
 		r.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
-		r.GET("/application_authentications/:id", ApplicationAuthenticationGet, middleware.Tenancy, middleware.UserCatcher)
+		r.GET("/application_authentications/:id", ApplicationAuthenticationGet, tenancyMiddleware...)
 		r.GET("/application_authentications/:application_authentication_id/authentications", ApplicationAuthenticationListAuthentications, tenancyWithListMiddleware...)
 		r.POST("/application_authentications", ApplicationAuthenticationCreate, permissionMiddleware...)
 		r.DELETE("/application_authentications/:id", ApplicationAuthenticationDelete, permissionMiddleware...)
@@ -116,7 +123,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
 
 		// GraphQL
-		r.POST("/graphql", GraphQLQuery, middleware.Tenancy, middleware.UserCatcher)
+		r.POST("/graphql", GraphQLQuery, tenancyMiddleware...)
 
 		// run the graphQL playground if running locally or in ephemeral. really handy for development!
 		// https://github.com/graphql/graphiql
