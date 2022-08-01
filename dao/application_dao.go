@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -18,14 +19,17 @@ var GetApplicationDao func(*RequestParams) ApplicationDao
 // getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultApplicationDao(daoParams *RequestParams) ApplicationDao {
 	var tenantID, userID *int64
+	var ctx context.Context
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
 		userID = daoParams.UserID
+		ctx = daoParams.ctx
 	}
 
 	return &applicationDaoImpl{
 		TenantID: tenantID,
 		UserID:   userID,
+		ctx:      ctx,
 	}
 }
 
@@ -37,6 +41,7 @@ func init() {
 type applicationDaoImpl struct {
 	TenantID *int64
 	UserID   *int64
+	ctx      context.Context
 }
 
 func (a *applicationDaoImpl) getDbWithTable(query *gorm.DB, table string) *gorm.DB {
@@ -71,7 +76,7 @@ func (a *applicationDaoImpl) useUserForDB(query *gorm.DB, table string) *gorm.DB
 }
 
 func (a *applicationDaoImpl) getDb() *gorm.DB {
-	return a.getDbWithTable(DB.Debug(), "")
+	return a.getDbWithTable(DB.Debug().WithContext(a.ctx), "")
 }
 
 func (a *applicationDaoImpl) getDbWithModel() *gorm.DB {
