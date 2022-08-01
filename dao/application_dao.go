@@ -20,6 +20,7 @@ func getDefaultApplicationDao(daoParams *RequestParams) ApplicationDao {
 	var tenantID, userID *int64
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
+		userID = daoParams.UserID
 	}
 
 	return &applicationDaoImpl{
