@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -13,6 +14,7 @@ import (
 type authenticationDaoDbImpl struct {
 	TenantID *int64
 	UserID   *int64
+	ctx      context.Context
 }
 
 func (add *authenticationDaoDbImpl) getDb() *gorm.DB {
@@ -20,7 +22,8 @@ func (add *authenticationDaoDbImpl) getDb() *gorm.DB {
 		panic("nil tenant found in sourceDaoImpl DAO")
 	}
 
-	query := DB.Debug().Where("tenant_id = ?", add.TenantID)
+	query := DB.Debug().WithContext(add.ctx)
+	query = query.Where("tenant_id = ?", add.TenantID)
 
 	if add.UserID != nil {
 		query = query.Where("user_id IS NULL OR user_id = ?", add.UserID)

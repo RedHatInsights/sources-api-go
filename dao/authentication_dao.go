@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,20 +31,24 @@ var GetAuthenticationDao func(daoParams *RequestParams) AuthenticationDao
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultAuthenticationDao(daoParams *RequestParams) AuthenticationDao {
 	var tenantID, userID *int64
+	var ctx context.Context
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
 		userID = daoParams.UserID
+		ctx = daoParams.ctx
 	}
 
 	if config.IsVaultOn() {
 		return &authenticationDaoImpl{
 			TenantID: tenantID,
 			UserID:   userID,
+			ctx:      ctx,
 		}
 	} else {
 		return &authenticationDaoDbImpl{
 			TenantID: tenantID,
 			UserID:   userID,
+			ctx:      ctx,
 		}
 	}
 }
@@ -56,6 +61,7 @@ func init() {
 type authenticationDaoImpl struct {
 	TenantID *int64
 	UserID   *int64
+	ctx      context.Context
 }
 
 /*
