@@ -16,7 +16,7 @@ var listMiddleware = []echo.MiddlewareFunc{
 }
 
 var tenancyWithListMiddleware = append([]echo.MiddlewareFunc{middleware.Tenancy, middleware.UserCatcher}, listMiddleware...)
-var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.PermissionCheck, middleware.RaiseEvent}
+var permissionMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.UserCatcher, middleware.PermissionCheck, middleware.RaiseEvent}
 var permissionWithListMiddleware = append(listMiddleware, middleware.PermissionCheck)
 
 func setupRoutes(e *echo.Echo) {
@@ -42,7 +42,7 @@ func setupRoutes(e *echo.Echo) {
 
 		// Sources
 		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
-		r.GET("/sources/:id", SourceGet, middleware.Tenancy, middleware.IdValidation)
+		r.GET("/sources/:id", SourceGet, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
 		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier, middleware.IdValidation)...)
 		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource, middleware.IdValidation)...)
@@ -52,28 +52,28 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/sources/:source_id/endpoints", SourceListEndpoint, append(tenancyWithListMiddleware, middleware.IdValidation)...)
 		r.GET("/sources/:source_id/authentications", SourceListAuthentications, append(tenancyWithListMiddleware, middleware.IdValidation)...)
 		r.GET("/sources/:source_id/rhc_connections", SourcesRhcConnectionList, append(tenancyWithListMiddleware, middleware.IdValidation)...)
-		r.POST("/sources/:source_id/pause", SourcePause, middleware.Tenancy, middleware.IdValidation)
-		r.POST("/sources/:source_id/unpause", SourceUnpause, middleware.Tenancy, middleware.IdValidation)
+		r.POST("/sources/:source_id/pause", SourcePause, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
+		r.POST("/sources/:source_id/unpause", SourceUnpause, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
 
 		// Applications
 		r.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
-		r.GET("/applications/:id", ApplicationGet, middleware.Tenancy, middleware.IdValidation)
+		r.GET("/applications/:id", ApplicationGet, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
 		r.POST("/applications", ApplicationCreate, permissionMiddleware...)
 		r.PATCH("/applications/:id", ApplicationEdit, append(permissionMiddleware, middleware.Notifier, middleware.IdValidation)...)
 		r.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.SuperKeyDestroyApplication, middleware.IdValidation)...)
 		r.GET("/applications/:application_id/authentications", ApplicationListAuthentications, append(tenancyWithListMiddleware, middleware.IdValidation)...)
-		r.POST("/applications/:id/pause", ApplicationPause, middleware.Tenancy, middleware.IdValidation)
-		r.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy, middleware.IdValidation)
+		r.POST("/applications/:id/pause", ApplicationPause, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
+		r.POST("/applications/:id/unpause", ApplicationUnpause, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
 
 		// Authentications
 		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
 		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
 		if config.IsVaultOn() {
-			r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.UuidValidation)
+			r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.UserCatcher, middleware.UuidValidation)
 			r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier, middleware.UuidValidation)...)
 			r.DELETE("/authentications/:uid", AuthenticationDelete, append(permissionMiddleware, middleware.UuidValidation)...)
 		} else {
-			r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.IdValidation)
+			r.GET("/authentications/:uid", AuthenticationGet, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
 			r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier, middleware.IdValidation)...)
 			r.DELETE("/authentications/:uid", AuthenticationDelete, append(permissionMiddleware, middleware.IdValidation)...)
 		}
@@ -93,7 +93,7 @@ func setupRoutes(e *echo.Echo) {
 
 		// ApplicationAuthentications
 		r.GET("/application_authentications", ApplicationAuthenticationList, tenancyWithListMiddleware...)
-		r.GET("/application_authentications/:id", ApplicationAuthenticationGet, middleware.Tenancy, middleware.IdValidation)
+		r.GET("/application_authentications/:id", ApplicationAuthenticationGet, middleware.Tenancy, middleware.UserCatcher, middleware.IdValidation)
 		r.GET("/application_authentications/:application_authentication_id/authentications", ApplicationAuthenticationListAuthentications, append(tenancyWithListMiddleware, middleware.IdValidation)...)
 		r.POST("/application_authentications", ApplicationAuthenticationCreate, permissionMiddleware...)
 		r.DELETE("/application_authentications/:id", ApplicationAuthenticationDelete, append(permissionMiddleware, middleware.IdValidation)...)
