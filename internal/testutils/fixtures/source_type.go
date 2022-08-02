@@ -16,6 +16,10 @@ var TestSourceTypeData = []m.SourceType{
 		Name: "bitbucket",
 	},
 	{
+		Id:   4,
+		Name: "amazon123",
+	},
+	{
 		Id:   100,
 		Name: "source type without sources in fixtures",
 	},

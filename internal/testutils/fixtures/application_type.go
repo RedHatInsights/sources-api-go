@@ -18,6 +18,11 @@ var TestApplicationTypeData = []m.ApplicationType{
 		DisplayName: "second test app type",
 	},
 	{
+		Id:          5,
+		Name:        "app type one123",
+		DisplayName: "test app type",
+	},
+	{
 		Id:          100,
 		DisplayName: "app type without related sources",
 	},
