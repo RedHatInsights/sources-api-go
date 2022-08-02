@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -331,18 +334,29 @@ func ApplicationTypeListSource(c echo.Context) error {
 }
 
 func SourceCheckAvailability(c echo.Context) error {
+	// override the context with a non-terminating context, setting the logger
+	// field so we still get the nice log messages
+	var ctx context.Context
+	var cancel context.CancelFunc
+	ctx = context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+	c.Set("override_context", ctx)
+
 	sourceDao, err := getSourceDao(c)
 	if err != nil {
+		cancel()
 		return err
 	}
 
 	sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
+		cancel()
 		return util.NewErrBadRequest(err)
 	}
 
 	exists, err := sourceDao.Exists(sourceID)
 	if !exists || err != nil {
+		cancel()
 		return util.NewErrNotFound("source")
 	}
 
@@ -369,6 +383,7 @@ func SourceCheckAvailability(c echo.Context) error {
 			return
 		}
 		service.RequestAvailabilityCheck(src, h)
+		cancel()
 	}()
 
 	return c.JSON(http.StatusAccepted, map[string]interface{}{})
