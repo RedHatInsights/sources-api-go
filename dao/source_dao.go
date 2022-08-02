@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -18,14 +19,17 @@ var GetSourceDao func(*RequestParams) SourceDao
 // getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultSourceDao(daoParams *RequestParams) SourceDao {
 	var tenantID, userID *int64
+	var ctx context.Context
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
 		userID = daoParams.UserID
+		ctx = daoParams.ctx
 	}
 
 	return &sourceDaoImpl{
 		TenantID: tenantID,
 		UserID:   userID,
+		ctx:      ctx,
 	}
 }
 
@@ -37,6 +41,7 @@ func init() {
 type sourceDaoImpl struct {
 	TenantID *int64
 	UserID   *int64
+	ctx      context.Context
 }
 
 func (s *sourceDaoImpl) getDbWithTable(query *gorm.DB, table string) *gorm.DB {
@@ -71,7 +76,7 @@ func (s *sourceDaoImpl) useUserForDB(query *gorm.DB, table string) *gorm.DB {
 }
 
 func (s *sourceDaoImpl) getDb() *gorm.DB {
-	return s.getDbWithTable(DB.Debug(), "")
+	return s.getDbWithTable(DB.Debug().WithContext(s.ctx), "")
 }
 
 func (s *sourceDaoImpl) getDbWithModel() *gorm.DB {

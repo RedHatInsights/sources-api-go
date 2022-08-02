@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/config"
@@ -17,14 +18,17 @@ var GetApplicationAuthenticationDao func(*RequestParams) ApplicationAuthenticati
 // getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultApplicationAuthenticationDao(daoParams *RequestParams) ApplicationAuthenticationDao {
 	var tenantID, userID *int64
+	var ctx context.Context
 	if daoParams != nil && daoParams.TenantID != nil {
 		tenantID = daoParams.TenantID
 		userID = daoParams.UserID
+		ctx = daoParams.ctx
 	}
 
 	return &applicationAuthenticationDaoImpl{
 		TenantID: tenantID,
 		UserID:   userID,
+		ctx:      ctx,
 	}
 }
 
@@ -36,6 +40,7 @@ func init() {
 type applicationAuthenticationDaoImpl struct {
 	TenantID *int64
 	UserID   *int64
+	ctx      context.Context
 }
 
 func (a applicationAuthenticationDaoImpl) getDb() *gorm.DB {
@@ -43,7 +48,7 @@ func (a applicationAuthenticationDaoImpl) getDb() *gorm.DB {
 		panic("nil tenant found in applicationAuthentication db DAO")
 	}
 
-	query := DB.Debug()
+	query := DB.Debug().WithContext(a.ctx)
 	query = query.Where("tenant_id = ?", a.TenantID)
 
 	if a.UserID != nil {
