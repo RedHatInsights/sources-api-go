@@ -98,13 +98,21 @@ func (at *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error)
 }
 
 func (at *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, error) {
-	appType := &m.ApplicationType{}
-	result := DB.Debug().Where("name LIKE ?", "%"+name+"%").First(&appType)
+	appTypes := make([]m.ApplicationType, 0)
+	result := DB.Debug().
+		Where("name LIKE ?", "%"+name+"%").
+		Find(&appTypes)
+
 	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected > int64(1) {
+		return nil, util.NewErrBadRequest("Found more than one of the same application type name")
+	} else if result.RowsAffected == int64(0) {
 		return nil, util.NewErrNotFound("application type")
 	}
+	return &appTypes[0], nil
 
-	return appType, nil
 }
 
 func (at *applicationTypeDaoImpl) Create(_ *m.ApplicationType) error {
