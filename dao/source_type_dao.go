@@ -63,12 +63,20 @@ func (st *sourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
 }
 
 func (st *sourceTypeDaoImpl) GetByName(name string) (*m.SourceType, error) {
-	sourceType := &m.SourceType{}
-	result := DB.Debug().Where("name LIKE ?", "%"+name+"%").First(sourceType)
+	sourceTypes := make([]m.SourceType, 0)
+	result := DB.Debug().
+		Where("name LIKE ?", "%"+name+"%").
+		Find(&sourceTypes)
+
 	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected > int64(1) {
+		return nil, util.NewErrBadRequest("Found more than one of the same source type name")
+	} else if result.RowsAffected == int64(0) {
 		return nil, util.NewErrNotFound("source type")
 	}
-	return sourceType, nil
+	return &sourceTypes[0], nil
 }
 
 func (st *sourceTypeDaoImpl) Create(_ *m.SourceType) error {
