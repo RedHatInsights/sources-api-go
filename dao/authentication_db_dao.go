@@ -256,7 +256,6 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 
 func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) error {
 	query := DB.Debug().
-		Select("source_id").
 		Where("tenant_id = ?", *add.TenantID)
 
 	switch strings.ToLower(authentication.ResourceType) {
@@ -287,6 +286,17 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 
 		authentication.SourceID = endpoint.SourceID
 	case "source":
+		var source m.Source
+		err := query.
+			Model(&m.Source{}).
+			Where("id = ?", authentication.ResourceID).
+			First(&source).
+			Error
+
+		if err != nil {
+			return fmt.Errorf("resource not found with type [%v], id [%v]", authentication.ResourceType, authentication.ResourceID)
+		}
+
 		authentication.SourceID = authentication.ResourceID
 	default:
 		return fmt.Errorf("bad resource type, supported types are [Application, Endpoint, Source]")
