@@ -80,23 +80,6 @@ func TestSourceTypeGetByNameNotFound(t *testing.T) {
 
 	DropSchema("source_type_by_name")
 }
-func TestSourceTypeGetByDifferentName(t *testing.T) {
-	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema("source_type_by_name")
-	wantSourceType := m.SourceType{Name: "amazon"}
-
-	sourceTypeDao := GetSourceTypeDao()
-	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name)
-	if gotSourceType != nil {
-		t.Error("got source type object, want nil")
-	}
-
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
-		t.Errorf("want bad request err, got '%v'", err)
-	}
-
-	DropSchema("source_type_by_name")
-}
 
 func TestSourceTypeGetByNameBadRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)

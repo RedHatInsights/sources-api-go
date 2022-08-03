@@ -112,7 +112,6 @@ func (at *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, er
 		return nil, util.NewErrNotFound("application type")
 	}
 	return &appTypes[0], nil
-
 }
 
 func (at *applicationTypeDaoImpl) Create(_ *m.ApplicationType) error {
