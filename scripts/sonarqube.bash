@@ -32,6 +32,8 @@ mkdir "$sonarqube_store_dir"
 #
 curl --output "$rh_it_root_ca_file" --insecure "$RH_IT_ROOT_CA_CERT_URL"
 
+curl --cacert "$rh_it_root_ca_file" "https://sonarqube.corp.redhat.com"
+
 # The JAVA_HOME variable is not set by default. Even though it is usually an
 # environment variable, we write it in lowercase because in this case we only
 # use it in this script.
