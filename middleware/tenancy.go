@@ -1,115 +1,50 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-/*
-	Parses all authorization related things into request context, notably:
-
-	1. 'psk' -> x-rh-sources-psk
-
-	2. 'identity' -> parsed version of identity header as a XRHID struct
-
-	3. 'x-rh-identity' -> raw version (b64 encoded) of the identity header
-
-
-	Returns a 401 if we cannot authorize the request from the required headers.
-	For example if we have a psk but no account-number, or if we have neither
-	headers when required.
-*/
+// Tenancy is a middleware which makes sure the EBS account number or OrgId are present, and therefore, the request is
+// properly authenticated. It sets the tenant ID on the context by looking in the database using the provided EBS
+// account number or OrgId.
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		switch {
-		case c.Get(h.PARSED_IDENTITY) != nil:
-			identity, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
-			if !ok {
-				return fmt.Errorf("invalid identity structure received")
-			}
-
-			// Check that we received at least an account number or an org ID.
-			// In the case of receiving an identity with an OrgId, but without an AccountNumber, log it since we need
-			// to be on the lookout for these anemic tenants. There might be services that still only support using
-			// EbsAccount numbers, and might not work otherwise.
-			if identity.Identity.AccountNumber == "" {
-				if identity.Identity.OrgID == "" {
-					return fmt.Errorf("account number or OrgId not present in x-rh-identity")
-				} else {
-					c.Logger().Warnf(`[org_id: %s] potential anemic tenant found`, identity.Identity.OrgID)
-				}
-			}
-
-			c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", identity.Identity.OrgID, identity.Identity.AccountNumber)
-
-			tenantDao := dao.GetTenantDao()
-			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity)
-			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request: %s", err)
-			}
-
-			c.Set(h.TENANTID, tenantId)
-
-		case c.Get(h.ACCOUNT_NUMBER) != nil:
-			accountNumber, ok := c.Get(h.ACCOUNT_NUMBER).(string)
-			if !ok {
-				return fmt.Errorf("failed to cast account-number to string")
-			}
-
-			c.Logger().Debugf("Looking up Tenant ID for account number %v", accountNumber)
-
-			// Use the whole "XRHID" struct for consistency, since many other parts in the code are expecting the
-			// "identity" context variable to have this struct.
-			id := &identity.XRHID{
-				Identity: identity.Identity{
-					AccountNumber: accountNumber,
-				},
-			}
-
-			tenantDao := dao.GetTenantDao()
-			tenantId, err := tenantDao.GetOrCreateTenantID(&id.Identity)
-			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request: %s", err)
-			}
-
-			c.Set(h.PARSED_IDENTITY, id)
-			c.Set(h.TENANTID, tenantId)
-
-		case c.Get(h.ORGID) != nil:
-			orgId, ok := c.Get(h.ORGID).(string)
-			if !ok {
-				return errors.New("failed to cast orgId to string")
-			}
-
-			c.Logger().Debugf(`[org_id: %s] Looking up Tenant ID`, orgId)
-
-			// Use the whole "XRHID" struct for consistency, since many other parts in the code are expecting the
-			// "identity" context variable to have this struct.
-			id := &identity.XRHID{
-				Identity: identity.Identity{
-					OrgID: orgId,
-				},
-			}
-
-			tenantDao := dao.GetTenantDao()
-			tenantId, err := tenantDao.GetOrCreateTenantID(&id.Identity)
-			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request: %s", err)
-			}
-
-			c.Set(h.PARSED_IDENTITY, id)
-			c.Set(h.TENANTID, tenantId)
-
-		default:
-			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
+		id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+		if !ok {
+			return fmt.Errorf("invalid identity structure received: %#v", id)
 		}
+
+		// Check that we received at least an account number or an org ID.
+		// In the case of receiving an identity with an OrgId, but without an AccountNumber, log it since we need
+		// to be on the lookout for these anemic tenants. There might be services that still only support using
+		// EbsAccount numbers, and might not work otherwise.
+		if id.Identity.AccountNumber == "" {
+			if id.Identity.OrgID == "" {
+				return c.JSON(http.StatusUnauthorized, "the ebs account number and the org id are missing")
+			} else {
+				c.Logger().Warnf(`[org_id: %s] potential anemic tenant found`, id.Identity.OrgID)
+			}
+		}
+
+		// Store the EBS account number and the OrgId in the context for easier usage later.
+		c.Set(h.ACCOUNT_NUMBER, id.Identity.AccountNumber)
+		c.Set(h.ORGID, id.Identity.OrgID)
+
+		c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", id.Identity.OrgID, id.Identity.AccountNumber)
+
+		tenantDao := dao.GetTenantDao()
+		tenantId, err := tenantDao.GetOrCreateTenantID(&id.Identity)
+		if err != nil {
+			return fmt.Errorf("failed to get or create tenant for request: %s", err)
+		}
+
+		c.Set(h.TENANTID, tenantId)
 
 		return next(c)
 	}
