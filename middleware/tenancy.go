@@ -9,7 +9,6 @@ import (
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -30,6 +29,34 @@ import (
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		switch {
+		case c.Get(h.PARSED_IDENTITY) != nil:
+			identity, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+			if !ok {
+				return fmt.Errorf("invalid identity structure received")
+			}
+
+			// Check that we received at least an account number or an org ID.
+			// In the case of receiving an identity with an OrgId, but without an AccountNumber, log it since we need
+			// to be on the lookout for these anemic tenants. There might be services that still only support using
+			// EbsAccount numbers, and might not work otherwise.
+			if identity.Identity.AccountNumber == "" {
+				if identity.Identity.OrgID == "" {
+					return fmt.Errorf("account number or OrgId not present in x-rh-identity")
+				} else {
+					c.Logger().Warnf(`[org_id: %s] potential anemic tenant found`, identity.Identity.OrgID)
+				}
+			}
+
+			c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", identity.Identity.OrgID, identity.Identity.AccountNumber)
+
+			tenantDao := dao.GetTenantDao()
+			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity)
+			if err != nil {
+				return fmt.Errorf("failed to get or create tenant for request: %s", err)
+			}
+
+			c.Set(h.TENANTID, tenantId)
+
 		case c.Get(h.ACCOUNT_NUMBER) != nil:
 			accountNumber, ok := c.Get(h.ACCOUNT_NUMBER).(string)
 			if !ok {
@@ -78,34 +105,6 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			c.Set(h.PARSED_IDENTITY, id)
-			c.Set(h.TENANTID, tenantId)
-
-		case c.Get(h.PARSED_IDENTITY) != nil:
-			identity, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
-			if !ok {
-				return fmt.Errorf("invalid identity structure received")
-			}
-
-			// Check that we received at least an account number or an org ID.
-			// In the case of receiving an identity with an OrgId, but without an AccountNumber, log it since we need
-			// to be on the lookout for these anemic tenants. There might be services that still only support using
-			// EbsAccount numbers, and might not work otherwise.
-			if identity.Identity.AccountNumber == "" {
-				if identity.Identity.OrgID == "" {
-					return fmt.Errorf("account number or OrgId not present in x-rh-identity")
-				} else {
-					log.Warnf(`[org_id: %s] potential anemic tenant found`, identity.Identity.OrgID)
-				}
-			}
-
-			c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", identity.Identity.OrgID, identity.Identity.AccountNumber)
-
-			tenantDao := dao.GetTenantDao()
-			tenantId, err := tenantDao.GetOrCreateTenantID(&identity.Identity)
-			if err != nil {
-				return fmt.Errorf("failed to get or create tenant for request: %s", err)
-			}
-
 			c.Set(h.TENANTID, tenantId)
 
 		default:
