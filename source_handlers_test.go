@@ -1319,14 +1319,13 @@ func TestSourceDelete(t *testing.T) {
 	// Create a source
 
 	tenantID := int64(1)
-	sourceDaoParams := dao.RequestParams{TenantID: &tenantID}
-	sourceDao := dao.GetSourceDao(&sourceDaoParams)
+	requestParams := dao.RequestParams{TenantID: &tenantID}
+	sourceDao := dao.GetSourceDao(&requestParams)
 
-	uid := "bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"
 	src := m.Source{
 		Name:         "Source for TestApplicationDelete()",
 		SourceTypeID: 1,
-		Uid:          &uid,
+		Uid:          util.StringRef("bd2ba6d6-4630-40e2-b829-cf09b03bdb9f"),
 	}
 
 	err := sourceDao.Create(&src)
@@ -1335,12 +1334,10 @@ func TestSourceDelete(t *testing.T) {
 	}
 
 	// Create and authentication for source
-	authDaoParams := dao.RequestParams{TenantID: &tenantID}
-	authenticationDao := dao.GetAuthenticationDao(&authDaoParams)
+	authenticationDao := dao.GetAuthenticationDao(&requestParams)
 
-	authNameForSource := "authentication for source"
 	auth := m.Authentication{
-		Name:         &authNameForSource,
+		Name:         util.StringRef("authentication for source"),
 		ResourceType: "Source",
 		ResourceID:   src.ID,
 		TenantID:     tenantID,
@@ -1355,7 +1352,7 @@ func TestSourceDelete(t *testing.T) {
 	auths = append(auths, auth)
 
 	// Create an application
-	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantID})
+	applicationDao := dao.GetApplicationDao(&requestParams)
 
 	app := m.Application{
 		SourceID:          src.ID,
@@ -1369,9 +1366,8 @@ func TestSourceDelete(t *testing.T) {
 	}
 
 	// Create an authentication for application
-	authNameForApp := "authentication for application"
 	auth = m.Authentication{
-		Name:         &authNameForApp,
+		Name:         util.StringRef("authentication for application"),
 		ResourceType: "Application",
 		ResourceID:   app.ID,
 		TenantID:     tenantID,
@@ -1386,7 +1382,7 @@ func TestSourceDelete(t *testing.T) {
 	auths = append(auths, auth)
 
 	// Create an application authentication
-	appAuthDao := dao.GetApplicationAuthenticationDao(&dao.RequestParams{TenantID: &tenantID})
+	appAuthDao := dao.GetApplicationAuthenticationDao(&requestParams)
 	appAuth := m.ApplicationAuthentication{
 		ApplicationID:    app.ID,
 		AuthenticationID: auth.DbID,
@@ -1400,11 +1396,10 @@ func TestSourceDelete(t *testing.T) {
 	// Create an endpoint
 	endpointDao := dao.GetEndpointDao(&tenantID)
 
-	role := "new role"
 	endpoint := m.Endpoint{
 		SourceID: src.ID,
 		TenantID: tenantID,
-		Role:     &role,
+		Role:     util.StringRef("new role"),
 	}
 
 	err = endpointDao.Create(&endpoint)
@@ -1413,9 +1408,8 @@ func TestSourceDelete(t *testing.T) {
 	}
 
 	// Create an authentication for endpoint
-	authNameForEndpoint := "authentication for endpoint"
 	auth = m.Authentication{
-		Name:         &authNameForEndpoint,
+		Name:         util.StringRef("authentication for endpoint"),
 		ResourceType: "Endpoint",
 		ResourceID:   endpoint.ID,
 		TenantID:     tenantID,
