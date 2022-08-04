@@ -91,11 +91,10 @@ func TestApplicationTypeListOffsetAndLimit(t *testing.T) {
 func TestApplicationTypeGetByName(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("app_type_by_name")
-	wantAppType := fixtures.TestApplicationTypeData[0]
+	wantAppType := fixtures.TestApplicationTypeData[1]
 
 	tenantId := int64(1)
 	appTypeDao := GetApplicationTypeDao(&tenantId)
-
 	gotAppType, err := appTypeDao.GetByName(wantAppType.Name)
 	if err != nil {
 		t.Error(err)
@@ -123,6 +122,24 @@ func TestApplicationTypeGetByNameNotFound(t *testing.T) {
 
 	if !errors.Is(err, util.ErrNotFoundEmpty) {
 		t.Errorf("want not found err, got '%v'", err)
+	}
+
+	DropSchema("app_type_by_name")
+}
+func TestApplicationTypeGetByNameBadRequest(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("app_type_by_name")
+	wantAppType := m.ApplicationType{Name: "app type"}
+	tenantId := int64(1)
+	appTypeDao := GetApplicationTypeDao(&tenantId)
+
+	gotAppType, err := appTypeDao.GetByName(wantAppType.Name)
+	if gotAppType != nil {
+		t.Error("got application type object, want nil")
+	}
+
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf("want bad request err, got '%v'", err)
 	}
 
 	DropSchema("app_type_by_name")
