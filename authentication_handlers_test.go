@@ -663,23 +663,25 @@ func TestAuthenticationEditBadRequest(t *testing.T) {
 }
 
 func TestAuthenticationDelete(t *testing.T) {
+	tenantId := int64(1)
+	var uid string
+	if config.IsVaultOn() {
+		uid = fixtures.TestAuthenticationData[0].ID
+	} else {
+		uid = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+	}
+
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
 		"/api/sources/v3.1/authentications/1",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("uid")
-
-	if config.IsVaultOn() {
-		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
-	} else {
-		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
-		c.SetParamValues(id)
-	}
+	c.SetParamValues(uid)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	err := AuthenticationDelete(c)
