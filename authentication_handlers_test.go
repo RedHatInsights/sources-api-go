@@ -543,6 +543,44 @@ func TestAuthenticationEdit(t *testing.T) {
 	service.NotificationProducer = backupNotificationProducer
 }
 
+// TestAuthenticationEditInvalidTenant tests situation when the tenant tries to
+// edit existing not owned authentication
+func TestAuthenticationEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	uid := "1"
+
+	requestBody := m.AuthenticationEditRequest{
+		AvailabilityStatus: util.StringRef("new status"),
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/authentications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("uid")
+	c.SetParamValues(uid)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundAuthenticationEdit := ErrorHandlingContext(AuthenticationEdit)
+	err = notFoundAuthenticationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestAuthenticationEditNotFound(t *testing.T) {
 	newAvailabilityStatus := "new status"
 
