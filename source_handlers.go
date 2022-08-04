@@ -382,7 +382,7 @@ func SourceCheckAvailability(c echo.Context) error {
 			c.Logger().Warn(err)
 			return
 		}
-		service.RequestAvailabilityCheck(src, h)
+		service.RequestAvailabilityCheck(c, src, h)
 		cancel()
 	}()
 
