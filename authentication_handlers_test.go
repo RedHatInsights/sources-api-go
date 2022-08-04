@@ -542,6 +542,18 @@ func TestAuthenticationEdit(t *testing.T) {
 		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
 	}
 
+	// Check the tenancy of edited authentication
+	requestParams := dao.RequestParams{TenantID: &tenantId}
+	authDao := dao.GetAuthenticationDao(&requestParams)
+	authOut, err := authDao.GetById(uid)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if authOut.TenantID != tenantId {
+		t.Errorf("for authentication with DbID %d was expected tenant id %d, but got %d", authOut.DbID, tenantId, authOut.TenantID)
+	}
+
 	service.NotificationProducer = backupNotificationProducer
 }
 
