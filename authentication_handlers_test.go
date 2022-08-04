@@ -746,6 +746,40 @@ func TestAuthenticationDelete(t *testing.T) {
 	}
 }
 
+// TestAuthenticationDeleteInvalidTenant tests that not found is returned
+// for tenant who doesn't own the authentication
+func TestAuthenticationDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	var uid string
+	if config.IsVaultOn() {
+		uid = fixtures.TestAuthenticationData[0].ID
+	} else {
+		uid = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/authentications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("uid")
+	c.SetParamValues(uid)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundAuthenticationDelete := ErrorHandlingContext(AuthenticationDelete)
+	err := notFoundAuthenticationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
 func TestAuthenticationDeleteNotFound(t *testing.T) {
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
