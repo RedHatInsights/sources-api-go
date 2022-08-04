@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -730,6 +731,12 @@ func TestAuthenticationDelete(t *testing.T) {
 
 	if rec.Body.Len() != 0 {
 		t.Errorf("Response body is not nil")
+	}
+
+	// Check that the authentication is deleted
+	_, err = authenticationDao.GetById(uid)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'authentication not found', got %s", err)
 	}
 
 	// Delete created source
