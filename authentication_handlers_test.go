@@ -479,7 +479,7 @@ func TestAuthenticationEdit(t *testing.T) {
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
 
-	newAvailabilityStatus := "new status"
+	newAvailabilityStatus := m.Unavailable
 
 	requestBody := m.AuthenticationEditRequest{
 		AvailabilityStatus: &newAvailabilityStatus,
@@ -566,7 +566,7 @@ func TestAuthenticationEditInvalidTenant(t *testing.T) {
 	uid := "1"
 
 	requestBody := m.AuthenticationEditRequest{
-		AvailabilityStatus: util.StringRef("new status"),
+		AvailabilityStatus: util.StringRef(m.InProgress),
 	}
 
 	body, err := json.Marshal(requestBody)
@@ -597,7 +597,7 @@ func TestAuthenticationEditInvalidTenant(t *testing.T) {
 }
 
 func TestAuthenticationEditNotFound(t *testing.T) {
-	newAvailabilityStatus := "new status"
+	newAvailabilityStatus := m.Available
 
 	requestBody := m.AuthenticationEditRequest{
 		AvailabilityStatus: &newAvailabilityStatus,

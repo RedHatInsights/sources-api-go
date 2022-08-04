@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestIntId(t *testing.T) {
@@ -89,5 +90,53 @@ func TestInvalidIdType(t *testing.T) {
 	err := ValidateAuthenticationCreationRequest(&acr)
 	if err == nil {
 		t.Errorf("Expected error but got none")
+	}
+}
+
+// TestAuthEditInvalidAvailabilityStatuses tests that a proper error is returned when providing invalid availability
+// statuses.
+func TestAuthEditInvalidAvailabilityStatuses(t *testing.T) {
+	testValues := []*string{
+		util.StringRef(""),
+		util.StringRef("availablel"),
+		util.StringRef("inprogress"),
+		util.StringRef("partial"),
+		util.StringRef("unavalialbe"),
+	}
+
+	want := `availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
+	for _, tv := range testValues {
+		editRequest := model.AuthenticationEditRequest{
+			AvailabilityStatus: tv,
+		}
+
+		err := ValidateAuthenticationEditRequest(&editRequest)
+
+		got := err.Error()
+		if want != got {
+			t.Errorf(`unexpected error when validating invalid availability statuses for an application edit. Want "%s", got "%s"`, want, got)
+		}
+	}
+}
+
+// TestAuthEditValidAvailabilityStatuses tests that no error is returned when valid availability statuses are provided.
+func TestAuthEditValidAvailabilityStatuses(t *testing.T) {
+	testValues := []*string{
+		util.StringRef(model.Available),
+		util.StringRef(model.InProgress),
+		util.StringRef(model.PartiallyAvailable),
+		util.StringRef(model.Unavailable),
+	}
+
+	for _, tv := range testValues {
+		editRequest := model.AuthenticationEditRequest{
+			AvailabilityStatus: tv,
+		}
+
+		err := ValidateAuthenticationEditRequest(&editRequest)
+
+		if err != nil {
+			t.Errorf(`unexpected error when validating a valid availability status "%s" for an application edit: %s`, *tv, err)
+		}
 	}
 }
