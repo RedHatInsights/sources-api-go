@@ -467,6 +467,13 @@ func TestAuthenticationCreateResourceNotFound(t *testing.T) {
 
 func TestAuthenticationEdit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	var uid string
+	if config.IsVaultOn() {
+		uid = fixtures.TestAuthenticationData[0].ID
+	} else {
+		uid = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+	}
 
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
@@ -487,17 +494,12 @@ func TestAuthenticationEdit(t *testing.T) {
 		"/api/sources/v3.1/authentications/1",
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("uid")
-	if config.IsVaultOn() {
-		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
-	} else {
-		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
-		c.SetParamValues(id)
-	}
+	c.SetParamValues(uid)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
