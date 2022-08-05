@@ -65,6 +65,10 @@ func (endpoint *Endpoint) UpdateFromRequestPaused(req *ResourceEditPausedRequest
 	lastCheckedAt := req.LastCheckedAt
 
 	if availabilityStatus != nil {
+		if _, ok := ValidEndpointAvailabilityStatuses[*req.AvailabilityStatus]; !ok {
+			return fmt.Errorf(`invalid availability status. Must be either "available" or "unavailable"`)
+		}
+
 		endpoint.AvailabilityStatus = *availabilityStatus
 	}
 

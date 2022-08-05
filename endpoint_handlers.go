@@ -201,6 +201,10 @@ func EndpointEdit(c echo.Context) error {
 			return util.NewErrBadRequest(err)
 		}
 
+		if err = service.ValidateEndpointEditRequest(endpointDao, endpoint.SourceID, input); err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
 		endpoint.UpdateFromRequest(input)
 	}
 

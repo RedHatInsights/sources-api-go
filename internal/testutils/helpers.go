@@ -82,7 +82,7 @@ func SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationType
 	authenticationCreateRequest := model.AuthenticationCreateRequest{ResourceType: authenticationResourceType}
 	bulkCreateAuthentication := model.BulkCreateAuthentication{AuthenticationCreateRequest: authenticationCreateRequest, ResourceName: applicationTypeName}
 
-	endpointCreateRequest := model.EndpointCreateRequest{}
+	endpointCreateRequest := model.EndpointCreateRequest{AvailabilityStatus: model.Unavailable}
 	bulkCreateEndpoints := model.BulkCreateEndpoint{EndpointCreateRequest: endpointCreateRequest, SourceName: nameSource}
 
 	return &model.BulkCreateRequest{Sources: []model.BulkCreateSource{bulkCreateSource},
