@@ -6,6 +6,7 @@ import (
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 /*
@@ -42,43 +43,42 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.PSK_USER, c.Request().Header.Get(h.PSK_USER))
 		}
 
-		// parsing the base64-encoded identity header if present
-		if c.Request().Header.Get(h.XRHID) != "" {
-			// store it raw first.
-			c.Set(h.XRHID, c.Request().Header.Get(h.XRHID))
+		// id is the XrhId struct we will store in the context. The idea is: if no "x-rh-identity" header has been
+		// received, generate an identity struct from the given "OrgId" and "EBS account number". If the "x-rh-identity"
+		// header is present, simply decode it and use the decided identity.
+		var id *identity.XRHID
+		xRhIdentityRaw := c.Request().Header.Get(h.XRHID)
+		if xRhIdentityRaw == "" {
+			generatedIdentity := util.GeneratedXRhIdentity(c.Request().Header.Get(h.ACCOUNT_NUMBER), c.Request().Header.Get(h.ORGID))
 
-			xRhIdentity, err := util.ParseXRHIDHeader(c.Request().Header.Get(h.XRHID))
+			// Store the raw, base64 encoded "xRhIdentity" string.
+			c.Set(h.XRHID, generatedIdentity)
+
+			// Generate the identity which we will store in the context.
+			genId, err := util.ParseXRHIDHeader(generatedIdentity)
 			if err != nil {
-				return fmt.Errorf("could not extract identity from header: %s", err)
+				return fmt.Errorf("could not generate the x-rh-identity structure: %w", err)
 			}
 
-			// store the parsed header for later usage.
-			c.Set(h.PARSED_IDENTITY, xRhIdentity)
+			id = genId
+		} else {
+			xRhIdentity, err := util.ParseXRHIDHeader(xRhIdentityRaw)
+			if err != nil {
+				return fmt.Errorf("could not extract identity from header: %w", err)
+			}
 
-			// store the account number + org_id for easy usage later
-			c.Set(h.ACCOUNT_NUMBER, xRhIdentity.Identity.AccountNumber)
-			c.Set(h.ORGID, xRhIdentity.Identity.OrgID)
+			// Store the raw identity header to forward it latter.
+			c.Set(h.XRHID, xRhIdentityRaw)
 
-			// store whether or not this a cert-auth based request
+			// Store whether this a cert-auth based request.
 			if xRhIdentity.Identity.System.CommonName != "" {
 				c.Set("cert-auth", true)
 			}
-		} else {
-			dummyIdentity := util.GeneratedXRhIdentity(
-				c.Request().Header.Get(h.ACCOUNT_NUMBER),
-				c.Request().Header.Get(h.ORGID),
-			)
 
-			// backup xrhid from account number (in case of psk auth)
-			c.Set(h.XRHID, dummyIdentity)
-
-			// store the parsed header for later usage.
-			id, err := util.ParseXRHIDHeader(dummyIdentity)
-			if err != nil {
-				return err
-			}
-			c.Set(h.PARSED_IDENTITY, id)
+			id = xRhIdentity
 		}
+
+		c.Set(h.PARSED_IDENTITY, id)
 
 		return next(c)
 	}
