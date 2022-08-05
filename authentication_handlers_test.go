@@ -467,6 +467,13 @@ func TestAuthenticationCreateResourceNotFound(t *testing.T) {
 
 func TestAuthenticationEdit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+	var uid string
+	if config.IsVaultOn() {
+		uid = fixtures.TestAuthenticationData[0].ID
+	} else {
+		uid = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+	}
 
 	backupNotificationProducer := service.NotificationProducer
 	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
@@ -487,17 +494,12 @@ func TestAuthenticationEdit(t *testing.T) {
 		"/api/sources/v3.1/authentications/1",
 		bytes.NewReader(body),
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("uid")
-	if config.IsVaultOn() {
-		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
-	} else {
-		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
-		c.SetParamValues(id)
-	}
+	c.SetParamValues(uid)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
@@ -540,7 +542,57 @@ func TestAuthenticationEdit(t *testing.T) {
 		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
 	}
 
+	// Check the tenancy of edited authentication
+	requestParams := dao.RequestParams{TenantID: &tenantId}
+	authDao := dao.GetAuthenticationDao(&requestParams)
+	authOut, err := authDao.GetById(uid)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if authOut.TenantID != tenantId {
+		t.Errorf("for authentication with DbID %d was expected tenant id %d, but got %d", authOut.DbID, tenantId, authOut.TenantID)
+	}
+
 	service.NotificationProducer = backupNotificationProducer
+}
+
+// TestAuthenticationEditInvalidTenant tests situation when the tenant tries to
+// edit existing not owned authentication
+func TestAuthenticationEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	uid := "1"
+
+	requestBody := m.AuthenticationEditRequest{
+		AvailabilityStatus: util.StringRef("new status"),
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/authentications/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("uid")
+	c.SetParamValues(uid)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundAuthenticationEdit := ErrorHandlingContext(AuthenticationEdit)
+	err = notFoundAuthenticationEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestAuthenticationEditNotFound(t *testing.T) {
