@@ -3,6 +3,7 @@ package dao
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/google/uuid"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -131,4 +132,85 @@ func CreateSourceWithSubResources(sourceTypeID int64, applicationTypeID int64, a
 	bulkCreateOutput.ApplicationAuthentications = []m.ApplicationAuthentication{*aa}
 
 	return &bulkCreateOutput, user, nil
+}
+
+type SourceOwnershipDataTestSuite struct {
+	userA                       *m.User
+	userB                       *m.User
+	userWithoutOwnershipRecords *m.User
+	resourcesUserA              *m.BulkCreateOutput
+	resourcesUserB              *m.BulkCreateOutput
+	resourcesNoUser             *m.BulkCreateOutput
+}
+
+func (s *SourceOwnershipDataTestSuite) TenantID() *int64 {
+	return &s.userA.TenantID
+}
+
+func (s *SourceOwnershipDataTestSuite) GetRequestParamsUserA() *RequestParams {
+	return &RequestParams{TenantID: s.TenantID(), UserID: &s.userA.Id}
+}
+
+func (s *SourceOwnershipDataTestSuite) GetRequestParamsUserB() *RequestParams {
+	return &RequestParams{TenantID: s.TenantID(), UserID: &s.userB.Id}
+}
+
+func (s *SourceOwnershipDataTestSuite) SourceUserA() *m.Source {
+	return &s.resourcesUserA.Sources[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) SourceUserB() *m.Source {
+	return &s.resourcesUserB.Sources[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) SourceNoUser() *m.Source {
+	return &s.resourcesNoUser.Sources[0]
+}
+
+func testSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnershipDataTestSuite) error) error {
+	accountNumber := "112567"
+	userIDA := "userA"
+	userIDB := "userB"
+	userIDWithoutOwnershipRecords := "userWithoutRecords"
+
+	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
+	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+	resourcesUserA, userA, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDA)
+	if err != nil {
+		return fmt.Errorf("unable to create source with subresources: %v for user %v", err, userIDA)
+	}
+
+	testSuiteData := &SourceOwnershipDataTestSuite{}
+
+	testSuiteData.resourcesUserA = resourcesUserA
+	testSuiteData.userA = userA
+
+	resourcesUserB, userB, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDB)
+	if err != nil {
+		return fmt.Errorf("unable to create source with subresources: %v for user %v", err, userIDB)
+	}
+
+	testSuiteData.resourcesUserB = resourcesUserB
+	testSuiteData.userB = userB
+
+	recordsNoUser, _, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, nil)
+	if err != nil {
+		return fmt.Errorf("unable to create source with subresources: %v", err)
+	}
+
+	testSuiteData.resourcesNoUser = recordsNoUser
+
+	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnershipRecords, testSuiteData.userA.TenantID)
+	if err != nil {
+		return fmt.Errorf("unable to create user: %v", err)
+	}
+
+	testSuiteData.userWithoutOwnershipRecords = userWithoutOwnRecords
+
+	err = performTest(testSuiteData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

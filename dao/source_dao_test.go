@@ -724,3 +724,60 @@ func TestSourceListUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestSourceGetUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to GET userA's source - expected result: success
+		*/
+		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
+		sourceUserA, err := sourceDaoUserA.GetById(&suiteData.SourceUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		if sourceUserA.ID != suiteData.SourceUserA().ID {
+			t.Errorf("source %v returned but source %v was expected", sourceUserA.ID, suiteData.SourceUserA().ID)
+		}
+
+		/*
+		 Test 2 - UserA tries to GET source without user - expected result: success
+		*/
+		sourceNoUser, err := sourceDaoUserA.GetById(&suiteData.SourceNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		if sourceNoUser.ID != suiteData.SourceNoUser().ID {
+			t.Errorf("source %v returned but source %v was expected", sourceNoUser.ID, suiteData.SourceNoUser().ID)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to GET userA's source - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		sourceDaoWithUser := GetSourceDao(requestParams)
+
+		_, err = sourceDaoWithUser.GetById(&suiteData.SourceUserA().ID)
+		if err == nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %v`, suiteData.SourceUserA())
+		}
+
+		if err.Error() != "source not found" {
+			t.Errorf(`unexpected error after calling GetById for the source: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
