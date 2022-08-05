@@ -33,7 +33,8 @@ func setUp() model.SourceCreateRequest {
 
 }
 
-func setUpEditSourceNameRequest() model.SourceEditRequest {
+// setUpSourceEditRequest returns a freshly created and valid SourceEditRequest.
+func setUpSourceEditRequest() model.SourceEditRequest {
 	name := "TestRequest"
 	version := "10.5"
 	imported := "true"
@@ -176,7 +177,6 @@ func TestAvailabilityStatusValues(t *testing.T) {
 
 	// The request already has a valid status, but we're testing all the values just in case
 	var validStatuses = []string{
-		"",
 		model.Available,
 		model.InProgress,
 		model.PartiallyAvailable,
@@ -190,6 +190,21 @@ func TestAvailabilityStatusValues(t *testing.T) {
 		if err != nil {
 			t.Errorf("No errors expected, got \"%s\"", err)
 		}
+	}
+
+	// Test that the default value is set on the request when no availability status is provided.
+
+	request.AvailabilityStatus = ""
+	err := ValidateSourceCreationRequest(sourceDao, &request)
+	if err != nil {
+		t.Errorf("unexpected error received when setting a default value for the availability status of a source: %s", err)
+	}
+
+	want := model.InProgress
+	got := request.AvailabilityStatus
+
+	if want != got {
+		t.Errorf(`unexpected availability status set when setting a default value for the availability status of a source. Want "%s", got "%s"`, want, got)
 	}
 
 	var invalidStatuses = []string{
@@ -296,7 +311,8 @@ func TestSourceTypeIdIsNil(t *testing.T) {
 	}
 }
 
-//TestEditSourceNameRequest tests if the function ValidateEditSourceNameRequest() will return a bad request if a source is edited to have the same name as another source within the same tenant.
+// TestEditSourceNameRequest tests if the function ValidateEditSourceNameRequest() will return a bad request if a
+// source is edited to have the same name as another source within the same tenant.
 func TestEditSourceNameRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
@@ -312,10 +328,10 @@ func TestEditSourceNameRequest(t *testing.T) {
 		t.Errorf(`could not create the source fixture for the test: %s`, err)
 	}
 
-	request := setUpEditSourceNameRequest()
+	request := setUpSourceEditRequest()
 	request.Name = &sourceName
 
-	err = ValidateEditSourceNameRequest(sourceDao, &request)
+	err = ValidateSourceEditRequest(sourceDao, &request)
 
 	if err == nil {
 		t.Errorf("Error expected, got none")
@@ -326,4 +342,116 @@ func TestEditSourceNameRequest(t *testing.T) {
 	}
 
 	dao.DB.Delete(newSource)
+}
+
+// TestEditSourceInvalidName tests that "Invalid name" errors are reported when validating the request.
+func TestEditSourceInvalidName(t *testing.T) {
+	request := setUpSourceEditRequest()
+
+	request.Name = util.StringRef("")
+
+	err := ValidateSourceEditRequest(sourceDao, &request)
+
+	want := "name cannot be empty"
+	got := err.Error()
+	if want != got {
+		t.Errorf(`unexpected error when editing a source and giving it an empty name. Want "%s", got "%s"`, want, got)
+	}
+}
+
+// TestEditSourceInvalidAvailabilityStatuses tests that a proper error is returned when providing invalid availability
+// statuses.
+func TestEditSourceInvalidAvailabilityStatuses(t *testing.T) {
+	testValues := []*string{
+		util.StringRef(""),
+		util.StringRef("availablel"),
+		util.StringRef("inprogress"),
+		util.StringRef("partial"),
+		util.StringRef("unavalialbe"),
+	}
+
+	want := `availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
+	for _, tv := range testValues {
+		editRequest := setUpSourceEditRequest()
+		editRequest.AvailabilityStatus = tv
+
+		err := ValidateSourceEditRequest(sourceDao, &editRequest)
+
+		got := err.Error()
+		if want != got {
+			t.Errorf(`unexpected error when validating invalid availability statuses for a source edit. Want "%s", got "%s"`, want, got)
+		}
+	}
+}
+
+// TestEditSourceValidAvailabilityStatuses tests that no error is returned when valid availability statuses are provided.
+func TestEditSourceValidAvailabilityStatuses(t *testing.T) {
+	testValues := []*string{
+		util.StringRef(model.Available),
+		util.StringRef(model.InProgress),
+		util.StringRef(model.PartiallyAvailable),
+		util.StringRef(model.Unavailable),
+	}
+
+	for _, tv := range testValues {
+		editRequest := setUpSourceEditRequest()
+		editRequest.AvailabilityStatus = tv
+
+		err := ValidateSourceEditRequest(sourceDao, &editRequest)
+
+		if err != nil {
+			t.Errorf(`unexpected error when validating a valid availability status "%s" for a source edit: %s`, *tv, err)
+		}
+	}
+}
+
+// TestEditSourceInvalidAvailabilityStatusPaused tests that an error is received when an invalid availability status
+// is given when updating a paused source.
+func TestEditSourceInvalidAvailabilityStatusPaused(t *testing.T) {
+	testValues := []*string{
+		util.StringRef("availablel"),
+		util.StringRef("inprogress"),
+		util.StringRef("partial"),
+		util.StringRef("unavalialbe"),
+	}
+
+	want := `invalid availability status. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
+	for _, tv := range testValues {
+
+		editRequest := model.SourcePausedEditRequest{
+			AvailabilityStatus: tv,
+		}
+
+		source := model.Source{}
+		err := source.UpdateFromRequestPaused(&editRequest)
+
+		got := err.Error()
+		if want != got {
+			t.Errorf(`unexpected error received when updating a paused source with an invalid availability status. Want "%s", got "%s"`, want, got)
+		}
+	}
+}
+
+// TestEditEndpointValidAvailabilityStatusPaused tests that no error is returned when valid availability statuses are
+// provided when updating a paused endpoint.
+func TestEditSourceValidAvailabilityStatusPaused(t *testing.T) {
+	testValues := []*string{
+		util.StringRef(model.Available),
+		util.StringRef(model.InProgress),
+		util.StringRef(model.PartiallyAvailable),
+		util.StringRef(model.Unavailable),
+	}
+
+	for _, tv := range testValues {
+		editRequest := model.SourcePausedEditRequest{
+			AvailabilityStatus: tv,
+		}
+
+		source := model.Source{}
+		err := source.UpdateFromRequestPaused(&editRequest)
+
+		if err != nil {
+			t.Errorf(`unexpected error when validating a valid availability status "%s" for a paused endpoint edit: %s`, *tv, err)
+		}
+	}
 }

@@ -36,8 +36,14 @@ func ValidateSourceCreationRequest(sourceDao dao.SourceDao, req *model.SourceCre
 		req.AppCreationWorkflow = model.ManualConfig
 	}
 
-	if !util.SliceContainsString(model.AvailabilityStatuses, req.AvailabilityStatus) {
-		return fmt.Errorf("invalid status")
+	// The team decided that the availability statuses will default to "in_progress" whenever they come empty, since
+	// setting them as "unavailable" by default may lead to some confusion to the calling clients.
+	if req.AvailabilityStatus == "" {
+		req.AvailabilityStatus = model.InProgress
+	} else {
+		if _, ok := model.ValidAvailabilityStatuses[req.AvailabilityStatus]; !ok {
+			return fmt.Errorf("invalid status")
+		}
 	}
 
 	// Try to get the SourceTypeID. If an error occurs, the user gets a generic error message, as they are not
@@ -66,14 +72,21 @@ func ValidateSourceCreationRequest(sourceDao dao.SourceDao, req *model.SourceCre
 	return nil
 }
 
-func ValidateEditSourceNameRequest(dao dao.SourceDao, req *model.SourceEditRequest) error {
-	if req.Name != nil {
-		if *req.Name == "" {
-			return fmt.Errorf("name cannot be empty string")
+func ValidateSourceEditRequest(dao dao.SourceDao, editRequest *model.SourceEditRequest) error {
+	if editRequest.Name != nil {
+		if *editRequest.Name == "" {
+			return errors.New("name cannot be empty")
 		}
 
-		if dao.NameExistsInCurrentTenant(*req.Name) {
+		if dao.NameExistsInCurrentTenant(*editRequest.Name) {
 			return fmt.Errorf("source name already exists in same tenant")
+		}
+	}
+
+	// On source edits, we don't set any default values and don't allow empty availability status values.
+	if editRequest.AvailabilityStatus != nil {
+		if _, ok := model.ValidAvailabilityStatuses[*editRequest.AvailabilityStatus]; !ok {
+			return errors.New(`availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`)
 		}
 	}
 	return nil
