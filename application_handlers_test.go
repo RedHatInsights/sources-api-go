@@ -863,7 +863,7 @@ func TestApplicationEdit(t *testing.T) {
 
 	emailNotificationInfo := &m.EmailNotificationInfo{ResourceDisplayName: "Application",
 		CurrentAvailabilityStatus:  "available",
-		PreviousAvailabilityStatus: "unknown",
+		PreviousAvailabilityStatus: "in_progress",
 		SourceName:                 src.Name,
 		SourceID:                   strconv.FormatInt(sourceID, 10),
 		TenantID:                   strconv.FormatInt(fixtures.TestSourceData[0].TenantID, 10),

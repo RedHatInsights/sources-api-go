@@ -423,7 +423,7 @@ func TestConsumeStatusMessage(t *testing.T) {
 	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	sourceTestData := TestData{StatusMessage: statusMessage, MessageHeaders: headers, RaiseEventCalled: true}
 
-	emailNotificationInfo := &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", PreviousAvailabilityStatus: "unknown", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Application", TenantID: "1"}
+	emailNotificationInfo := &m.EmailNotificationInfo{SourceID: "1", SourceName: "Source1", PreviousAvailabilityStatus: "in_progress", CurrentAvailabilityStatus: "available", ResourceDisplayName: "Application", TenantID: "1"}
 	statusMessageApplication := types.StatusMessage{ResourceType: "Application", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}
 	applicationTestData := TestData{StatusMessage: statusMessageApplication, MessageHeaders: headers, RaiseEventCalled: true, ExpectedEmitAvailabilityStatusCallCounter: 1, EmailNotificationInfo: emailNotificationInfo}
 
