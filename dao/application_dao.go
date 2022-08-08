@@ -209,12 +209,14 @@ func (a *applicationDaoImpl) IsSuperkey(id int64) bool {
 	var valid bool
 
 	result := a.getDbWithTable(DB.Debug(), "applications").
+		Model(&m.Application{}).
 		Select(`"Source".app_creation_workflow = ?`, m.AccountAuth).
 		Where("applications.id = ?", id).
 		Joins("Source").
 		First(&valid)
 
 	if result.Error != nil {
+		DB.Logger.Warn(a.ctx, "Failed to determine if app %v is superkey: %v", id, result.Error)
 		return false
 	}
 
