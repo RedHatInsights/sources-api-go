@@ -486,3 +486,73 @@ func TestApplicationListUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestApplicationIsSuperkeyTrue(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("application_superkey_true")
+	defer DropSchema("application_superkey_true")
+
+	src := m.Source{
+		Name:                "Superkey",
+		Uid:                 util.StringRef("asdf"),
+		SourceTypeID:        fixtures.TestSourceTypeData[0].Id,
+		AppCreationWorkflow: m.AccountAuth,
+		TenantID:            fixtures.TestTenantData[0].Id,
+	}
+	srcDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+	err := srcDao.Create(&src)
+	if err != nil {
+		t.Error(err)
+	}
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
+		TenantID:          fixtures.TestTenantData[0].Id,
+	}
+	appDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+	err = appDao.Create(&app)
+	if err != nil {
+		t.Error(err)
+	}
+
+	superkey := appDao.IsSuperkey(app.ID)
+	if !superkey {
+		t.Errorf("application should have been superkey but came back as false")
+	}
+}
+
+func TestApplicationIsSuperkeyFalse(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("application_superkey_false")
+	defer DropSchema("application_superkey_false")
+
+	src := m.Source{
+		Name:                "NotSuperkey",
+		Uid:                 util.StringRef("asdf"),
+		SourceTypeID:        fixtures.TestSourceTypeData[0].Id,
+		AppCreationWorkflow: m.ManualConfig,
+		TenantID:            fixtures.TestTenantData[0].Id,
+	}
+	srcDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+	err := srcDao.Create(&src)
+	if err != nil {
+		t.Error(err)
+	}
+
+	app := m.Application{
+		SourceID:          src.ID,
+		ApplicationTypeID: fixtures.TestApplicationTypeData[0].Id,
+		TenantID:          fixtures.TestTenantData[0].Id,
+	}
+	appDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+	err = appDao.Create(&app)
+	if err != nil {
+		t.Error(err)
+	}
+
+	superkey := appDao.IsSuperkey(app.ID)
+	if superkey {
+		t.Errorf("application should have been NOT superkey but came back as true")
+	}
+}
