@@ -27,6 +27,7 @@ var MigrationsCollection = []*gormigrate.Migration{
 	RemoveOldMigrationsTable(),
 	RenameForeignKeysIndexes(),
 	RemoveProcessedDuplicatedTenants(),
+	AvailabilityStatusColumnsNotNullConstraintDefaultValue(),
 }
 
 var ctx = context.Background()
