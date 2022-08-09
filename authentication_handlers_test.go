@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -663,26 +664,63 @@ func TestAuthenticationEditBadRequest(t *testing.T) {
 }
 
 func TestAuthenticationDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	tenantId := int64(1)
+
+	// Create new test data (source + authentication) for the test
+	// Create a source
+	requestParams := dao.RequestParams{TenantID: &tenantId}
+	sourceDao := dao.GetSourceDao(&requestParams)
+
+	src := m.Source{
+		Name:         "Source for TestAuthenticationDelete()",
+		SourceTypeID: 1,
+		Uid:          util.StringRef("b5cff4f3-4b1a-4f8d-b51a-5c8217ebc23b"),
+	}
+
+	err := sourceDao.Create(&src)
+	if err != nil {
+		t.Errorf("source not created correctly: %s", err)
+	}
+
+	// Create an authentication for the source
+	authenticationDao := dao.GetAuthenticationDao(&requestParams)
+
+	auth := m.Authentication{
+		Name:         util.StringRef("authentication for source"),
+		ResourceType: "Source",
+		ResourceID:   src.ID,
+		TenantID:     tenantId,
+		SourceID:     src.ID,
+	}
+
+	err = authenticationDao.Create(&auth)
+	if err != nil {
+		t.Errorf("authentication for source not created correctly: %s", err)
+	}
+
+	var uid string
+	if config.IsVaultOn() {
+		uid = auth.ID
+	} else {
+		uid = strconv.FormatInt(auth.DbID, 10)
+	}
+
 	c, rec := request.CreateTestContext(
 		http.MethodDelete,
-		"/api/sources/v3.1/authentications/1",
+		"/api/sources/v3.1/authentications/"+uid,
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(1),
+			"tenantID": tenantId,
 		},
 	)
 
 	c.SetParamNames("uid")
-
-	if config.IsVaultOn() {
-		c.SetParamValues(fixtures.TestAuthenticationData[0].ID)
-	} else {
-		id := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
-		c.SetParamValues(id)
-	}
+	c.SetParamValues(uid)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := AuthenticationDelete(c)
+	err = AuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -694,6 +732,52 @@ func TestAuthenticationDelete(t *testing.T) {
 	if rec.Body.Len() != 0 {
 		t.Errorf("Response body is not nil")
 	}
+
+	// Check that the authentication is deleted
+	_, err = authenticationDao.GetById(uid)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("expected 'authentication not found', got %s", err)
+	}
+
+	// Delete created source
+	_, err = sourceDao.Delete(&src.ID)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+// TestAuthenticationDeleteInvalidTenant tests that not found is returned
+// for tenant who doesn't own the authentication
+func TestAuthenticationDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	var uid string
+	if config.IsVaultOn() {
+		uid = fixtures.TestAuthenticationData[0].ID
+	} else {
+		uid = strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/authentications/1",
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("uid")
+	c.SetParamValues(uid)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundAuthenticationDelete := ErrorHandlingContext(AuthenticationDelete)
+	err := notFoundAuthenticationDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
 }
 
 func TestAuthenticationDeleteNotFound(t *testing.T) {
