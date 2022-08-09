@@ -125,6 +125,25 @@ func Init() {
 	if err != nil {
 		logging.Log.Fatalf("Failed to populate static type cache: %v", err)
 	}
+
+	// Close the privileged connection which was used for all the setup steps.
+	err = rawDB.Close()
+	if err != nil {
+		logging.Log.Fatalf("unable to close the database connection after performing the migrations: %s", err)
+	}
+
+	// Open the less privileged "application" connection to the database.
+	db, err = gorm.Open(postgres.Open(dbApplicationString()), &gorm.Config{Logger: l})
+	if err != nil {
+		logging.Log.Fatalf("unable to open the application connection to the database: %s", err)
+	}
+
+	DB = db
+	rawDB, err = db.DB()
+	if err != nil {
+		logging.Log.Fatalf("unable to get the raw database connection from the application connection: %s", err)
+	}
+	rawDB.SetMaxOpenConns(20)
 }
 
 func dbString() string {
@@ -132,6 +151,18 @@ func dbString() string {
 		"user=%s password=%s dbname=%s host=%s port=%d sslmode=disable",
 		config.Get().DatabaseUser,
 		config.Get().DatabasePassword,
+		config.Get().DatabaseName,
+		config.Get().DatabaseHost,
+		config.Get().DatabasePort,
+	)
+}
+
+// dbApplicationString returns the connection string which uses the less privileged "application" connection.
+func dbApplicationString() string {
+	return fmt.Sprintf(
+		"user=%s password=%s dbname=%s host=%s port=%d sslmode=disable",
+		config.Get().DatabaseUserApplication,
+		config.Get().DatabasePasswordApplication,
 		config.Get().DatabaseName,
 		config.Get().DatabaseHost,
 		config.Get().DatabasePort,

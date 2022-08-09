@@ -10,6 +10,8 @@ objects:
     labels:
       app: sources-api
   stringData:
+    database-application-username: "${DATABASE_APPLICATION_USERNAME}"
+    database-application-password: "${DATABASE_APPLICATION_PASSWORD}"
     encryption-key: "${ENCRYPTION_KEY}"
     secret-key: "${SECRET_KEY}"
     psks: "thisMustBeEphemeralOrMinikube"
@@ -78,6 +80,18 @@ objects:
             secretKeyRef:
               name: sources-api-secrets
               key: encryption-key
+        - name: DATABASE_APPLICATION_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: database-application-username
+              optional: false
+        - name: DATABASE_APPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: database-application-password
+              optional: false
         resources:
           limits:
             cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
@@ -106,6 +120,18 @@ objects:
           value: ${SOURCES_ENV}
         - name: MARKETPLACE_HOST
           value: ${MARKETPLACE_HOST}
+        - name: DATABASE_APPLICATION_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: database-application-username
+              optional: false
+        - name: DATABASE_APPLICATION_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: database-application-password
+              optional: false
         - name: SOURCES_PSKS
           valueFrom:
             secretKeyRef:
@@ -342,3 +368,9 @@ parameters:
 - description: Specify any application_types to not seed into the database
   name: APPLICATION_TYPE_SKIP_LIST
   value: ''
+- description: (ephemeral environment only) Specify a database username for the application user of sources
+  name: DATABASE_APPLICATION_USERNAME
+  value: sources_application_user
+- description: (Ephemeral environment only) Specify a user password for the application user of sources
+  name: DATABASE_APPLICATION_PASSWORD
+  value: sources_application_password
