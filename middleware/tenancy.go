@@ -6,6 +6,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -26,7 +27,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		// EbsAccount numbers, and might not work otherwise.
 		if id.Identity.AccountNumber == "" {
 			if id.Identity.OrgID == "" {
-				return c.JSON(http.StatusUnauthorized, "the ebs account number and the org id are missing")
+				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("the ebs account number and the org id are missing", "401"))
 			} else {
 				c.Logger().Warnf(`[org_id: %s] potential anemic tenant found`, id.Identity.OrgID)
 			}
