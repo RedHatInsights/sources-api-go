@@ -22,7 +22,7 @@ func (app *Application) UpdateFromRequestPaused(req *ResourceEditPausedRequest) 
 	lastCheckedAt := req.LastCheckedAt
 
 	if availabilityStatus != nil {
-		if _, ok := ValidAvailabilityStatuses[*req.AvailabilityStatus]; !ok {
+		if _, ok := ValidAvailabilityStatuses[*availabilityStatus]; !ok {
 			return fmt.Errorf(`invalid availability status. Must be one of "available", "in_progress", "partially_available" or "unavailable"`)
 		}
 
