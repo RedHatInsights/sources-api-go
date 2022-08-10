@@ -781,3 +781,81 @@ func TestSourceGetUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestSourceEditUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to update source for userA - expected result: success
+		*/
+		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
+
+		newNameSource := "new name"
+		newSourceUserA := &m.Source{ID: suiteData.SourceUserA().ID, Name: newNameSource}
+		err := sourceDaoUserA.Update(newSourceUserA)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedSource, err := sourceDaoUserA.GetById(&suiteData.SourceUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedSource.Name != newNameSource {
+			t.Errorf("source name %v returned but source %v was expected", updatedSource.Name, newNameSource)
+		}
+
+		/*
+		 Test 2 - UserA tries to update source without user - expected result: success
+		*/
+		newSourceNoUser := &m.Source{ID: suiteData.SourceNoUser().ID, Name: newNameSource}
+		err = sourceDaoUserA.Update(newSourceNoUser)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedSource, err = sourceDaoUserA.GetById(&suiteData.SourceNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedSource.Name != newNameSource {
+			t.Errorf("source name %v returned but source %v was expected", updatedSource.Name, newNameSource)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to update userA's source - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		sourceDaoWithUser := GetSourceDao(requestParams)
+
+		newNameSource = "amazon"
+		newSourceUserB := &m.Source{ID: suiteData.SourceUserA().ID, Name: newNameSource}
+		err = sourceDaoWithUser.Update(newSourceUserB)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedSource, err = sourceDaoUserA.GetById(&suiteData.SourceUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedSource.Name == newNameSource {
+			t.Errorf("source name %v returned but source %v was not expected", updatedSource.Name, newNameSource)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
