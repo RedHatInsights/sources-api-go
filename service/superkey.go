@@ -131,7 +131,10 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 }
 
 func produceSuperkeyRequest(m *kafka.Message) error {
-	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, superkeyTopic)
+	writer, err := kafka.GetWriter(&kafka.Options{
+		BrokerConfig: &conf.KafkaBrokerConfig,
+		Topic:        superkeyTopic,
+	})
 	if err != nil {
 		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
 	}

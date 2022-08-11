@@ -151,7 +151,12 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 	}
 
 	// instantiate a producer for this source
-	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, satelliteTopic)
+	writer, err := kafka.GetWriter(&kafka.Options{
+		BrokerConfig:        &conf.KafkaBrokerConfig,
+		Topic:               satelliteTopic,
+		LoggerFunction:      l.KafkaLogger(),
+		ErrorLoggerFunction: l.KafkaErrorLogger(),
+	})
 	if err != nil {
 		acr.Logger().Errorf(`[source_id: %d] unable to create a Kafka writer for the endpoint availability check: %s`, source.ID, err)
 		return
