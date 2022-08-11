@@ -859,3 +859,92 @@ func TestSourceEditUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1,2 - UserA tries to GET userA's sources of certain application type - expected result: success
+		*/
+		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
+		applicationType := m.ApplicationType{Id: fixtures.TestApplicationTypeData[3].Id}
+		sources, _, err := sourceDaoUserA.SubCollectionList(applicationType, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		var subCollectionSourcesIDs []int64
+		for _, source := range sources {
+			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
+		}
+
+		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsUserA()) {
+			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
+		}
+
+		/*
+		 Test 3 - User without any ownership tries to GET sources of certain application type - expected result: only records without ownership
+		*/
+
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		sourceDaoWithUser := GetSourceDao(requestParams)
+		applicationType = m.ApplicationType{Id: fixtures.TestApplicationTypeData[3].Id}
+		sources, _, err = sourceDaoWithUser.SubCollectionList(applicationType, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		subCollectionSourcesIDs = []int64{}
+		for _, source := range sources {
+			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
+		}
+
+		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsNoUser()) {
+			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
+		}
+
+		rhcDAO := GetRhcConnectionDao(suiteData.TenantID())
+		rhcSourceUserA, errRhc := rhcDAO.Create(&m.RhcConnection{Sources: suiteData.resourcesUserA.Sources})
+		if errRhc != nil {
+			t.Errorf(`unexpected error after calling Create for rhc connection: %v`, errRhc)
+		}
+
+		/*
+		 UserA tries to GET userA's RHC connection - expected result: success
+		*/
+
+		sources, _, err = sourceDaoUserA.ListForRhcConnection(&rhcSourceUserA.ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling ListForRhcConnection: %v`, err)
+		}
+
+		if sources[0].ID != suiteData.resourcesUserA.Sources[0].ID {
+			t.Errorf(`source %v was not expected, source %v was expected `, sources[0].ID, suiteData.resourcesUserA.Sources[0].ID)
+		}
+
+		/*
+		 User without ownership resources tries to GET userA RHC connection - expected result: success
+		*/
+
+		sourcesWithoutOwnership, _, err := sourceDaoWithUser.ListForRhcConnection(&rhcSourceUserA.ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling ListForRhcConnection for the source: %s`, err)
+		}
+
+		if len(sourcesWithoutOwnership) != 0 {
+			t.Errorf(`no sources was expected but we obtained : %d`, len(sourcesWithoutOwnership))
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}

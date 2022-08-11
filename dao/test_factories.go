@@ -159,12 +159,35 @@ func (s *SourceOwnershipDataTestSuite) SourceUserA() *m.Source {
 	return &s.resourcesUserA.Sources[0]
 }
 
+func (s *SourceOwnershipDataTestSuite) SourceIDsUserA() []int64 {
+	var sourcesIDs []int64
+	for _, source := range s.resourcesUserA.Sources {
+		sourcesIDs = append(sourcesIDs, source.ID)
+	}
+
+	for _, source := range s.resourcesNoUser.Sources {
+		sourcesIDs = append(sourcesIDs, source.ID)
+	}
+
+	return sourcesIDs
+}
+
 func (s *SourceOwnershipDataTestSuite) SourceUserB() *m.Source {
 	return &s.resourcesUserB.Sources[0]
 }
 
 func (s *SourceOwnershipDataTestSuite) SourceNoUser() *m.Source {
 	return &s.resourcesNoUser.Sources[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) SourceIDsNoUser() []int64 {
+	var sourcesIDs []int64
+
+	for _, source := range s.resourcesNoUser.Sources {
+		sourcesIDs = append(sourcesIDs, source.ID)
+	}
+
+	return sourcesIDs
 }
 
 func testSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnershipDataTestSuite) error) error {
