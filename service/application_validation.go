@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -46,6 +47,19 @@ func ValidateApplicationCreateRequest(appReq *m.ApplicationCreateRequest) error 
 	err = AppTypeDao.ApplicationTypeCompatibleWithSource(appReq.ApplicationTypeID, appReq.SourceID)
 	if err != nil {
 		return fmt.Errorf("source type is not compatible with this application type")
+	}
+
+	return nil
+}
+
+// ValidateApplicationEditRequest validates that the edit request received for an application is valid.
+func ValidateApplicationEditRequest(editReq *m.ApplicationEditRequest) error {
+	// The availability status could be "nil" if the JSON is missing the key. But that's okay, since the user might be
+	// purposely omitting it because the availability status didn't change.
+	if editReq.AvailabilityStatus != nil {
+		if _, ok := m.ValidAvailabilityStatuses[*editReq.AvailabilityStatus]; !ok {
+			return errors.New(`availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`)
+		}
 	}
 
 	return nil

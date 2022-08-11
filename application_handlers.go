@@ -175,6 +175,11 @@ func ApplicationEdit(c echo.Context) error {
 		if err := c.Bind(input); err != nil {
 			return util.NewErrBadRequest(err)
 		}
+
+		if err := service.ValidateApplicationEditRequest(input); err != nil {
+			return util.NewErrBadRequest(fmt.Errorf(`invalid payload: %w`, err))
+		}
+
 		statusFromRequest = input.AvailabilityStatus
 		app.UpdateFromRequest(input)
 	}
