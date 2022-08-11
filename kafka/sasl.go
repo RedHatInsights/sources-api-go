@@ -22,9 +22,22 @@ const (
 	scramSha512 = "scram-sha-512"
 )
 
+var (
+	// package level sharable kafka variables, safe to use concurrently.
+	Dialer    *kafka.Dialer
+	Transport *kafka.Transport
+
+	TlsConfig     *tls.Config
+	SaslMechanism sasl.Mechanism
+)
+
 // CreateDialer returns a Kafka dialer for the Kafka Go library, which includes the TLS configuration and the Sasl
 // mechanism to connect to the managed Kafka.
 func CreateDialer(config *clowder.BrokerConfig) (*kafka.Dialer, error) {
+	if Dialer != nil {
+		return Dialer, nil
+	}
+
 	if config == nil {
 		return nil, errors.New(`could not create a dialer for Kafka: the passed configuration is empty`)
 	}
@@ -40,17 +53,23 @@ func CreateDialer(config *clowder.BrokerConfig) (*kafka.Dialer, error) {
 		return nil, fmt.Errorf(`unable to create the Sasl mechanism for the dialer: %w`, err)
 	}
 
-	return &kafka.Dialer{
+	Dialer = &kafka.Dialer{
 		DualStack:     true,
 		SASLMechanism: mechanism,
 		Timeout:       10 * time.Second,
 		TLS:           tlsConfig,
-	}, nil
+	}
+
+	return Dialer, nil
 }
 
 // CreateTLSConfig returns a TLS configuration. The minimum TLS version is set to 1.2 and if the "caContents" are not
 // empty the provided certificate is included as "trusted" for the TLS configuration.
 func CreateTLSConfig(caContents *string) *tls.Config {
+	if TlsConfig != nil {
+		return TlsConfig
+	}
+
 	tlsConfig := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}
@@ -64,12 +83,17 @@ func CreateTLSConfig(caContents *string) *tls.Config {
 		tlsConfig.RootCAs = certPool
 	}
 
-	return tlsConfig
+	TlsConfig = tlsConfig
+	return TlsConfig
 }
 
 // CreateSaslMechanism returns a Sasl mechanism that Kafka Go requires for setting up the connection. Currently, we
 // support plain, scram-sha-256 and scram-sha-512 mechanisms.
 func CreateSaslMechanism(saslConfig *clowder.KafkaSASLConfig) (sasl.Mechanism, error) {
+	if SaslMechanism != nil {
+		return SaslMechanism, nil
+	}
+
 	if saslConfig == nil {
 		return nil, errors.New("could not create a Sasl mechanism for Kafka: the Sasl configuration settings are empty")
 	}
@@ -103,5 +127,16 @@ func CreateSaslMechanism(saslConfig *clowder.KafkaSASLConfig) (sasl.Mechanism, e
 		return nil, fmt.Errorf(`unable to generate "%s" mechanism with the "%v" algorithm: %s`, *saslConfig.SaslMechanism, algorithm, err)
 	}
 
-	return mechanism, nil
+	SaslMechanism = mechanism
+	return SaslMechanism, nil
+}
+
+// CreateTransport returns a kafka transport that is memoized since it can be used concurrently
+func CreateTransport(sasl sasl.Mechanism, tls *tls.Config) *kafka.Transport {
+	if Transport != nil {
+		return Transport
+	}
+
+	Transport = &kafka.Transport{SASL: sasl, TLS: tls}
+	return Transport
 }

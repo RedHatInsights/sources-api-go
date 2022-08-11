@@ -93,10 +93,7 @@ func GetWriter(brokerConfig *clowder.BrokerConfig, topic string) (*kafka.Writer,
 			return nil, fmt.Errorf(`unable to create Kafka producer's Sasl mechanism: %w`, err)
 		}
 
-		kafkaWriter.Transport = &kafka.Transport{
-			SASL: mechanism,
-			TLS:  tls,
-		}
+		kafkaWriter.Transport = CreateTransport(mechanism, tls)
 	}
 
 	return kafkaWriter, nil
