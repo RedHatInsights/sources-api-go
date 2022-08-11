@@ -54,14 +54,13 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 		return
 	}
 
-	defer kafka.CloseReader(kf, "subscribe availability status. Shutdown signal received")
-
 	// run async for graceful shutdown handling
 	go func() {
 		kafka.Consume(kf, avs.ConsumeStatusMessage)
 	}()
 
 	<-shutdown
+	kafka.CloseReader(kf, "subscribe availability status. Shutdown signal received")
 	shutdown <- struct{}{}
 }
 
