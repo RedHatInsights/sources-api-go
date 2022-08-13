@@ -77,9 +77,12 @@ func ConnectAndMigrateDB(schema string) {
 
 // ConnectToTestDB connects to the test database, populates the "dao.DB" member, and runs a schema migration.
 func ConnectToTestDB(dbSchema string) {
-	db, err := gorm.Open(postgres.Open(testDbString(testDbName)), &gorm.Config{NamingStrategy: schema.NamingStrategy{
-		TablePrefix: dbSchema + ".",
-	}})
+	db, err := gorm.Open(postgres.Open(testDbString(testDbName)), &gorm.Config{
+		Logger: &logging.GormLogger{Logger: logging.Log},
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix: dbSchema + ".",
+		},
+	})
 
 	if err != nil {
 		log.Fatalf(`could not connect to database: %s`, err)

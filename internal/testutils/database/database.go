@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/db/migrations"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"github.com/labstack/gommon/log"
 	"gorm.io/driver/postgres"
@@ -19,9 +20,12 @@ var testDbName = "sources_api_test_go"
 
 // ConnectToTestDB connects to the test database, populates the "dao.DB" member, and runs a schema migration.
 func ConnectToTestDB(dbSchema string) {
-	db, err := gorm.Open(postgres.Open(testDbString(testDbName)), &gorm.Config{NamingStrategy: schema.NamingStrategy{
-		TablePrefix: dbSchema + ".",
-	}})
+	db, err := gorm.Open(postgres.Open(testDbString(testDbName)), &gorm.Config{
+		Logger: &logger.GormLogger{Logger: logger.Log},
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix: dbSchema + ".",
+		},
+	})
 
 	if err != nil {
 		log.Fatalf("db does not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
