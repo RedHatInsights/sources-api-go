@@ -390,7 +390,7 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 			return err
 		}
 
-		err = tx.Debug().
+		err = s.getDbWithTable(tx.Debug(), "").
 			Model(&m.Application{}).
 			Where("source_id = ?", id).
 			Where("tenant_id = ?", s.TenantID).
