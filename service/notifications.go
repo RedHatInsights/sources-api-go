@@ -67,6 +67,7 @@ type notificationMessage struct {
 	Context     string                   `json:"context"`
 	Events      []notificationEvent      `json:"events"`
 	Recipients  []notificationRecipients `json:"recipients"`
+	ID          string                   `json:"id"`
 }
 
 func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo) error {
