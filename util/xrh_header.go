@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -35,9 +34,11 @@ func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
 // "x-rh-sources-account-number" or "x-rh-identity" headers. It returns early on the first match, without any specific
 // preference or order.
 func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error) {
+	var outputIdentity identity.Identity
+
 	for _, header := range headers {
 		if header.Key == xrhAccountNumberKey {
-			return &identity.Identity{AccountNumber: string(header.Value)}, nil
+			outputIdentity.AccountNumber = string(header.Value)
 		}
 
 		if header.Key == xrhIdentityKey {
@@ -45,10 +46,14 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 			if err != nil {
 				return nil, err
 			}
-
-			return &xRhIdentity.Identity, nil
+			
+			outputIdentity = xRhIdentity.Identity
 		}
 	}
 
-	return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", xrhAccountNumberKey, xrhIdentityKey)
+	if outputIdentity.AccountNumber == "" && outputIdentity.OrgID == "" {
+		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", xrhAccountNumberKey, xrhIdentityKey)
+	}
+
+	return &outputIdentity, nil
 }
