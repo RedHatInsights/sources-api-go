@@ -117,6 +117,10 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		return
 	}
 
+	if id.OrgID == "" {
+		id.OrgID = tenant.OrgID
+	}
+
 	updateAttributes := avs.attributesForUpdate(statusMessage)
 	modelEventDao, err := dao.GetFromResourceType(statusMessage.ResourceType, tenant.Id)
 	if err != nil {

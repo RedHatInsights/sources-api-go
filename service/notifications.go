@@ -89,6 +89,10 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 		return err
 	}
 
+	if id.OrgID == "" {
+		l.Log.Warnf("OrgID is not present, notification maybe not be processed in notification service for %v", statusEventType)
+	}
+
 	event := notificationEvent{Metadata: notificationMetadata{}, Payload: string(payload)}
 
 	msg := &kafka.Message{}
