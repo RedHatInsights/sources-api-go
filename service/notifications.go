@@ -79,6 +79,18 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 
 	defer kafka.CloseWriter(writer, "emit availability status notification")
 
+	notificationMessageGuid := uuid.New().String()
+	if guidPrefix != "" {
+		notificationMessageGuid = fmt.Sprintf("%s-%s", guidPrefix, notificationMessageGuid)
+	}
+
+	l.Log.Infof("[tenant_id: %s][source_id: %s] Publishing notification status message, status %s changed from: %s to %s",
+		emailNotificationInfo.TenantID,
+		emailNotificationInfo.SourceID,
+		emailNotificationInfo.PreviousAvailabilityStatus,
+		emailNotificationInfo.CurrentAvailabilityStatus,
+		notificationMessageGuid)
+
 	context, err := json.Marshal(emailNotificationInfo)
 	if err != nil {
 		l.Log.Warnf(`error when marshalling the email notification information: %s`, err)
@@ -96,11 +108,6 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 	}
 
 	event := notificationEvent{Metadata: notificationMetadata{}, Payload: string(payload)}
-
-	notificationMessageGuid := uuid.New().String()
-	if guidPrefix != "" {
-		notificationMessageGuid = fmt.Sprintf("%s-%s", guidPrefix, notificationMessageGuid)
-	}
 
 	msg := &kafka.Message{}
 	err = msg.AddValueAsJSON(&notificationMessage{
@@ -133,11 +140,5 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 }
 
 func EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, guidPrefix string) error {
-	l.Log.Infof("[tenant_id: %s][source_id: %s] Publishing status notification status changed from: %s to %s",
-		emailNotificationInfo.TenantID,
-		emailNotificationInfo.SourceID,
-		emailNotificationInfo.PreviousAvailabilityStatus,
-		emailNotificationInfo.CurrentAvailabilityStatus)
-
 	return NotificationProducer.EmitAvailabilityStatusNotification(id, emailNotificationInfo, guidPrefix)
 }
