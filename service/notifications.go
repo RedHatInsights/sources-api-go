@@ -9,6 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/google/uuid"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -19,7 +20,7 @@ func init() {
 }
 
 type Notifier interface {
-	EmitAvailabilityStatusNotification(xRhIdentity *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo) error
+	EmitAvailabilityStatusNotification(xRhIdentity *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, guidPrefix string) error
 }
 
 type AvailabilityStatusNotifier struct {
@@ -70,7 +71,7 @@ type notificationMessage struct {
 	ID          string                   `json:"id"`
 }
 
-func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo) error {
+func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, guidPrefix string) error {
 	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, notificationTopic)
 	if err != nil {
 		return fmt.Errorf(`could not get Kafka writer to emit an availability status notification: %w`, err)
@@ -96,8 +97,14 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 
 	event := notificationEvent{Metadata: notificationMetadata{}, Payload: string(payload)}
 
+	notificationMessageGuid := uuid.New().String()
+	if guidPrefix != "" {
+		notificationMessageGuid = fmt.Sprintf("%s-%s", guidPrefix, notificationMessageGuid)
+	}
+
 	msg := &kafka.Message{}
 	err = msg.AddValueAsJSON(&notificationMessage{
+		ID:          notificationMessageGuid,
 		Version:     notificationMessageVersion,
 		Bundle:      bundle,
 		Application: application,
@@ -125,12 +132,12 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 	return nil
 }
 
-func EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo) error {
+func EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, guidPrefix string) error {
 	l.Log.Infof("[tenant_id: %s][source_id: %s] Publishing status notification status changed from: %s to %s",
 		emailNotificationInfo.TenantID,
 		emailNotificationInfo.SourceID,
 		emailNotificationInfo.PreviousAvailabilityStatus,
 		emailNotificationInfo.CurrentAvailabilityStatus)
 
-	return NotificationProducer.EmitAvailabilityStatusNotification(id, emailNotificationInfo)
+	return NotificationProducer.EmitAvailabilityStatusNotification(id, emailNotificationInfo, guidPrefix)
 }

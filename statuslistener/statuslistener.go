@@ -163,7 +163,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 		}
 
 		if emailInfo != nil {
-			err = service.EmitAvailabilityStatusNotification(id, emailInfo.ToEmail(previousStatus))
+			err = service.EmitAvailabilityStatusNotification(id, emailInfo.ToEmail(previousStatus), "status-listener")
 			if err != nil {
 				l.Log.Errorf("[tenant_id: %d][resource_type: %s][resource_id: %d][resource_uuid: %s] unable to emit notification: %v", resource.TenantID, resource.ResourceType, resource.ResourceID, resource.ResourceUID, err)
 			}
