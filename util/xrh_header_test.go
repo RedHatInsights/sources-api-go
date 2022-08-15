@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/kafka"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -127,11 +128,15 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 		}
 	}
 
-	// Lastly test with the "x-rh-account-number" header.
+	// Lastly test with the "x-rh-account-number" and "x-rh-sources-org-id" header.
 	headers = []kafka.Header{
 		{
 			Key:   xrhAccountNumberKey,
 			Value: []byte(accountNumber),
+		},
+		{
+			Key:   h.ORGID,
+			Value: []byte(orgId),
 		},
 	}
 
@@ -145,6 +150,14 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 		got := id.AccountNumber
 		if want != got {
 			t.Errorf(`invalid account number extracted from identity. Want "%s", got "%s"`, want, got)
+		}
+	}
+
+	{
+		want := orgId
+		got := id.OrgID
+		if want != got {
+			t.Errorf(`invalid org id extracted from identity. Want "%s", got "%s"`, want, got)
 		}
 	}
 

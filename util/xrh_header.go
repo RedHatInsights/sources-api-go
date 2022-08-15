@@ -4,8 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
@@ -41,12 +43,16 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 			outputIdentity.AccountNumber = string(header.Value)
 		}
 
+		if header.Key == h.ORGID {
+			outputIdentity.OrgID = string(header.Value)
+		}
+
 		if header.Key == xrhIdentityKey {
 			xRhIdentity, err := ParseXRHIDHeader(string(header.Value))
 			if err != nil {
 				return nil, err
 			}
-			
+
 			outputIdentity = xRhIdentity.Identity
 		}
 	}
