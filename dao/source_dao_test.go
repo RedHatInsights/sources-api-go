@@ -95,6 +95,100 @@ func TestPausingSource(t *testing.T) {
 	DropSchema("pause_unpause")
 }
 
+func TestPausingSourceWithOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("pause_unpause")
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to pause source for userA - expected result: success
+		*/
+
+		sourceDao := GetSourceDao(suiteData.GetRequestParamsUserA())
+		err := sourceDao.Pause(suiteData.SourceUserA().ID)
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+
+		source, err := sourceDao.GetByIdWithPreload(&suiteData.SourceUserA().ID, "Applications")
+		if err != nil {
+			t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
+		}
+
+		want := time.Now()
+		if !dateTimesAreSimilar(want, *source.PausedAt) {
+			t.Errorf(`want "%s", got "%s"`, want, *source.PausedAt)
+		}
+
+		for _, app := range source.Applications {
+			if !dateTimesAreSimilar(want, *app.PausedAt) {
+				t.Errorf(`application not properly paused. Want "%s", got "%s"`, want, app.PausedAt)
+			}
+		}
+
+		/*
+		 Test 2 - UserA tries to update source without user - expected result: success
+		*/
+
+		sourceDao = GetSourceDao(suiteData.GetRequestParamsUserA())
+		err = sourceDao.Pause(suiteData.SourceNoUser().ID)
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+
+		source, err = sourceDao.GetByIdWithPreload(&suiteData.SourceNoUser().ID, "Applications")
+		if err != nil {
+			t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
+		}
+
+		want = time.Now()
+		if !dateTimesAreSimilar(want, *source.PausedAt) {
+			t.Errorf(`want "%s", got "%s"`, want, *source.PausedAt)
+		}
+
+		for _, app := range source.Applications {
+			if !dateTimesAreSimilar(want, *app.PausedAt) {
+				t.Errorf(`application not properly paused. Want "%s", got "%s"`, want, app.PausedAt)
+			}
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to update userB's source - expected result: failure
+		*/
+
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		sourceDaoWithUser := GetSourceDao(requestParams)
+
+		err = sourceDaoWithUser.Pause(suiteData.SourceUserB().ID)
+		if err != nil {
+			t.Errorf(`error fetching the source dao with its applications. Want nil error, got "%s"`, err)
+		}
+
+		source, err = GetSourceDao(suiteData.GetRequestParamsUserB()).GetByIdWithPreload(&suiteData.SourceUserB().ID, "Applications")
+		if err != nil {
+			t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
+		}
+
+		if source.PausedAt != nil {
+			t.Errorf("pausedAt column should be nil but it is %v for source", source.PausedAt)
+		}
+
+		for _, app := range source.Applications {
+			if app.PausedAt != nil {
+				t.Errorf("pausedAt column should be nil but it is %v for application", source.PausedAt)
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema("pause_unpause")
+}
+
 // TestResumingSource checks whether the "paused_at" column gets set as "NULL" when resuming a source.
 func TestResumingSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
