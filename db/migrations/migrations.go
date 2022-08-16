@@ -26,6 +26,7 @@ var MigrationsCollection = []*gormigrate.Migration{
 	AddApplicationConstraint(),
 	RemoveOldMigrationsTable(),
 	RenameForeignKeysIndexes(),
+	TranslateEbsAccountNumbersToOrgIdsSecondRun(),
 }
 
 var ctx = context.Background()
