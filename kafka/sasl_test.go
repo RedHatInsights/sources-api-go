@@ -92,6 +92,7 @@ func TestCreateDialer(t *testing.T) {
 // TestCreateTlsConfigEmptyCaContents tests that when a nil or empty certificate is given to the function under test,
 // the TLS configuration is only set up with the minimum TLS version.
 func TestCreateTlsConfigEmptyCaContents(t *testing.T) {
+	TlsConfig = nil
 	emptyString := ""
 	testValues := []*string{nil, &emptyString}
 
@@ -120,6 +121,7 @@ func TestCreateTlsConfigEmptyCaContents(t *testing.T) {
 
 // TestCreateTlsConfig tests that the TLS configuration is properly created when a valid configuration is given.
 func TestCreateTlsConfig(t *testing.T) {
+	TlsConfig = nil
 	// The certificate is a certificate from https://example.org
 	caContents := `
 -----BEGIN CERTIFICATE-----
@@ -186,6 +188,7 @@ A7sKPPcw7+uvTPyLNhBzPvOk
 // TestCreateSaslMechanismEmptyConfig tests that when a "nil" configuration is passed to the function, an error is
 // returned without panicking.
 func TestCreateSaslMechanismEmptyConfig(t *testing.T) {
+	SaslMechanism = nil
 	_, err := CreateSaslMechanism(nil)
 
 	want := "could not create a Sasl mechanism for Kafka: the Sasl configuration settings are empty"
@@ -199,6 +202,7 @@ func TestCreateSaslMechanismEmptyConfig(t *testing.T) {
 // TestCreatSaslMechanismEmptySaslMechanism tests that when a "nil" or empty "SaslMechanism" is passed via the config,
 // an error is returned without panicking.
 func TestCreatSaslMechanismEmptySaslMechanism(t *testing.T) {
+	SaslMechanism = nil
 	emptyString := ""
 	testValues := []*string{nil, &emptyString}
 
@@ -221,6 +225,7 @@ func TestCreatSaslMechanismEmptySaslMechanism(t *testing.T) {
 // TestCreateSaslMechanismNilUsername tests that when a "nil" username is passed via the config, an error is returned
 // without panicking.
 func TestCreateSaslMechanismNilUsername(t *testing.T) {
+	SaslMechanism = nil
 	saslConfig := createKafkaSaslConfigurationFixture()
 	saslConfig.Username = nil
 
@@ -237,6 +242,7 @@ func TestCreateSaslMechanismNilUsername(t *testing.T) {
 // TestCreateSaslMechanismNilPassword tests that when a "nil" password is passed via the config, an error is returned
 // without panicking.
 func TestCreateSaslMechanismNilPassword(t *testing.T) {
+	SaslMechanism = nil
 	saslConfig := createKafkaSaslConfigurationFixture()
 	saslConfig.Password = nil
 
@@ -253,6 +259,7 @@ func TestCreateSaslMechanismNilPassword(t *testing.T) {
 // TestCreateSaslPlainMechanism tests that when a "plain" Sasl mechanism is provided, the corresponding kafka-go
 // compatible mechanism is returned.
 func TestCreateSaslPlainMechanism(t *testing.T) {
+	SaslMechanism = nil
 	plainMech := plain.Mechanism{}
 	plainMechName := plainMech.Name()
 
@@ -274,6 +281,7 @@ func TestCreateSaslPlainMechanism(t *testing.T) {
 // TestCreateSaslSha512Mechanism tests that when a "scram-sha-256" Sasl mechanism is provided, the corresponding
 // kafka-go compatible mechanism is returned.
 func TestCreateSaslSha512Mechanism(t *testing.T) {
+	SaslMechanism = nil
 	scramSha256 := scram.SHA256.Name()
 
 	saslConfig := createKafkaSaslConfigurationFixture()
@@ -294,6 +302,7 @@ func TestCreateSaslSha512Mechanism(t *testing.T) {
 // TestCreateSaslSha512Mechanism tests that when a "scram-sha-512" Sasl mechanism is provided, the corresponding
 // kafka-go compatible mechanism is returned.
 func TestCreateSaslScramSha512Mechanism(t *testing.T) {
+	SaslMechanism = nil
 	scramSha512 := scram.SHA512.Name()
 
 	saslConfig := createKafkaSaslConfigurationFixture()
@@ -313,6 +322,7 @@ func TestCreateSaslScramSha512Mechanism(t *testing.T) {
 
 // TestCreateSaslInvalidMechanism tests that when a not recognized Sasl mechanism is provided, an error is returned.
 func TestCreateSaslInvalidMechanism(t *testing.T) {
+	SaslMechanism = nil
 	whatever := "whatever"
 
 	saslConfig := createKafkaSaslConfigurationFixture()
