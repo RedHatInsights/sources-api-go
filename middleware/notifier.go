@@ -27,7 +27,7 @@ func Notifier(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if emailNotificationInfo.PreviousAvailabilityStatus != emailNotificationInfo.CurrentAvailabilityStatus {
-			return service.EmitAvailabilityStatusNotification(&xRhIdentity.Identity, emailNotificationInfo)
+			return service.EmitAvailabilityStatusNotification(&xRhIdentity.Identity, emailNotificationInfo, "notifier-middleware")
 		}
 
 		return nil

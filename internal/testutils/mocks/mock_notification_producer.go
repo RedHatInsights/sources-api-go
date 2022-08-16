@@ -12,7 +12,7 @@ type MockAvailabilityStatusNotificationProducer struct {
 	EmailNotificationInfo             *m.EmailNotificationInfo
 }
 
-func (producer *MockAvailabilityStatusNotificationProducer) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo) error {
+func (producer *MockAvailabilityStatusNotificationProducer) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, guidPrefix string) error {
 	producer.EmitAvailabilityStatusCallCounter++
 	producer.EmailNotificationInfo = emailNotificationInfo
 	producer.AccountNumber = id.AccountNumber
