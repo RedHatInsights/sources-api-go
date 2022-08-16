@@ -134,6 +134,7 @@ func produceSuperkeyRequest(m *kafka.Message) error {
 	writer, err := kafka.GetWriter(&kafka.Options{
 		BrokerConfig: &conf.KafkaBrokerConfig,
 		Topic:        superkeyTopic,
+		Logger:       l.Log,
 	})
 	if err != nil {
 		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)

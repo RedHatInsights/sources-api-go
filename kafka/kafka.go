@@ -5,46 +5,44 @@ import (
 	"errors"
 	"fmt"
 
-	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
 	"github.com/segmentio/kafka-go"
 )
 
-type Options struct {
-	// REQUIRED FIELDS
-	BrokerConfig *clowder.BrokerConfig
-	Topic        string
-
-	// only used for reader, optional.
-	GroupID *string
-
-	// logging functions to pass along
-	LoggerFunction      kafka.LoggerFunc
-	ErrorLoggerFunction kafka.LoggerFunc
-}
-
 // CloseReader attempts to close the provided reader and logs the error if it fails.
-func CloseReader(reader *kafka.Reader, context string) {
+func CloseReader(reader *Reader, context string) {
+	if reader == nil {
+		return
+	}
+
 	err := reader.Close()
-	if err != nil && reader.Config().ErrorLogger != nil {
-		reader.Config().ErrorLogger.Printf(`unable to close reader in the "%s" context: %s`, context, err)
+	if err != nil && reader.Options.Logger != nil {
+		reader.Options.Logger.Errorf(`unable to close reader in the "%s" context: %s`, context, err)
 	}
 }
 
 // CloseWriter attempts to close the provided writer and logs the error if it fails.
-func CloseWriter(writer *kafka.Writer, context string) {
+func CloseWriter(writer *Writer, context string) {
+	if writer == nil {
+		return
+	}
+
 	err := writer.Close()
 	if err != nil && writer.ErrorLogger != nil {
-		writer.ErrorLogger.Printf(`unable to close writer in the "%s" context: %s`, context, err)
+		writer.Options.Logger.Errorf(`unable to close writer in the "%s" context: %s`, context, err)
 	}
 }
 
 // Consume consumes a message from the reader with the provided handler function.
-func Consume(reader *kafka.Reader, consumerHandler func(Message)) {
+func Consume(reader *Reader, consumerHandler func(Message)) {
+	if reader == nil || reader.Reader == nil {
+		panic("cannot consume on a nil reader, be sure to initialize with kafka.NewReader()")
+	}
+
 	for {
 		message, err := reader.ReadMessage(context.Background())
 		if err != nil {
-			if reader.Config().ErrorLogger != nil {
-				reader.Config().ErrorLogger.Printf(`error reading Kafka message: %s. Continuing...`, err)
+			if reader.Options.Logger != nil {
+				reader.Options.Logger.Errorf(`error reading Kafka message: %s. Continuing...`, err)
 			}
 
 			continue
@@ -55,7 +53,7 @@ func Consume(reader *kafka.Reader, consumerHandler func(Message)) {
 }
 
 // GetReader returns a Kafka reader configured with the specified settings.
-func GetReader(conf *Options) (*kafka.Reader, error) {
+func GetReader(conf *Options) (*Reader, error) {
 	if conf.BrokerConfig == nil {
 		return nil, errors.New("could not create Kafka reader: the provided configuration is empty")
 	}
@@ -69,12 +67,17 @@ func GetReader(conf *Options) (*kafka.Reader, error) {
 	}
 
 	readerConfig := kafka.ReaderConfig{
-		Brokers:     []string{fmt.Sprintf("%s:%d", conf.BrokerConfig.Hostname, *conf.BrokerConfig.Port)},
-		Topic:       conf.Topic,
-		Logger:      conf.LoggerFunction,
-		ErrorLogger: conf.ErrorLoggerFunction,
+		Brokers: []string{fmt.Sprintf("%s:%d", conf.BrokerConfig.Hostname, *conf.BrokerConfig.Port)},
+		Topic:   conf.Topic,
 	}
 
+	// set up the logger
+	if conf.Logger != nil {
+		readerConfig.Logger = kafka.LoggerFunc(conf.Logger.Debugf)
+		readerConfig.ErrorLogger = kafka.LoggerFunc(conf.Logger.Errorf)
+	}
+
+	// set the group id if present
 	if conf.GroupID != nil {
 		readerConfig.GroupID = *conf.GroupID
 	}
@@ -90,11 +93,11 @@ func GetReader(conf *Options) (*kafka.Reader, error) {
 		readerConfig.Dialer = dialer
 	}
 
-	return kafka.NewReader(readerConfig), nil
+	return &Reader{Reader: kafka.NewReader(readerConfig), Options: conf}, nil
 }
 
 // GetWriter returns a Kafka writer configured with the specified settings.
-func GetWriter(conf *Options) (*kafka.Writer, error) {
+func GetWriter(conf *Options) (*Writer, error) {
 	if conf.BrokerConfig == nil {
 		return nil, errors.New("could not create Kafka writer: the provided configuration is empty")
 	}
@@ -108,10 +111,13 @@ func GetWriter(conf *Options) (*kafka.Writer, error) {
 	}
 
 	kafkaWriter := &kafka.Writer{
-		Addr:        kafka.TCP(fmt.Sprintf("%s:%d", conf.BrokerConfig.Hostname, *conf.BrokerConfig.Port)),
-		Topic:       conf.Topic,
-		Logger:      conf.LoggerFunction,
-		ErrorLogger: conf.ErrorLoggerFunction,
+		Addr:  kafka.TCP(fmt.Sprintf("%s:%d", conf.BrokerConfig.Hostname, *conf.BrokerConfig.Port)),
+		Topic: conf.Topic,
+	}
+
+	if conf.Logger != nil {
+		kafkaWriter.Logger = kafka.LoggerFunc(conf.Logger.Debugf)
+		kafkaWriter.ErrorLogger = kafka.LoggerFunc(conf.Logger.Errorf)
 	}
 
 	if conf.BrokerConfig.Authtype != nil {
@@ -125,11 +131,15 @@ func GetWriter(conf *Options) (*kafka.Writer, error) {
 		kafkaWriter.Transport = CreateTransport(mechanism, tls)
 	}
 
-	return kafkaWriter, nil
+	return &Writer{Writer: kafkaWriter, Options: conf}, nil
 }
 
 // Produce produces a message with the writer.
-func Produce(writer *kafka.Writer, message *Message) error {
+func Produce(writer *Writer, message *Message) error {
+	if writer == nil || writer.Writer == nil {
+		return fmt.Errorf("cannot produce on a nil writer - be sure to initialize with kafka.NewWriter()")
+	}
+
 	if !message.isEmpty() {
 		err := writer.WriteMessages(
 			context.Background(),
@@ -143,6 +153,10 @@ func Produce(writer *kafka.Writer, message *Message) error {
 			headersMap := make(map[string]string)
 			for _, h := range message.Headers {
 				headersMap[h.Key] = string(h.Value)
+			}
+
+			if writer.Options.Logger != nil {
+				writer.Options.Logger.Errorf(`could not produce Kafka message. Headers: %s, content: "%s": %w`, headersMap, string(message.Value), err)
 			}
 
 			return fmt.Errorf(`could not produce Kafka message. Headers: %s, content: "%s": %w`, headersMap, string(message.Value), err)

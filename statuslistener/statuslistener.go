@@ -49,11 +49,10 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 	}
 
 	kf, err := kafka.GetReader(&kafka.Options{
-		BrokerConfig:        &config.KafkaBrokerConfig,
-		GroupID:             util.StringRef(groupID),
-		Topic:               sourcesStatusTopic,
-		LoggerFunction:      l.KafkaLogger(),
-		ErrorLoggerFunction: l.KafkaErrorLogger(),
+		BrokerConfig: &config.KafkaBrokerConfig,
+		GroupID:      util.StringRef(groupID),
+		Topic:        sourcesStatusTopic,
+		Logger:       l.Log,
 	})
 	if err != nil {
 		l.Log.Errorf(`could not get a Kafka reader: %s`, err)

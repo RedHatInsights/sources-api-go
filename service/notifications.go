@@ -76,10 +76,9 @@ type notificationMessage struct {
 
 func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, sourceIdentification string) error {
 	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig:        &conf.KafkaBrokerConfig,
-		Topic:               notificationTopic,
-		LoggerFunction:      l.KafkaLogger(),
-		ErrorLoggerFunction: l.KafkaErrorLogger(),
+		BrokerConfig: &conf.KafkaBrokerConfig,
+		Topic:        notificationTopic,
+		Logger:       l.Log,
 	})
 	if err != nil {
 		return fmt.Errorf(`could not get Kafka writer to emit an availability status notification: %w`, err)
