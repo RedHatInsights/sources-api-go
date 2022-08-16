@@ -43,6 +43,10 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.PSK_USER, c.Request().Header.Get(h.PSK_USER))
 		}
 
+		if c.Request().Header.Get(h.INSIGHTS_REQUEST_ID) != "" {
+			c.Set(h.INSIGHTS_REQUEST_ID, c.Request().Header.Get(h.INSIGHTS_REQUEST_ID))
+		}
+
 		// id is the XrhId struct we will store in the context. The idea is: if no "x-rh-identity" header has been
 		// received, generate an identity struct from the given "OrgId" and "EBS account number". If the "x-rh-identity"
 		// header is present, simply decode it and use the decided identity.

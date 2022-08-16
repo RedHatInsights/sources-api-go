@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
@@ -24,7 +25,7 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 				message = util.ErrorDocWithoutLogging(err.Error(), "400")
 			default:
 				c.Logger().Error(err)
-				uuid, ok := c.Get("uuid").(string)
+				uuid, ok := c.Get(h.INSIGHTS_REQUEST_ID).(string)
 				if !ok {
 					uuid = ""
 				}
