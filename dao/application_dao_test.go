@@ -556,3 +556,60 @@ func TestApplicationIsSuperkeyFalse(t *testing.T) {
 		t.Errorf("application should have been NOT superkey but came back as true")
 	}
 }
+
+func TestApplicationGetUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		   Test 1 - UserA tries to GET userA's application - expected result: success
+		*/
+		applicationDaoUserA := GetApplicationDao(suiteData.GetRequestParamsUserA())
+		applicationUserA, err := applicationDaoUserA.GetById(&suiteData.ApplicationUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the application: %s`, err)
+		}
+
+		if applicationUserA.ID != suiteData.ApplicationUserA().ID {
+			t.Errorf("source %v returned but source %v was expected", applicationUserA.ID, suiteData.ApplicationUserA().ID)
+		}
+
+		/*
+		   Test 2 - UserA tries to GET application without user - expected result: success
+		*/
+		applicationNoUser, err := applicationDaoUserA.GetById(&suiteData.ApplicationNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		if applicationNoUser.ID != suiteData.ApplicationNoUser().ID {
+			t.Errorf("application %v returned but application %v was expected", applicationNoUser.ID, suiteData.ApplicationNoUser().ID)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to GET userA's application - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		applicationDaoWithUser := GetApplicationDao(requestParams)
+
+		_, err = applicationDaoWithUser.GetById(&suiteData.ApplicationUserA().ID)
+		if err == nil {
+			t.Errorf(`unexpected error after calling GetById for the application: %v`, suiteData.ApplicationUserA())
+		}
+
+		if err.Error() != "application not found" {
+			t.Errorf(`unexpected error after calling GetById for the application: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
