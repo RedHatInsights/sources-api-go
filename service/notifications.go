@@ -84,12 +84,11 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 		notificationMessageGuid = fmt.Sprintf("%s-%s", guidPrefix, notificationMessageGuid)
 	}
 
-	l.Log.Infof("[tenant_id: %s][source_id: %s] Publishing notification status message, status %s changed from: %s to %s",
+	l.Log.WithField("notification-guid", notificationMessageGuid).Infof(`[tenant_id: %s][source_id: %s] Publishing notification status message, status changed from '%s' to '%s'`,
 		emailNotificationInfo.TenantID,
 		emailNotificationInfo.SourceID,
 		emailNotificationInfo.PreviousAvailabilityStatus,
-		emailNotificationInfo.CurrentAvailabilityStatus,
-		notificationMessageGuid)
+		emailNotificationInfo.CurrentAvailabilityStatus)
 
 	context, err := json.Marshal(emailNotificationInfo)
 	if err != nil {
