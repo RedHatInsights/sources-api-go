@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 var uuidRegex = regexp.MustCompile(`[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`)
@@ -30,6 +31,21 @@ func setUp() model.SourceCreateRequest {
 		SourceTypeIDRaw:     &sourceTypeId,
 	}
 
+}
+
+func setUpEditSourceNameRequest() model.SourceEditRequest {
+	name := "TestRequest"
+	version := "10.5"
+	imported := "true"
+	sourceRef := "Source reference #5"
+
+	return model.SourceEditRequest{
+		Name:               &name,
+		Version:            &version,
+		Imported:           &imported,
+		SourceRef:          &sourceRef,
+		AvailabilityStatus: util.StringRef(model.Available),
+	}
 }
 
 // TestValidRequest tests that a valid request doesn't report any errors when validated.
@@ -261,4 +277,36 @@ func TestInvalidSourceTypeIdFormat(t *testing.T) {
 			t.Errorf("got \"%s\", want \"%s\"", err.Error(), "the source type id is not valid")
 		}
 	}
+}
+
+//TestEditSourceNameRequest tests if the function ValidateEditSourceNameRequest() will return a bad request if a source is edited to have the same name as another source within the same tenant.
+func TestEditSourceNameRequest(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	sourceName := "Source350"
+	sourceUid := "abcde-fghijk"
+	newSource := model.Source{ID: 350, Name: sourceName, SourceTypeID: 1, TenantID: 1, Uid: &sourceUid}
+	err := dao.DB.
+		Debug().
+		Create(&newSource).
+		Error
+
+	if err != nil {
+		t.Errorf(`could not create the source fixture for the test: %s`, err)
+	}
+
+	request := setUpEditSourceNameRequest()
+	request.Name = &sourceName
+
+	err = ValidateEditSourceNameRequest(sourceDao, &request)
+
+	if err == nil {
+		t.Errorf("Error expected, got none")
+	}
+
+	if err.Error() != "source name already exists in same tenant" {
+		t.Errorf("want %#v, got %#v", "source name already exists in same tenant", err.Error())
+	}
+
+	dao.DB.Delete(newSource)
 }

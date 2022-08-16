@@ -164,6 +164,10 @@ func SourceEdit(c echo.Context) error {
 		if err := c.Bind(input); err != nil {
 			return err
 		}
+		err := service.ValidateEditSourceNameRequest(sourcesDB, input)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
 
 		s.UpdateFromRequest(input)
 	}
