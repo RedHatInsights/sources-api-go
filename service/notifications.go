@@ -84,7 +84,9 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 		notificationMessageGuid = fmt.Sprintf("%s-%s", guidPrefix, notificationMessageGuid)
 	}
 
-	l.Log.WithField("notification-guid", notificationMessageGuid).Infof(`[tenant_id: %s][source_id: %s] Publishing notification status message, status changed from '%s' to '%s'`,
+	loggerWithGuid := l.Log.WithField("notification-guid", notificationMessageGuid)
+
+	loggerWithGuid.Infof(`[tenant_id: %s][source_id: %s] Publishing notification status message, status changed from '%s' to '%s'`,
 		emailNotificationInfo.TenantID,
 		emailNotificationInfo.SourceID,
 		emailNotificationInfo.PreviousAvailabilityStatus,
@@ -92,18 +94,18 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 
 	context, err := json.Marshal(emailNotificationInfo)
 	if err != nil {
-		l.Log.Warnf(`error when marshalling the email notification information: %s`, err)
+		loggerWithGuid.Warnf(`error when marshalling the email notification information: %s`, err)
 		return err
 	}
 
 	payload, err := json.Marshal(&notificationPayload{})
 	if err != nil {
-		l.Log.Warnf(`error when marshalling the email notification payload: %s`, err)
+		loggerWithGuid.Warnf(`error when marshalling the email notification payload: %s`, err)
 		return err
 	}
 
 	if id.OrgID == "" {
-		l.Log.Warnf("OrgID is not present, notification maybe not be processed in notification service for %v", statusEventType)
+		loggerWithGuid.Warnf("OrgID is not present, notification maybe not be processed in notification service for %v", statusEventType)
 	}
 
 	event := notificationEvent{Metadata: notificationMetadata{}, Payload: string(payload)}
@@ -124,14 +126,14 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 	})
 
 	if err != nil {
-		l.Log.Warnf("Failed to add struct value as json to kafka message: %v", err)
+		loggerWithGuid.Warnf("Failed to add struct value as json to kafka message: %v", err)
 		return err
 	}
 
 	if err := kafka.Produce(writer, msg); err != nil {
 		err := fmt.Errorf("failed to produce Kafka message to emit notification: %v, error: %s", statusEventType, err)
 
-		l.Log.Warn(err)
+		loggerWithGuid.Warn(err)
 		return err
 	}
 
