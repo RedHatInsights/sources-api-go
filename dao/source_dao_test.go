@@ -724,3 +724,227 @@ func TestSourceListUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestSourceGetUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to GET userA's source - expected result: success
+		*/
+		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
+		sourceUserA, err := sourceDaoUserA.GetById(&suiteData.SourceUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		if sourceUserA.ID != suiteData.SourceUserA().ID {
+			t.Errorf("source %v returned but source %v was expected", sourceUserA.ID, suiteData.SourceUserA().ID)
+		}
+
+		/*
+		 Test 2 - UserA tries to GET source without user - expected result: success
+		*/
+		sourceNoUser, err := sourceDaoUserA.GetById(&suiteData.SourceNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		if sourceNoUser.ID != suiteData.SourceNoUser().ID {
+			t.Errorf("source %v returned but source %v was expected", sourceNoUser.ID, suiteData.SourceNoUser().ID)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to GET userA's source - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		sourceDaoWithUser := GetSourceDao(requestParams)
+
+		_, err = sourceDaoWithUser.GetById(&suiteData.SourceUserA().ID)
+		if err == nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %v`, suiteData.SourceUserA())
+		}
+
+		if err.Error() != "source not found" {
+			t.Errorf(`unexpected error after calling GetById for the source: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
+
+func TestSourceEditUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to update source for userA - expected result: success
+		*/
+		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
+
+		newNameSource := "new name"
+		newSourceUserA := &m.Source{ID: suiteData.SourceUserA().ID, Name: newNameSource}
+		err := sourceDaoUserA.Update(newSourceUserA)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedSource, err := sourceDaoUserA.GetById(&suiteData.SourceUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedSource.Name != newNameSource {
+			t.Errorf("source name %v returned but source %v was expected", updatedSource.Name, newNameSource)
+		}
+
+		/*
+		 Test 2 - UserA tries to update source without user - expected result: success
+		*/
+		newSourceNoUser := &m.Source{ID: suiteData.SourceNoUser().ID, Name: newNameSource}
+		err = sourceDaoUserA.Update(newSourceNoUser)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedSource, err = sourceDaoUserA.GetById(&suiteData.SourceNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedSource.Name != newNameSource {
+			t.Errorf("source name %v returned but source %v was expected", updatedSource.Name, newNameSource)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to update userA's source - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		sourceDaoWithUser := GetSourceDao(requestParams)
+
+		newNameSource = "amazon"
+		newSourceUserB := &m.Source{ID: suiteData.SourceUserA().ID, Name: newNameSource}
+		err = sourceDaoWithUser.Update(newSourceUserB)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedSource, err = sourceDaoUserA.GetById(&suiteData.SourceUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedSource.Name == newNameSource {
+			t.Errorf("source name %v returned but source %v was not expected", updatedSource.Name, newNameSource)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
+
+func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1,2 - UserA tries to GET userA's sources of certain application type - expected result: success
+		*/
+		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
+		applicationType := m.ApplicationType{Id: fixtures.TestApplicationTypeData[3].Id}
+		sources, _, err := sourceDaoUserA.SubCollectionList(applicationType, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		var subCollectionSourcesIDs []int64
+		for _, source := range sources {
+			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
+		}
+
+		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsUserA()) {
+			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
+		}
+
+		/*
+		 Test 3 - User without any ownership tries to GET sources of certain application type - expected result: only records without ownership
+		*/
+
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		sourceDaoWithUser := GetSourceDao(requestParams)
+		applicationType = m.ApplicationType{Id: fixtures.TestApplicationTypeData[3].Id}
+		sources, _, err = sourceDaoWithUser.SubCollectionList(applicationType, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		subCollectionSourcesIDs = []int64{}
+		for _, source := range sources {
+			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
+		}
+
+		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsNoUser()) {
+			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
+		}
+
+		rhcDAO := GetRhcConnectionDao(suiteData.TenantID())
+		rhcSourceUserA, errRhc := rhcDAO.Create(&m.RhcConnection{Sources: suiteData.resourcesUserA.Sources})
+		if errRhc != nil {
+			t.Errorf(`unexpected error after calling Create for rhc connection: %v`, errRhc)
+		}
+
+		/*
+		 UserA tries to GET userA's RHC connection - expected result: success
+		*/
+
+		sources, _, err = sourceDaoUserA.ListForRhcConnection(&rhcSourceUserA.ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling ListForRhcConnection: %v`, err)
+		}
+
+		if sources[0].ID != suiteData.resourcesUserA.Sources[0].ID {
+			t.Errorf(`source %v was not expected, source %v was expected `, sources[0].ID, suiteData.resourcesUserA.Sources[0].ID)
+		}
+
+		/*
+		 User without ownership resources tries to GET userA RHC connection - expected result: success
+		*/
+
+		sourcesWithoutOwnership, _, err := sourceDaoWithUser.ListForRhcConnection(&rhcSourceUserA.ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling ListForRhcConnection for the source: %s`, err)
+		}
+
+		if len(sourcesWithoutOwnership) != 0 {
+			t.Errorf(`no sources was expected but we obtained : %d`, len(sourcesWithoutOwnership))
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
