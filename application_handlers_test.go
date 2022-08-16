@@ -2139,6 +2139,162 @@ func TestApplicationEditPausedUnitInvalidFields(t *testing.T) {
 	c.Echo().Binder = backupBinder
 }
 
+func TestApplicationDeleteWithOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	err := dao.TestSuiteForSourceWithOwnership(func(suiteData *dao.SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to delete application for userA - expected result: success
+		*/
+
+		id := fmt.Sprintf("%d", suiteData.ApplicationUserA().ID)
+
+		c, rec := request.CreateTestContext(
+			http.MethodDelete,
+			"/api/sources/v3.1/applications/"+id,
+			nil,
+			map[string]interface{}{
+				"tenantID": *suiteData.TenantID(),
+				"userID":   suiteData.UserA().Id,
+			},
+		)
+
+		c.SetParamNames("id")
+		c.SetParamValues(id)
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+		err := ApplicationDelete(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusNoContent {
+			t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
+		}
+
+		applicationDao := dao.GetApplicationDao(suiteData.GetRequestParamsUserA())
+		_, err = applicationDao.GetById(&suiteData.ApplicationUserA().ID)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("expected 'application not found', got %s", err)
+		}
+
+		authenticationDao := dao.GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		_, err = authenticationDao.GetById(suiteData.AuthenticationUserA().ID)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("expected 'authentication not found', got %s", err)
+		}
+
+		applicationAuthenticationDao := dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("expected 'application authentication not found', got %s", err)
+		}
+
+		/*
+		 Test 2 -  UserA tries to delete application without user - expected result: success
+		*/
+
+		id = fmt.Sprintf("%d", suiteData.ApplicationNoUser().ID)
+
+		c, rec = request.CreateTestContext(
+			http.MethodDelete,
+			"/api/sources/v3.1/applications/"+id,
+			nil,
+			map[string]interface{}{
+				"tenantID": *suiteData.TenantID(),
+				"userID":   suiteData.UserA().Id,
+			},
+		)
+
+		c.SetParamNames("id")
+		c.SetParamValues(id)
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+		err = ApplicationDelete(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusNoContent {
+			t.Errorf("Wrong return code, expected %v got %v", http.StatusNoContent, rec.Code)
+		}
+
+		applicationDao = dao.GetApplicationDao(suiteData.GetRequestParamsUserA())
+		_, err = applicationDao.GetById(&suiteData.ApplicationNoUser().ID)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("expected 'application not found', got %s", err)
+		}
+
+		authenticationDao = dao.GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		_, err = authenticationDao.GetById(suiteData.AuthenticationNoUser().ID)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("expected 'authentication not found', got %s", err)
+		}
+
+		applicationAuthenticationDao = dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
+			t.Errorf("expected 'application authentication not found', got %s", err)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to delete userB's application - expected result: failure
+		*/
+
+		id = fmt.Sprintf("%d", suiteData.ApplicationUserB().ID)
+
+		c, _ = request.CreateTestContext(
+			http.MethodDelete,
+			"/api/sources/v3.1/applications/"+id,
+			nil,
+			map[string]interface{}{
+				"tenantID": *suiteData.TenantID(),
+				"userID":   suiteData.UserWithoutOwnership().Id,
+			},
+		)
+
+		c.SetParamNames("id")
+		c.SetParamValues(id)
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+		err = ApplicationDelete(c)
+		if err.Error() != "application not found" {
+			t.Error(err)
+		}
+
+		applicationDao = dao.GetApplicationDao(suiteData.GetRequestParamsUserB())
+		_, err = applicationDao.GetById(&suiteData.ApplicationUserB().ID)
+		if err != nil {
+			t.Errorf("unable to get application, there is err %s", err)
+		}
+
+		authenticationDao = dao.GetAuthenticationDao(suiteData.GetRequestParamsUserB())
+		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+		_, err = authenticationDao.GetById(authId)
+		if err != nil {
+			t.Errorf("unable to get authentication, there is err %s", err)
+		}
+
+		applicationAuthenticationDao = dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserB())
+		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationUserB().ID)
+		if err != nil {
+			t.Errorf("unable to get application authentication, there is err %s", err)
+		}
+
+		err = cleanSourceForTenant(suiteData.SourceUserB().Name, suiteData.TenantID())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+}
+
 // HELPERS:
 
 // checkAllApplicationsBelongToTenant checks that all returned apps belongs to given tenant

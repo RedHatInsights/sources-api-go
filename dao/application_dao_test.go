@@ -563,7 +563,7 @@ func TestApplicationGetUserOwnership(t *testing.T) {
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
-	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
 		   Test 1 - UserA tries to GET userA's application - expected result: success
 		*/
@@ -620,7 +620,7 @@ func TestApplicationEditUserOwnership(t *testing.T) {
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
-	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
 		 Test 1 - UserA tries to update application for userA - expected result: success
 		*/
