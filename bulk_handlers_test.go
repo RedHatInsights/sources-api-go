@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -50,7 +51,7 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 	c.Set(h.USERID, user.Id)
 
 	err = BulkCreate(c)
-	if err.Error() != "no source type present, need either [source_type_name] or [source_type_id]" {
+	if !strings.Contains(err.Error(), "no source type present, need either [source_type_name] or [source_type_id]") {
 		t.Error(err)
 	}
 

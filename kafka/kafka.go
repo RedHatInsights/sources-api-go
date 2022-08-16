@@ -111,7 +111,12 @@ func Produce(writer *kafka.Writer, message *Message) error {
 		)
 
 		if err != nil {
-			return fmt.Errorf(`could not produce Kafka message "%v": %w`, message, err)
+			headersMap := make(map[string]string)
+			for _, h := range message.Headers {
+				headersMap[h.Key] = string(h.Value)
+			}
+
+			return fmt.Errorf(`could not produce Kafka message. Headers: %s, content: "%s": %w`, headersMap, string(message.Value), err)
 		}
 	}
 
