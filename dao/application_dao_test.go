@@ -852,3 +852,80 @@ func TestUnpauseApplicationWithOwnership(t *testing.T) {
 
 	DropSchema("pause_unpause")
 }
+
+func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1- UserA tries to GET userA's application of certain source - expected result: success
+		*/
+		applicationDaoUserA := GetApplicationDao(suiteData.GetRequestParamsUserA())
+		applications, _, err := applicationDaoUserA.SubCollectionList(*suiteData.SourceUserA(), 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling SubCollectionList for the source: %s`, err)
+		}
+
+		var subCollectionApplicationsIDs []int64
+		for _, application := range applications {
+			subCollectionApplicationsIDs = append(subCollectionApplicationsIDs, application.ID)
+		}
+
+		var applicationsIDs []int64
+		for _, application := range suiteData.resourcesUserA.Applications {
+			applicationsIDs = append(applicationsIDs, application.ID)
+		}
+
+		if !cmp.Equal(subCollectionApplicationsIDs, applicationsIDs) {
+			t.Errorf("Expected application IDs %v are not same with obtained ids: %v", applicationsIDs, subCollectionApplicationsIDs)
+		}
+
+		/*
+		  Test 2 - UserA tries to GET applications of certain source without ownership - expected result: success
+		*/
+		applicationDaoUserA = GetApplicationDao(suiteData.GetRequestParamsUserA())
+		applications, _, err = applicationDaoUserA.SubCollectionList(*suiteData.SourceNoUser(), 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling SubCollectionList for the source: %s`, err)
+		}
+
+		subCollectionApplicationsIDs = []int64{}
+		for _, application := range applications {
+			subCollectionApplicationsIDs = append(subCollectionApplicationsIDs, application.ID)
+		}
+
+		applicationsIDs = []int64{}
+		for _, application := range suiteData.resourcesNoUser.Applications {
+			applicationsIDs = append(applicationsIDs, application.ID)
+		}
+
+		if !cmp.Equal(subCollectionApplicationsIDs, applicationsIDs) {
+			t.Errorf("Expected application IDs %v are not same with obtained ids: %v", applicationsIDs, subCollectionApplicationsIDs)
+		}
+
+		/*
+		  Test 3 - User without any ownership tries to GET userA's applications of certain source - expected result: no applications returned
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		applicationsDaoWithUser := GetApplicationDao(requestParams)
+		applications, _, err = applicationsDaoWithUser.SubCollectionList(*suiteData.SourceUserA(), 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling SubCollectionList: %s`, err)
+		}
+
+		if len(applications) != 0 {
+			t.Errorf("no applications expected but we obtained %v", len(applications))
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
