@@ -765,3 +765,90 @@ func TestPausingApplicationWithOwnership(t *testing.T) {
 
 	DropSchema("pause_unpause")
 }
+
+func TestUnpauseApplicationWithOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("pause_unpause")
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to unpause application for userA - expected result: success
+		*/
+		applicationDao := GetApplicationDao(suiteData.GetRequestParamsUserA())
+		err := applicationDao.Pause(suiteData.ApplicationUserA().ID)
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+
+		err = applicationDao.Unpause(suiteData.ApplicationUserA().ID)
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+
+		application, err := applicationDao.GetById(&suiteData.ApplicationUserA().ID)
+		if err != nil {
+			t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
+		}
+
+		if application.PausedAt != nil {
+			t.Errorf("pausedAt column should be nil but it is %v for source", application.PausedAt)
+		}
+
+		/*
+		  Test 2 - UserA tries to unpause application without user - expected result: success
+		*/
+		applicationDao = GetApplicationDao(suiteData.GetRequestParamsUserA())
+		err = applicationDao.Pause(suiteData.ApplicationNoUser().ID)
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+
+		err = applicationDao.Unpause(suiteData.ApplicationNoUser().ID)
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+
+		application, err = applicationDao.GetById(&suiteData.ApplicationNoUser().ID)
+		if err != nil {
+			t.Errorf(`error fetching the source with its applications. Want nil error, got "%s"`, err)
+		}
+
+		if application.PausedAt != nil {
+			t.Errorf("pausedAt column should be nil but it is %v for application", application.PausedAt)
+		}
+
+		/*
+		  Test 3 - User without any ownership records tries to unpause userB's application - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		applicationDaoWithUser := GetApplicationDao(requestParams)
+
+		applicationDaoUserB := GetApplicationDao(suiteData.GetRequestParamsUserB())
+		err = applicationDaoUserB.Pause(suiteData.ApplicationUserB().ID)
+		if err != nil {
+			t.Errorf(`want nil error, got "%s"`, err)
+		}
+
+		err = applicationDaoWithUser.Unpause(suiteData.SourceUserB().ID)
+		if err != nil {
+			t.Errorf(`error unpausing the application. Want nil error, got "%s"`, err)
+		}
+
+		application, err = GetApplicationDao(suiteData.GetRequestParamsUserB()).GetById(&suiteData.ApplicationUserB().ID)
+		if err != nil {
+			t.Errorf(`error fetching the application. Want nil error, got "%s"`, err)
+		}
+
+		if application.PausedAt == nil {
+			t.Errorf("pausedAt column should not be nil")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema("pause_unpause")
+}
