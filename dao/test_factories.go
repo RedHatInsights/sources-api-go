@@ -198,6 +198,10 @@ func (s *SourceOwnershipDataTestSuite) ApplicationNoUser() *m.Application {
 	return &s.resourcesNoUser.Applications[0]
 }
 
+func (s *SourceOwnershipDataTestSuite) ApplicationUserB() *m.Application {
+	return &s.resourcesUserB.Applications[0]
+}
+
 func testSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnershipDataTestSuite) error) error {
 	accountNumber := "112567"
 	userIDA := "userA"

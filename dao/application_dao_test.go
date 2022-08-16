@@ -613,3 +613,82 @@ func TestApplicationGetUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestApplicationEditUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to update application for userA - expected result: success
+		*/
+		applicationDaoUserA := GetApplicationDao(suiteData.GetRequestParamsUserA())
+
+		newAvailabilityStatusError := "new error"
+		newApplicationUserA := &m.Application{ID: suiteData.ApplicationUserA().ID, AvailabilityStatusError: newAvailabilityStatusError}
+		err := applicationDaoUserA.Update(newApplicationUserA)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedApplication, err := applicationDaoUserA.GetById(&suiteData.ApplicationUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedApplication.AvailabilityStatusError != newAvailabilityStatusError {
+			t.Errorf("av.status error %v returned but av.status error %v was expected", updatedApplication.AvailabilityStatusError, newAvailabilityStatusError)
+		}
+
+		/*
+		   Test 2 - UserA tries to update application without user - expected result: success
+		*/
+		newApplicationNoUser := &m.Application{ID: suiteData.ApplicationNoUser().ID, AvailabilityStatusError: newAvailabilityStatusError}
+		err = applicationDaoUserA.Update(newApplicationNoUser)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		updatedApplication, err = applicationDaoUserA.GetById(&suiteData.ApplicationNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedApplication.AvailabilityStatusError != newAvailabilityStatusError {
+			t.Errorf("av.status error %v returned but av.status error %v was expected", updatedApplication.AvailabilityStatusError, newAvailabilityStatusError)
+		}
+
+		/*
+			Test 3 - User without any ownership records tries to update userA's application - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		applicationDaoWithUser := GetApplicationDao(requestParams)
+
+		newAvailabilityStatusError = "new error"
+		newApplicationUserB := &m.Application{ID: suiteData.ApplicationUserB().ID, AvailabilityStatusError: newAvailabilityStatusError}
+		err = applicationDaoWithUser.Update(newApplicationUserB)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		applicationDaoUserB := GetApplicationDao(suiteData.GetRequestParamsUserB())
+		updatedApplication, err = applicationDaoUserB.GetById(&suiteData.ApplicationUserB().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if updatedApplication.AvailabilityStatusError == newAvailabilityStatusError {
+			t.Errorf("av.status error %v returned but av.status error %v was expected", updatedApplication.AvailabilityStatusError, newAvailabilityStatusError)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
