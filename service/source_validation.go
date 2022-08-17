@@ -55,8 +55,8 @@ func ValidateSourceCreationRequest(dao dao.SourceDao, req *model.SourceCreateReq
 
 	return nil
 }
-func ValidateEditSourceNameRequest(dao dao.SourceDao, req *model.SourceEditRequest) error {
 
+func ValidateEditSourceNameRequest(dao dao.SourceDao, req *model.SourceEditRequest) error {
 	if req.Name == nil || *req.Name == "" {
 		return fmt.Errorf("name cannot be empty")
 	}
