@@ -5,7 +5,6 @@ import (
 
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -17,7 +16,7 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		agent := c.Request().UserAgent()
 		acct := c.Get(h.ACCOUNT_NUMBER)
 		orgid := c.Get(h.ORGID)
-		uuid := uuid.New().String()
+		uuid := c.Get(h.INSIGHTS_REQUEST_ID)
 
 		baseFields := logrus.Fields{
 			"uri":            uri,
@@ -31,7 +30,6 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		baseLoggerEntry := l.Log.WithFields(baseFields)
 
 		c.Set("logger", baseLoggerEntry)
-		c.Set("uuid", uuid)
 		// holy cow echo makes this ugly. Setting a value on the actual net/http request's context
 		c.SetRequest(c.Request().WithContext(context.WithValue(c.Request().Context(), l.EchoLogger{}, baseLoggerEntry)))
 
