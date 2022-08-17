@@ -158,6 +158,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 				Where(untranslatedTenantsWhereCondition).
 				Pluck("external_tenant", &ebsAccountNumbers).
 				Offset(int(i)).
+				Limit(100).
 				Error
 
 			if err != nil {
