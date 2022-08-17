@@ -155,6 +155,14 @@ func (s *SourceOwnershipDataTestSuite) GetRequestParamsUserB() *RequestParams {
 	return &RequestParams{TenantID: s.TenantID(), UserID: &s.userB.Id}
 }
 
+func (s *SourceOwnershipDataTestSuite) UserA() *m.User {
+	return s.userA
+}
+
+func (s *SourceOwnershipDataTestSuite) UserWithoutOwnership() *m.User {
+	return s.userWithoutOwnershipRecords
+}
+
 func (s *SourceOwnershipDataTestSuite) SourceUserA() *m.Source {
 	return &s.resourcesUserA.Sources[0]
 }
@@ -190,7 +198,43 @@ func (s *SourceOwnershipDataTestSuite) SourceIDsNoUser() []int64 {
 	return sourcesIDs
 }
 
-func testSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnershipDataTestSuite) error) error {
+func (s *SourceOwnershipDataTestSuite) ApplicationUserA() *m.Application {
+	return &s.resourcesUserA.Applications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) ApplicationNoUser() *m.Application {
+	return &s.resourcesNoUser.Applications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) ApplicationUserB() *m.Application {
+	return &s.resourcesUserB.Applications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) AuthenticationUserA() *m.Authentication {
+	return &s.resourcesUserA.Authentications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) AuthenticationUserB() *m.Authentication {
+	return &s.resourcesUserB.Authentications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) AuthenticationNoUser() *m.Authentication {
+	return &s.resourcesNoUser.Authentications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) ApplicationAuthenticationUserA() *m.ApplicationAuthentication {
+	return &s.resourcesUserA.ApplicationAuthentications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) ApplicationAuthenticationUserB() *m.ApplicationAuthentication {
+	return &s.resourcesUserB.ApplicationAuthentications[0]
+}
+
+func (s *SourceOwnershipDataTestSuite) ApplicationAuthenticationNoUser() *m.ApplicationAuthentication {
+	return &s.resourcesNoUser.ApplicationAuthentications[0]
+}
+
+func TestSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnershipDataTestSuite) error) error {
 	accountNumber := "112567"
 	userIDA := "userA"
 	userIDB := "userB"

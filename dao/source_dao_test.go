@@ -731,7 +731,7 @@ func TestSourceGetUserOwnership(t *testing.T) {
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
-	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
 		 Test 1 - UserA tries to GET userA's source - expected result: success
 		*/
@@ -788,7 +788,7 @@ func TestSourceEditUserOwnership(t *testing.T) {
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
-	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
 		 Test 1 - UserA tries to update source for userA - expected result: success
 		*/
@@ -866,7 +866,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
-	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
 		 Test 1,2 - UserA tries to GET userA's sources of certain application type - expected result: success
 		*/
