@@ -1,96 +1,128 @@
 #!/bin/bash
 
 #
-# This script runs SonarQube's scanner on the project. As our SonarQube instance
-# uses a self-signed certificate, before running the scanner a keystore
-# containing RH IT's certificate is created. After that, the scanner is
-# downloaded and run.
+# Bash script to run the SonarQube scanner on the code. Basically what we do is:
+#
+# 1. Generate a Java Keystore containing Red Hat's custom IT certificate, because the SonarQube instance has one, and
+# the scanner needs to trust that certificate.
+# 2. Download the Sonar scanner and extract it to a directory.
+# 3. Mount the keystore, the scanner and the source code to a container.
+# 4. Run the scanner on the code and push the results.
 #
 
+#
+# Bash safety options:
+#   - e is for exiting immediately when a command exits with a non-zero status.
+#   - u is for treating unset variables as an error when substituting.
+#   - x is for printing all the commands as they're executed.
+#   - o pipefail is for taking into account the exit status of the commands that run on pipelines.
+#
 set -euxo pipefail
 
-readonly sonarqube_dir="$PWD/sonarqube"
-readonly sonarqube_certs_dir="$sonarqube_dir/certs"
-readonly sonarqube_download_dir="$sonarqube_dir/download"
-readonly sonarqube_extract_dir="$sonarqube_dir/extract"
-readonly sonarqube_store_dir="$sonarqube_dir/store"
-
-readonly rh_it_keystore_file="$sonarqube_store_dir/RH-IT-Root-CA.keystore"
-readonly rh_it_keystore_pass="redhat"
-readonly rh_it_root_ca_file="$sonarqube_certs_dir/RH-IT-Root-CA.crt"
-
-mkdir "$sonarqube_dir"
-mkdir "$sonarqube_certs_dir"
-mkdir "$sonarqube_download_dir"
-mkdir "$sonarqube_extract_dir"
-mkdir "$sonarqube_store_dir"
+#
+# Get the current directory since it represents the project's root directory.
+#
+current_directory=$(pwd)
 
 #
-# To make SonarQube's scanner trust the SonarQube instance with the custom
-# certificate, a keystore containing Red Hat IT's root certificate must be
-# created, to then pass it to the scanner.
+# Prepare the keystore variables for generating the key store with the custom certificate.
 #
-curl --output "$rh_it_root_ca_file" --insecure "$RH_IT_ROOT_CA_CERT_URL"
-
-# The JAVA_HOME variable is not set by default. Even though it is usually an
-# environment variable, we write it in lowercase because in this case we only
-# use it in this script.
-java_home="/usr/lib/jvm/jre-1.8.0"
-
-"$java_home"/bin/keytool \
-  -alias "RH-IT-Root-CA" \
-  -file "$rh_it_root_ca_file" \
-  -import \
-  -keystore "$rh_it_keystore_file" \
-  -noprompt \
-  -storepass "$rh_it_keystore_pass"
+keystore_dir="${current_directory}/scripts/keystore"
+keystore_name="RH-IT-Root-CA.keystore"
+keystore_password="redhat"
 
 #
-# Download and extract sonnarcube-cli.
+# Set the directory as writable by anyone so that the container can place the generated key store there.
 #
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  readonly sonar_scanner_os="macosx"
-else
-  readonly sonar_scanner_os="linux"
+chmod 777 "${keystore_dir}"
+
+#
+# Generate the key store.
+#
+docker run \
+  --rm \
+  --volume "${keystore_dir}":/keystore \
+  --env KEYSTORE_NAME="${keystore_name}" \
+  --env KEYSTORE_PASSWORD="${keystore_password}" \
+  --env RH_IT_ROOT_CA_CERT_URL="$RH_IT_ROOT_CA_CERT_URL" \
+  registry.access.redhat.com/ubi8/openjdk-11:1.14-3 \
+  bash /keystore/generate_keystore.bash
+
+#
+# Revert the directory back to safe permissions.
+#
+chmod 755 "${keystore_dir}"
+
+#
+# Check that the key store was properly generated.
+#
+if [ ! -f "${keystore_dir}/${keystore_name}" ]; then
+  echo "The keystore was not properly generated. File not found."
+  exit 1
 fi
 
-readonly sonar_scanner_cli_version="4.7.0.2747"
-readonly sonar_scanner_name="sonar-scanner-$sonar_scanner_cli_version-$sonar_scanner_os"
-readonly sonar_scanner_zipped_file="$sonarqube_download_dir/$sonar_scanner_name.zip"
-
-curl --output "$sonar_scanner_zipped_file" "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip"
-unzip -d "$sonarqube_extract_dir" "$sonar_scanner_zipped_file"
+#
+# Create a temporary file for the scanner's zip file we are about to download.
+#
+sonar_scanner_zip=$(mktemp)
 
 #
-# Export the path to the binary.
+# Download the scanner.
 #
-export PATH="$sonarqube_extract_dir/$sonar_scanner_name/bin:$PATH"
+scanner_cli_version="4.7.0.2747"
+curl --output "${sonar_scanner_zip}" "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${scanner_cli_version}-linux.zip"
 
-# Get the commit SHA in very short format for the project version.
+#
+# Create a temporary directory for the unzipped contents. Give it "755" permissions so that it can be directly mounted
+# and used.
+#
+sonar_scanner_dir=$(mktemp --directory)
+chmod 755 "${sonar_scanner_dir}"
+
+#
+# Unzip the contents of the scanner in the temporary directory.
+#
+unzip -d "${sonar_scanner_dir}" "${sonar_scanner_zip}"
+
+#
+# Remove the zipped file.
+#
+rm "${sonar_scanner_zip}"
+
+#
+# Get the commit SHA to give the scanner a unique "project version" setting.
+#
 commit_short=$(git rev-parse --short=7 HEAD)
 
 #
-# Run the sonar-scanner by specifying the previously created keystore.
+# Run the Sonar Scanner in a container. The "keystore" is mounted to make the scanner trust our SonarQube's custom
+# certificate. The "repository" directory is just the source code. Finally, the "sonar-scanner" directory has the
+# extracted scanner files ready to be used.
 #
-export SONAR_SCANNER_OPTS="-Djavax.net.ssl.trustStore=$rh_it_keystore_file -Djavax.net.ssl.trustStorePassword=$rh_it_keystore_pass"
-# The Jenkins pipeline inject the pull request ID with the lowercase variable,
-# so the shellcheck rule must be disabled to avoid any issues.
-# shellcheck disable=SC2154
-#
-# Also, we need to tell the scanner to ignore the SQL files to avoid any warnings, since the Sonar Scanner only
-# supports "T-SQL" and "PL/SQL", and not the PostgresSQL dialect.
-sonar-scanner \
-  -Dsonar.exclusions="**/*.sql" \
-  -Dsonar.host.url="$SONARQUBE_REPORT_URL" \
-  -Dsonar.login="$SONARQUBE_TOKEN" \
-  -Dsonar.projectKey=console.redhat.com:sources-api-go \
-  -Dsonar.projectVersion="$commit_short" \
-  -Dsonar.pullrequest.base="main" \
-  -Dsonar.pullrequest.branch="$GIT_BRANCH" \
-  -Dsonar.pullrequest.key="$ghprbPullId" \
-  -Dsonar.sources=.
+docker run \
+  --volume "${keystore_dir}":/keystore \
+  --volume "${current_directory}":/repository \
+  --volume "${sonar_scanner_dir}":/sonar-scanner \
+  --env KEYSTORE_NAME="${keystore_name}" \
+  --env KEYSTORE_PASSWORD="${keystore_password}" \
+  --env SCANNER_CLI_VERSION="${scanner_cli_version}" \
+  --env SONAR_LOGIN="${SONARQUBE_TOKEN}" \
+  --env SONAR_HOST_URL="${SONARQUBE_REPORT_URL}" \
+  --env SONAR_PROJECT_KEY="console.redhat.com:sources-api-go" \
+  --env SONAR_PROJECT_VERSION="${commit_short}" \
+  --env SONAR_PULL_REQUEST_BASE="main" \
+  --env SONAR_PULL_REQUEST_BRANCH="${GIT_BRANCH}" \
+  --env SONAR_PULL_REQUEST_KEY="${ghprbPullId}" \
+  registry.access.redhat.com/ubi8/openjdk-11:1.14-3 \
+  bash /repository/scripts/scanner/scan_code.bash
 
-# Need to make a dummy results file to make tests pass
+#
+# Clean up the files and the directories.
+#
+rm "${keystore_dir}/${keystore_name}"
+rm --force --recursive "${sonar_scanner_dir}"
+
+# Need to make a dummy results file to make tests pass.
 mkdir -p artifacts
 cat << EOF > artifacts/junit-dummy.xml
 <testsuite tests="1">
