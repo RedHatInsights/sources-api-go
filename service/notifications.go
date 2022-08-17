@@ -71,7 +71,7 @@ type notificationMessage struct {
 	ID          string                   `json:"id"`
 }
 
-func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, guidPrefix string) error {
+func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, sourceIdentification string) error {
 	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, notificationTopic)
 	if err != nil {
 		return fmt.Errorf(`could not get Kafka writer to emit an availability status notification: %w`, err)
@@ -80,11 +80,10 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 	defer kafka.CloseWriter(writer, "emit availability status notification")
 
 	notificationMessageGuid := uuid.New().String()
-	if guidPrefix != "" {
-		notificationMessageGuid = fmt.Sprintf("%s-%s", guidPrefix, notificationMessageGuid)
-	}
-
 	loggerWithGuid := l.Log.WithField("notification-guid", notificationMessageGuid)
+	if sourceIdentification != "" {
+		loggerWithGuid = loggerWithGuid.WithField("notification-source-id", sourceIdentification)
+	}
 
 	loggerWithGuid.Infof(`[tenant_id: %s][source_id: %s] Publishing notification status message, status changed from '%s' to '%s'`,
 		emailNotificationInfo.TenantID,
