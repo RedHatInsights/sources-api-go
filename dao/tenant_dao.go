@@ -139,7 +139,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 	// the translation is in progress, all the counts and the results will still match.
 	err := DB.Debug().Transaction(func(tx *gorm.DB) error {
 		// Get the count to be able to process the tenants in batches of 100 tenants.
-		err := DB.Debug().
+		err := tx.
 			Model(&m.Tenant{}).
 			Where(untranslatedTenantsWhereCondition).
 			Count(&translatableTenants).
@@ -153,8 +153,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 		for i := int64(0); i < translatableTenants; i += 100 {
 			// Grab all the EBS account numbers to be processed.
 			var ebsAccountNumbers []string
-			err := DB.
-				Debug().
+			err := tx.
 				Model(&m.Tenant{}).
 				Where(untranslatedTenantsWhereCondition).
 				Pluck("external_tenant", &ebsAccountNumbers).
@@ -189,7 +188,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 				// Grab the updated tenant for the "translated tenant" struct.
 				var tenant m.Tenant
 				// Update the tenant with the translated "orgId".
-				dbResult := DB.Debug().
+				dbResult := tx.
 					Model(&tenant).
 					Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
 					Where("external_tenant = ?", result.EAN).
