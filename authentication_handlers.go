@@ -156,6 +156,11 @@ func AuthenticationEdit(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	err = service.ValidateAuthenticationEditRequest(updateRequest)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
 	auth, err := authDao.GetById(c.Param("uid"))
 	if err != nil {
 		return err

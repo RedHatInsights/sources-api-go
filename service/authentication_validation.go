@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -30,6 +31,16 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 
 	// capitalize it so it's always the same format.
 	auth.ResourceType = util.Capitalize(auth.ResourceType)
+
+	return nil
+}
+
+func ValidateAuthenticationEditRequest(auth *model.AuthenticationEditRequest) error {
+	if auth.AvailabilityStatus != nil {
+		if _, ok := model.ValidAvailabilityStatuses[*auth.AvailabilityStatus]; !ok {
+			return errors.New(`availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`)
+		}
+	}
 
 	return nil
 }
