@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -55,4 +56,40 @@ func InternalSourceList(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}
+
+// GetUntranslatedTenants returns all the tenants from the database that have just an "external_tenant" set up.
+func GetUntranslatedTenants(c echo.Context) error {
+	tenantsDao := dao.GetTenantDao()
+
+	tenants, err := tenantsDao.GetUntranslatedTenants()
+	if err != nil {
+		return fmt.Errorf("unable to fetch the untranslated tenants: %w", err)
+	}
+
+	out := make([]interface{}, len(tenants))
+	for i := 0; i < len(tenants); i++ {
+		out[i] = tenants[i]
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), len(tenants), 0, 0))
+}
+
+// TranslateTenants attempts to translate the
+func TranslateTenants(c echo.Context) error {
+	tenantsDao := dao.GetTenantDao()
+
+	translatableTenants, translatedTenants, untranslatedTenants, translationResults, err := tenantsDao.TranslateTenants()
+	if err != nil {
+		return fmt.Errorf("unable to translate the EBS account numbers to orgIds: %w", err)
+	}
+
+	response := map[string]interface{}{
+		"total_translatable_tenants_count": translatableTenants,
+		"translation_results":              translationResults,
+		"translated_tenants":               translatedTenants,
+		"untranslated_tenants":             untranslatedTenants,
+	}
+
+	return c.JSON(http.StatusOK, response)
 }

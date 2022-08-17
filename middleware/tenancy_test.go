@@ -29,9 +29,19 @@ func (mtd mockTenantDao) GetOrCreateTenant(_ *identity.Identity) (*m.Tenant, err
 	return &tenant, nil
 }
 
+// GetUntranslatedTenants is unimplemented since we are not using it in the tests.
+func (_ mockTenantDao) GetUntranslatedTenants() ([]m.Tenant, error) {
+	return nil, nil
+}
+
 // TenantByIdentity is unimplemented since we are not using it in the tests.
 func (_ mockTenantDao) TenantByIdentity(_ *identity.Identity) (*m.Tenant, error) {
 	return nil, nil
+}
+
+// GetUntranslatedTenants is unimplemented since we are not using it in the tests.
+func (_ mockTenantDao) TranslateTenants() (int64, uint64, uint64, []m.TenantTranslation, error) {
+	return 0, 0, 0, nil, nil
 }
 
 // TestTenancySetsAllTenancyVariables tests that even if we simply receive one of the two "EBS account number" and
