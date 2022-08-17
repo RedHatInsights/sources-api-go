@@ -1142,3 +1142,63 @@ func TestBulkDeleteRegression(t *testing.T) {
 
 	DropSchema("authentications_db")
 }
+
+func TestAuthenticationGetUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		   Test 1 - UserA tries to GET userA's authentication - expected result: success
+		*/
+		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		authenticationUserA, err := authenticationDaoUserA.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the authenticationD: %s`, err)
+		}
+
+		if authenticationUserA.DbID != suiteData.AuthenticationUserA().DbID {
+			t.Errorf("source %v returned but source %v was expected", authenticationUserA.DbID, suiteData.AuthenticationUserA().DbID)
+		}
+
+		/*
+		  Test 2 - UserA tries to GET authentication without user - expected result: success
+		*/
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationNoUser().DbID)
+		authenticationNoUser, err := authenticationDaoUserA.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the authentication: %s`, err)
+		}
+
+		if authenticationNoUser.DbID != suiteData.AuthenticationNoUser().DbID {
+			t.Errorf("authentication %v returned but authentication %v was expected", authenticationNoUser.ID, suiteData.AuthenticationNoUser().DbID)
+		}
+
+		/*
+		  Test 3 - User without any ownership records tries to GET userA's authentication - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
+
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		_, err = authenticationDaoWithUser.GetById(authId)
+		if err == nil {
+			t.Errorf(`unexpected error after calling GetById for the authentication: %v`, suiteData.AuthenticationNoUser().DbID)
+		}
+
+		if err.Error() != "authentication not found" {
+			t.Errorf(`unexpected error after calling GetById for the authentication: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
