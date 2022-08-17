@@ -150,19 +150,19 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 
 			sourceType, err = dao.GetSourceTypeDao().GetById(&id)
 			if err != nil {
-				return nil, err
+				return nil, util.NewErrNotFound(fmt.Sprintf("the specified source type was not found: %s", err))
 			}
 
 		case source.SourceTypeName != "":
 			// look up the source type dynamically....or set it by ID later
 			sourceType, err = dao.GetSourceTypeDao().GetByName(source.SourceTypeName)
 			if err != nil {
-				return nil, fmt.Errorf("invalid source_type_name for lookup: %v", source.SourceTypeName)
+				return nil, util.NewErrBadRequest(fmt.Sprintf("invalid source_type_name for lookup: %v", source.SourceTypeName))
 			}
 
 			source.SourceTypeIDRaw = sourceType.Id
 		default:
-			return nil, fmt.Errorf("no source type present, need either [source_type_name] or [source_type_id]")
+			return nil, util.NewErrBadRequest("no source type present, need either [source_type_name] or [source_type_id]")
 		}
 
 		// set up the source type + id for validation
@@ -240,7 +240,7 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 	// if all of the applications did not get linked up - there was a problem
 	// with the request.
 	if len(applications) != len(reqApplications) {
-		return nil, fmt.Errorf("failed to link up all applications - check to make sure the names match up")
+		return nil, util.NewErrBadRequest("failed to link up all applications - check to make sure the names match up")
 	}
 
 	return applications, nil
@@ -266,7 +266,7 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 
 		err := ValidateEndpointCreateRequest(dao.GetEndpointDao(&tenant.Id), &endpt.EndpointCreateRequest)
 		if err != nil {
-			return nil, err
+			return nil, util.NewErrBadRequest(err)
 		}
 
 		e.Scheme = endpt.Scheme
@@ -284,7 +284,7 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 	// if all of the endpoints did not get linked up - there was a problem
 	// with the request.
 	if len(endpoints) != len(reqEndpoints) {
-		return nil, fmt.Errorf("failed to link up all endpoints - check to make sure the names match up")
+		return nil, util.NewErrBadRequest("failed to link up all endpoints - check to make sure the names match up")
 	}
 
 	return endpoints, nil
@@ -354,7 +354,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		case "application":
 			id, err := linkupApplication(auth.ResourceName, current.Applications, &tenant.Id)
 			if err != nil {
-				return nil, err
+				return nil, util.NewErrBadRequest(err)
 			}
 
 			a.ResourceID = id
@@ -367,14 +367,14 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		case "endpoint":
 			id, err := linkupEndpoint(auth.ResourceName, current.Endpoints)
 			if err != nil {
-				return nil, err
+				return nil, util.NewErrBadRequest(err)
 			}
 
 			a.ResourceID = id
 			a.SourceID = current.Sources[0].ID
 
 		default:
-			return nil, fmt.Errorf("failed to link authentication: no resource type present")
+			return nil, util.NewErrBadRequest("failed to link authentication: no resource type present")
 		}
 
 		// checking to make sure the polymorphic relationship is set.
@@ -384,7 +384,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 	}
 
 	if len(authentications) != len(req.Authentications) {
-		return nil, fmt.Errorf("failed to link up all authentications - check to make sure the names match up")
+		return nil, util.NewErrBadRequest("failed to link up all authentications - check to make sure the names match up")
 	}
 
 	return authentications, nil
@@ -497,14 +497,14 @@ func applicationFromBulkCreateApplication(reqApplication *m.BulkCreateApplicatio
 		// dynamically look up the application type by name if passed
 		appType, err := dao.GetApplicationTypeDao(&tenant.Id).GetByName(reqApplication.ApplicationTypeName)
 		if err != nil {
-			return nil, fmt.Errorf("failed to lookup application_type_name %v", reqApplication.ApplicationTypeName)
+			return nil, util.NewErrBadRequest(fmt.Sprintf("failed to lookup application_type_name %s", reqApplication.ApplicationTypeName))
 		}
 
 		a.ApplicationType = *appType
 		a.ApplicationTypeID = appType.Id
 
 	default:
-		return nil, fmt.Errorf("no application type present, need either [application_type_name] or [application_type_id]")
+		return nil, util.NewErrBadRequest("no application type present, need either [application_type_name] or [application_type_id]")
 	}
 
 	return &a, nil
