@@ -113,7 +113,7 @@ func (t *tenantDaoImpl) GetUntranslatedTenants() ([]m.Tenant, error) {
 
 	err := DB.Debug().
 		Model(&m.Tenant{}).
-		Where(`("external_tenant" IS NOT NULL OR "external_tenant" = '') AND ("org_id" IS NULL OR "org_id" = '')`).
+		Where(`("external_tenant" IS NOT NULL OR "external_tenant" != '') AND ("org_id" IS NULL OR "org_id" = '')`).
 		Find(&tenants).
 		Error
 
@@ -126,7 +126,7 @@ func (t *tenantDaoImpl) GetUntranslatedTenants() ([]m.Tenant, error) {
 
 func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTranslation, error) {
 	// The where condition to fetch only the untranslated tenants.
-	untranslatedTenantsWhereCondition := `("external_tenant" IS NOT NULL OR "external_tenant" = '') AND ("org_id" IS NULL OR "org_id" = '')`
+	untranslatedTenantsWhereCondition := `("external_tenant" IS NOT NULL OR "external_tenant" != '') AND ("org_id" IS NULL OR "org_id" = '')`
 
 	// Count the total number of translatable tenants.
 	var translatableTenants int64
