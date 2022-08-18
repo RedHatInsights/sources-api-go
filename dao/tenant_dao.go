@@ -1,6 +1,8 @@
 package dao
 
 import (
+	"fmt"
+
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -22,7 +24,7 @@ func init() {
 
 type tenantDaoImpl struct{}
 
-func (t *tenantDaoImpl) GetOrCreateTenantID(identity *identity.Identity) (int64, error) {
+func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenant, error) {
 	// Try to find the tenant.
 	var tenant m.Tenant
 	err := DB.
@@ -33,7 +35,7 @@ func (t *tenantDaoImpl) GetOrCreateTenantID(identity *identity.Identity) (int64,
 		First(&tenant).
 		Error
 
-	// Looks like we didn't find it, create it and return the ID.
+	// Looks like we didn't find the tenant: create it and return it.
 	if err != nil {
 		tenant.ExternalTenant = identity.AccountNumber
 		tenant.OrgID = identity.OrgID
@@ -44,11 +46,11 @@ func (t *tenantDaoImpl) GetOrCreateTenantID(identity *identity.Identity) (int64,
 			Error
 
 		if err != nil {
-			return 0, err
+			return nil, fmt.Errorf("unable to create the tenant: %w", err)
 		}
 	}
 
-	return tenant.Id, nil
+	return &tenant, nil
 }
 
 func (t *tenantDaoImpl) TenantByIdentity(id *identity.Identity) (*m.Tenant, error) {

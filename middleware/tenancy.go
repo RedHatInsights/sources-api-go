@@ -40,12 +40,12 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", id.Identity.OrgID, id.Identity.AccountNumber)
 
 		tenantDao := dao.GetTenantDao()
-		tenantId, err := tenantDao.GetOrCreateTenantID(&id.Identity)
+		tenant, err := tenantDao.GetOrCreateTenant(&id.Identity)
 		if err != nil {
 			return fmt.Errorf("failed to get or create tenant for request: %s", err)
 		}
 
-		c.Set(h.TENANTID, tenantId)
+		c.Set(h.TENANTID, tenant.Id)
 
 		return next(c)
 	}
