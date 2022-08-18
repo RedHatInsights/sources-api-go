@@ -24,8 +24,11 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/go-cmp/cmp"
+	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
+
+var echoBinder echo.Binder = &NoUnknownFieldsBinder{}
 
 func TestAuthenticationList(t *testing.T) {
 	tenantId := int64(1)
@@ -417,6 +420,8 @@ func TestAuthenticationCreateBadRequestInvalidResourceType(t *testing.T) {
 	)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
+	c.Echo().Binder = echoBinder
+
 	badRequestAuthenticationCreate := ErrorHandlingContext(AuthenticationCreate)
 	err = badRequestAuthenticationCreate(c)
 	if err != nil {
@@ -503,6 +508,8 @@ func TestAuthenticationEdit(t *testing.T) {
 	c.SetParamValues(uid)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+
+	c.Echo().Binder = echoBinder
 
 	authEditHandlerWithNotifier := middleware.Notifier(AuthenticationEdit)
 	err = authEditHandlerWithNotifier(c)

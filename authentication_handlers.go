@@ -150,13 +150,13 @@ func AuthenticationEdit(c echo.Context) error {
 		return err
 	}
 
-	updateRequest := &m.AuthenticationEditRequest{}
-	err = c.Bind(updateRequest)
+	updateRequest := m.AuthenticationEditRequest{}
+	err = c.Bind(&updateRequest)
 	if err != nil {
-		return util.NewErrBadRequest(err)
+		return err
 	}
 
-	err = service.ValidateAuthenticationEditRequest(updateRequest)
+	err = service.ValidateAuthenticationEditRequest(&updateRequest)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
@@ -170,7 +170,7 @@ func AuthenticationEdit(c echo.Context) error {
 	if auth.AvailabilityStatus != nil {
 		previousStatus = *auth.AvailabilityStatus
 	}
-	err = auth.UpdateFromRequest(updateRequest)
+	err = auth.UpdateFromRequest(&updateRequest)
 	if err != nil {
 		return util.NewErrBadRequest(`invalid JSON given in "extra" field`)
 	}
