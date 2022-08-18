@@ -13,12 +13,11 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
-	kafka "github.com/RedHatInsights/sources-api-go/kafka"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	kafkago "github.com/segmentio/kafka-go"
 )
 
 const (
@@ -41,7 +40,7 @@ type availabilityChecker interface {
 
 	// private methods
 	httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
-	publishSatelliteMessage(writer *kafkago.Writer, source *m.Source, endpoint *m.Endpoint)
+	publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint)
 	pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header)
 	updateRhcStatus(source *m.Source, status string, errstr string, rhcConnection *m.RhcConnection, headers []kafka.Header)
 
@@ -151,7 +150,11 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 	}
 
 	// instantiate a producer for this source
-	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, satelliteTopic)
+	writer, err := kafka.GetWriter(&kafka.Options{
+		BrokerConfig: &conf.KafkaBrokerConfig,
+		Topic:        satelliteTopic,
+		Logger:       acr.Logger(),
+	})
 	if err != nil {
 		acr.Logger().Errorf(`[source_id: %d] unable to create a Kafka writer for the endpoint availability check: %s`, source.ID, err)
 		return
@@ -163,7 +166,7 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 	}
 }
 
-func (acr availabilityCheckRequester) publishSatelliteMessage(writer *kafkago.Writer, source *m.Source, endpoint *m.Endpoint) {
+func (acr availabilityCheckRequester) publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint) {
 	acr.Logger().Infof("[source_id: %d] Requesting Availability Check for Endpoint %v", source.ID, endpoint.ID)
 	defer kafka.CloseWriter(writer, "publish satellite message")
 

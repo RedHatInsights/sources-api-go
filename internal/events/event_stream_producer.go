@@ -31,7 +31,11 @@ type EventStreamSender struct {
 func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
 	logging.Log.Debugf("publishing message %v to topic %q...", eventType, eventStreamTopic)
 
-	kf, err := kafka.GetWriter(&config.KafkaBrokerConfig, eventStreamTopic)
+	kf, err := kafka.GetWriter(&kafka.Options{
+		BrokerConfig: &config.KafkaBrokerConfig,
+		Topic:        eventStreamTopic,
+		Logger:       logging.Log,
+	})
 	if err != nil {
 		return fmt.Errorf(`unable to create a Kafka writer to raise an event: %w`, err)
 	}

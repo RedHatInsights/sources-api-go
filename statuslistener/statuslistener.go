@@ -48,13 +48,16 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 		panic("logging is not initialized")
 	}
 
-	kf, err := kafka.GetReader(&config.KafkaBrokerConfig, groupID, sourcesStatusTopic)
+	kf, err := kafka.GetReader(&kafka.Options{
+		BrokerConfig: &config.KafkaBrokerConfig,
+		GroupID:      util.StringRef(groupID),
+		Topic:        sourcesStatusTopic,
+		Logger:       l.Log,
+	})
 	if err != nil {
 		l.Log.Errorf(`could not get a Kafka reader: %s`, err)
 		return
 	}
-
-	defer kafka.CloseReader(kf, "subscribe availability status. Shutdown signal received")
 
 	// run async for graceful shutdown handling
 	go func() {
@@ -62,6 +65,7 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 	}()
 
 	<-shutdown
+	kafka.CloseReader(kf, "subscribe availability status. Shutdown signal received")
 	shutdown <- struct{}{}
 }
 

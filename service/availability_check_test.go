@@ -8,7 +8,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/echo/v4"
-	kafkago "github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 )
 
@@ -35,7 +34,7 @@ func (c *dummyChecker) ApplicationAvailabilityCheck(source *m.Source) {
 // send out a satellite kafka message per endpoint
 func (c *dummyChecker) EndpointAvailabilityCheck(source *m.Source) {
 	for i := 0; i < len(source.Endpoints); i++ {
-		c.publishSatelliteMessage(&kafkago.Writer{}, source, &source.Endpoints[i])
+		c.publishSatelliteMessage(&kafka.Writer{}, source, &source.Endpoints[i])
 	}
 }
 
@@ -50,7 +49,7 @@ func (c *dummyChecker) RhcConnectionAvailabilityCheck(source *m.Source, headers 
 func (c *dummyChecker) httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL) {
 	c.ApplicationCounter++
 }
-func (c *dummyChecker) publishSatelliteMessage(writer *kafkago.Writer, source *m.Source, endpoint *m.Endpoint) {
+func (c *dummyChecker) publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint) {
 	c.EndpointCounter++
 }
 func (c *dummyChecker) pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header) {

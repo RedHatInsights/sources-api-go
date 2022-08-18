@@ -13,7 +13,19 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-var NotificationProducer Notifier
+const (
+	application                = "sources"
+	statusEventType            = "availability-status"
+	bundle                     = "console"
+	notificationMessageVersion = "v1.1.0"
+
+	notificationRequestedTopic = "platform.notifications.ingress"
+)
+
+var (
+	NotificationProducer Notifier
+	notificationTopic    = config.Get().KafkaTopic(notificationRequestedTopic)
+)
 
 func init() {
 	NotificationProducer = &AvailabilityStatusNotifier{}
@@ -25,15 +37,6 @@ type Notifier interface {
 
 type AvailabilityStatusNotifier struct {
 }
-
-var notificationTopic = config.Get().KafkaTopic("platform.notifications.ingress")
-
-const (
-	application                = "sources"
-	statusEventType            = "availability-status"
-	bundle                     = "console"
-	notificationMessageVersion = "v1.1.0"
-)
 
 // notificationPayload and notificationMetadata are empty and
 // they are used for proper formatting of final
@@ -72,7 +75,11 @@ type notificationMessage struct {
 }
 
 func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, sourceIdentification string) error {
-	writer, err := kafka.GetWriter(&conf.KafkaBrokerConfig, notificationTopic)
+	writer, err := kafka.GetWriter(&kafka.Options{
+		BrokerConfig: &conf.KafkaBrokerConfig,
+		Topic:        notificationTopic,
+		Logger:       l.Log,
+	})
 	if err != nil {
 		return fmt.Errorf(`could not get Kafka writer to emit an availability status notification: %w`, err)
 	}
