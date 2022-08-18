@@ -1,11 +1,13 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"gorm.io/gorm"
 )
 
 // GetTenantDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -25,18 +27,39 @@ func init() {
 type tenantDaoImpl struct{}
 
 func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenant, error) {
-	// Try to find the tenant.
+	// Try to find the tenant. Prefer fetching it by its OrgId first, since EBS account numbers are deprecated.
 	var tenant m.Tenant
-	err := DB.
+	var err error
+
+	err = DB.
 		Debug().
 		Model(&m.Tenant{}).
 		Where("org_id = ? AND org_id != ''", identity.OrgID).
-		Or("external_tenant = ? AND external_tenant != ''", identity.AccountNumber).
 		First(&tenant).
 		Error
 
+	// If the error isn't a "Not Found" one, something went wrong.
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("unexpected error when fetching a tenant by its OrgId: %w", err)
+	}
+
+	// Try to fetch the tenant by its EBS account number otherwise.
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = DB.
+			Debug().
+			Model(&m.Tenant{}).
+			Where("external_tenant = ? AND external_tenant != ''", identity.AccountNumber).
+			First(&tenant).
+			Error
+
+		// Again, if the error isn't a "Not Found" one, something went wrong.
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("unexpected error when fetching a tenant by its EBS account number: %w", err)
+		}
+	}
+
 	// Looks like we didn't find the tenant: create it and return it.
-	if err != nil {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		tenant.ExternalTenant = identity.AccountNumber
 		tenant.OrgID = identity.OrgID
 
