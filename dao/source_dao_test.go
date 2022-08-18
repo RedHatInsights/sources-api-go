@@ -99,7 +99,7 @@ func TestPausingSourceWithOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
 		 Test 1 - UserA tries to pause source for userA - expected result: success
 		*/
@@ -190,7 +190,7 @@ func TestUnpauseSourceWithOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("pause_unpause")
 
-	err := testSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
 		 Test 1 - UserA tries to unpause source for userA - expected result: success
 		*/
