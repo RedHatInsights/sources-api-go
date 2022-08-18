@@ -33,10 +33,6 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 		}
 
-		// Store the EBS account number and the OrgId in the context for easier usage later.
-		c.Set(h.ACCOUNT_NUMBER, id.Identity.AccountNumber)
-		c.Set(h.ORGID, id.Identity.OrgID)
-
 		c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", id.Identity.OrgID, id.Identity.AccountNumber)
 
 		tenantDao := dao.GetTenantDao()
@@ -45,7 +41,16 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			return fmt.Errorf("failed to get or create tenant for request: %s", err)
 		}
 
+		// Store the ID, EBS account number and OrgId from what we've got in the database. Prior to this, we stored
+		// the contents of the incoming headers, but this had a problem: if we only received an EBS account number, we
+		// would only forward that account number even if we had a complementary OrgId number stored.
+		//
+		// This can cause issues with services we are integrated with —notifications, for example—, which will not
+		// accept EBS account numbers anymore. However, we can deal with that by forwarding the OrgId too if we have it
+		// stored in the database.
 		c.Set(h.TENANTID, tenant.Id)
+		c.Set(h.ACCOUNT_NUMBER, tenant.ExternalTenant)
+		c.Set(h.ORGID, tenant.OrgID)
 
 		return next(c)
 	}
