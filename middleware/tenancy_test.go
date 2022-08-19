@@ -67,6 +67,29 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 		}
 
 		{
+			id, ok := c.Get(headers.PARSED_IDENTITY).(*identity.XRHID)
+			if !ok {
+				t.Errorf("unable to correctly type cast the parsed identity from the context")
+			}
+
+			{
+				want := orgId
+				got := id.Identity.OrgID
+				if want != got {
+					t.Errorf(`the identity struct does not have the OrgId value from the database. Want "%s", got "%s"`, want, got)
+				}
+			}
+
+			{
+				want := accountNumber
+				got := id.Identity.AccountNumber
+				if want != got {
+					t.Errorf(`the identity struct does not have the AccountNUmber value from the database. Want "%s", got "%s"`, want, got)
+				}
+			}
+		}
+
+		{
 			want := accountNumber
 			got := c.Get(headers.ACCOUNT_NUMBER)
 

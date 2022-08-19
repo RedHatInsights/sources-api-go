@@ -41,6 +41,11 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 			return fmt.Errorf("failed to get or create tenant for request: %s", err)
 		}
 
+		// Update the identity struct with the tenancy data from the database.
+		id.Identity.OrgID = tenant.OrgID
+		id.Identity.AccountNumber = tenant.ExternalTenant
+		c.Set(h.PARSED_IDENTITY, id)
+
 		// Store the ID, EBS account number and OrgId from what we've got in the database. Prior to this, we stored
 		// the contents of the incoming headers, but this had a problem: if we only received an EBS account number, we
 		// would only forward that account number even if we had a complementary OrgId number stored.
