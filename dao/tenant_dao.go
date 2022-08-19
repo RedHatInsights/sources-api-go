@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -51,6 +53,10 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 			Where("external_tenant = ? AND external_tenant != ''", identity.AccountNumber).
 			First(&tenant).
 			Error
+
+		if err == nil && tenant != (m.Tenant{}) {
+			logger.Log.WithFields(logrus.Fields{"account_number": identity.AccountNumber}).Warn("tenant found by its EBS account number")
+		}
 
 		// Again, if the error isn't a "Not Found" one, something went wrong.
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
