@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -83,4 +86,36 @@ func TestNoBody(t *testing.T) {
 	}
 
 	c.Echo().Binder = &echo.DefaultBinder{}
+}
+
+// TestEmptyJsonBody tests that when a valid, empty JSON object is given, a "bad request" error is returned.
+func TestEmptyJsonBody(t *testing.T) {
+	testValues := []*bytes.Buffer{
+		bytes.NewBufferString("{}"),
+		bytes.NewBufferString("{     }"),
+		bytes.NewBufferString("[]"),
+		bytes.NewBufferString("[     ]"),
+		bytes.NewBufferString("null"),
+	}
+
+	for _, tv := range testValues {
+		c, _ := request.CreateTestContext(
+			http.MethodPost,
+			"/",
+			tv,
+			nil,
+		)
+		c.Echo().Binder = binder
+
+		err := c.Bind(&TestStruct{})
+		if err == nil {
+			t.Error("No error was found when there should have been a no body error")
+		}
+
+		if !errors.Is(err, util.ErrBadRequestEmpty) {
+			t.Errorf(`bad request error expected when passing it an empty JSON body, got "%s"`, reflect.TypeOf(err))
+		}
+
+		c.Echo().Binder = &echo.DefaultBinder{}
+	}
 }
