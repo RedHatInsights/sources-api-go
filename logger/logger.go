@@ -13,6 +13,7 @@ import (
 	appconf "github.com/RedHatInsights/sources-api-go/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/lindgrenj6/logrus_zinc"
 	lc "github.com/redhatinsights/platform-go-middlewares/logging/cloudwatch"
 	"github.com/sirupsen/logrus"
 )
@@ -45,6 +46,17 @@ func AddHooksTo(logger *logrus.Logger, config *appconf.SourcesApiConfig) {
 		Log.Warn("Key or Secret are missing for logging to Cloud Watch.")
 	} else {
 		logger.AddHook(hook)
+	}
+
+	// add a hook to a Zinc search instance if defined in the ENV and we aren't in stage/prod
+	if config.Env != "stage" && config.Env != "prod" {
+		zinc, err := logrus_zinc.FromEnv()
+		if err != nil {
+			Log.Warnf("Not adding local zinc: %v", err)
+			return
+		}
+
+		logger.AddHook(zinc)
 	}
 }
 

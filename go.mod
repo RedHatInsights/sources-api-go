@@ -22,15 +22,17 @@ require (
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/labstack/gommon v0.3.1
+	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9 // indirect
 	github.com/prometheus/client_golang v1.12.1
 	github.com/redhatinsights/app-common-go v1.6.3
 	github.com/redhatinsights/platform-go-middlewares v0.19.0
 	github.com/redhatinsights/sources-superkey-worker v0.0.0-20220110114734-d076299a7d68
 	github.com/segmentio/kafka-go v0.4.25
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.10.0
 	github.com/vektah/gqlparser/v2 v2.4.0
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
+	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6 // indirect
 	gorm.io/datatypes v1.0.1
 	gorm.io/driver/postgres v1.3.1
 	gorm.io/gorm v1.23.2
