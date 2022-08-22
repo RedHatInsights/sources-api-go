@@ -53,6 +53,7 @@ type SourcesApiConfig struct {
 	SecretStore             string
 	TenantTranslatorUrl     string
 	ResourceOwnership       string
+	Env                     string
 }
 
 //String() returns a string that shows the settings in which the pod is running in
@@ -80,6 +81,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "BypassRbac", parsedConfig.BypassRbac)
 	fmt.Fprintf(&b, "%s=%v ", "SecretStore", parsedConfig.SecretStore)
 	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", parsedConfig.TenantTranslatorUrl)
+	fmt.Fprintf(&b, "%s=%v ", "Env", parsedConfig.Env)
 	return b.String()
 }
 
@@ -184,6 +186,8 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("UNLEASH_TOKEN"))
 	}
 
+	options.SetDefault("Env", os.Getenv("SOURCES_ENV"))
+
 	options.SetDefault("FeatureFlagsService", os.Getenv("FEATURE_FLAGS_SERVICE"))
 
 	if os.Getenv("SOURCES_ENV") == "prod" {
@@ -281,6 +285,7 @@ func Get() *SourcesApiConfig {
 		SecretStore:             options.GetString("SecretStore"),
 		TenantTranslatorUrl:     options.GetString("TenantTranslatorUrl"),
 		ResourceOwnership:       options.GetString("ResourceOwnership"),
+		Env:                     options.GetString("Env"),
 	}
 
 	return parsedConfig
