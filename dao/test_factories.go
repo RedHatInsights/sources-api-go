@@ -15,12 +15,12 @@ func CreateTenantForAccountNumber(accountNumber string) (*int64, error) {
 	}
 
 	tenantDao := GetTenantDao()
-	tenantID, err := tenantDao.GetOrCreateTenantID(&identityStruct)
+	tenant, err := tenantDao.GetOrCreateTenant(&identityStruct)
 	if err != nil {
 		return nil, fmt.Errorf("error getting or creating the tenant")
 	}
 
-	return &tenantID, nil
+	return &tenant.Id, nil
 }
 
 func CreateUserForUserID(userIDFromHeader string, tenantID int64) (*m.User, error) {

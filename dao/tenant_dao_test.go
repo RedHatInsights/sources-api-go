@@ -24,7 +24,7 @@ func TestGetOrCreateTenantIDEbsNumberCreate(t *testing.T) {
 
 	tenantDao := GetTenantDao()
 
-	id, err := tenantDao.GetOrCreateTenantID(&identityStruct)
+	dbTenant, err := tenantDao.GetOrCreateTenant(&identityStruct)
 	if err != nil {
 		t.Errorf(`Error getting or creating the tenant. Want nil error, got "%s"`, err)
 	}
@@ -33,7 +33,7 @@ func TestGetOrCreateTenantIDEbsNumberCreate(t *testing.T) {
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
-		Where(`id = ?`, id).
+		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
 
@@ -63,7 +63,7 @@ func TestGetOrCreateTenantIDEbsNumberFind(t *testing.T) {
 
 	tenantDao := GetTenantDao()
 
-	id, err := tenantDao.GetOrCreateTenantID(&identityStruct)
+	dbTenant, err := tenantDao.GetOrCreateTenant(&identityStruct)
 	if err != nil {
 		t.Errorf(`Error getting or creating the tenant. Want nil error, got "%s"`, err)
 	}
@@ -72,7 +72,7 @@ func TestGetOrCreateTenantIDEbsNumberFind(t *testing.T) {
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
-		Where(`id = ?`, id).
+		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
 
@@ -102,7 +102,7 @@ func TestGetOrCreateTenantIDOrgIdCreate(t *testing.T) {
 
 	tenantDao := GetTenantDao()
 
-	id, err := tenantDao.GetOrCreateTenantID(&identityStruct)
+	dbTenant, err := tenantDao.GetOrCreateTenant(&identityStruct)
 	if err != nil {
 		t.Errorf(`Error getting or creating the tenant. Want nil error, got "%s"`, err)
 	}
@@ -111,7 +111,7 @@ func TestGetOrCreateTenantIDOrgIdCreate(t *testing.T) {
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
-		Where(`id = ?`, id).
+		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
 
@@ -140,7 +140,7 @@ func TestGetOrCreateTenantIDOrgIdFind(t *testing.T) {
 
 	tenantDao := GetTenantDao()
 
-	id, err := tenantDao.GetOrCreateTenantID(&identityStruct)
+	dbTenant, err := tenantDao.GetOrCreateTenant(&identityStruct)
 	if err != nil {
 		t.Errorf(`Error getting or creating the tenant. Want nil error, got "%s"`, err)
 	}
@@ -149,7 +149,7 @@ func TestGetOrCreateTenantIDOrgIdFind(t *testing.T) {
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
-		Where(`id = ?`, id).
+		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
 
@@ -250,7 +250,7 @@ func TestCreateTenantNullEbsOrgId(t *testing.T) {
 	tenantDao := GetTenantDao()
 
 	// Try to insert a tenant without an "external_tenant" and "org_id" values.
-	id, err := tenantDao.GetOrCreateTenantID(&identity.Identity{})
+	tenant, err := tenantDao.GetOrCreateTenant(&identity.Identity{})
 	if err != nil {
 		t.Errorf(`unexpected error when creating a tenant with a NULL EBS account number and OrgId: %s`, err)
 	}
@@ -261,7 +261,7 @@ func TestCreateTenantNullEbsOrgId(t *testing.T) {
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
-		Where("id = ?", id).
+		Where("id = ?", tenant.Id).
 		Find(&createdTenant).
 		Error
 

@@ -12,7 +12,7 @@ import (
 )
 
 var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
-var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.UserCatcher}
+var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
 
 var tenancyWithListMiddleware = append(tenancyMiddleware, listMiddleware...)
 var permissionMiddleware = append(tenancyMiddleware, []echo.MiddlewareFunc{middleware.PermissionCheck, middleware.RaiseEvent}...)
@@ -37,7 +37,6 @@ func setupRoutes(e *echo.Echo) {
 			middleware.HandleErrors,
 			middleware.IdValidation,
 			middleware.ParseHeaders,
-			middleware.LoggerFields,
 		)
 
 		// openapi
@@ -52,7 +51,7 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
 		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
-		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy)
+		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy, middleware.LoggerFields)
 		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)
@@ -85,13 +84,13 @@ func setupRoutes(e *echo.Echo) {
 		}
 
 		// ApplicationTypes
-		r.GET("/application_types", ApplicationTypeList, listMiddleware...)
-		r.GET("/application_types/:id", ApplicationTypeGet)
+		r.GET("/application_types", ApplicationTypeList, append(listMiddleware, middleware.LoggerFields)...)
+		r.GET("/application_types/:id", ApplicationTypeGet, middleware.LoggerFields)
 		r.GET("/application_types/:application_type_id/sources", ApplicationTypeListSource, tenancyWithListMiddleware...)
 
 		// Endpoints
 		r.GET("/endpoints", EndpointList, tenancyWithListMiddleware...)
-		r.GET("/endpoints/:id", EndpointGet, middleware.Tenancy)
+		r.GET("/endpoints/:id", EndpointGet, middleware.Tenancy, middleware.LoggerFields)
 		r.POST("/endpoints", EndpointCreate, permissionMiddleware...)
 		r.PATCH("/endpoints/:id", EndpointEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/endpoints/:id", EndpointDelete, permissionMiddleware...)
@@ -105,13 +104,13 @@ func setupRoutes(e *echo.Echo) {
 		r.DELETE("/application_authentications/:id", ApplicationAuthenticationDelete, permissionMiddleware...)
 
 		// AppMetaData
-		r.GET("/app_meta_data", MetaDataList, listMiddleware...)
-		r.GET("/app_meta_data/:id", MetaDataGet)
-		r.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, listMiddleware...)
+		r.GET("/app_meta_data", MetaDataList, append(listMiddleware, middleware.LoggerFields)...)
+		r.GET("/app_meta_data/:id", MetaDataGet, middleware.LoggerFields)
+		r.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, append(listMiddleware, middleware.LoggerFields)...)
 
 		// SourceTypes
-		r.GET("/source_types", SourceTypeList, listMiddleware...)
-		r.GET("/source_types/:id", SourceTypeGet)
+		r.GET("/source_types", SourceTypeList, append(listMiddleware, middleware.LoggerFields)...)
+		r.GET("/source_types/:id", SourceTypeGet, middleware.LoggerFields)
 		r.GET("/source_types/:source_type_id/sources", SourceTypeListSource, tenancyWithListMiddleware...)
 
 		// Red Hat Connector Connections

@@ -166,9 +166,9 @@ type RhcConnectionDao interface {
 }
 
 type TenantDao interface {
-	// GetOrCreateTenantID returns the ID of the tenant associated with the provided identity. It tries to fetch the
-	// tenant by its OrgId, and if it is not present, by its EBS account number.
-	GetOrCreateTenantID(identity *identity.Identity) (int64, error)
+	// GetOrCreateTenant returns the tenant associated with the provided identity. It tries to fetch the tenant by its
+	// OrgId, and if it is not present, by its EBS account number.
+	GetOrCreateTenant(identity *identity.Identity) (*m.Tenant, error)
 	// TenantByIdentity returns the tenant associated to the given identity. It tries to fetch the tenant by its OrgId,
 	// and if it is not preset, by its EBS account number.
 	TenantByIdentity(identity *identity.Identity) (*m.Tenant, error)
