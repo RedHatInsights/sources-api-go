@@ -212,8 +212,8 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 					continue
 				}
 
-				if err != nil {
-					translationError := fmt.Errorf(`could no translate to "org_id": %w`, err)
+				if dbResult.Error != nil {
+					translationError := fmt.Errorf(`could no translate to "org_id": %w`, dbResult.Error)
 
 					logger.Log.WithField("external_tenant", *result.EAN).WithField("org_id", result.OrgID).Error(translationError)
 
