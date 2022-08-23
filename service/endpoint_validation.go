@@ -64,8 +64,7 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 	}
 
 	if ecr.Scheme == nil || !schemeRegexp.MatchString(*ecr.Scheme) {
-		tmp := defaultScheme
-		ecr.Scheme = &tmp
+		ecr.Scheme = util.StringRef(defaultScheme)
 	}
 
 	if ecr.Host != "" {
@@ -126,8 +125,7 @@ func ValidateEndpointEditRequest(dao dao.EndpointDao, sourceId int64, editReques
 	}
 
 	if editRequest.Scheme == nil || (editRequest.Scheme != nil && !schemeRegexp.MatchString(*editRequest.Scheme)) {
-		tmp := defaultScheme
-		editRequest.Scheme = &tmp
+		editRequest.Scheme = util.StringRef(defaultScheme)
 	}
 
 	if editRequest.Host != nil && *editRequest.Host != "" {

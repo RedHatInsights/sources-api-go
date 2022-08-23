@@ -560,8 +560,7 @@ func TestEditEmptyHost(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	editRequest, sourceId := setUpEndpointEditRequest()
-	tmp := ""
-	editRequest.Host = &tmp
+	editRequest.Host = util.StringRef("")
 
 	err := ValidateEndpointEditRequest(endpointDao, sourceId, &editRequest)
 	if err != nil {
