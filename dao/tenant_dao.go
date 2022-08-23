@@ -225,7 +225,9 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 					continue
 				}
 
-				logger.Log.WithField("external_tenant", *result.EAN).WithField("org_id", result.OrgID).Info("successful tenant translation")
+				logger.Log.WithFields(
+					logrus.Fields{"external_tenant": *result.EAN, "org_id": result.OrgID, "tenant_id": tenant.Id},
+				).Info("successful tenant translation")
 
 				tenantTranslation.Id = tenant.Id
 				tenantTranslation.ExternalTenant = *result.EAN
