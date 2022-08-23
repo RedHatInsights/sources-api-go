@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -226,13 +227,7 @@ func TestHostFqdnTooLong(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
 	// The "longHostname" variable holds a 256 char hostname
-	ecr.Host = `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaa
-	`
+	ecr.Host = strings.Repeat("a", 256)
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
@@ -582,14 +577,7 @@ func TestEditHostFqdnTooLong(t *testing.T) {
 	editRequest, sourceId := setUpEndpointEditRequest()
 
 	// The "longHostname" variable holds a 256 char hostname
-	tmp := `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaa
-	`
-	editRequest.Host = &tmp
+	editRequest.Host = util.StringRef(strings.Repeat("a", 256))
 
 	err := ValidateEndpointEditRequest(endpointDao, sourceId, &editRequest)
 
