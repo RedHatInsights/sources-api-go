@@ -84,14 +84,6 @@ amazon:
               pattern: "^arnaws:.*"
             - type: min-length
               threshold: 10
-    endpoint:
-      hidden: true
-      fields:
-      - component: text-field
-        name: endpoint.role
-        hideField: true
-        initializeOnMount: true
-        initialValue: aws
   vendor: Amazon
   icon_url: "/apps/frontend-assets/partners-icons/aws-long.svg"
 google:
