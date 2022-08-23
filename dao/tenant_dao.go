@@ -77,6 +77,10 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 		if err != nil {
 			return nil, fmt.Errorf("unable to create the tenant: %w", err)
 		}
+
+		logger.Log.WithFields(
+			logrus.Fields{"account_number": tenant.ExternalTenant, "org_id": tenant.OrgID, "tenant_id": tenant.Id},
+		).Info("tenant created")
 	}
 
 	return &tenant, nil
