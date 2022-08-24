@@ -45,6 +45,7 @@ objects:
     deployments:
     - name: background-worker
       minReplicas: 1
+      maxReplicas: 0
       podSpec:
         args:
         - -background-worker
@@ -66,6 +67,7 @@ objects:
             memory: ${AVAILABILITY_LISTENER_MEMORY_REQUEST}
     - name: availability-status-listener
       minReplicas: ${{AVAILABILITY_MIN_REPLICAS}}
+      maxReplicas: 0
       podSpec:
         args:
         - -listener
@@ -87,6 +89,7 @@ objects:
             memory: ${AVAILABILITY_LISTENER_MEMORY_REQUEST}
     - name: svc
       minReplicas: ${{MIN_REPLICAS}}
+      maxReplicas: 0
       webServices:
         public:
           enabled: true
