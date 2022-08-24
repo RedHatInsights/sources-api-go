@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -353,8 +354,10 @@ func TestAuthenticationListUserOwnership(t *testing.T) {
 		expectedAuthenticationIDs = append(expectedAuthenticationIDs, authentication.DbID)
 	}
 
+	sort.Slice(authenticationIDs, func(i, j int) bool { return authenticationIDs[i] < authenticationIDs[j] })
+
 	if !cmp.Equal(authenticationIDs, expectedAuthenticationIDs) {
-		t.Errorf("Expected authentication IDs %v are not same with obtained ids: %v", expectedAuthenticationIDs, authenticationIDs)
+		t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", expectedAuthenticationIDs, authenticationIDs)
 	}
 
 	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
@@ -380,8 +383,10 @@ func TestAuthenticationListUserOwnership(t *testing.T) {
 		expectedAuthenticationIDs = append(expectedAuthenticationIDs, authentication.DbID)
 	}
 
+	sort.Slice(authenticationIDs, func(i, j int) bool { return authenticationIDs[i] < authenticationIDs[j] })
+
 	if !cmp.Equal(authenticationIDs, expectedAuthenticationIDs) {
-		t.Errorf("Expected authentication IDs %v are not same with obtained ids: %v", expectedAuthenticationIDs, authenticationIDs)
+		t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", expectedAuthenticationIDs, authenticationIDs)
 	}
 
 	DropSchema(schema)

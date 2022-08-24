@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -887,8 +888,10 @@ func TestSourceListUserOwnership(t *testing.T) {
 		expectedSourcesIDs = append(expectedSourcesIDs, appAuth.ID)
 	}
 
+	sort.Slice(sourcesIDs, func(i, j int) bool { return sourcesIDs[i] < sourcesIDs[j] })
+
 	if !cmp.Equal(sourcesIDs, expectedSourcesIDs) {
-		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedSourcesIDs, sourcesIDs)
+		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedSourcesIDs, sourcesIDs)
 	}
 
 	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
@@ -914,8 +917,10 @@ func TestSourceListUserOwnership(t *testing.T) {
 		expectedSourcesIDs = append(expectedSourcesIDs, source.ID)
 	}
 
+	sort.Slice(sourcesIDs, func(i, j int) bool { return sourcesIDs[i] < sourcesIDs[j] })
+
 	if !cmp.Equal(sourcesIDs, expectedSourcesIDs) {
-		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedSourcesIDs, sourcesIDs)
+		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedSourcesIDs, sourcesIDs)
 	}
 
 	DropSchema(schema)
@@ -1078,8 +1083,10 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
 		}
 
+		sort.Slice(subCollectionSourcesIDs, func(i, j int) bool { return subCollectionSourcesIDs[i] < subCollectionSourcesIDs[j] })
+
 		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsUserA()) {
-			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
+			t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
 		}
 
 		/*
@@ -1099,8 +1106,10 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
 		}
 
+		sort.Slice(subCollectionSourcesIDs, func(i, j int) bool { return subCollectionSourcesIDs[i] < subCollectionSourcesIDs[j] })
+
 		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsNoUser()) {
-			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
+			t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
 		}
 
 		rhcDAO := GetRhcConnectionDao(suiteData.TenantID())

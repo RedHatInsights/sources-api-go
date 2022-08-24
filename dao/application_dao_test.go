@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -453,8 +454,10 @@ func TestApplicationListUserOwnership(t *testing.T) {
 		expectedApplicationIDs = append(expectedApplicationIDs, application.ID)
 	}
 
+	sort.Slice(applicationIDs, func(i, j int) bool { return applicationIDs[i] < applicationIDs[j] })
+
 	if !cmp.Equal(applicationIDs, expectedApplicationIDs) {
-		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedApplicationIDs, applicationIDs)
+		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedApplicationIDs, applicationIDs)
 	}
 
 	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
@@ -480,8 +483,10 @@ func TestApplicationListUserOwnership(t *testing.T) {
 		expectedApplicationIDs = append(expectedApplicationIDs, application.ID)
 	}
 
+	sort.Slice(applicationIDs, func(i, j int) bool { return applicationIDs[i] < applicationIDs[j] })
+
 	if !cmp.Equal(applicationIDs, expectedApplicationIDs) {
-		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedApplicationIDs, applicationIDs)
+		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedApplicationIDs, applicationIDs)
 	}
 
 	DropSchema(schema)
