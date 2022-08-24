@@ -3,6 +3,7 @@ package dao
 import (
 	"errors"
 	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -271,8 +272,10 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 		expectedAppAuthsIDs = append(expectedAppAuthsIDs, appAuth.ID)
 	}
 
+	sort.Slice(appAuthsIDs, func(i, j int) bool { return appAuthsIDs[i] < appAuthsIDs[j] })
+
 	if !cmp.Equal(appAuthsIDs, expectedAppAuthsIDs) {
-		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedAppAuthsIDs, appAuthsIDs)
+		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedAppAuthsIDs, appAuthsIDs)
 	}
 
 	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
@@ -298,8 +301,10 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 		expectedAppAuthsIDs = append(expectedAppAuthsIDs, appAuth.ID)
 	}
 
+	sort.Slice(appAuthsIDs, func(i, j int) bool { return appAuthsIDs[i] < appAuthsIDs[j] })
+
 	if !cmp.Equal(appAuthsIDs, expectedAppAuthsIDs) {
-		t.Errorf("Expected application authentication IDS %v are not same with obtained ids: %v", expectedAppAuthsIDs, appAuthsIDs)
+		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedAppAuthsIDs, appAuthsIDs)
 	}
 
 	DropSchema(schema)
