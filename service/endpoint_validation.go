@@ -23,13 +23,6 @@ var fqdnRegexp = regexp.MustCompile(`^(?:[a-zA-Z\d](?:[a-zA-Z\d-]*[a-zA-Z\d])?\.
 // schemeRegexp matches a valid scheme, as per RFC 3986
 var schemeRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z\d+\-.]*$`)
 
-// validAvailabilityStatuses is a map containing the valid availability statuses. It has this form because a map is
-// faster for these lookups.
-var validAvailabilityStatuses = map[string]struct{}{
-	model.Available:   {},
-	model.Unavailable: {},
-}
-
 const (
 	defaultScheme    = "https"
 	defaultPort      = 443
@@ -107,7 +100,7 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 	if ecr.AvailabilityStatus == "" {
 		ecr.AvailabilityStatus = model.InProgress
 	} else {
-		if _, ok := validAvailabilityStatuses[ecr.AvailabilityStatus]; !ok {
+		if _, ok := model.ValidAvailabilityStatuses[ecr.AvailabilityStatus]; !ok {
 			return fmt.Errorf("invalid availability status")
 		}
 	}
@@ -164,7 +157,7 @@ func ValidateEndpointEditRequest(dao dao.EndpointDao, sourceId int64, editReques
 	}
 
 	if editRequest.AvailabilityStatus != nil {
-		if _, ok := validAvailabilityStatuses[*editRequest.AvailabilityStatus]; !ok {
+		if _, ok := model.ValidAvailabilityStatuses[*editRequest.AvailabilityStatus]; !ok {
 			return fmt.Errorf("invalid availability status")
 		}
 	}
