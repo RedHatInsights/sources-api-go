@@ -199,6 +199,19 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 						"org_id": result.OrgID,
 					})
 
+				if dbResult.Error != nil {
+					translationError := fmt.Errorf(`could no translate to "org_id": %w`, dbResult.Error)
+
+					logger.Log.WithField("external_tenant", *result.EAN).WithField("org_id", result.OrgID).Error(translationError)
+
+					tenantTranslation.ExternalTenant = *result.EAN
+					tenantTranslation.OrgId = result.OrgID
+					tenantTranslations = append(tenantTranslations, tenantTranslation)
+
+					untranslatedTenants++
+					continue
+				}
+
 				// If the update yielded 0 affected rows that means that no tenant could be found with that
 				// "external_tenant".
 				if dbResult.RowsAffected == 0 {
@@ -208,19 +221,6 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 
 					tenantTranslation.ExternalTenant = *result.EAN
 					tenantTranslation.Error = translationError
-					tenantTranslations = append(tenantTranslations, tenantTranslation)
-
-					untranslatedTenants++
-					continue
-				}
-
-				if dbResult.Error != nil {
-					translationError := fmt.Errorf(`could no translate to "org_id": %w`, dbResult.Error)
-
-					logger.Log.WithField("external_tenant", *result.EAN).WithField("org_id", result.OrgID).Error(translationError)
-
-					tenantTranslation.ExternalTenant = *result.EAN
-					tenantTranslation.OrgId = result.OrgID
 					tenantTranslations = append(tenantTranslations, tenantTranslation)
 
 					untranslatedTenants++
