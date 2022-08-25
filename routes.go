@@ -119,7 +119,7 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/rhc_connections", RhcConnectionCreate, permissionMiddleware...)
 		r.PATCH("/rhc_connections/:id", RhcConnectionEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/rhc_connections/:id", RhcConnectionDelete, permissionMiddleware...)
-		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, permissionWithListMiddleware...)
+		r.GET("/rhc_connections/:id/sources", RhcConnectionSourcesList, tenancyWithListMiddleware...)
 
 		// GraphQL
 		r.POST("/graphql", GraphQLQuery, tenancyMiddleware...)
