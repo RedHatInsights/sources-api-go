@@ -138,6 +138,26 @@ func EndpointCreate(c echo.Context) error {
 		return err
 	}
 
+	// Check that source exists
+	sourceId, err := util.InterfaceToInt64(input.SourceIDRaw)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	sourceDao, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	sourceExists, err := sourceDao.Exists(sourceId)
+	if err != nil {
+		return err
+	}
+
+	if !sourceExists {
+		return util.NewErrBadRequest("source id not found")
+	}
+
 	err = service.ValidateEndpointCreateRequest(endpointDao, input)
 	if err != nil {
 		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %s", err))
