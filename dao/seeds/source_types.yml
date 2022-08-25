@@ -81,7 +81,7 @@ amazon:
           validate:
             - type: required
             - type: pattern
-              pattern: "^arnaws:.*"
+              pattern: "^arn:aws:.*"
             - type: min-length
               threshold: 10
   vendor: Amazon
