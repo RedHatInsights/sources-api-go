@@ -360,3 +360,64 @@ func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		  Test 1 -UserA tries to delete application authentication for userA - expected result: success
+		*/
+		authenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+		_, err := authenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Delete: %v`, err)
+		}
+
+		_, err = authenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`expected 'application authentication not found', got %s`, err)
+		}
+
+		/*
+		  Test 2 - UserA tries to delete application authentication without user - expected result: success
+		*/
+		_, err = authenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Delete: %v`, err)
+		}
+
+		_, err = authenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`expected 'authentication not found', got %s`, err)
+		}
+
+		/*
+		  User without any ownership records tries to delete userB's application authentication - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		authenticationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
+
+		_, err = authenticationDaoWithUser.Delete(&suiteData.ApplicationAuthenticationUserB().ID)
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`expected 'authentication not found', got %s`, err)
+		}
+
+		authenticationDaoUserB := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserB())
+		_, err = authenticationDaoUserB.GetById(&suiteData.ApplicationAuthenticationUserB().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
