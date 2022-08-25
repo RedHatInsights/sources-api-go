@@ -52,7 +52,6 @@ type SourcesApiConfig struct {
 	MigrationsReset         bool
 	SecretStore             string
 	TenantTranslatorUrl     string
-	ResourceOwnership       string
 	Env                     string
 }
 
@@ -210,7 +209,6 @@ func Get() *SourcesApiConfig {
 	}
 	options.SetDefault("SecretStore", secretStore)
 	options.SetDefault("TenantTranslatorUrl", os.Getenv("TENANT_TRANSLATOR_URL"))
-	options.SetDefault("ResourceOwnership", os.Getenv("RESOURCE_OWNERSHIP"))
 
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
 	fs := flag.NewFlagSet("runtime", flag.ContinueOnError)
@@ -284,7 +282,6 @@ func Get() *SourcesApiConfig {
 		MigrationsReset:         options.GetBool("MigrationsReset"),
 		SecretStore:             options.GetString("SecretStore"),
 		TenantTranslatorUrl:     options.GetString("TenantTranslatorUrl"),
-		ResourceOwnership:       options.GetString("ResourceOwnership"),
 		Env:                     options.GetString("Env"),
 	}
 
