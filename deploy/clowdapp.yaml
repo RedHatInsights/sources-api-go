@@ -44,7 +44,7 @@ objects:
     envName: ${ENV_NAME}
     deployments:
     - name: background-worker
-      minReplicas: 1
+      minReplicas: ${{BACKGROUND_WORKER_MIN_REPLICAS}}
       podSpec:
         args:
         - -background-worker
@@ -269,6 +269,9 @@ parameters:
   value: '1'
 - description: The number of replicas to use for the availability status listener
   name: AVAILABILITY_MIN_REPLICAS
+  value: '1'
+- description: The number of replicas to use for the background worker
+  name: BACKGROUND_WORKER_MIN_REPLICAS
   value: '1'
 - description: 'Options can be found in the doc: https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS'
   displayName: Postgres SSL mode
