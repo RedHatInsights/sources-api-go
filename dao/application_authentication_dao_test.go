@@ -303,3 +303,60 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		   Test 1 - UserA tries to GET userA's application - expected result: success
+		*/
+		applicationAuthenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+		applicationAuthenticationUserA, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %s`, err)
+		}
+
+		if applicationAuthenticationUserA.ID != suiteData.ApplicationAuthenticationUserA().ID {
+			t.Errorf("source %v returned but source %v was expected", applicationAuthenticationUserA.ID, suiteData.ApplicationAuthenticationUserA().ID)
+		}
+
+		/*
+			Test 2 - UserA tries to GET application without user - expected result: success
+		*/
+		applicationNoUser, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		if applicationNoUser.ID != suiteData.ApplicationAuthenticationNoUser().ID {
+			t.Errorf("application %v returned but application %v was expected", applicationNoUser.ID, suiteData.ApplicationAuthenticationNoUser().ID)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to GET userA's application - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		applicationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
+
+		_, err = applicationDaoWithUser.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err == nil {
+			t.Errorf(`unexpected error after calling GetById for the application: %v`, suiteData.ApplicationAuthenticationUserA())
+		}
+
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`unexpected error after calling GetById for the application: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
