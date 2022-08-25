@@ -68,11 +68,8 @@ func (add *authenticationDaoDbImpl) List(limit, offset int, filters []util.Filte
 func (add *authenticationDaoDbImpl) GetById(id string) (*m.Authentication, error) {
 	var authentication m.Authentication
 
-	err := DB.
-		Debug().
-		Model(&m.Authentication{}).
+	err := add.getDbWithModel().
 		Where("id = ?", id).
-		Where("tenant_id = ?", add.TenantID).
 		First(&authentication).
 		Error
 

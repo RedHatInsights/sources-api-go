@@ -1142,3 +1142,211 @@ func TestBulkDeleteRegression(t *testing.T) {
 
 	DropSchema("authentications_db")
 }
+
+func TestAuthenticationGetUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		   Test 1 - UserA tries to GET userA's authentication - expected result: success
+		*/
+		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		authenticationUserA, err := authenticationDaoUserA.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the authenticationD: %s`, err)
+		}
+
+		if authenticationUserA.DbID != suiteData.AuthenticationUserA().DbID {
+			t.Errorf("source %v returned but source %v was expected", authenticationUserA.DbID, suiteData.AuthenticationUserA().DbID)
+		}
+
+		/*
+		  Test 2 - UserA tries to GET authentication without user - expected result: success
+		*/
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationNoUser().DbID)
+		authenticationNoUser, err := authenticationDaoUserA.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the authentication: %s`, err)
+		}
+
+		if authenticationNoUser.DbID != suiteData.AuthenticationNoUser().DbID {
+			t.Errorf("authentication %v returned but authentication %v was expected", authenticationNoUser.ID, suiteData.AuthenticationNoUser().DbID)
+		}
+
+		/*
+		  Test 3 - User without any ownership records tries to GET userA's authentication - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
+
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		_, err = authenticationDaoWithUser.GetById(authId)
+		if err == nil {
+			t.Errorf(`unexpected error after calling GetById for the authentication: %v`, suiteData.AuthenticationNoUser().DbID)
+		}
+
+		if err.Error() != "authentication not found" {
+			t.Errorf(`unexpected error after calling GetById for the authentication: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
+
+func TestAuthenticationEditUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 - UserA tries to update authentication for userA - expected result: success
+		*/
+		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		newName := "new error"
+		newAuthenticationUserA := &model.Authentication{DbID: suiteData.AuthenticationUserA().DbID, Name: &newName}
+		err := authenticationDaoUserA.Update(newAuthenticationUserA)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		updatedAuthentication, err := authenticationDaoUserA.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if *updatedAuthentication.Name != newName {
+			t.Errorf("name %v returned but name %v was expected", updatedAuthentication.Name, newName)
+		}
+
+		/*
+		  Test 2 - UserA tries to update authentication without user - expected result: success
+		*/
+		newAuthenticationNoUser := &model.Authentication{DbID: suiteData.AuthenticationNoUser().DbID, Name: &newName}
+		err = authenticationDaoUserA.Update(newAuthenticationNoUser)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		updatedAuthentication, err = authenticationDaoUserA.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if *updatedAuthentication.Name != newName {
+			t.Errorf("av.status error %v returned but av.status error %v was expected", updatedAuthentication.AvailabilityStatusError, newName)
+		}
+
+		/*
+		  Test 3 - User without any ownership records tries to update userA's authentication - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
+
+		newName = "new error"
+		newAuthenticationUserB := &model.Authentication{DbID: suiteData.AuthenticationUserB().DbID, Name: &newName}
+		err = authenticationDaoWithUser.Update(newAuthenticationUserB)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Update: %v`, err)
+		}
+
+		authenticationDaoUserB := GetAuthenticationDao(suiteData.GetRequestParamsUserB())
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+		updatedAuthentication, err = authenticationDaoUserB.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		if *updatedAuthentication.Name == newName {
+			t.Errorf("av.status error %v returned but av.status error %v was expected", updatedAuthentication.AvailabilityStatusError, newName)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
+
+func TestAuthenticationDeleteUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		 Test 1 -UserA tries to delete application for userA - expected result: success
+		*/
+		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		_, err := authenticationDaoUserA.Delete(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Delete: %v`, err)
+		}
+
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+		_, err = authenticationDaoUserA.GetById(authId)
+		if err.Error() != "authentication not found" {
+			t.Errorf(`expected 'authentication not found', got %s`, err)
+		}
+
+		/*
+		  Test 2 - UserA tries to delete application without user - expected result: success
+		*/
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationNoUser().DbID)
+		_, err = authenticationDaoUserA.Delete(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Delete: %v`, err)
+		}
+
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationNoUser().DbID)
+		_, err = authenticationDaoUserA.GetById(authId)
+		if err.Error() != "authentication not found" {
+			t.Errorf(`expected 'authentication not found', got %s`, err)
+		}
+
+		/*
+		  User without any ownership records tries to delete userB's authentication - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
+
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+		_, err = authenticationDaoWithUser.Delete(authId)
+		if err.Error() != "authentication not found" {
+			t.Errorf(`expected 'authentication not found', got %s`, err)
+		}
+
+		authenticationDaoUserB := GetAuthenticationDao(suiteData.GetRequestParamsUserB())
+		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+		_, err = authenticationDaoUserB.GetById(authId)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
