@@ -19,6 +19,7 @@
       - gitlab-personal-access-token
     quay:
       - quay-encrypted-password
+  resource_ownership: user
 
 "/insights/platform/cost-management":
   display_name: Cost Management
