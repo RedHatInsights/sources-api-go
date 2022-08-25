@@ -521,7 +521,7 @@ func loadUserResourceSettingFromBulkCreateApplication(userResource *m.UserResour
 }
 
 func userResourceFromBulkCreateApplications(user *m.User, applications []m.BulkCreateApplication, tenant *m.Tenant) (*m.UserResource, error) {
-	userResource := &m.UserResource{User: user, ResourceOwnership: ""}
+	userResource := &m.UserResource{User: user}
 
 	for _, reqApp := range applications {
 		err := loadUserResourceSettingFromBulkCreateApplication(userResource, &reqApp, tenant)
