@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -198,13 +199,7 @@ func TestHostFqdnTooLong(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
 	// The "longHostname" variable holds a 256 char hostname
-	ecr.Host = `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee
-		aaaaaa
-	`
+	ecr.Host = strings.Repeat("a", 256)
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
@@ -275,14 +270,15 @@ func TestLabelNamesTooLong(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
 	// The first label is 64 characters long
-	ecr.Host = `aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggg.example.org`
+	label := strings.Repeat("a", 64)
+	ecr.Host = label + ".example.org"
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 	if err == nil {
 		t.Error("want error, got none")
 	}
 
-	want := fmt.Sprintf("the label '%s' is greater than %d characters", "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggg", maxLabelLength)
+	want := fmt.Sprintf("the label '%s' is greater than %d characters", label, maxLabelLength)
 	if err.Error() != want {
 		t.Errorf("want '%s', got %s", want, err)
 	}
