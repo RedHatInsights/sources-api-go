@@ -689,6 +689,42 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+// TestEndpointCreateInvalidSource tests bad request is returned
+// when create request contains source id that is not owned by tenant
+func TestEndpointCreateInvalidSource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	sourceId := int64(1)
+
+	requestBody := m.EndpointCreateRequest{
+		Role:        "invalid tenant",
+		SourceIDRaw: sourceId,
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/endpoints",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestEndpointCreate := ErrorHandlingContext(EndpointCreate)
+	err = badRequestEndpointCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 func TestEndpointEdit(t *testing.T) {
 	tenantId := int64(1)
 	backupNotificationProducer := service.NotificationProducer
