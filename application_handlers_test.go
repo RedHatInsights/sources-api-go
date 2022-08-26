@@ -731,6 +731,40 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 }
 
+// TestApplicationCreateInvalidSource tests that bed request is returned
+// when source in request not belongs to the tenant
+func TestApplicationCreateInvalidSource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+
+	req := m.ApplicationCreateRequest{
+		SourceIDRaw:          "2",
+		ApplicationTypeIDRaw: "2",
+		Extra:                nil,
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/applications",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+	err := badRequestApplicationCreate(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
 func TestApplicationEdit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
