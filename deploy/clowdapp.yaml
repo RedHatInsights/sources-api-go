@@ -143,8 +143,6 @@ objects:
               optional: true
         - name: FEATURE_FLAGS_SERVICE
           value: ${FEATURE_FLAGS_SERVICE}
-        - name: RESOURCE_OWNERSHIP
-          value: ${RESOURCE_OWNERSHIP}
         - name: SOURCE_TYPE_SKIP_LIST
           value: ${SOURCE_TYPE_SKIP_LIST}
         - name: APPLICATION_TYPE_SKIP_LIST
@@ -336,9 +334,6 @@ parameters:
 - description: Specify name of service for Feature Flags
   name: FEATURE_FLAGS_SERVICE
   value: 'unleash'
-- description: Specify name to select strategy to ensure resource ownership
-  name: RESOURCE_OWNERSHIP
-  value: ''
 - description: Specify any source_types to not seed into the database
   name: SOURCE_TYPE_SKIP_LIST
   value: ''
