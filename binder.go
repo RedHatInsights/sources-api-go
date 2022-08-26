@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
+	"reflect"
 
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -19,11 +19,12 @@ type NoUnknownFieldsBinder struct{}
 	`DisallowUnknownFields` Decoder setting for unmarshaling json.
 */
 func (binder *NoUnknownFieldsBinder) Bind(i interface{}, c echo.Context) error {
-	// if there is no body on the request - return early
-	if c.Request().Body == http.NoBody || c.Request().Body == nil {
-		return util.NewErrBadRequest("no body")
-	}
+	// Close the request's body after we're done with it.
 	defer c.Request().Body.Close()
+
+	// is the struct passed in initially empty? then it's pretty easy to tell if
+	// no fields were plucked from the body.
+	isInitiallyEmpty := reflect.ValueOf(i).Elem().IsZero()
 
 	// create a new decoder for the request body
 	dec := json.NewDecoder(c.Request().Body)
@@ -34,6 +35,14 @@ func (binder *NoUnknownFieldsBinder) Bind(i interface{}, c echo.Context) error {
 	if err != nil {
 		c.Logger().Warnf("Failed to decode request: %v", err)
 		return util.NewErrBadRequest(err)
+	}
+
+	// ...is the struct still empty after unmarshaling? if so then we had an
+	// empty JSON body.
+	isEmptyAfterDecoding := reflect.ValueOf(i).Elem().IsZero()
+
+	if isInitiallyEmpty && isEmptyAfterDecoding {
+		return util.NewErrBadRequest("empty body")
 	}
 
 	return nil
