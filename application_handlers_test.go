@@ -592,6 +592,7 @@ func TestApplicationGetBadRequest(t *testing.T) {
 }
 
 func TestApplicationCreateGood(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
 	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
@@ -699,6 +700,7 @@ func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
 }
 
 func TestApplicationCreateIncompatible(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
 	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: false}
 
 	req := m.ApplicationCreateRequest{
