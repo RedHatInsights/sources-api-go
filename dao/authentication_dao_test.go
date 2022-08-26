@@ -391,3 +391,142 @@ func TestAuthenticationListUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		  Test 1 - UserA tries to GET userA's authentications of certain application authentication - expected result: success
+		*/
+		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		aa := suiteData.resourcesUserA.ApplicationAuthentications[0]
+		authentications, _, err := authenticationDaoUserA.ListForApplicationAuthentication(aa.ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		var subCollectionAuthenticationsIDs []int64
+		for _, authentication := range authentications {
+			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
+		}
+
+		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
+
+		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationUserA().DbID}) {
+			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.AuthenticationUserA().DbID, subCollectionAuthenticationsIDs)
+		}
+
+		/*
+		  Test 2 - UserA tries to authentications without ownership of certain application authentication - expected result: success
+		*/
+		authenticationDaoUserA = GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		aa = suiteData.resourcesNoUser.ApplicationAuthentications[0]
+		authentications, _, err = authenticationDaoUserA.ListForApplicationAuthentication(aa.ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		subCollectionAuthenticationsIDs = []int64{}
+		for _, authentication := range authentications {
+			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
+		}
+
+		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
+
+		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationNoUser().DbID}) {
+			t.Errorf("Expected authentication IDS %v are not same with obtained ids: %v", suiteData.AuthenticationNoUser().DbID, subCollectionAuthenticationsIDs)
+		}
+
+		/*
+		  Test 3 - User without any ownership tries to GET authentication of certain application authentication
+		         - expected result: only records without ownership
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
+		aa = suiteData.resourcesUserA.ApplicationAuthentications[0]
+		_, _, err = authenticationDaoWithUser.ListForApplicationAuthentication(aa.ID, 1000, 0, []util.Filter{})
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
+
+func TestListForSourceWithUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		  Test 1 - UserA tries to GET userA's authentications of certain application authentication - expected result: success
+		*/
+		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		authentications, _, err := authenticationDaoUserA.ListForSource(suiteData.SourceUserA().ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		var subCollectionAuthenticationsIDs []int64
+		for _, authentication := range authentications {
+			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
+		}
+
+		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
+
+		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationUserA().DbID}) {
+			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.AuthenticationUserA().DbID, subCollectionAuthenticationsIDs)
+		}
+
+		/*
+		  Test 2 - UserA tries to authentications without ownership of certain application authentication - expected result: success
+		*/
+		authenticationDaoUserA = GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+		authentications, _, err = authenticationDaoUserA.ListForSource(suiteData.SourceNoUser().ID, 1000, 0, []util.Filter{})
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		subCollectionAuthenticationsIDs = []int64{}
+		for _, authentication := range authentications {
+			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
+		}
+
+		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
+
+		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationNoUser().DbID}) {
+			t.Errorf("Expected authentication IDS %v are not same with obtained ids: %v", suiteData.AuthenticationNoUser().DbID, subCollectionAuthenticationsIDs)
+		}
+
+		/*
+		  Test 3 - User without any ownership tries to GET authentication of certain application authentication
+		         - expected result: only records without ownership
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
+		authentications, _, err = authenticationDaoWithUser.ListForSource(suiteData.SourceUserA().ID, 1000, 0, []util.Filter{})
+		if len(authentications) != 0 {
+			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
