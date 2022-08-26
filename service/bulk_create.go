@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
@@ -522,7 +521,7 @@ func loadUserResourceSettingFromBulkCreateApplication(userResource *m.UserResour
 }
 
 func userResourceFromBulkCreateApplications(user *m.User, applications []m.BulkCreateApplication, tenant *m.Tenant) (*m.UserResource, error) {
-	userResource := &m.UserResource{User: user, ResourceOwnership: config.Get().ResourceOwnership}
+	userResource := &m.UserResource{User: user}
 
 	for _, reqApp := range applications {
 		err := loadUserResourceSettingFromBulkCreateApplication(userResource, &reqApp, tenant)

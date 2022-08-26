@@ -64,8 +64,6 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 func TestBulkCreateWithUserCreation(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
-	conf.ResourceOwnership = "user"
-
 	testUserId := "testUser"
 	identityHeader := testutils.IdentityHeaderForUser(testUserId)
 
@@ -175,8 +173,6 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 
 func TestBulkCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-
-	conf.ResourceOwnership = ""
 
 	testUserId := "testUser"
 	identityHeader := testutils.IdentityHeaderForUser(testUserId)
