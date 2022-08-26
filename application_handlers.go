@@ -89,12 +89,17 @@ func ApplicationCreate(c echo.Context) error {
 		return err
 	}
 
+	requestParams, err := dao.NewRequestParamsFromContext(c)
+	if err != nil {
+		return err
+	}
+
 	input := &m.ApplicationCreateRequest{}
 	if err = c.Bind(input); err != nil {
 		return err
 	}
 
-	err = service.ValidateApplicationCreateRequest(input)
+	err = service.ValidateApplicationCreateRequest(requestParams, input)
 	if err != nil {
 		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
 	}
