@@ -37,6 +37,10 @@ func TestMain(t *testing.M) {
 	} else {
 		endpointDao = &dao.MockEndpointDao{}
 		sourceDao = &dao.MockSourceDao{}
+		err := dao.PopulateMockStaticTypeCache()
+		if err != nil {
+			panic("failed to populate mock static type cache")
+		}
 	}
 
 	code := t.Run()
