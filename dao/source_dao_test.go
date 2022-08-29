@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
 	"testing"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/google/go-cmp/cmp"
 )
 
 var sourceDao = sourceDaoImpl{
@@ -888,10 +886,8 @@ func TestSourceListUserOwnership(t *testing.T) {
 		expectedSourcesIDs = append(expectedSourcesIDs, appAuth.ID)
 	}
 
-	sort.Slice(sourcesIDs, func(i, j int) bool { return sourcesIDs[i] < sourcesIDs[j] })
-
-	if !cmp.Equal(sourcesIDs, expectedSourcesIDs) {
-		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedSourcesIDs, sourcesIDs)
+	if !util.ElementsInSlicesEqual(sourcesIDs, expectedSourcesIDs) {
+		t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", expectedSourcesIDs, sourcesIDs)
 	}
 
 	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
@@ -917,10 +913,8 @@ func TestSourceListUserOwnership(t *testing.T) {
 		expectedSourcesIDs = append(expectedSourcesIDs, source.ID)
 	}
 
-	sort.Slice(sourcesIDs, func(i, j int) bool { return sourcesIDs[i] < sourcesIDs[j] })
-
-	if !cmp.Equal(sourcesIDs, expectedSourcesIDs) {
-		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedSourcesIDs, sourcesIDs)
+	if !util.ElementsInSlicesEqual(sourcesIDs, expectedSourcesIDs) {
+		t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", expectedSourcesIDs, sourcesIDs)
 	}
 
 	DropSchema(schema)
@@ -1083,9 +1077,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
 		}
 
-		sort.Slice(subCollectionSourcesIDs, func(i, j int) bool { return subCollectionSourcesIDs[i] < subCollectionSourcesIDs[j] })
-
-		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsUserA()) {
+		if !util.ElementsInSlicesEqual(subCollectionSourcesIDs, suiteData.SourceIDsUserA()) {
 			t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
 		}
 
@@ -1106,9 +1098,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 			subCollectionSourcesIDs = append(subCollectionSourcesIDs, source.ID)
 		}
 
-		sort.Slice(subCollectionSourcesIDs, func(i, j int) bool { return subCollectionSourcesIDs[i] < subCollectionSourcesIDs[j] })
-
-		if !cmp.Equal(subCollectionSourcesIDs, suiteData.SourceIDsNoUser()) {
+		if !util.ElementsInSlicesEqual(subCollectionSourcesIDs, suiteData.SourceIDsNoUser()) {
 			t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
 		}
 
