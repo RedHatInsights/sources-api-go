@@ -19,7 +19,7 @@ func setUp() model.SourceCreateRequest {
 	version := "10.5"
 	imported := "true"
 	sourceRef := "Source reference #5"
-	sourceTypeId := "501"
+	sourceTypeId := "1"
 
 	return model.SourceCreateRequest{
 		Name:                &name,
