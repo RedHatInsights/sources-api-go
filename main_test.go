@@ -82,6 +82,10 @@ func TestMain(t *testing.M) {
 		}
 		getAuthenticationDao = func(c echo.Context) (dao.AuthenticationDao, error) { return mockAuthenticationDao, nil }
 
+		err := dao.PopulateMockStaticTypeCache()
+		if err != nil {
+			panic("failed to populate mock static type cache")
+		}
 	}
 
 	code := t.Run()
