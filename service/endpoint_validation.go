@@ -100,7 +100,7 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 	if ecr.AvailabilityStatus == "" {
 		ecr.AvailabilityStatus = model.InProgress
 	} else {
-		if _, ok := model.ValidAvailabilityStatuses[ecr.AvailabilityStatus]; !ok {
+		if _, ok := model.ValidEndpointAvailabilityStatuses[ecr.AvailabilityStatus]; !ok {
 			return fmt.Errorf("invalid availability status")
 		}
 	}
@@ -157,7 +157,7 @@ func ValidateEndpointEditRequest(dao dao.EndpointDao, sourceId int64, editReques
 	}
 
 	if editRequest.AvailabilityStatus != nil {
-		if _, ok := model.ValidAvailabilityStatuses[*editRequest.AvailabilityStatus]; !ok {
+		if _, ok := model.ValidEndpointAvailabilityStatuses[*editRequest.AvailabilityStatus]; !ok {
 			return fmt.Errorf("invalid availability status")
 		}
 	}
