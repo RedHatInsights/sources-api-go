@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	endpointDao dao.EndpointDao
-	sourceDao   dao.SourceDao
+	endpointDao   dao.EndpointDao
+	sourceDao     dao.SourceDao
+	requestParams *dao.RequestParams
 )
 
 func TestMain(t *testing.M) {
@@ -22,21 +23,26 @@ func TestMain(t *testing.M) {
 
 	flags := parser.ParseFlags()
 
+	tenantId := fixtures.TestTenantData[0].Id
+	requestParams = &dao.RequestParams{TenantID: &tenantId}
+
 	if flags.CreateDb {
 		database.CreateTestDB()
 	} else if flags.Integration {
 		database.ConnectAndMigrateDB("service")
 
-		endpointDao = dao.GetEndpointDao(&fixtures.TestTenantData[0].Id)
-		sourceDao = dao.GetSourceDao(&dao.RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+		endpointDao = dao.GetEndpointDao(&tenantId)
+		sourceDao = dao.GetSourceDao(requestParams)
+
 		database.CreateFixtures("service")
 		err := dao.PopulateStaticTypeCache()
 		if err != nil {
 			panic("failed to populate static type cache")
 		}
 	} else {
-		endpointDao = &dao.MockEndpointDao{}
-		sourceDao = &dao.MockSourceDao{}
+		endpointDao = &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
+		sourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData}
+
 		err := dao.PopulateMockStaticTypeCache()
 		if err != nil {
 			panic("failed to populate mock static type cache")

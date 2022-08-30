@@ -5,11 +5,13 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestValidApplicationRequest(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
 	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
@@ -18,7 +20,7 @@ func TestValidApplicationRequest(t *testing.T) {
 		ApplicationTypeIDRaw: "1",
 	}
 
-	err := ValidateApplicationCreateRequest(&req)
+	err := ValidateApplicationCreateRequest(requestParams, &req)
 	if err != nil {
 		t.Errorf("Got an error when there should not have been one: %v", err)
 	}
@@ -37,6 +39,7 @@ func TestValidApplicationRequest(t *testing.T) {
 }
 
 func TestInvalidApplicationTypeForSource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
 	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: false}
 
 	req := m.ApplicationCreateRequest{
@@ -45,7 +48,7 @@ func TestInvalidApplicationTypeForSource(t *testing.T) {
 		ApplicationTypeIDRaw: "1",
 	}
 
-	err := ValidateApplicationCreateRequest(&req)
+	err := ValidateApplicationCreateRequest(requestParams, &req)
 	if err == nil {
 		t.Errorf("Got no error when there should not have been one")
 	}
@@ -63,7 +66,7 @@ func TestMissingApplicationTypeId(t *testing.T) {
 		SourceIDRaw: "1",
 	}
 
-	err := ValidateApplicationCreateRequest(&req)
+	err := ValidateApplicationCreateRequest(requestParams, &req)
 	if err == nil {
 		t.Errorf("No error when there should have been one")
 	}
@@ -77,7 +80,7 @@ func TestMissingSourceId(t *testing.T) {
 		ApplicationTypeIDRaw: "1",
 	}
 
-	err := ValidateApplicationCreateRequest(&req)
+	err := ValidateApplicationCreateRequest(requestParams, &req)
 	if err == nil {
 		t.Errorf("No error when there should have been one")
 	}

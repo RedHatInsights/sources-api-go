@@ -19,7 +19,7 @@ var AppTypeDao = dao.GetApplicationTypeDao(nil)
 	Really not much here other than validating the application type is
 	compatible with the specified source type.
 */
-func ValidateApplicationCreateRequest(appReq *m.ApplicationCreateRequest) error {
+func ValidateApplicationCreateRequest(requestParams *dao.RequestParams, appReq *m.ApplicationCreateRequest) error {
 	// need both source id + application type id
 	if appReq.SourceIDRaw == nil {
 		return fmt.Errorf("missing required parameter source_id")
@@ -36,11 +36,23 @@ func ValidateApplicationCreateRequest(appReq *m.ApplicationCreateRequest) error 
 	}
 	appReq.ApplicationTypeID = appTypeID
 
-	source, err := util.InterfaceToInt64(appReq.SourceIDRaw)
+	sourceID, err := util.InterfaceToInt64(appReq.SourceIDRaw)
 	if err != nil {
 		return fmt.Errorf("invalid source id %v", appReq.SourceIDRaw)
 	}
-	appReq.SourceID = source
+
+	// Check if sourceID exists
+	sourceDao := dao.GetSourceDao(requestParams)
+	sourceExists, err := sourceDao.Exists(sourceID)
+	if err != nil {
+		return err
+	}
+
+	if !sourceExists {
+		return fmt.Errorf("source id not found")
+	}
+
+	appReq.SourceID = sourceID
 
 	// check that the application type supports the source type we're attaching
 	// it to.
