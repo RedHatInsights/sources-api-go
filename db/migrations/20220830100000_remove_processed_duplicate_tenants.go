@@ -47,9 +47,11 @@ func RemoveProcessedDuplicatedTenants() *gormigrate.Migration {
 					DELETE FROM
                         tenants AS t
                     WHERE
-                        t.external_tenant LIKE 'processed-duplicate-tenant-of-%'
-					OR
+					(
+						t.external_tenant LIKE 'processed-duplicate-tenant-of-%'
+						OR
 						t.org_id LIKE 'processed-duplicate-tenant-of-%'
+					)
                     AND
                         NOT EXISTS (SELECT 1 FROM application_authentications appAuths WHERE appAuths.tenant_id = t.id)
                     AND
