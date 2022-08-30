@@ -22,7 +22,6 @@ var fqdnRegexp = regexp.MustCompile(`^(?:[a-zA-Z\d](?:[a-zA-Z\d-]*[a-zA-Z\d])?\.
 
 // schemeRegexp matches a valid scheme, as per RFC 3986
 var schemeRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z\d+\-.]*$`)
-var validAvailabilityStatuses = []string{"", model.Available, model.Unavailable}
 
 const (
 	defaultScheme    = "https"
@@ -58,8 +57,7 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 	}
 
 	if ecr.Scheme == nil || !schemeRegexp.MatchString(*ecr.Scheme) {
-		tmp := defaultScheme
-		ecr.Scheme = &tmp
+		ecr.Scheme = util.StringRef(defaultScheme)
 	}
 
 	if ecr.Host != "" {
@@ -97,8 +95,71 @@ func ValidateEndpointCreateRequest(dao dao.EndpointDao, ecr *model.EndpointCreat
 		return fmt.Errorf("the certificate authority cannot be empty")
 	}
 
-	if !util.SliceContainsString(validAvailabilityStatuses, ecr.AvailabilityStatus) {
-		return fmt.Errorf("invalid availability status")
+	// The team decided that the availability statuses will default to "in_progress" whenever they come empty, since
+	// setting them as "unavailable" by default may lead to some confusion to the calling clients.
+	if ecr.AvailabilityStatus == "" {
+		ecr.AvailabilityStatus = model.InProgress
+	} else {
+		if _, ok := model.ValidEndpointAvailabilityStatuses[ecr.AvailabilityStatus]; !ok {
+			return fmt.Errorf("invalid availability status")
+		}
+	}
+
+	return nil
+}
+
+func ValidateEndpointEditRequest(dao dao.EndpointDao, sourceId int64, editRequest *model.EndpointEditRequest) error {
+	if editRequest.Default != nil && (*editRequest.Default && !dao.CanEndpointBeSetAsDefaultForSource(sourceId)) {
+		return fmt.Errorf("a default endpoint already exists for the provided source")
+	}
+
+	if editRequest.Role != nil && !dao.IsRoleUniqueForSource(*editRequest.Role, sourceId) {
+		return fmt.Errorf("the role already exists for the given source")
+	}
+
+	if editRequest.Scheme == nil || (editRequest.Scheme != nil && !schemeRegexp.MatchString(*editRequest.Scheme)) {
+		editRequest.Scheme = util.StringRef(defaultScheme)
+	}
+
+	if editRequest.Host != nil && *editRequest.Host != "" {
+		if utf8.RuneCountInString(*editRequest.Host) > maxFqdnLength {
+			return fmt.Errorf("the provided host is longer than %d characters", maxFqdnLength)
+		}
+
+		if !fqdnRegexp.MatchString(*editRequest.Host) {
+			return fmt.Errorf("the provided host is invalid")
+		}
+
+		labels := strings.Split(*editRequest.Host, ".")
+		for _, label := range labels {
+			if utf8.RuneCountInString(*editRequest.Host) > maxLabelLength {
+				return fmt.Errorf("the label '%s' is greater than %d characters", label, maxLabelLength)
+			}
+		}
+	}
+
+	if editRequest.Port == nil || (editRequest.Port != nil && *editRequest.Port <= 0) {
+		tmp := defaultPort
+		editRequest.Port = &tmp
+	}
+
+	if *editRequest.Port > maxPort {
+		return fmt.Errorf("invalid port number")
+	}
+
+	if editRequest.VerifySsl == nil {
+		tmp := defaultVerifySsl
+		editRequest.VerifySsl = &tmp
+	}
+
+	if *editRequest.VerifySsl && (editRequest.CertificateAuthority == nil || *editRequest.CertificateAuthority == "") {
+		return fmt.Errorf("the certificate authority cannot be empty")
+	}
+
+	if editRequest.AvailabilityStatus != nil {
+		if _, ok := model.ValidEndpointAvailabilityStatuses[*editRequest.AvailabilityStatus]; !ok {
+			return fmt.Errorf("invalid availability status")
+		}
 	}
 
 	return nil

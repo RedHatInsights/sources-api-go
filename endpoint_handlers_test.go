@@ -734,7 +734,7 @@ func TestEndpointEdit(t *testing.T) {
 		ReceptorNode:            util.StringRef("receptor_node"),
 		Role:                    util.StringRef("role"),
 		Scheme:                  util.StringRef("scheme"),
-		Host:                    util.StringRef("host"),
+		Host:                    util.StringRef("example.com"),
 		Path:                    util.StringRef("path"),
 		CertificateAuthority:    util.StringRef("cert"),
 		AvailabilityStatus:      util.StringRef("available"),
@@ -809,7 +809,7 @@ func TestEndpointEdit(t *testing.T) {
 		t.Errorf("Wrong scheme, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 
-	if *endpointOut.Host != "host" {
+	if *endpointOut.Host != "example.com" {
 		t.Errorf("Wrong host, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
 
