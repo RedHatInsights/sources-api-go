@@ -3,14 +3,12 @@ package dao
 import (
 	"errors"
 	"reflect"
-	"sort"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/google/go-cmp/cmp"
 )
 
 // TestDeleteApplicationAuthentication tests that an applicationAuthentication gets correctly deleted, and its data returned.
@@ -272,9 +270,7 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 		expectedAppAuthsIDs = append(expectedAppAuthsIDs, appAuth.ID)
 	}
 
-	sort.Slice(appAuthsIDs, func(i, j int) bool { return appAuthsIDs[i] < appAuthsIDs[j] })
-
-	if !cmp.Equal(appAuthsIDs, expectedAppAuthsIDs) {
+	if !util.ElementsInSlicesEqual(appAuthsIDs, expectedAppAuthsIDs) {
 		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedAppAuthsIDs, appAuthsIDs)
 	}
 
@@ -301,9 +297,7 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 		expectedAppAuthsIDs = append(expectedAppAuthsIDs, appAuth.ID)
 	}
 
-	sort.Slice(appAuthsIDs, func(i, j int) bool { return appAuthsIDs[i] < appAuthsIDs[j] })
-
-	if !cmp.Equal(appAuthsIDs, expectedAppAuthsIDs) {
+	if !util.ElementsInSlicesEqual(appAuthsIDs, expectedAppAuthsIDs) {
 		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedAppAuthsIDs, appAuthsIDs)
 	}
 

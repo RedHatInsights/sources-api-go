@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"testing"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/vault/api"
 )
 
@@ -354,9 +352,7 @@ func TestAuthenticationListUserOwnership(t *testing.T) {
 		expectedAuthenticationIDs = append(expectedAuthenticationIDs, authentication.DbID)
 	}
 
-	sort.Slice(authenticationIDs, func(i, j int) bool { return authenticationIDs[i] < authenticationIDs[j] })
-
-	if !cmp.Equal(authenticationIDs, expectedAuthenticationIDs) {
+	if !util.ElementsInSlicesEqual(authenticationIDs, expectedAuthenticationIDs) {
 		t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", expectedAuthenticationIDs, authenticationIDs)
 	}
 
@@ -383,9 +379,7 @@ func TestAuthenticationListUserOwnership(t *testing.T) {
 		expectedAuthenticationIDs = append(expectedAuthenticationIDs, authentication.DbID)
 	}
 
-	sort.Slice(authenticationIDs, func(i, j int) bool { return authenticationIDs[i] < authenticationIDs[j] })
-
-	if !cmp.Equal(authenticationIDs, expectedAuthenticationIDs) {
+	if !util.ElementsInSlicesEqual(authenticationIDs, expectedAuthenticationIDs) {
 		t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", expectedAuthenticationIDs, authenticationIDs)
 	}
 
@@ -414,10 +408,8 @@ func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
 		}
 
-		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
-
-		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationUserA().DbID}) {
-			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.AuthenticationUserA().DbID, subCollectionAuthenticationsIDs)
+		if !util.ElementsInSlicesEqual(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationUserA().DbID}) {
+			t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", suiteData.AuthenticationUserA().DbID, subCollectionAuthenticationsIDs)
 		}
 
 		/*
@@ -435,10 +427,8 @@ func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
 		}
 
-		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
-
-		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationNoUser().DbID}) {
-			t.Errorf("Expected authentication IDS %v are not same with obtained ids: %v", suiteData.AuthenticationNoUser().DbID, subCollectionAuthenticationsIDs)
+		if !util.ElementsInSlicesEqual(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationNoUser().DbID}) {
+			t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", suiteData.AuthenticationNoUser().DbID, subCollectionAuthenticationsIDs)
 		}
 
 		/*
@@ -484,10 +474,8 @@ func TestListForSourceWithUserOwnership(t *testing.T) {
 			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
 		}
 
-		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
-
-		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationUserA().DbID}) {
-			t.Errorf("Expected source IDS %v are not same with obtained ids: %v", suiteData.AuthenticationUserA().DbID, subCollectionAuthenticationsIDs)
+		if !util.ElementsInSlicesEqual(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationUserA().DbID}) {
+			t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", suiteData.AuthenticationUserA().DbID, subCollectionAuthenticationsIDs)
 		}
 
 		/*
@@ -504,10 +492,8 @@ func TestListForSourceWithUserOwnership(t *testing.T) {
 			subCollectionAuthenticationsIDs = append(subCollectionAuthenticationsIDs, authentication.DbID)
 		}
 
-		sort.Slice(subCollectionAuthenticationsIDs, func(i, j int) bool { return subCollectionAuthenticationsIDs[i] < subCollectionAuthenticationsIDs[j] })
-
-		if !cmp.Equal(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationNoUser().DbID}) {
-			t.Errorf("Expected authentication IDS %v are not same with obtained ids: %v", suiteData.AuthenticationNoUser().DbID, subCollectionAuthenticationsIDs)
+		if !util.ElementsInSlicesEqual(subCollectionAuthenticationsIDs, []int64{suiteData.AuthenticationNoUser().DbID}) {
+			t.Errorf("Expected authentication IDs %v are not same with obtained IDs: %v", suiteData.AuthenticationNoUser().DbID, subCollectionAuthenticationsIDs)
 		}
 
 		/*

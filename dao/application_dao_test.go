@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
 	"testing"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/google/go-cmp/cmp"
 )
 
 // testApplication holds a test application in order to avoid having to write the "fixtures..." stuff every time.
@@ -454,10 +452,8 @@ func TestApplicationListUserOwnership(t *testing.T) {
 		expectedApplicationIDs = append(expectedApplicationIDs, application.ID)
 	}
 
-	sort.Slice(applicationIDs, func(i, j int) bool { return applicationIDs[i] < applicationIDs[j] })
-
-	if !cmp.Equal(applicationIDs, expectedApplicationIDs) {
-		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedApplicationIDs, applicationIDs)
+	if !util.ElementsInSlicesEqual(applicationIDs, expectedApplicationIDs) {
+		t.Errorf("Expected application IDs %v are not same with obtained IDs: %v", expectedApplicationIDs, applicationIDs)
 	}
 
 	userWithoutOwnRecords, err := CreateUserForUserID(userIDWithoutOwnRecords, user.TenantID)
@@ -483,10 +479,8 @@ func TestApplicationListUserOwnership(t *testing.T) {
 		expectedApplicationIDs = append(expectedApplicationIDs, application.ID)
 	}
 
-	sort.Slice(applicationIDs, func(i, j int) bool { return applicationIDs[i] < applicationIDs[j] })
-
-	if !cmp.Equal(applicationIDs, expectedApplicationIDs) {
-		t.Errorf("Expected application authentication IDs %v are not same with obtained IDs: %v", expectedApplicationIDs, applicationIDs)
+	if !util.ElementsInSlicesEqual(applicationIDs, expectedApplicationIDs) {
+		t.Errorf("Expected application IDs %v are not same with obtained IDs: %v", expectedApplicationIDs, applicationIDs)
 	}
 
 	DropSchema(schema)
@@ -884,8 +878,8 @@ func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 			applicationsIDs = append(applicationsIDs, application.ID)
 		}
 
-		if !cmp.Equal(subCollectionApplicationsIDs, applicationsIDs) {
-			t.Errorf("Expected application IDs %v are not same with obtained ids: %v", applicationsIDs, subCollectionApplicationsIDs)
+		if !util.ElementsInSlicesEqual(subCollectionApplicationsIDs, applicationsIDs) {
+			t.Errorf("Expected application IDs %v are not same with obtained IDs: %v", applicationsIDs, subCollectionApplicationsIDs)
 		}
 
 		/*
@@ -907,8 +901,8 @@ func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 			applicationsIDs = append(applicationsIDs, application.ID)
 		}
 
-		if !cmp.Equal(subCollectionApplicationsIDs, applicationsIDs) {
-			t.Errorf("Expected application IDs %v are not same with obtained ids: %v", applicationsIDs, subCollectionApplicationsIDs)
+		if !util.ElementsInSlicesEqual(subCollectionApplicationsIDs, applicationsIDs) {
+			t.Errorf("Expected application IDs %v are not same with obtained IDs: %v", applicationsIDs, subCollectionApplicationsIDs)
 		}
 
 		/*
