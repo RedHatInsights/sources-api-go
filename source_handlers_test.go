@@ -1124,8 +1124,8 @@ func TestSourceCreate(t *testing.T) {
 	}
 
 	id, _ := strconv.ParseInt(src.ID, 10, 64)
-	dao, _ := getSourceDao(c)
-	_, err = dao.Delete(&id)
+	SourceDao, _ := getSourceDao(c)
+	_, err = SourceDao.Delete(&id)
 	if err != nil {
 		t.Errorf("Failed to delete source id %v", id)
 	}
@@ -1303,6 +1303,110 @@ func TestSourceEditBadRequest(t *testing.T) {
 	}
 
 	templates.BadRequestTest(t, rec)
+}
+
+func TestSourceEditNameEmptyString(t *testing.T) {
+	newSourceName := ""
+	req := m.SourceEditRequest{
+		Name:               util.StringRef(newSourceName),
+		AvailabilityStatus: util.StringRef("available"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("1")
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
+	err := badRequestSourceEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
+}
+
+func TestSourceEditNoNameRequest(t *testing.T) {
+	tenant := fixtures.TestTenantData[0]
+	source := fixtures.TestSourceData[1]
+
+	backupNotificationProducer := service.NotificationProducer
+	service.NotificationProducer = &mocks.MockAvailabilityStatusNotificationProducer{}
+
+	req := m.SourceEditRequest{
+		AvailabilityStatus: util.StringRef("in_progress"),
+	}
+
+	body, _ := json.Marshal(req)
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/sources/1",
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenant.Id,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(fmt.Sprintf("%d", source.ID))
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+	c.Set("identity", &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
+
+	sourceEditHandlerWithNotifier := middleware.Notifier(SourceEdit)
+	err := sourceEditHandlerWithNotifier(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Errorf("Wrong return code, expected %v got %v", http.StatusOK, rec.Code)
+	}
+
+	src := m.SourceResponse{}
+	raw, _ := io.ReadAll(rec.Body)
+	err = json.Unmarshal(raw, &src)
+	if err != nil {
+		t.Errorf("Failed to unmarshal application from response: %v", err)
+	}
+
+	if *src.Name != source.Name {
+		t.Errorf("Unexpected source name: expected #'{source.Name}', got '#{*src.Name}'")
+	}
+	if *src.AvailabilityStatus != "in_progress" {
+		t.Errorf("Wrong availability status, wanted %v got %v", "in_progress", *src.AvailabilityStatus)
+	}
+
+	notificationProducer, ok := service.NotificationProducer.(*mocks.MockAvailabilityStatusNotificationProducer)
+	if !ok {
+		t.Errorf("unable to cast notification producer")
+	}
+
+	emailNotificationInfo := &m.EmailNotificationInfo{ResourceDisplayName: "Source",
+		CurrentAvailabilityStatus:  "in_progress",
+		PreviousAvailabilityStatus: "unavailable",
+		SourceName:                 source.Name,
+		SourceID:                   strconv.FormatInt(source.ID, 10),
+		TenantID:                   strconv.FormatInt(source.TenantID, 10),
+	}
+	fmt.Println("emailNotification Info", emailNotificationInfo)
+
+	if !cmp.Equal(emailNotificationInfo, notificationProducer.EmailNotificationInfo) {
+		t.Errorf("Invalid email notification data:")
+		t.Errorf("Expected: %v Obtained: %v", emailNotificationInfo, notificationProducer.EmailNotificationInfo)
+	}
+
+	service.NotificationProducer = backupNotificationProducer
 }
 
 func TestSourceDelete(t *testing.T) {
