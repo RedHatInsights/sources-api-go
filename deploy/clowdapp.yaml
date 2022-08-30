@@ -175,21 +175,6 @@ objects:
     - topicName: platform.sources.superkey-requests
       partitions: 3
       replicas: 3
-    - topicName: platform.topological-inventory.operations-amazon
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-ansible-tower
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-azure
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-google
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-openshift
-      partitions: 3
-      replicas: 3
     - topicName: platform.topological-inventory.operations-satellite
       partitions: 3
       replicas: 3
