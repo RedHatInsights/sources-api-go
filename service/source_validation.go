@@ -42,6 +42,10 @@ func ValidateSourceCreationRequest(sourceDao dao.SourceDao, req *model.SourceCre
 
 	// Try to get the SourceTypeID. If an error occurs, the user gets a generic error message, as they are not
 	// interested in the underlying ones
+	if req.SourceTypeIDRaw == nil {
+		return errors.New("source type id cannot be empty")
+	}
+
 	value, err := util.InterfaceToInt64(req.SourceTypeIDRaw)
 	if err != nil {
 		return errors.New("the source type id is not valid")
