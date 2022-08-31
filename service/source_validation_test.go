@@ -279,6 +279,23 @@ func TestInvalidSourceTypeIdFormat(t *testing.T) {
 	}
 }
 
+// TestSourceTypeIdIsNil tests that validate function reports an error when source type id is missing in the request
+func TestSourceTypeIdIsNil(t *testing.T) {
+	request := model.SourceCreateRequest{
+		Name: util.StringRef("source name"),
+	}
+
+	err := ValidateSourceCreationRequest(sourceDao, &request)
+
+	if err == nil {
+		t.Errorf("Error expected, got none")
+	}
+
+	if err.Error() != "source type id cannot be empty" {
+		t.Errorf("got \"%s\", want \"%s\"", err.Error(), "source type id cannot be empty")
+	}
+}
+
 //TestEditSourceNameRequest tests if the function ValidateEditSourceNameRequest() will return a bad request if a source is edited to have the same name as another source within the same tenant.
 func TestEditSourceNameRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
