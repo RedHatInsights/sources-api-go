@@ -172,6 +172,15 @@ type TenantDao interface {
 	// TenantByIdentity returns the tenant associated to the given identity. It tries to fetch the tenant by its OrgId,
 	// and if it is not preset, by its EBS account number.
 	TenantByIdentity(identity *identity.Identity) (*m.Tenant, error)
+	// GetUntranslatedTenants returns a list of tenants which only have an EBS account number and not a corresponding
+	// OrgId.
+	GetUntranslatedTenants() ([]m.Tenant, error)
+	// TranslateTenants attempts to translate tenants which only have an EBS account number. It takes batches of 100
+	// tenants and tries to get an "org_id" translation for the "external_tenant" number.
+	//
+	// Returns the total number of translatable tenants, number of translated tenants, untranslated tenants and each
+	// translation operation's results. It doesn't error when a tenant cannot be translated.
+	TranslateTenants() (int64, uint64, uint64, []m.TenantTranslation, error)
 }
 
 type UserDao interface {

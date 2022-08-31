@@ -32,3 +32,11 @@ func (t Tenant) GetHeaders() []kafka.Header {
 		{Key: h.ORGID, Value: []byte(t.OrgID)},
 	}
 }
+
+// TenantTranslation is a struct which represents a tenant translation from "EBS account number" to "OrgId".
+type TenantTranslation struct {
+	Id             int64  `json:"id"`
+	ExternalTenant string `json:"external_tenant"`
+	OrgId          string `json:"org_id"`
+	Error          error  `json:"error,omitempty"`
+}

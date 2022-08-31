@@ -142,5 +142,8 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
 		// Sources
 		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
+		// Tenant translation endpoints.
+		r.GET("/untranslated-tenants", GetUntranslatedTenants)
+		r.POST("/translate-tenants", TranslateTenants)
 	}
 }
