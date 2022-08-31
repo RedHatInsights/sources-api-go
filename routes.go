@@ -15,8 +15,9 @@ var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.
 var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
 
 var tenancyWithListMiddleware = append(tenancyMiddleware, listMiddleware...)
-var permissionMiddleware = append(tenancyMiddleware, []echo.MiddlewareFunc{middleware.PermissionCheck, middleware.RaiseEvent}...)
+var permissionMiddleware = append(permissionMiddlewareWithoutEvents, middleware.RaiseEvent)
 var permissionWithListMiddleware = append(listMiddleware, middleware.PermissionCheck)
+var permissionMiddlewareWithoutEvents = append(tenancyMiddleware, middleware.PermissionCheck)
 
 func setupRoutes(e *echo.Echo) {
 	e.GET("/health", func(c echo.Context) error {
@@ -107,6 +108,9 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/app_meta_data", MetaDataList, append(listMiddleware, middleware.LoggerFields)...)
 		r.GET("/app_meta_data/:id", MetaDataGet, middleware.LoggerFields)
 		r.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, append(listMiddleware, middleware.LoggerFields)...)
+
+		// Secrets
+		r.POST("/secrets", SecretCreate, permissionMiddlewareWithoutEvents...)
 
 		// SourceTypes
 		r.GET("/source_types", SourceTypeList, append(listMiddleware, middleware.LoggerFields)...)

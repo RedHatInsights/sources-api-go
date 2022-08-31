@@ -39,6 +39,7 @@ func TestMain(t *testing.M) {
 	} else if flags.Integration {
 		database.ConnectAndMigrateDB("public")
 
+		getSecretDao = getSecretDaoWithTenant
 		getSourceDao = getSourceDaoWithTenant
 		getApplicationDao = getApplicationDaoWithTenant
 		getEndpointDao = getEndpointDaoWithTenant
