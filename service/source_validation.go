@@ -63,13 +63,14 @@ func ValidateSourceCreationRequest(sourceDao dao.SourceDao, req *model.SourceCre
 }
 
 func ValidateEditSourceNameRequest(dao dao.SourceDao, req *model.SourceEditRequest) error {
-	if req.Name == nil || *req.Name == "" {
-		return fmt.Errorf("name cannot be empty")
-	}
+	if req.Name != nil {
+		if *req.Name == "" {
+			return fmt.Errorf("name cannot be empty string")
+		}
 
-	if dao.NameExistsInCurrentTenant(*req.Name) {
-		return fmt.Errorf("source name already exists in same tenant")
+		if dao.NameExistsInCurrentTenant(*req.Name) {
+			return fmt.Errorf("source name already exists in same tenant")
+		}
 	}
-
 	return nil
 }
