@@ -6,12 +6,15 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -227,4 +230,262 @@ func cleanSecretByID(t *testing.T, secretIDValue string, requestParams *dao.Requ
 	if err != nil {
 		t.Error(err)
 	}
+}
+
+func TestSecretList(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	tenantId := int64(1)
+	secret1, err := dao.CreateSecretByName("Secret 1", &tenantId, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secret2, err := dao.CreateSecretByName("Secret 2", &tenantId, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/secrets",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err = SecretList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	if out.Meta.Count != 2 {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	if len(out.Data) != 2 {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	_, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	var foundIDs []int64
+	for _, secret := range out.Data {
+		secretMap := secret.(map[string]interface{})
+		secretID := secretMap["id"].(string)
+		outID, err := strconv.ParseInt(secretID, 10, 64)
+		if err != nil {
+			t.Errorf(`The ID of the payload could not be converted to int64: %s`, err)
+		}
+
+		if outID == secret1.DbID || outID == secret2.DbID {
+			foundIDs = append(foundIDs, outID)
+		}
+	}
+
+	if len(foundIDs) != 2 {
+		t.Errorf("Some secret IDs are missing, obtained: %v expected: %v", foundIDs, out.Data)
+	}
+
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+
+	secret1ID, err := util.InterfaceToString(secret1.DbID)
+	if err != nil {
+		t.Error(nil)
+	}
+	cleanSecretByID(t, secret1ID, &dao.RequestParams{TenantID: &tenantId})
+
+	secret2ID, err := util.InterfaceToString(secret2.DbID)
+	if err != nil {
+		t.Error(nil)
+	}
+	cleanSecretByID(t, secret2ID, &dao.RequestParams{TenantID: &tenantId})
+}
+
+func TestSecretListWithFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	tenantId := int64(1)
+	secret1, err := dao.CreateSecretByName("Secret 1", &tenantId, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secret2, err := dao.CreateSecretByName("Secret 2", &tenantId, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/secrets",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "name", Value: []string{"Secret 2"}},
+			},
+			"tenantID": tenantId,
+		},
+	)
+
+	err = SecretList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Error("Did not return 200")
+	}
+
+	var out util.Collection
+	err = json.Unmarshal(rec.Body.Bytes(), &out)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if out.Meta.Limit != 100 {
+		t.Error("limit not set correctly")
+	}
+
+	if out.Meta.Offset != 0 {
+		t.Error("offset not set correctly")
+	}
+
+	if out.Meta.Count != 1 {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	if len(out.Data) != 1 {
+		t.Error("not enough objects passed back from DB")
+	}
+
+	_, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	var foundIDs []int64
+	for _, secret := range out.Data {
+		secretMap := secret.(map[string]interface{})
+		secretID := secretMap["id"].(string)
+		outID, err := strconv.ParseInt(secretID, 10, 64)
+		if err != nil {
+			t.Errorf(`The ID of the payload could not be converted to int64: %s`, err)
+		}
+
+		if outID == secret2.DbID {
+			foundIDs = append(foundIDs, outID)
+		}
+	}
+
+	if len(foundIDs) != 1 {
+		t.Errorf("Some secret IDs are missing, obtained: %v expected: %v", foundIDs, out.Data)
+	}
+
+	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+
+	secret1ID, err := util.InterfaceToString(secret1.DbID)
+	if err != nil {
+		t.Error(nil)
+	}
+	cleanSecretByID(t, secret1ID, &dao.RequestParams{TenantID: &tenantId})
+
+	secret2ID, err := util.InterfaceToString(secret2.DbID)
+	if err != nil {
+		t.Error(nil)
+	}
+	cleanSecretByID(t, secret2ID, &dao.RequestParams{TenantID: &tenantId})
+}
+
+func TestSecretTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	tenantIDForSecret := int64(1)
+
+	secret, err := dao.CreateSecretByName("Secret 1", &tenantIDForSecret, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	tenantId := fixtures.NotExistingTenantId
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/secrets",
+		nil,
+		map[string]interface{}{
+			"limit":    100,
+			"offset":   0,
+			"filters":  []util.Filter{},
+			"tenantID": tenantId,
+		},
+	)
+
+	err = SecretList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.EmptySubcollectionListTest(t, c, rec)
+
+	secretID, err := util.InterfaceToString(secret.DbID)
+	if err != nil {
+		t.Error(nil)
+	}
+
+	cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantIDForSecret})
+}
+
+func TestSecretListBadRequestInvalidFilter(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/secrets",
+		nil,
+		map[string]interface{}{
+			"limit":  100,
+			"offset": 0,
+			"filters": []util.Filter{
+				{Name: "wrongName", Value: []string{"wrongValue"}},
+			},
+			"tenantID": tenantId,
+		},
+	)
+
+	badRequestSecretList := ErrorHandlingContext(SecretList)
+	err := badRequestSecretList(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
 }

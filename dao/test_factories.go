@@ -5,6 +5,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/uuid"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
@@ -280,4 +281,23 @@ func TestSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnership
 	}
 
 	return nil
+}
+
+func CreateSecretByName(name string, tenantID *int64, userID *int64) (*m.Authentication, error) {
+	secretDao := GetSecretDao(&RequestParams{TenantID: tenantID})
+
+	secret := &m.Authentication{
+		Name:         util.StringRef(name),
+		AuthType:     "X",
+		Username:     util.StringRef("Y"),
+		ResourceType: secretResourceType,
+		ResourceID:   *tenantID,
+	}
+
+	if userID != nil {
+		secret.UserID = userID
+	}
+
+	err := secretDao.Create(secret)
+	return secret, err
 }
