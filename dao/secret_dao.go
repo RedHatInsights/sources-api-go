@@ -60,7 +60,7 @@ func (secret *secretDaoDbImpl) GetById(id *int64) (*m.Authentication, error) {
 	var secretAuthentication m.Authentication
 
 	err := secret.getDbWithModel().
-		Where("id = ? AND resource_type = ?", id, SecretResourceType).
+		Where("id = ?", id).
 		First(&secretAuthentication).
 		Error
 
