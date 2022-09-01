@@ -70,7 +70,8 @@ func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset 
 
 func IdentityHeaderForUser(testUserId string) *identity.XRHID {
 	accountNumber := fixtures.TestTenantData[0].ExternalTenant
-	return &identity.XRHID{Identity: identity.Identity{AccountNumber: accountNumber, User: identity.User{UserID: testUserId}}}
+	orgID := fixtures.TestTenantData[0].OrgID
+	return &identity.XRHID{Identity: identity.Identity{OrgID: orgID, AccountNumber: accountNumber, User: identity.User{UserID: testUserId}}}
 }
 
 func SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType string) *model.BulkCreateRequest {

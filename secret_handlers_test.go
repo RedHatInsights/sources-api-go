@@ -12,6 +12,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/middleware"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -31,16 +32,16 @@ func TestSecretCreateNameExistInCurrentTenant(t *testing.T) {
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
 
 	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
-	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId)
+	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId, false)
 	if err != nil {
 		t.Error(err)
 	}
 
 	secret := parseSecretResponse(t, rec)
 
-	_, _, err = createSecretRequest(t, secretCreateRequest, &tenantId)
+	_, _, err = createSecretRequest(t, secretCreateRequest, &tenantId, false)
 
-	if err.Error() != "bad request: secret name "+name+" exists in current tenant" {
+	if err != nil && err.Error() != "bad request: secret name "+name+" exists in current tenant" {
 		t.Error(err)
 	}
 
@@ -62,7 +63,7 @@ func TestSecretCreateEmptyName(t *testing.T) {
 
 	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
 
-	_, _, err := createSecretRequest(t, secretCreateRequest, &tenantId)
+	_, _, err := createSecretRequest(t, secretCreateRequest, &tenantId, false)
 
 	if err.Error() != "bad request: secret name have to be populated" {
 		t.Error(err)
@@ -84,7 +85,7 @@ func TestSecretCreate(t *testing.T) {
 
 	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
 
-	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId)
+	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId, false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -166,8 +167,16 @@ func secretFromParams(secretName, secretAuthType, secretUserName, secretPassword
 	}
 }
 
-func createSecretRequest(t *testing.T, requestBody *m.AuthenticationCreateRequest, tenantIDValue *int64) (echo.Context, *httptest.ResponseRecorder, error) {
-	body, err := json.Marshal(requestBody)
+func createSecretRequest(t *testing.T, requestBody *m.AuthenticationCreateRequest, tenantIDValue *int64, userOwnership bool) (echo.Context, *httptest.ResponseRecorder, error) {
+	requestInputBody := struct {
+		*m.AuthenticationCreateRequest
+		UserOwnership bool
+	}{}
+
+	requestInputBody.AuthenticationCreateRequest = requestBody
+	requestInputBody.UserOwnership = userOwnership
+
+	body, err := json.Marshal(requestInputBody)
 	if err != nil {
 		t.Error("Could not marshal JSON")
 	}
@@ -181,7 +190,15 @@ func createSecretRequest(t *testing.T, requestBody *m.AuthenticationCreateReques
 		},
 	)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	err = SecretCreate(c)
+
+	tenancy := middleware.Tenancy(SecretCreate)
+	userCatcher := middleware.UserCatcher(tenancy)
+
+	testUserId := "testUser"
+	identityHeader := testutils.IdentityHeaderForUser(testUserId)
+	c.Set("identity", identityHeader)
+
+	err = userCatcher(c)
 
 	return c, rec, err
 }
