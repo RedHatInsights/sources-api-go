@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/model"
@@ -23,7 +22,7 @@ func ValidateSecretCreationRequest(requestParams *dao.RequestParams, auth model.
 		return fmt.Errorf("resource_id is not applicable to create secret")
 	}
 
-	if auth.ResourceType != "" && !strings.EqualFold(auth.ResourceType, dao.SecretResourceType) {
+	if auth.ResourceType != "" && auth.ResourceType != dao.SecretResourceType {
 		return fmt.Errorf("invalid resource_type - must be Tenant(default) or empty")
 	}
 
