@@ -109,6 +109,10 @@ func (src *Source) UpdateFromRequestPaused(update *SourcePausedEditRequest) erro
 	lastCheckedAt := update.LastCheckedAt
 
 	if availabilityStatus != nil {
+		if _, ok := ValidAvailabilityStatuses[*update.AvailabilityStatus]; !ok {
+			return fmt.Errorf(`invalid availability status. Must be one of "available", "in_progress", "partially_available" or "unavailable"`)
+		}
+
 		src.AvailabilityStatus = *availabilityStatus
 	}
 

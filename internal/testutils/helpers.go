@@ -74,7 +74,7 @@ func IdentityHeaderForUser(testUserId string) *identity.XRHID {
 }
 
 func SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType string) *model.BulkCreateRequest {
-	sourceCreateRequest := model.SourceCreateRequest{Name: &nameSource}
+	sourceCreateRequest := model.SourceCreateRequest{Name: &nameSource, AvailabilityStatus: model.Available}
 	bulkCreateSource := model.BulkCreateSource{SourceCreateRequest: sourceCreateRequest, SourceTypeName: sourceTypeName}
 
 	bulkCreateApplication := model.BulkCreateApplication{SourceName: nameSource, ApplicationTypeName: applicationTypeName}

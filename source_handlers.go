@@ -165,9 +165,7 @@ func SourceEdit(c echo.Context) error {
 			return err
 		}
 
-		err := service.ValidateEditSourceNameRequest(sourcesDB, input)
-
-		if err != nil {
+		if err := service.ValidateSourceEditRequest(sourcesDB, input); err != nil {
 			return util.NewErrBadRequest(err)
 		}
 
