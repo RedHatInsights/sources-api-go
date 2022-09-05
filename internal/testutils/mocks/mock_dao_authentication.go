@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"fmt"
+
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
