@@ -4,15 +4,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 func TestValidApplicationRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		Extra:                []byte(`{"a good":"thing"`),
@@ -40,7 +40,7 @@ func TestValidApplicationRequest(t *testing.T) {
 
 func TestInvalidApplicationTypeForSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: false}
+	AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: false}
 
 	req := m.ApplicationCreateRequest{
 		Extra:                []byte(`{"a good":"thing"`),
@@ -59,7 +59,7 @@ func TestInvalidApplicationTypeForSource(t *testing.T) {
 }
 
 func TestMissingApplicationTypeId(t *testing.T) {
-	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		Extra:       []byte(`{"a good":"thing"`),
@@ -73,7 +73,7 @@ func TestMissingApplicationTypeId(t *testing.T) {
 }
 
 func TestMissingSourceId(t *testing.T) {
-	AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		Extra:                []byte(`{"a good":"thing"`),

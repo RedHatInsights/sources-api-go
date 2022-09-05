@@ -1,8 +1,9 @@
-package dao
+package mocks
 
 import (
 	"errors"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -760,7 +761,7 @@ func (m MockAuthenticationDao) GetById(id string) (*m.Authentication, error) {
 	for _, auth := range m.Authentications {
 		// If secret store is database, we compare given ID with different field
 		// than if secret store is vault
-		if conf.SecretStore == "database" {
+		if dao.conf.SecretStore == "database" {
 			if fmt.Sprintf("%d", auth.DbID) == id {
 				return &auth, nil
 			}
@@ -890,7 +891,7 @@ func (m MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
 	for _, auth := range m.Authentications {
 		// If secret store is database, we compare given ID with different field
 		// than if secret store is vault
-		if conf.SecretStore == "database" {
+		if dao.conf.SecretStore == "database" {
 			if fmt.Sprintf("%d", auth.DbID) == id {
 				return &auth, nil
 			}

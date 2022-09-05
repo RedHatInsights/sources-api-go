@@ -2633,7 +2633,7 @@ func TestSourceEditPausedUnit(t *testing.T) {
 	// Get the specific SourceDao mock which simulates that the sources are paused.
 	backupDao := getSourceDao
 	getSourceDao = func(c echo.Context) (dao.SourceDao, error) {
-		return &dao.MockSourceDao{Sources: fixtures.TestSourceData}, nil
+		return &mocks.MockSourceDao{Sources: fixtures.TestSourceData}, nil
 	}
 
 	// Set the fixture source as "paused".

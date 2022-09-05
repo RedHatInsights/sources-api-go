@@ -593,7 +593,7 @@ func TestApplicationGetBadRequest(t *testing.T) {
 
 func TestApplicationCreateGood(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	service.AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		SourceIDRaw:          "2",
@@ -640,7 +640,7 @@ func TestApplicationCreateGood(t *testing.T) {
 }
 
 func TestApplicationCreateMissingSourceId(t *testing.T) {
-	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	service.AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		ApplicationTypeIDRaw: "1",
@@ -670,7 +670,7 @@ func TestApplicationCreateMissingSourceId(t *testing.T) {
 }
 
 func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
-	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: true}
+	service.AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
 		SourceIDRaw: "1",
@@ -701,7 +701,7 @@ func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
 
 func TestApplicationCreateIncompatible(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	service.AppTypeDao = &dao.MockApplicationTypeDao{Compatible: false}
+	service.AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: false}
 
 	req := m.ApplicationCreateRequest{
 		SourceIDRaw:          "2",
@@ -2085,7 +2085,7 @@ func TestApplicationEditPausedUnit(t *testing.T) {
 	// Get the specific ApplicationDao mock which simulates that the applications are paused.
 	backupDao := getApplicationDao
 	getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) {
-		return &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}, nil
+		return &mocks.MockApplicationDao{Applications: fixtures.TestApplicationData}, nil
 	}
 
 	appEdit := ErrorHandlingContext(ApplicationEdit)
@@ -2138,7 +2138,7 @@ func TestApplicationEditPausedUnitInvalidFields(t *testing.T) {
 	// Get the specific ApplicationDao mock which simulates that the applications are paused.
 	backupDao := getApplicationDao
 	getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) {
-		return &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}, nil
+		return &mocks.MockApplicationDao{Applications: fixtures.TestApplicationData}, nil
 	}
 
 	// Set the fixture application as "paused".

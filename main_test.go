@@ -60,15 +60,15 @@ func TestMain(t *testing.M) {
 			panic("failed to populate static type cache")
 		}
 	} else {
-		mockSourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData, RelatedSources: fixtures.TestSourceData}
-		mockApplicationDao = &dao.MockApplicationDao{Applications: fixtures.TestApplicationData}
-		mockEndpointDao = &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
-		mockSourceTypeDao = &dao.MockSourceTypeDao{SourceTypes: fixtures.TestSourceTypeData}
-		mockApplicationTypeDao = &dao.MockApplicationTypeDao{ApplicationTypes: fixtures.TestApplicationTypeData}
-		mockMetaDataDao = &dao.MockMetaDataDao{MetaDatas: fixtures.TestMetaDataData}
-		mockRhcConnectionDao = &dao.MockRhcConnectionDao{RhcConnections: fixtures.TestRhcConnectionData, RelatedRhcConnections: fixtures.TestRhcConnectionData}
-		mockApplicationAuthenticationDao = &dao.MockApplicationAuthenticationDao{ApplicationAuthentications: fixtures.TestApplicationAuthenticationData}
-		mockAuthenticationDao = &dao.MockAuthenticationDao{Authentications: fixtures.TestAuthenticationData}
+		mockSourceDao = &mocks.MockSourceDao{Sources: fixtures.TestSourceData, RelatedSources: fixtures.TestSourceData}
+		mockApplicationDao = &mocks.MockApplicationDao{Applications: fixtures.TestApplicationData}
+		mockEndpointDao = &mocks.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
+		mockSourceTypeDao = &mocks.MockSourceTypeDao{SourceTypes: fixtures.TestSourceTypeData}
+		mockApplicationTypeDao = &mocks.MockApplicationTypeDao{ApplicationTypes: fixtures.TestApplicationTypeData}
+		mockMetaDataDao = &mocks.MockMetaDataDao{MetaDatas: fixtures.TestMetaDataData}
+		mockRhcConnectionDao = &mocks.MockRhcConnectionDao{RhcConnections: fixtures.TestRhcConnectionData, RelatedRhcConnections: fixtures.TestRhcConnectionData}
+		mockApplicationAuthenticationDao = &mocks.MockApplicationAuthenticationDao{ApplicationAuthentications: fixtures.TestApplicationAuthenticationData}
+		mockAuthenticationDao = &mocks.MockAuthenticationDao{Authentications: fixtures.TestAuthenticationData}
 
 		getSourceDao = func(c echo.Context) (dao.SourceDao, error) { return mockSourceDao, nil }
 		getApplicationDao = func(c echo.Context) (dao.ApplicationDao, error) { return mockApplicationDao, nil }

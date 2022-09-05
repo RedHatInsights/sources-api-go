@@ -1145,7 +1145,7 @@ func TestEndpointEditPaused(t *testing.T) {
 	// Store the original "getEndopintDao" function to restore it later.
 	backupGetEndpointDao := getEndpointDao
 	getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) {
-		return &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
+		return &mocks.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
 	}
 
 	// Set the fixture endpoint as "paused".
@@ -1209,7 +1209,7 @@ func TestEndpointEditPausedInvalidFields(t *testing.T) {
 	// Store the original "getEndopintDao" function to restore it later.
 	backupGetEndpointDao := getEndpointDao
 	getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) {
-		return &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
+		return &mocks.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
 	}
 
 	badRequestEndpointEdit := ErrorHandlingContext(EndpointEdit)
