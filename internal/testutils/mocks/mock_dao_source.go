@@ -14,7 +14,7 @@ type MockSourceDao struct {
 	RelatedSources []m.Source
 }
 
-func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+func (mockSourceDao *MockSourceDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.Source, int64, error) {
 	var sources []m.Source
 
 	switch object := primaryCollection.(type) {
@@ -32,9 +32,9 @@ func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit
 		}
 
 		// Source type exists = return sources subcollection
-		for index, source := range src.Sources {
+		for index, source := range mockSourceDao.Sources {
 			if source.SourceTypeID == object.Id {
-				sources = append(sources, src.Sources[index])
+				sources = append(sources, mockSourceDao.Sources[index])
 			}
 		}
 
@@ -62,18 +62,18 @@ func (src *MockSourceDao) SubCollectionList(primaryCollection interface{}, limit
 	return sources, count, nil
 }
 
-func (src *MockSourceDao) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	count := int64(len(src.Sources))
-	return src.Sources, count, nil
+func (mockSourceDao *MockSourceDao) List(_, _ int, _ []util.Filter) ([]m.Source, int64, error) {
+	count := int64(len(mockSourceDao.Sources))
+	return mockSourceDao.Sources, count, nil
 }
 
-func (src *MockSourceDao) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	count := int64(len(src.Sources))
-	return src.Sources, count, nil
+func (mockSourceDao *MockSourceDao) ListInternal(_, _ int, _ []util.Filter) ([]m.Source, int64, error) {
+	count := int64(len(mockSourceDao.Sources))
+	return mockSourceDao.Sources, count, nil
 }
 
-func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
-	for _, i := range src.Sources {
+func (mockSourceDao *MockSourceDao) GetById(id *int64) (*m.Source, error) {
+	for _, i := range mockSourceDao.Sources {
 		if i.ID == *id {
 			return &i, nil
 		}
@@ -82,19 +82,19 @@ func (src *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 	return nil, util.NewErrNotFound("source")
 }
 
-func (src *MockSourceDao) Create(s *m.Source) error {
-	src.Sources = append(src.Sources, *s)
+func (mockSourceDao *MockSourceDao) Create(s *m.Source) error {
+	mockSourceDao.Sources = append(mockSourceDao.Sources, *s)
 	return nil
 }
 
-func (src *MockSourceDao) Update(s *m.Source) error {
+func (mockSourceDao *MockSourceDao) Update(_ *m.Source) error {
 	return nil
 }
 
-func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
-	for i, source := range src.Sources {
+func (mockSourceDao *MockSourceDao) Delete(id *int64) (*m.Source, error) {
+	for i, source := range mockSourceDao.Sources {
 		if source.ID == *id {
-			src.Sources = append(src.Sources[:i], src.Sources[i+1:]...)
+			mockSourceDao.Sources = append(mockSourceDao.Sources[:i], mockSourceDao.Sources[i+1:]...)
 
 			return &source, nil
 		}
@@ -102,18 +102,18 @@ func (src *MockSourceDao) Delete(id *int64) (*m.Source, error) {
 	return nil, util.NewErrNotFound("source")
 }
 
-func (src *MockSourceDao) Tenant() *int64 {
+func (mockSourceDao *MockSourceDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
 
-func (src *MockSourceDao) User() *int64 {
+func (mockSourceDao *MockSourceDao) User() *int64 {
 	user := int64(1)
 	return &user
 }
 
-func (src *MockSourceDao) Exists(sourceId int64) (bool, error) {
-	for _, source := range src.Sources {
+func (mockSourceDao *MockSourceDao) Exists(sourceId int64) (bool, error) {
+	for _, source := range mockSourceDao.Sources {
 		if source.ID == sourceId {
 			return true, nil
 		}
@@ -124,16 +124,16 @@ func (src *MockSourceDao) Exists(sourceId int64) (bool, error) {
 
 // NameExistsInCurrentTenant returns always false because it's the safe default in case the request gets validated
 // in the tests.
-func (src *MockSourceDao) NameExistsInCurrentTenant(name string) bool {
+func (mockSourceDao *MockSourceDao) NameExistsInCurrentTenant(_ string) bool {
 	return false
 }
 
-func (src *MockSourceDao) IsSuperkey(id int64) bool {
+func (mockSourceDao *MockSourceDao) IsSuperkey(_ int64) bool {
 	return false
 }
 
-func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Source, error) {
-	for _, i := range src.Sources {
+func (mockSourceDao *MockSourceDao) GetByIdWithPreload(id *int64, _ ...string) (*m.Source, error) {
+	for _, i := range mockSourceDao.Sources {
 		if i.ID == *id {
 			return &i, nil
 		}
@@ -142,13 +142,13 @@ func (src *MockSourceDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.
 	return nil, util.NewErrNotFound("source")
 }
 
-func (m *MockSourceDao) ListForRhcConnection(id *int64, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	count := int64(len(m.RelatedSources))
+func (mockSourceDao *MockSourceDao) ListForRhcConnection(_ *int64, _, _ int, _ []util.Filter) ([]m.Source, int64, error) {
+	count := int64(len(mockSourceDao.RelatedSources))
 
-	return m.RelatedSources, count, nil
+	return mockSourceDao.RelatedSources, count, nil
 }
 
-func (msd *MockSourceDao) DeleteCascade(id int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error) {
+func (mockSourceDao *MockSourceDao) DeleteCascade(id int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error) {
 	var source *m.Source
 	for _, src := range fixtures.TestSourceData {
 		if src.ID == id {
@@ -163,22 +163,22 @@ func (msd *MockSourceDao) DeleteCascade(id int64) ([]m.ApplicationAuthentication
 	return fixtures.TestApplicationAuthenticationData, fixtures.TestApplicationData, fixtures.TestEndpointData, fixtures.TestRhcConnectionData, source, nil
 }
 
-func (m *MockSourceDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
+func (mockSourceDao *MockSourceDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (m *MockSourceDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) (interface{}, error) {
+func (mockSourceDao *MockSourceDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (m *MockSourceDao) ToEventJSON(_ util.Resource) ([]byte, error) {
+func (mockSourceDao *MockSourceDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	return nil, nil
 }
 
-func (s *MockSourceDao) Pause(_ int64) error {
+func (mockSourceDao *MockSourceDao) Pause(_ int64) error {
 	return nil
 }
 
-func (s *MockSourceDao) Unpause(_ int64) error {
+func (mockSourceDao *MockSourceDao) Unpause(_ int64) error {
 	return nil
 }
