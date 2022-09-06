@@ -73,6 +73,8 @@ func (secret *secretDaoDbImpl) GetById(id *int64) (*m.Authentication, error) {
 
 func (secret *secretDaoDbImpl) Create(authentication *m.Authentication) error {
 	authentication.TenantID = *secret.TenantID // the TenantID gets injected in the middleware
+	authentication.ResourceType = secretResourceType
+	authentication.ResourceID = *secret.TenantID
 	if authentication.Password != nil {
 		encryptedValue, err := util.Encrypt(*authentication.Password)
 		if err != nil {

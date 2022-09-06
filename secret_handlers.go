@@ -59,13 +59,11 @@ func SecretCreate(c echo.Context) error {
 	}
 
 	secret := &m.Authentication{
-		Name:         createRequest.Name,
-		AuthType:     createRequest.AuthType,
-		Username:     createRequest.Username,
-		Password:     createRequest.Password,
-		ExtraDb:      extraDb,
-		ResourceType: dao.SecretResourceType,
-		ResourceID:   *requestParams.TenantID,
+		Name:     createRequest.Name,
+		AuthType: createRequest.AuthType,
+		Username: createRequest.Username,
+		Password: createRequest.Password,
+		ExtraDb:  extraDb,
 	}
 
 	if createInputRequest.UserOwnership && requestParams.UserID != nil {
