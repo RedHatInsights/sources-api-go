@@ -73,7 +73,7 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	}
 }
 
-func (auth *Authentication) SecretToResponse() *SecretResponse {
+func (auth *Authentication) ToSecretResponse() *SecretResponse {
 	id, extra := unmarshalExtraFields(auth)
 	return &SecretResponse{
 		ID:       id,

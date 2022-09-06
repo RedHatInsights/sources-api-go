@@ -77,5 +77,5 @@ func SecretCreate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	return c.JSON(http.StatusCreated, secret.SecretToResponse())
+	return c.JSON(http.StatusCreated, secret.ToSecretResponse())
 }
