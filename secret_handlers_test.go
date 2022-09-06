@@ -33,15 +33,15 @@ func TestSecretCreateNameExistInCurrentTenant(t *testing.T) {
 	password := "123456"
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
 
-	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
-	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId, false)
+	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra, false)
+	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId)
 	if err != nil {
 		t.Error(err)
 	}
 
 	secret := parseSecretResponse(t, rec)
 
-	_, _, err = createSecretRequest(t, secretCreateRequest, &tenantId, false)
+	_, _, err = createSecretRequest(t, secretCreateRequest, &tenantId)
 
 	if err != nil && err.Error() != "bad request: secret name "+name+" exists in current tenant" {
 		t.Error(err)
@@ -63,9 +63,9 @@ func TestSecretCreateEmptyName(t *testing.T) {
 	password := "123456"
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
 
-	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
+	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra, false)
 
-	_, _, err := createSecretRequest(t, secretCreateRequest, &tenantId, false)
+	_, _, err := createSecretRequest(t, secretCreateRequest, &tenantId)
 
 	if err.Error() != "bad request: secret name have to be populated" {
 		t.Error(err)
@@ -85,10 +85,10 @@ func TestSecretCreate(t *testing.T) {
 	password := "123456"
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
 
-	for _, userOwnership := range []bool{false, true} {
-		secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
+	for _, userScoped := range []bool{false, true} {
+		secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra, userScoped)
 
-		_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId, userOwnership)
+		_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId)
 		if err != nil {
 			t.Error(err)
 		}
@@ -111,7 +111,7 @@ func TestSecretCreate(t *testing.T) {
 		stringMatcher(t, "secret auth type", secretOut.AuthType, authType)
 		stringMatcher(t, "secret name", secretOut.ResourceType, secretResourceType)
 
-		if userOwnership && secretOut.UserID == nil || !userOwnership && secretOut.UserID != nil {
+		if userScoped && secretOut.UserID == nil || !userScoped && secretOut.UserID != nil {
 			t.Error("user id has to be nil as user ownership was not requested for secret")
 		}
 
@@ -165,26 +165,24 @@ func fetchSecretFromDB(t *testing.T, secretIDValue string, secretTenantID int64)
 	return secret
 }
 
-func secretFromParams(secretName, secretAuthType, secretUserName, secretPassword string, secretExtra map[string]interface{}) *m.AuthenticationCreateRequest {
-	return &m.AuthenticationCreateRequest{
-		Name:     util.StringRef(secretName),
-		AuthType: secretAuthType,
-		Username: util.StringRef(secretUserName),
-		Password: util.StringRef(secretPassword),
-		Extra:    secretExtra,
+func secretFromParams(secretName, secretAuthType, secretUserName, secretPassword string, secretExtra map[string]interface{}, userScoped bool) *m.SecretCreateRequest {
+	secretUserScoped := false
+	if userScoped {
+		secretUserScoped = true
+	}
+
+	return &m.SecretCreateRequest{
+		Name:       util.StringRef(secretName),
+		AuthType:   secretAuthType,
+		Username:   util.StringRef(secretUserName),
+		Password:   util.StringRef(secretPassword),
+		Extra:      secretExtra,
+		UserScoped: secretUserScoped,
 	}
 }
 
-func createSecretRequest(t *testing.T, requestBody *m.AuthenticationCreateRequest, tenantIDValue *int64, userOwnership bool) (echo.Context, *httptest.ResponseRecorder, error) {
-	requestInputBody := struct {
-		*m.AuthenticationCreateRequest
-		UserOwnership bool `json:"user_ownership"`
-	}{}
-
-	requestInputBody.AuthenticationCreateRequest = requestBody
-	requestInputBody.UserOwnership = userOwnership
-
-	body, err := json.Marshal(requestInputBody)
+func createSecretRequest(t *testing.T, requestBody *m.SecretCreateRequest, tenantIDValue *int64) (echo.Context, *httptest.ResponseRecorder, error) {
+	body, err := json.Marshal(requestBody)
 	if err != nil {
 		t.Error("Could not marshal JSON")
 	}

@@ -29,16 +29,11 @@ func SecretCreate(c echo.Context) error {
 		return err
 	}
 
-	createInputRequest := struct {
-		m.AuthenticationCreateRequest
-		UserOwnership bool `json:"user_ownership"`
-	}{}
-
-	err = c.Bind(&createInputRequest)
+	createRequest := m.SecretCreateRequest{}
+	err = c.Bind(&createRequest)
 	if err != nil {
 		return err
 	}
-	createRequest := createInputRequest.AuthenticationCreateRequest
 
 	requestParams, err := dao.NewRequestParamsFromContext(c)
 	if err != nil {
@@ -66,7 +61,7 @@ func SecretCreate(c echo.Context) error {
 		ExtraDb:  extraDb,
 	}
 
-	if createInputRequest.UserOwnership && requestParams.UserID != nil {
+	if createRequest.UserScoped && requestParams.UserID != nil {
 		secret.UserID = requestParams.UserID
 	}
 
