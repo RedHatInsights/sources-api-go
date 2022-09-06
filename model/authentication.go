@@ -84,6 +84,28 @@ func (auth *Authentication) ToSecretResponse() *SecretResponse {
 	}
 }
 
+func (auth *Authentication) ToInternalSecretResponse() *SecretInternalResponse {
+	id, extra := mapIdExtraFields(auth)
+
+	var password string
+	if auth.Password != nil {
+		decrypted, err := util.Decrypt(*auth.Password)
+		if err != nil {
+			logger.Log.Errorf("failed to decrypt password id %v: %v", id, err)
+		}
+		password = decrypted
+	}
+
+	return &SecretInternalResponse{
+		ID:       id,
+		Name:     util.ValueOrBlank(auth.Name),
+		AuthType: auth.AuthType,
+		Username: util.ValueOrBlank(auth.Username),
+		Extra:    extra,
+		Password: password,
+	}
+}
+
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
 	id, extra := mapIdExtraFields(auth)
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
@@ -114,10 +136,10 @@ func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse
 }
 
 /*
-	This method translates an Authentication struct to a hash that will be
-	accepted by vault, this format will also be deserialized properly by
-	dao.authFromVault, so if we are to add more fields they will need to be
-	added here as well.
+This method translates an Authentication struct to a hash that will be
+accepted by vault, this format will also be deserialized properly by
+dao.authFromVault, so if we are to add more fields they will need to be
+added here as well.
 */
 func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 	data := map[string]interface{}{

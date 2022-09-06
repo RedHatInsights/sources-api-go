@@ -111,6 +111,7 @@ func setupRoutes(e *echo.Echo) {
 
 		// Secrets
 		r.GET("/secrets", SecretList, tenancyWithListMiddleware...)
+		r.GET("/secrets/:id", SecretGet, tenancyMiddleware...)
 		r.POST("/secrets", SecretCreate, permissionMiddlewareWithoutEvents...)
 
 		// SourceTypes
@@ -145,6 +146,8 @@ func setupRoutes(e *echo.Echo) {
 
 		// Authentications
 		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
+		r.GET("/secrets/:id", InternalSecretGet, permissionMiddleware...)
+
 		// Sources
 		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
 		// Tenant translation endpoints.
