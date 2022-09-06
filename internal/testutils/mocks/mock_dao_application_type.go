@@ -14,13 +14,13 @@ type MockApplicationTypeDao struct {
 	Compatible       bool
 }
 
-func (a *MockApplicationTypeDao) List(limit int, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
-	count := int64(len(a.ApplicationTypes))
-	return a.ApplicationTypes, count, nil
+func (mockAppTypeDao *MockApplicationTypeDao) List(_ int, _ int, _ []util.Filter) ([]m.ApplicationType, int64, error) {
+	count := int64(len(mockAppTypeDao.ApplicationTypes))
+	return mockAppTypeDao.ApplicationTypes, count, nil
 }
 
-func (a *MockApplicationTypeDao) GetById(id *int64) (*m.ApplicationType, error) {
-	for _, i := range a.ApplicationTypes {
+func (mockAppTypeDao *MockApplicationTypeDao) GetById(id *int64) (*m.ApplicationType, error) {
+	for _, i := range mockAppTypeDao.ApplicationTypes {
 		if i.Id == *id {
 			return &i, nil
 		}
@@ -29,19 +29,19 @@ func (a *MockApplicationTypeDao) GetById(id *int64) (*m.ApplicationType, error) 
 	return nil, util.NewErrNotFound("application type")
 }
 
-func (a *MockApplicationTypeDao) Create(src *m.ApplicationType) error {
-	panic("not implemented") // TODO: Implement
+func (mockAppTypeDao *MockApplicationTypeDao) Create(_ *m.ApplicationType) error {
+	panic("not implemented")
 }
 
-func (a *MockApplicationTypeDao) Update(src *m.ApplicationType) error {
-	panic("not implemented") // TODO: Implement
+func (mockAppTypeDao *MockApplicationTypeDao) Update(_ *m.ApplicationType) error {
+	panic("not implemented")
 }
 
-func (a *MockApplicationTypeDao) Delete(id *int64) error {
-	panic("not implemented") // TODO: Implement
+func (mockAppTypeDao *MockApplicationTypeDao) Delete(_ *int64) error {
+	panic("not implemented")
 }
 
-func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
+func (mockAppTypeDao *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.ApplicationType, int64, error) {
 	var appTypesOut []m.ApplicationType
 
 	switch object := primaryCollection.(type) {
@@ -63,7 +63,7 @@ func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}
 			}
 		}
 
-		for _, appType := range a.ApplicationTypes {
+		for _, appType := range mockAppTypeDao.ApplicationTypes {
 			for id := range appTypes {
 				if appType.Id == id {
 					appTypesOut = append(appTypesOut, appType)
@@ -79,26 +79,26 @@ func (a *MockApplicationTypeDao) SubCollectionList(primaryCollection interface{}
 	return appTypesOut, count, nil
 }
 
-func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64) error {
-	if a.Compatible {
+func (mockAppTypeDao *MockApplicationTypeDao) ApplicationTypeCompatibleWithSource(_, _ int64) error {
+	if mockAppTypeDao.Compatible {
 		return nil
 	}
 
 	return errors.New("Not compatible!")
 }
 
-func (at *MockApplicationTypeDao) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
+func (mockAppTypeDao *MockApplicationTypeDao) GetSuperKeyResultType(_ int64, _ string) (string, error) {
 	panic("not needed")
 }
 
-func (a *MockApplicationTypeDao) ApplicationTypeCompatibleWithSourceType(_, _ int64) error {
-	if a.Compatible {
+func (mockAppTypeDao *MockApplicationTypeDao) ApplicationTypeCompatibleWithSourceType(_, _ int64) error {
+	if mockAppTypeDao.Compatible {
 		return nil
 	}
 
 	return errors.New("Not compatible!")
 }
 
-func (a *MockApplicationTypeDao) GetByName(_ string) (*m.ApplicationType, error) {
+func (mockAppTypeDao *MockApplicationTypeDao) GetByName(_ string) (*m.ApplicationType, error) {
 	return nil, nil
 }
