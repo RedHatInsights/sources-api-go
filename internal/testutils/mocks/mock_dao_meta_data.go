@@ -11,19 +11,19 @@ type MockMetaDataDao struct {
 	MetaDatas []m.MetaData
 }
 
-func (a *MockMetaDataDao) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
-	count := int64(len(a.MetaDatas))
-	return a.MetaDatas, count, nil
+func (mockMetaDataDao *MockMetaDataDao) List(_ int, _ int, _ []util.Filter) ([]m.MetaData, int64, error) {
+	count := int64(len(mockMetaDataDao.MetaDatas))
+	return mockMetaDataDao.MetaDatas, count, nil
 }
 
-func (a *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
+func (mockMetaDataDao *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.MetaData, int64, error) {
 	var appMetaDataList []m.MetaData
 
-	for index, i := range a.MetaDatas {
+	for index, i := range mockMetaDataDao.MetaDatas {
 		switch object := primaryCollection.(type) {
 		case m.ApplicationType:
 			if i.ApplicationTypeID == object.Id {
-				appMetaDataList = append(appMetaDataList, a.MetaDatas[index])
+				appMetaDataList = append(appMetaDataList, mockMetaDataDao.MetaDatas[index])
 			}
 		default:
 			return nil, 0, fmt.Errorf("unexpected primary collection type")
@@ -37,8 +37,8 @@ func (a *MockMetaDataDao) SubCollectionList(primaryCollection interface{}, limit
 	return appMetaDataList, count, nil
 }
 
-func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
-	for _, i := range a.MetaDatas {
+func (mockMetaDataDao *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
+	for _, i := range mockMetaDataDao.MetaDatas {
 		if i.ID == *id {
 			return &i, nil
 		}
@@ -47,26 +47,26 @@ func (a *MockMetaDataDao) GetById(id *int64) (*m.MetaData, error) {
 	return nil, util.NewErrNotFound("metadata")
 }
 
-func (a *MockMetaDataDao) Create(src *m.MetaData) error {
-	panic("not implemented") // TODO: Implement
-}
-
-func (a *MockMetaDataDao) Update(src *m.MetaData) error {
-	panic("not implemented") // TODO: Implement
-}
-
-func (a *MockMetaDataDao) Delete(id *int64) error {
-	panic("not implemented") // TODO: Implement
-}
-
-func (md *MockMetaDataDao) GetSuperKeySteps(_ int64) ([]m.MetaData, error) {
+func (mockMetaDataDao *MockMetaDataDao) Create(_ *m.MetaData) error {
 	panic("not implemented")
 }
 
-func (md *MockMetaDataDao) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
+func (mockMetaDataDao *MockMetaDataDao) Update(_ *m.MetaData) error {
+	panic("not implemented")
+}
+
+func (mockMetaDataDao *MockMetaDataDao) Delete(_ *int64) error {
+	panic("not implemented")
+}
+
+func (mockMetaDataDao *MockMetaDataDao) GetSuperKeySteps(_ int64) ([]m.MetaData, error) {
+	panic("not implemented")
+}
+
+func (mockMetaDataDao *MockMetaDataDao) GetSuperKeyAccountNumber(_ int64) (string, error) {
 	panic("not implemented!")
 }
 
-func (md *MockMetaDataDao) ApplicationOptedIntoRetry(applicationTypeId int64) (bool, error) {
+func (mockMetaDataDao *MockMetaDataDao) ApplicationOptedIntoRetry(_ int64) (bool, error) {
 	panic("not implemented!")
 }
