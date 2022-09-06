@@ -83,39 +83,45 @@ func TestSecretCreate(t *testing.T) {
 	password := "123456"
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
 
-	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
+	for _, userOwnership := range []bool{false, true} {
+		secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra)
 
-	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId, false)
-	if err != nil {
-		t.Error(err)
+		_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId, userOwnership)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusCreated {
+			t.Errorf("Did not return 201. Body: %s", rec.Body.String())
+		}
+
+		secret := parseSecretResponse(t, rec)
+
+		stringMatcher(t, "secret name", secret.Name, name)
+		stringMatcher(t, "secret user name", secret.Username, userName)
+		stringMatcher(t, "secret auth type", secret.AuthType, authType)
+
+		secretOut := fetchSecretFromDB(t, secret.ID, tenantId)
+
+		int64Matcher(t, "secret tenant id", secretOut.TenantID, tenantId)
+		stringMatcher(t, "secret name", *secretOut.Name, name)
+		stringMatcher(t, "secret user name", *secretOut.Username, userName)
+		stringMatcher(t, "secret auth type", secretOut.AuthType, authType)
+		stringMatcher(t, "secret name", secretOut.ResourceType, dao.SecretResourceType)
+
+		if userOwnership && secretOut.UserID == nil || !userOwnership && secretOut.UserID != nil {
+			t.Error("user id has to be nil as user ownership was not requested for secret")
+		}
+
+		encryptedPassword, err := util.Encrypt(password)
+		if err != nil {
+			t.Error(err)
+		}
+
+		stringMatcher(t, "secret password", *secretOut.Password, encryptedPassword)
+
+		cleanSecretByID(t, secret.ID, &tenantId)
 	}
-
-	if rec.Code != http.StatusCreated {
-		t.Errorf("Did not return 201. Body: %s", rec.Body.String())
-	}
-
-	secret := parseSecretResponse(t, rec)
-
-	stringMatcher(t, "secret name", secret.Name, name)
-	stringMatcher(t, "secret user name", secret.Username, userName)
-	stringMatcher(t, "secret auth type", secret.AuthType, authType)
-
-	secretOut := fetchSecretFromDB(t, secret.ID, tenantId)
-
-	int64Matcher(t, "secret tenant id", secretOut.TenantID, tenantId)
-	stringMatcher(t, "secret name", *secretOut.Name, name)
-	stringMatcher(t, "secret user name", *secretOut.Username, userName)
-	stringMatcher(t, "secret auth type", secretOut.AuthType, authType)
-	stringMatcher(t, "secret name", secretOut.ResourceType, dao.SecretResourceType)
-
-	encryptedPassword, err := util.Encrypt(password)
-	if err != nil {
-		t.Error(err)
-	}
-
-	stringMatcher(t, "secret password", *secretOut.Password, encryptedPassword)
-
-	cleanSecretByID(t, secret.ID, &tenantId)
 }
 
 func stringMatcher(t *testing.T, nameResource, firstValue string, secondValue string) {
@@ -170,7 +176,7 @@ func secretFromParams(secretName, secretAuthType, secretUserName, secretPassword
 func createSecretRequest(t *testing.T, requestBody *m.AuthenticationCreateRequest, tenantIDValue *int64, userOwnership bool) (echo.Context, *httptest.ResponseRecorder, error) {
 	requestInputBody := struct {
 		*m.AuthenticationCreateRequest
-		UserOwnership bool
+		UserOwnership bool `json:"user_ownership"`
 	}{}
 
 	requestInputBody.AuthenticationCreateRequest = requestBody
