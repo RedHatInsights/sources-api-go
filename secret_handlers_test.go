@@ -18,6 +18,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const secretResourceType = "Tenant"
+
 func TestSecretCreateNameExistInCurrentTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
@@ -107,7 +109,7 @@ func TestSecretCreate(t *testing.T) {
 		stringMatcher(t, "secret name", *secretOut.Name, name)
 		stringMatcher(t, "secret user name", *secretOut.Username, userName)
 		stringMatcher(t, "secret auth type", secretOut.AuthType, authType)
-		stringMatcher(t, "secret name", secretOut.ResourceType, dao.SecretResourceType)
+		stringMatcher(t, "secret name", secretOut.ResourceType, secretResourceType)
 
 		if userOwnership && secretOut.UserID == nil || !userOwnership && secretOut.UserID != nil {
 			t.Error("user id has to be nil as user ownership was not requested for secret")

@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const SecretResourceType = "Tenant"
+const secretResourceType = "Tenant"
 
 var GetSecretDao func(daoParams *RequestParams) SecretDao
 
@@ -47,7 +47,7 @@ func (secret *secretDaoDbImpl) getDb() *gorm.DB {
 	query := DB.Debug().WithContext(secret.ctx)
 	query = query.Where("tenant_id = ?", secret.TenantID)
 
-	query = query.Where("resource_type = ?", SecretResourceType)
+	query = query.Where("resource_type = ?", secretResourceType)
 
 	return query
 }
