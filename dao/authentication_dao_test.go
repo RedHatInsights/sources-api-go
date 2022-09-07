@@ -168,7 +168,7 @@ func TestSecretPathDidntChange(t *testing.T) {
 	resourceId := 10
 	resourceUuid := "abcd-efgh"
 
-	got := fmt.Sprintf(vaultSecretPathFormat, tenantId, resourceType, resourceId, resourceUuid)
+	got := fmt.Sprintf(VAULT_SECRET_PATH_FORMAT, tenantId, resourceType, resourceId, resourceUuid)
 
 	want := "secret/data/5/Source_10_abcd-efgh"
 	if want != got {

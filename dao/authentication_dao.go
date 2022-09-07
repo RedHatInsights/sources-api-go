@@ -18,11 +18,11 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-// vaultSecretPathFormat defines the format of the path that the secrets will be created with in Vault. The idea is
+// VAULT_SECRET_PATH_FORMAT defines the format of the path that the secrets will be created with in Vault. The idea is
 // to have the following format:
 //
 // secret/data/<tenant_id>/<resourceType>_<resourceId>_<resourceUuid>
-const vaultSecretPathFormat = "secret/data/%d/%s_%d_%s"
+const VAULT_SECRET_PATH_FORMAT = "secret/data/%d/%s_%d_%s"
 
 // GetAuthenticationDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
@@ -275,7 +275,7 @@ func (a *authenticationDaoImpl) Create(auth *m.Authentication) error {
 
 	auth.ID = uuid.New().String()
 	auth.CreatedAt = time.Now()
-	path := fmt.Sprintf(vaultSecretPathFormat, *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
+	path := fmt.Sprintf(VAULT_SECRET_PATH_FORMAT, *a.TenantID, auth.ResourceType, auth.ResourceID, auth.ID)
 
 	data, err := auth.ToVaultMap()
 	if err != nil {
