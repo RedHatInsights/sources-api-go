@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const KafkaGroupId = "sources-api-go"
+const KAFKA_GROUP_ID = "sources-api-go"
 
 var parsedConfig *SourcesApiConfig
 
@@ -195,7 +195,7 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("FeatureFlagsEnvironment", "development")
 	}
 
-	options.SetDefault("KafkaGroupID", KafkaGroupId)
+	options.SetDefault("KafkaGroupID", KAFKA_GROUP_ID)
 	options.SetDefault("KafkaTopics", kafkaTopics)
 
 	options.SetDefault("LogLevel", os.Getenv("LOG_LEVEL"))
