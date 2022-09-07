@@ -26,18 +26,18 @@ type SortBy struct {
 type Direction string
 
 const (
-	DirectionAsc  Direction = "asc"
-	DirectionDesc Direction = "desc"
+	DIRECTION_ASC  Direction = "asc"
+	DIRECTION_DESC Direction = "desc"
 )
 
 var AllDirection = []Direction{
-	DirectionAsc,
-	DirectionDesc,
+	DIRECTION_ASC,
+	DIRECTION_DESC,
 }
 
 func (e Direction) IsValid() bool {
 	switch e {
-	case DirectionAsc, DirectionDesc:
+	case DIRECTION_ASC, DIRECTION_DESC:
 		return true
 	}
 	return false
