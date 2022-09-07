@@ -22,7 +22,7 @@ type MarketplaceTokenCacher struct {
 }
 
 // FetchToken fetches the token from the Redis cache. It returns the bearer token on a cache hit. It returns
-// (nil, redis.Nil) when the token was not found.
+// (nil, redis.NIL) when the token was not found.
 func (mtc *MarketplaceTokenCacher) FetchToken() (*BearerToken, error) {
 	redisKey := fmt.Sprintf(redisKeySuffix, mtc.TenantID)
 

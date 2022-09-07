@@ -10,7 +10,7 @@ import (
 var Client *redis.Client
 
 // error used for checking if the error coming back from redis is nil or not
-const Nil = redis.Nil
+const NIL = redis.Nil
 
 func Init() {
 	cfg := config.Get()

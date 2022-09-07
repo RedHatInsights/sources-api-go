@@ -24,10 +24,10 @@ func Run(shutdown chan struct{}) {
 			// something gets queued.
 			//
 			// Once it does succeed - we check to see if the error is just
-			// `redis.Nil`, in which case things are fine and we continue.
+			// `redis.NIL`, in which case things are fine and we continue.
 			val, err := redis.Client.BLPop(context.Background(), 0, workQueue).Result()
 			if err != nil {
-				if !errors.Is(err, redis.Nil) {
+				if !errors.Is(err, redis.NIL) {
 					l.Log.Warnf("Failed to pop job from queue: %v", err)
 				}
 
