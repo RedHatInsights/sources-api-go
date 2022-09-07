@@ -1,6 +1,7 @@
-package util
+package echo
 
 import (
+	"github.com/RedHatInsights/sources-api-go/util"
 	"net/http"
 	"strings"
 	"testing"
@@ -24,7 +25,7 @@ func TestGetTenantFromEchoContext(t *testing.T) {
 		map[string]interface{}{
 			"limit":    100,
 			"offset":   0,
-			"filters":  []Filter{},
+			"filters":  []util.Filter{},
 			"tenantID": want,
 		},
 	)
@@ -52,7 +53,7 @@ func TestGetTenantFromEchoContextLowerOrEqualsZero(t *testing.T) {
 			map[string]interface{}{
 				"limit":    100,
 				"offset":   0,
-				"filters":  []Filter{},
+				"filters":  []util.Filter{},
 				"tenantID": iti,
 			},
 		)
@@ -78,7 +79,7 @@ func TestGetTenantFromEchoContextInvalidFormat(t *testing.T) {
 		map[string]interface{}{
 			"limit":    100,
 			"offset":   0,
-			"filters":  []Filter{},
+			"filters":  []util.Filter{},
 			"tenantID": invalidTenantIdFormat,
 		},
 	)
@@ -100,7 +101,7 @@ func TestGetTenantFromEchoContextMissing(t *testing.T) {
 		map[string]interface{}{
 			"limit":   100,
 			"offset":  0,
-			"filters": []Filter{},
+			"filters": []util.Filter{},
 		},
 	)
 
