@@ -11,18 +11,18 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-// accountNumber to be used in the tests.
-const accountNumber = "12345"
+// ACCOUNT_NUMBER to be used in the tests.
+const ACCOUNT_NUMBER = "12345"
 
-// orgId to be used in the tests.
-const orgId = "abc-org-id"
+// ORG_ID to be used in the tests.
+const ORG_ID = "abc-org-id"
 
 // setUpValidIdentity returns a base64 encoded valid identity.
 func setUpValidIdentity(t *testing.T) string {
 	xRhId := identity.XRHID{
 		Identity: identity.Identity{
-			AccountNumber: accountNumber,
-			OrgID:         orgId,
+			AccountNumber: ACCOUNT_NUMBER,
+			OrgID:         ORG_ID,
 		},
 	}
 
@@ -47,7 +47,7 @@ func TestParseXRHIDHeader(t *testing.T) {
 	}
 
 	{
-		want := orgId
+		want := ORG_ID
 		got := result.Identity.OrgID
 
 		if want != got {
@@ -56,7 +56,7 @@ func TestParseXRHIDHeader(t *testing.T) {
 	}
 
 	{
-		want := accountNumber
+		want := ACCOUNT_NUMBER
 		got := result.Identity.AccountNumber
 
 		if want != got {
@@ -113,7 +113,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 	}
 
 	{
-		want := accountNumber
+		want := ACCOUNT_NUMBER
 		got := id.AccountNumber
 		if want != got {
 			t.Errorf(`invalid account number extracted from identity. Want "%s", got "%s"`, want, got)
@@ -121,7 +121,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 	}
 
 	{
-		want := orgId
+		want := ORG_ID
 		got := id.OrgID
 		if want != got {
 			t.Errorf(`invalid orgId extracted from identity. Want "%s", got "%s"`, want, got)
@@ -132,11 +132,11 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 	headers = []kafka.Header{
 		{
 			Key:   xrhAccountNumberKey,
-			Value: []byte(accountNumber),
+			Value: []byte(ACCOUNT_NUMBER),
 		},
 		{
 			Key:   h.ORGID,
-			Value: []byte(orgId),
+			Value: []byte(ORG_ID),
 		},
 	}
 
@@ -146,7 +146,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 	}
 
 	{
-		want := accountNumber
+		want := ACCOUNT_NUMBER
 		got := id.AccountNumber
 		if want != got {
 			t.Errorf(`invalid account number extracted from identity. Want "%s", got "%s"`, want, got)
@@ -154,7 +154,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 	}
 
 	{
-		want := orgId
+		want := ORG_ID
 		got := id.OrgID
 		if want != got {
 			t.Errorf(`invalid org id extracted from identity. Want "%s", got "%s"`, want, got)
