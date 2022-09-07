@@ -8,7 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-const defaultLimit = 500
+const DEFAULT_LIMIT = 500
 
 // Struct to track any information on the current GraphQL request
 type RequestData struct {
@@ -49,7 +49,7 @@ func (rd *RequestData) EnsureApplicationsAreLoaded() error {
 	// again due to the fact that multiple threads might have locked this the
 	// first time
 	if rd.applicationMap == nil {
-		apps, _, err := dao.GetApplicationDao(&dao.RequestParams{TenantID: &rd.TenantID, UserID: rd.UserID}).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
+		apps, _, err := dao.GetApplicationDao(&dao.RequestParams{TenantID: &rd.TenantID, UserID: rd.UserID}).List(DEFAULT_LIMIT, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ func (rd *RequestData) EnsureEndpointsAreLoaded() error {
 	defer rd.SourceMutex.Unlock()
 
 	if rd.endpointMap == nil {
-		endpts, _, err := dao.GetEndpointDao(&rd.TenantID).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
+		endpts, _, err := dao.GetEndpointDao(&rd.TenantID).List(DEFAULT_LIMIT, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}
@@ -110,7 +110,7 @@ func (rd *RequestData) EnsureAuthenticationsAreLoaded() error {
 	defer rd.SourceMutex.Unlock()
 
 	if rd.authenticationMap == nil {
-		auths, _, err := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &rd.TenantID}).List(defaultLimit, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
+		auths, _, err := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &rd.TenantID}).List(DEFAULT_LIMIT, 0, []util.Filter{{Name: "source_id", Value: *rd.sourceIdList}})
 		if err != nil {
 			return err
 		}
