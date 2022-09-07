@@ -928,3 +928,34 @@ func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+// TestApplicationCreateBadRequest tests that bad request is returned when you try to create
+// an application of same application type that already exists for the source and tenant
+func TestApplicationCreateBadRequest(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("create_bad_request")
+
+	// Existing application from fixtures
+	tenantId := testApplication.TenantID
+	appTypeId := testApplication.ApplicationTypeID
+	sourceId := testApplication.SourceID
+
+	// Create new app of same app type for same source id and tenant id
+	daoParams := RequestParams{TenantID: &tenantId}
+	applicationDao := GetApplicationDao(&daoParams)
+
+	application := m.Application{
+		Extra:             []byte(`{"create_app": "bad_request"}`),
+		SourceID:          sourceId,
+		TenantID:          tenantId,
+		ApplicationTypeID: appTypeId,
+	}
+
+	// Create the test application.
+	err := applicationDao.Create(&application)
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf("wanted Bad Request err, got '%s'", err)
+	}
+
+	DropSchema("create_bad_request")
+}

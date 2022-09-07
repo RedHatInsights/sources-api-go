@@ -3,11 +3,14 @@ package dao
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/jackc/pgconn"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -170,6 +173,15 @@ func (a *applicationDaoImpl) Create(app *m.Application) error {
 	app.TenantID = *a.TenantID
 	result := DB.Debug().Create(app)
 
+	// Check if specific error code is returned
+	var pgErr *pgconn.PgError
+	if errors.As(result.Error, &pgErr) {
+		// unique constraint violation for index (source id + app type id + tenant id)
+		if pgErr.Code == PG_UNIQUE_CONSTRAINT_VIOLATION && strings.Contains(pgErr.Detail, "Key (source_id, application_type_id, tenant_id)") {
+			message := fmt.Sprintf("Application of application type = %d already exists for the source id = %d", app.ApplicationTypeID, app.SourceID)
+			return util.NewErrBadRequest(message)
+		}
+	}
 	return result.Error
 }
 
