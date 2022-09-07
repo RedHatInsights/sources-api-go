@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/logger"
 )
@@ -40,8 +41,8 @@ func TestMain(t *testing.M) {
 			panic("failed to populate static type cache")
 		}
 	} else {
-		endpointDao = &dao.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
-		sourceDao = &dao.MockSourceDao{Sources: fixtures.TestSourceData}
+		endpointDao = &mocks.MockEndpointDao{Endpoints: fixtures.TestEndpointData}
+		sourceDao = &mocks.MockSourceDao{Sources: fixtures.TestSourceData}
 
 		err := dao.PopulateMockStaticTypeCache()
 		if err != nil {
