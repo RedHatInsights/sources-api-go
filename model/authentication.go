@@ -73,6 +73,17 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	}
 }
 
+func (auth *Authentication) ToSecretResponse() *SecretResponse {
+	id, extra := unmarshalExtraFields(auth)
+	return &SecretResponse{
+		ID:       id,
+		Name:     util.ValueOrBlank(auth.Name),
+		AuthType: auth.AuthType,
+		Username: util.ValueOrBlank(auth.Username),
+		Extra:    extra,
+	}
+}
+
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
 	id, extra := mapIdExtraFields(auth)
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
@@ -202,13 +213,21 @@ func mapIdExtraFields(auth *Authentication) (string, map[string]interface{}) {
 		id = auth.ID
 		extra = auth.Extra
 	} else {
-		id = strconv.FormatInt(auth.DbID, 10)
+		return unmarshalExtraFields(auth)
+	}
 
-		if auth.ExtraDb != nil {
-			err := json.Unmarshal(auth.ExtraDb, &extra)
-			if err != nil {
-				logger.Log.Errorf(`could not unmarshal "extra" field from authentication with ID "%s"`, id)
-			}
+	return id, extra
+}
+
+func unmarshalExtraFields(auth *Authentication) (string, map[string]interface{}) {
+	var id string
+	var extra map[string]interface{}
+	id = strconv.FormatInt(auth.DbID, 10)
+
+	if auth.ExtraDb != nil {
+		err := json.Unmarshal(auth.ExtraDb, &extra)
+		if err != nil {
+			logger.Log.Errorf(`could not unmarshal "extra" field from authentication with ID "%s"`, id)
 		}
 	}
 

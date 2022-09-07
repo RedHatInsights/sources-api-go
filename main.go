@@ -84,6 +84,7 @@ func runServer(shutdown chan struct{}) {
 	getAuthenticationDao = getAuthenticationDaoWithTenant
 	getApplicationAuthenticationDao = getApplicationAuthenticationDaoWithTenant
 	getApplicationTypeDao = getApplicationTypeDaoWithTenant
+	getSecretDao = getSecretDaoWithTenant
 	getSourceTypeDao = getSourceTypeDaoWithoutTenant
 	getEndpointDao = getEndpointDaoWithTenant
 	getMetaDataDao = getMetaDataDaoWithoutTenant

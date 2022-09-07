@@ -139,6 +139,13 @@ type MetaDataDao interface {
 	ApplicationOptedIntoRetry(applicationTypeId int64) (bool, error)
 }
 
+type SecretDao interface {
+	Create(src *m.Authentication) error
+	Delete(id *int64) error
+	GetById(id *int64) (*m.Authentication, error)
+	NameExistsInCurrentTenant(name string) bool
+}
+
 type SourceTypeDao interface {
 	List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error)
 	GetById(id *int64) (*m.SourceType, error)
