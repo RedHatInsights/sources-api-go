@@ -14,6 +14,7 @@ import (
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
+	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
 	echoMetrics "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -65,7 +66,7 @@ func runServer(shutdown chan struct{}) {
 	e.Logger = l.EchoLogger{Entry: l.Log.WithFields(logrus.Fields{})}
 
 	// set the binder to the one that does not allow extra parameters in payload
-	e.Binder = &NoUnknownFieldsBinder{}
+	e.Binder = &sourcesEcho.NoUnknownFieldsBinder{}
 
 	// strip trailing slashes
 	e.Pre(middleware.RemoveTrailingSlash())
