@@ -16,9 +16,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-// untranslatedTenantsWhereCondition is the condition required for the "get tenants" and "update tenants" member
+// UNTRANSLATED_TENANTS_WHERE_CONDITION is the condition required for the "get tenants" and "update tenants" member
 // functions to grab the tenants that are translatable.
-const untranslatedTenantsWhereCondition = `("external_tenant" IS NOT NULL OR "external_tenant" != '') AND ("org_id" IS NULL OR "org_id" = '')`
+const UNTRANSLATED_TENANTS_WHERE_CONDITION = `("external_tenant" IS NOT NULL OR "external_tenant" != '') AND ("org_id" IS NULL OR "org_id" = '')`
 
 // GetTenantDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
@@ -117,7 +117,7 @@ func (t *tenantDaoImpl) GetUntranslatedTenants() ([]m.Tenant, error) {
 
 	err := DB.Debug().
 		Model(&m.Tenant{}).
-		Where(untranslatedTenantsWhereCondition).
+		Where(UNTRANSLATED_TENANTS_WHERE_CONDITION).
 		Find(&tenants).
 		Error
 
@@ -142,7 +142,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 		// Get the count to be able to process the tenants in batches of 100 tenants.
 		err := tx.
 			Model(&m.Tenant{}).
-			Where(untranslatedTenantsWhereCondition).
+			Where(UNTRANSLATED_TENANTS_WHERE_CONDITION).
 			Count(&translatableTenants).
 			Error
 
@@ -156,7 +156,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 			var ebsAccountNumbers []string
 			err := tx.
 				Model(&m.Tenant{}).
-				Where(untranslatedTenantsWhereCondition).
+				Where(UNTRANSLATED_TENANTS_WHERE_CONDITION).
 				Pluck("external_tenant", &ebsAccountNumbers).
 				Offset(int(i)).
 				Order(clause.OrderByColumn{Column: clause.Column{Name: "external_tenant"}, Desc: false}).
