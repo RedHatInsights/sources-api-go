@@ -1133,10 +1133,6 @@ func TestEndpointEditPaused(t *testing.T) {
 		},
 	)
 
-	// Make sure we are using the "NoUnknownFieldsBinder".
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
-
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -1167,9 +1163,6 @@ func TestEndpointEditPaused(t *testing.T) {
 
 	// Restore the original "getEndpointDao" function.
 	getEndpointDao = backupGetEndpointDao
-
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 // TestEndpointEditPausedInvalidFields tests that a "bad request" response is returned when a paused endpoint is tried
@@ -1192,10 +1185,6 @@ func TestEndpointEditPausedInvalidFields(t *testing.T) {
 			"tenantID": int64(1),
 		},
 	)
-
-	// Make sure we don't accept the "Scheme" field we set up above.
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
 
 	c.SetParamNames("id")
 	c.SetParamValues("1")
@@ -1241,9 +1230,6 @@ func TestEndpointEditPausedInvalidFields(t *testing.T) {
 
 	// Restore the original "getEndpointDao" function.
 	getEndpointDao = backupGetEndpointDao
-
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 func TestEndpointListAuthentications(t *testing.T) {

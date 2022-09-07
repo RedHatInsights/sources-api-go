@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"io"
 	"net/http"
 	"reflect"
@@ -29,7 +30,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {
@@ -635,8 +635,8 @@ func TestApplicationCreateGood(t *testing.T) {
 	}
 
 	id, _ := strconv.ParseInt(app.ID, 10, 64)
-	dao, _ := getApplicationDao(c)
-	_, _ = dao.Delete(&id)
+	applicationDao, _ := getApplicationDao(c)
+	_, _ = applicationDao.Delete(&id)
 }
 
 func TestApplicationCreateMissingSourceId(t *testing.T) {
@@ -1932,10 +1932,6 @@ func TestApplicationEditPaused(t *testing.T) {
 		},
 	)
 
-	// Make sure we are using the "NoUnknownFieldsBinder".
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
-
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -1974,9 +1970,6 @@ func TestApplicationEditPaused(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 // TestApplicationEditPausedUnitInvalidFields tests that a "bad request" response is returned when a paused application
@@ -2002,10 +1995,6 @@ func TestApplicationEditPausedIntegration(t *testing.T) {
 		},
 	)
 
-	// Make sure we are using the "NoUnknownFieldsBinder".
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
-
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -2044,9 +2033,6 @@ func TestApplicationEditPausedIntegration(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 // TestApplicationEditPaused tests that an application can be edited even if it is paused, if the payload is right.
@@ -2074,10 +2060,6 @@ func TestApplicationEditPausedUnit(t *testing.T) {
 		},
 	)
 
-	// Make sure we are using the "NoUnknownFieldsBinder".
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
-
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
@@ -2102,8 +2084,6 @@ func TestApplicationEditPausedUnit(t *testing.T) {
 		t.Errorf("Wrong return code, expected %v got %v", http.StatusOK, rec.Code)
 	}
 
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 // TestApplicationEditPausedUnitInvalidFields tests that a "bad request" response is returned when a paused application
@@ -2126,10 +2106,6 @@ func TestApplicationEditPausedUnitInvalidFields(t *testing.T) {
 			"tenantID": int64(1),
 		},
 	)
-
-	// Make sure we don't accept the "Extra" field we set up above
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
 
 	c.SetParamNames("id")
 	c.SetParamValues("1")
@@ -2170,9 +2146,6 @@ func TestApplicationEditPausedUnitInvalidFields(t *testing.T) {
 	if rec.Code != http.StatusBadRequest {
 		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
 	}
-
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 func TestApplicationDeleteWithOwnership(t *testing.T) {
