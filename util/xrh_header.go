@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	xrhAccountNumberKey string = "x-rh-sources-account-number"
-	xrhIdentityKey      string = "x-rh-identity"
+	XRH_ACCOUNT_NUMBER_KEY string = "x-rh-sources-account-number"
+	XRH_IDENTITY_KEY       string = "x-rh-identity"
 )
 
 func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
@@ -39,7 +39,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 	var outputIdentity identity.Identity
 
 	for _, header := range headers {
-		if header.Key == xrhAccountNumberKey {
+		if header.Key == XRH_ACCOUNT_NUMBER_KEY {
 			outputIdentity.AccountNumber = string(header.Value)
 		}
 
@@ -47,7 +47,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 			outputIdentity.OrgID = string(header.Value)
 		}
 
-		if header.Key == xrhIdentityKey {
+		if header.Key == XRH_IDENTITY_KEY {
 			xRhIdentity, err := ParseXRHIDHeader(string(header.Value))
 			if err != nil {
 				return nil, err
@@ -58,7 +58,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 	}
 
 	if outputIdentity.AccountNumber == "" && outputIdentity.OrgID == "" {
-		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", xrhAccountNumberKey, xrhIdentityKey)
+		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", XRH_ACCOUNT_NUMBER_KEY, XRH_IDENTITY_KEY)
 	}
 
 	return &outputIdentity, nil

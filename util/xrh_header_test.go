@@ -101,7 +101,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 
 	headers := []kafka.Header{
 		{
-			Key:   xrhIdentityKey,
+			Key:   XRH_IDENTITY_KEY,
 			Value: []byte(base64Identity),
 		},
 	}
@@ -131,7 +131,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 	// Lastly test with the "x-rh-account-number" and "x-rh-sources-org-id" header.
 	headers = []kafka.Header{
 		{
-			Key:   xrhAccountNumberKey,
+			Key:   XRH_ACCOUNT_NUMBER_KEY,
 			Value: []byte(ACCOUNT_NUMBER),
 		},
 		{
