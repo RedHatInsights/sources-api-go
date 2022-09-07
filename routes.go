@@ -7,7 +7,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/middleware"
-	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
+	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,7 +26,7 @@ func setupRoutes(e *echo.Echo) {
 	// overriding the echo.Context instance with our own - so we can use any
 	// changes we made to the context's methods.
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error { return next(&sourcesEcho.SourcesContext{Context: c}) }
+		return func(c echo.Context) error { return next(&echoUtils.SourcesContext{Context: c}) }
 	})
 
 	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1", "v1", "v2", "v3"}

@@ -10,7 +10,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
-	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
+	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,7 +18,7 @@ import (
 var getEndpointDao func(c echo.Context) (dao.EndpointDao, error)
 
 func getEndpointDaoWithTenant(c echo.Context) (dao.EndpointDao, error) {
-	tenantId, err := sourcesEcho.GetTenantFromEchoContext(c)
+	tenantId, err := echoUtils.GetTenantFromEchoContext(c)
 
 	if err != nil {
 		return nil, err

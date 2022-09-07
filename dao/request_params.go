@@ -2,7 +2,7 @@ package dao
 
 import (
 	"context"
-	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
+	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
@@ -13,12 +13,12 @@ type RequestParams struct {
 }
 
 func NewRequestParamsFromContext(c echo.Context) (*RequestParams, error) {
-	tenantId, err := sourcesEcho.GetTenantFromEchoContext(c)
+	tenantId, err := echoUtils.GetTenantFromEchoContext(c)
 	if err != nil {
 		return nil, err
 	}
 
-	userID, err := sourcesEcho.GetUserFromEchoContext(c)
+	userID, err := echoUtils.GetUserFromEchoContext(c)
 	if err != nil {
 		return nil, err
 	}
