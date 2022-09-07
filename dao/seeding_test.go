@@ -148,7 +148,7 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 
 	appmdata := make([]m.MetaData, 0)
 	result := DB.Model(&m.MetaData{}).
-		Where("type = ?", AppMetaData).
+		Where("type = ?", m.APP_META_DATA).
 		Distinct("name").
 		Scan(&appmdata)
 	if result.Error != nil {

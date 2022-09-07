@@ -315,7 +315,7 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 				Name:              key,
 				Payload:           payload,
 				ApplicationTypeID: appType.Id,
-				Type:              "AppMetaData",
+				Type:              m.APP_META_DATA,
 			}
 
 			result := DB.Create(&m)

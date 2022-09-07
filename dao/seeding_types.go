@@ -24,8 +24,6 @@ type applicationTypeSeed struct {
 	ResourceOwnership            *string     `json:"resource_ownership"`
 }
 
-const AppMetaData = "AppMetaData"
-
 type superKeySeed struct {
 	Steps []superKeyStep `json:"steps"`
 }
