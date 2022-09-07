@@ -7,6 +7,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
@@ -14,7 +15,7 @@ import (
 var getApplicationTypeDao func(c echo.Context) (dao.ApplicationTypeDao, error)
 
 func getApplicationTypeDaoWithTenant(c echo.Context) (dao.ApplicationTypeDao, error) {
-	tenantId, err := util.GetTenantFromEchoContext(c)
+	tenantId, err := sourcesEcho.GetTenantFromEchoContext(c)
 
 	if err != nil {
 		return nil, err

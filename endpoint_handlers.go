@@ -10,6 +10,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
+	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
@@ -17,7 +18,7 @@ import (
 var getEndpointDao func(c echo.Context) (dao.EndpointDao, error)
 
 func getEndpointDaoWithTenant(c echo.Context) (dao.EndpointDao, error) {
-	tenantId, err := util.GetTenantFromEchoContext(c)
+	tenantId, err := sourcesEcho.GetTenantFromEchoContext(c)
 
 	if err != nil {
 		return nil, err
@@ -209,7 +210,7 @@ func EndpointEdit(c echo.Context) error {
 	if endpoint.PausedAt != nil {
 		input := &m.ResourceEditPausedRequest{}
 		if err := c.Bind(input); err != nil {
-			return util.NewErrBadRequest(err)
+			return err
 		}
 
 		if err := endpoint.UpdateFromRequestPaused(input); err != nil {
@@ -218,7 +219,7 @@ func EndpointEdit(c echo.Context) error {
 	} else {
 		input := &m.EndpointEditRequest{}
 		if err := c.Bind(input); err != nil {
-			return util.NewErrBadRequest(err)
+			return err
 		}
 
 		if err = service.ValidateEndpointEditRequest(endpointDao, endpoint.SourceID, input); err != nil {
