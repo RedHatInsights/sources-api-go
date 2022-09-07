@@ -13,6 +13,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/middleware"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -47,7 +48,7 @@ func TestSecretCreateNameExistInCurrentTenant(t *testing.T) {
 		t.Error(err)
 	}
 
-	cleanSecretByID(t, secret.ID, &tenantId)
+	cleanSecretByID(t, secret.ID, &dao.RequestParams{TenantID: &tenantId})
 }
 
 func TestSecretCreateEmptyName(t *testing.T) {
@@ -84,11 +85,12 @@ func TestSecretCreate(t *testing.T) {
 	userName := "test-name"
 	password := "123456"
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
+	var userID *int64
 
 	for _, userScoped := range []bool{false, true} {
 		secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra, userScoped)
 
-		_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId)
+		c, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId)
 		if err != nil {
 			t.Error(err)
 		}
@@ -103,7 +105,14 @@ func TestSecretCreate(t *testing.T) {
 		stringMatcher(t, "secret user name", secret.Username, userName)
 		stringMatcher(t, "secret auth type", secret.AuthType, authType)
 
-		secretOut := fetchSecretFromDB(t, secret.ID, tenantId)
+		if userScoped {
+			secretUserID, ok := c.Get(h.USERID).(int64)
+			if ok {
+				userID = &secretUserID
+			}
+		}
+
+		secretOut := fetchSecretFromDB(t, secret.ID, &dao.RequestParams{TenantID: &tenantId, UserID: userID})
 
 		int64Matcher(t, "secret tenant id", secretOut.TenantID, tenantId)
 		stringMatcher(t, "secret name", *secretOut.Name, name)
@@ -122,7 +131,7 @@ func TestSecretCreate(t *testing.T) {
 
 		stringMatcher(t, "secret password", *secretOut.Password, encryptedPassword)
 
-		cleanSecretByID(t, secret.ID, &tenantId)
+		cleanSecretByID(t, secret.ID, &dao.RequestParams{TenantID: &tenantId, UserID: userID})
 	}
 }
 
@@ -149,9 +158,8 @@ func parseSecretResponse(t *testing.T, rec *httptest.ResponseRecorder) *m.Authen
 	return secret
 }
 
-func fetchSecretFromDB(t *testing.T, secretIDValue string, secretTenantID int64) *m.Authentication {
-	requestParams := dao.RequestParams{TenantID: &secretTenantID}
-	secretDao := dao.GetSecretDao(&requestParams)
+func fetchSecretFromDB(t *testing.T, secretIDValue string, requestParams *dao.RequestParams) *m.Authentication {
+	secretDao := dao.GetSecretDao(requestParams)
 	secretID, err := util.InterfaceToInt64(secretIDValue)
 	if err != nil {
 		t.Error(err)
@@ -209,13 +217,12 @@ func createSecretRequest(t *testing.T, requestBody *m.SecretCreateRequest, tenan
 	return c, rec, err
 }
 
-func cleanSecretByID(t *testing.T, secretIDValue string, tenantId *int64) {
+func cleanSecretByID(t *testing.T, secretIDValue string, requestParams *dao.RequestParams) {
 	secretID, err := util.InterfaceToInt64(secretIDValue)
 	if err != nil {
 		t.Error(err)
 	}
-	requestParams := dao.RequestParams{TenantID: tenantId}
-	secretDao := dao.GetSecretDao(&requestParams)
+	secretDao := dao.GetSecretDao(requestParams)
 	err = secretDao.Delete(&secretID)
 	if err != nil {
 		t.Error(err)
