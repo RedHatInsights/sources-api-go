@@ -1,12 +1,11 @@
 package echo
 
 import (
-	"github.com/RedHatInsights/sources-api-go/util"
 	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -18,7 +17,7 @@ var _ = (echo.Context)(&SourcesContext{})
 func TestGetTenantFromEchoContext(t *testing.T) {
 	want := int64(12345)
 
-	c, _ := request.CreateTestContext(
+	c, _ := CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/whatever",
 		nil,
@@ -46,7 +45,7 @@ func TestGetTenantFromEchoContextLowerOrEqualsZero(t *testing.T) {
 	invalidTenantIds := []int64{-5, 0}
 
 	for _, iti := range invalidTenantIds {
-		c, _ := request.CreateTestContext(
+		c, _ := CreateTestContext(
 			http.MethodGet,
 			"/api/sources/v3.1/whatever",
 			nil,
@@ -72,7 +71,7 @@ func TestGetTenantFromEchoContextLowerOrEqualsZero(t *testing.T) {
 func TestGetTenantFromEchoContextInvalidFormat(t *testing.T) {
 	invalidTenantIdFormat := "12345"
 
-	c, _ := request.CreateTestContext(
+	c, _ := CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/whatever",
 		nil,
@@ -94,7 +93,7 @@ func TestGetTenantFromEchoContextInvalidFormat(t *testing.T) {
 // TestGetTenantFromEchoContextMissing tests that when the tenant is missing from the context the function returns a
 // default value and a nil error.
 func TestGetTenantFromEchoContextMissing(t *testing.T) {
-	c, _ := request.CreateTestContext(
+	c, _ := CreateTestContext(
 		http.MethodGet,
 		"/api/sources/v3.1/whatever",
 		nil,

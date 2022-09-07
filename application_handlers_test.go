@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"io"
 	"net/http"
 	"reflect"
@@ -30,6 +29,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 func TestSourceApplicationSubcollectionList(t *testing.T) {

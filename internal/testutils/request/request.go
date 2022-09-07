@@ -1,11 +1,12 @@
 package request
 
 import (
-	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
-	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"net/http/httptest"
+
+	sourcesEcho "github.com/RedHatInsights/sources-api-go/util/echo"
+	"github.com/labstack/echo/v4"
 )
 
 var echoInstance = echo.New()
