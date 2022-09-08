@@ -2,6 +2,7 @@ package echo
 
 import (
 	"encoding/json"
+	"net/http"
 	"reflect"
 
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -21,6 +22,11 @@ type NoUnknownFieldsBinder struct{}
 func (binder *NoUnknownFieldsBinder) Bind(i interface{}, c echo.Context) error {
 	// Close the request's body after we're done with it.
 	defer c.Request().Body.Close()
+
+	// Check if request contains a body
+	if c.Request().Body == http.NoBody {
+		return util.NewErrBadRequest("no body")
+	}
 
 	// is the struct passed in initially empty? then it's pretty easy to tell if
 	// no fields were plucked from the body.
