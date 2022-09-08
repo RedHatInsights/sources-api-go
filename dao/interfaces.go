@@ -145,6 +145,7 @@ type SecretDao interface {
 	GetById(id *int64) (*m.Authentication, error)
 	List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	NameExistsInCurrentTenant(name string) bool
+	Update(src *m.Authentication) error
 }
 
 type SourceTypeDao interface {
