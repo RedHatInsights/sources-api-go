@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -51,8 +52,12 @@ func TestNilBody(t *testing.T) {
 	)
 
 	err := c.Bind(&TestStruct{})
-	if err == nil {
-		t.Error("No error was found when there should have been a no body error")
+
+	// Check that returned err is Bad request with "no body" message
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf("Expected Bad request err, got %s", err)
+	} else if !strings.Contains(err.Error(), "no body") {
+		t.Errorf("Expected that err message contains 'no body' but got '%s'", err)
 	}
 
 }
@@ -65,8 +70,12 @@ func TestNoBody(t *testing.T) {
 		nil,
 	)
 	err := c.Bind(&TestStruct{})
-	if err == nil {
-		t.Error("No error was found when there should have been a no body error")
+
+	// Check that returned err is Bad request with "no body" message
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf("Expected Bad request err, got %s", err)
+	} else if !strings.Contains(err.Error(), "no body") {
+		t.Errorf("Expected that err message contains 'no body' but got '%s'", err)
 	}
 
 }
