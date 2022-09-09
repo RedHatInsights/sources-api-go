@@ -131,7 +131,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 	// Lastly test with the "x-rh-account-number" and "x-rh-sources-org-id" header.
 	headers = []kafka.Header{
 		{
-			Key:   xrhAccountNumberKey,
+			Key:   h.AccountNumberKey,
 			Value: []byte(accountNumber),
 		},
 		{
