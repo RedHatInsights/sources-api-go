@@ -50,7 +50,7 @@ func TestSecretListUserOwnership(t *testing.T) {
 
 	secrets, _, err := secretDaoWithUser.List(100, 0, []util.Filter{})
 	if err != nil {
-		t.Errorf(`unexpected error when listing the application authentications: %s`, err)
+		t.Errorf(`unexpected error when listing the secrets: %s`, err)
 	}
 
 	var secretsIDs []int64
@@ -61,7 +61,7 @@ func TestSecretListUserOwnership(t *testing.T) {
 	expectedSecretsIDs := []int64{secret1.DbID, secretWithoutOwnership.DbID}
 
 	if !util.ElementsInSlicesEqual(secretsIDs, expectedSecretsIDs) {
-		t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", expectedSecretsIDs, secretsIDs)
+		t.Errorf("Expected secrets IDs %v are not same with obtained IDs: %v", expectedSecretsIDs, secretsIDs)
 	}
 
 	userWithOwnRecords, err = CreateUserForUserID(userIDWithoutOwnRecords, tenantId)
@@ -77,7 +77,7 @@ func TestSecretListUserOwnership(t *testing.T) {
 
 	secrets, _, err = secretDaoWithUser.List(100, 0, []util.Filter{})
 	if err != nil {
-		t.Errorf(`unexpected error when listing the application authentications: %s`, err)
+		t.Errorf(`unexpected error when listing the secrets: %s`, err)
 	}
 
 	secretsIDs = []int64{}
@@ -88,7 +88,7 @@ func TestSecretListUserOwnership(t *testing.T) {
 	expectedSecretsIDs = []int64{secretWithoutOwnership.DbID}
 
 	if !util.ElementsInSlicesEqual(secretsIDs, expectedSecretsIDs) {
-		t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", expectedSecretsIDs, secretsIDs)
+		t.Errorf("Expected secrets IDs %v are not same with obtained IDs: %v", expectedSecretsIDs, secretsIDs)
 	}
 
 	DropSchema(schema)
