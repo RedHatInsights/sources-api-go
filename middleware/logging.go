@@ -14,7 +14,7 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		uri := c.Request().RequestURI
 		method := c.Request().Method
 		agent := c.Request().UserAgent()
-		acct := c.Get(h.ACCOUNT_NUMBER)
+		acct := c.Get(h.AccountNumberKey)
 		orgid := c.Get(h.ORGID)
 		uuid := c.Get(h.INSIGHTS_REQUEST_ID)
 

@@ -56,7 +56,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		// accept EBS account numbers anymore. However, we can deal with that by forwarding the OrgId too if we have it
 		// stored in the database.
 		c.Set(h.TENANTID, tenant.Id)
-		c.Set(h.ACCOUNT_NUMBER, tenant.ExternalTenant)
+		c.Set(h.AccountNumberKey, tenant.ExternalTenant)
 		c.Set(h.ORGID, tenant.OrgID)
 
 		return next(c)

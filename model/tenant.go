@@ -28,7 +28,7 @@ func (t Tenant) GetHeadersWithGeneratedXRHID() []kafka.Header {
 
 func (t Tenant) GetHeaders() []kafka.Header {
 	return []kafka.Header{
-		{Key: h.ACCOUNT_NUMBER, Value: []byte(t.ExternalTenant)},
+		{Key: h.AccountNumberKey, Value: []byte(t.ExternalTenant)},
 		{Key: h.ORGID, Value: []byte(t.OrgID)},
 	}
 }

@@ -61,7 +61,7 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 
 	// Prepare the headers we will be testing this with. We will try with one at a time.
 	testHeaders := map[string]string{
-		headers.ACCOUNT_NUMBER: accountNumber,
+		headers.AccountNumberKey: accountNumber,
 		headers.ORGID:          orgId,
 	}
 
@@ -101,7 +101,7 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 
 		{
 			want := accountNumber
-			got := c.Get(headers.ACCOUNT_NUMBER)
+			got := c.Get(headers.AccountNumberKey)
 
 			if want != got {
 				t.Errorf(`"%s" header set with value "%s". Invalid account number set when going through the "ParseHeaders" and "Tenancy" middlewares. Want "%s", got "%s"`, key, value, want, got)
