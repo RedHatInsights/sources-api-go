@@ -54,7 +54,7 @@ func TestGoodPSK(t *testing.T) {
 		http.MethodPost,
 		"/",
 		nil,
-		map[string]interface{}{h.PSK: "1234"},
+		map[string]interface{}{h.PskKey: "1234"},
 	)
 
 	err := permCheckOrElse204(c)
@@ -73,7 +73,7 @@ func TestBadPSK(t *testing.T) {
 		http.MethodPost,
 		"/",
 		nil,
-		map[string]interface{}{h.PSK: "1234"},
+		map[string]interface{}{h.PskKey: "1234"},
 	)
 
 	err := permCheckOrElse204(c)

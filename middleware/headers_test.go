@@ -28,7 +28,7 @@ func TestParseAll(t *testing.T) {
 	)
 
 	c.Request().Header.Set(h.XRHID, xrhid)
-	c.Request().Header.Set(h.PSK, "test-psk")
+	c.Request().Header.Set(h.PskKey, "test-psk")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "test-ebs-account-number")
 	c.Request().Header.Set(h.PSK_USER, "test-psk-user")
 	c.Request().Header.Set(h.ORGID, "test-orgid")
@@ -42,8 +42,8 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was returned instead of %v", rec.Code, 204)
 	}
 
-	if c.Get(h.PSK).(string) != "test-psk" {
-		t.Errorf("%v was set as psk instead of %v", c.Get(h.PSK).(string), "test-psk")
+	if c.Get(h.PskKey).(string) != "test-psk" {
+		t.Errorf("%v was set as psk instead of %v", c.Get(h.PskKey).(string), "test-psk")
 	}
 
 	if c.Get(h.ACCOUNT_NUMBER).(string) != "test-ebs-account-number" {
@@ -82,7 +82,7 @@ func TestParseWithoutXrhid(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set(h.PSK, "test-psk")
+	c.Request().Header.Set(h.PskKey, "test-psk")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "test-ebs-account-number")
 	c.Request().Header.Set(h.PSK_USER, "test-psk-user")
 	c.Request().Header.Set(h.ORGID, "test-orgid")
@@ -96,8 +96,8 @@ func TestParseWithoutXrhid(t *testing.T) {
 		t.Errorf("%v was returned instead of %v", rec.Code, 204)
 	}
 
-	if c.Get(h.PSK).(string) != "test-psk" {
-		t.Errorf("%v was set as psk instead of %v", c.Get(h.PSK).(string), "test-psk")
+	if c.Get(h.PskKey).(string) != "test-psk" {
+		t.Errorf("%v was set as psk instead of %v", c.Get(h.PskKey).(string), "test-psk")
 	}
 
 	if c.Get(h.ACCOUNT_NUMBER).(string) != "test-ebs-account-number" {
@@ -209,7 +209,7 @@ func TestOnlyPskHeaders(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set(h.PSK, "1234")
+	c.Request().Header.Set(h.PskKey, "1234")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "9876")
 	c.Request().Header.Set(h.PSK_USER, "555555")
 
@@ -222,7 +222,7 @@ func TestOnlyPskHeaders(t *testing.T) {
 		t.Errorf("%v was returned instead of %v", rec.Code, 204)
 	}
 
-	if c.Get(h.PSK).(string) != "1234" {
+	if c.Get(h.PskKey).(string) != "1234" {
 		t.Errorf("%v was set as psk instead of %v", c.Get("psk").(string), "1234")
 	}
 

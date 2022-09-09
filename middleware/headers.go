@@ -27,8 +27,8 @@ import (
 func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// the PSK related headers - just storing them as raw strings.
-		if c.Request().Header.Get(h.PSK) != "" {
-			c.Set(h.PSK, c.Request().Header.Get(h.PSK))
+		if c.Request().Header.Get(h.PskKey) != "" {
+			c.Set(h.PskKey, c.Request().Header.Get(h.PskKey))
 		}
 
 		if c.Request().Header.Get(h.ACCOUNT_NUMBER) != "" {
