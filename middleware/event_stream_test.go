@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -59,7 +60,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	s := mocks.MockSender{}
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
-		"x-rh-sources-psk": "1234",
+		h.PskKey: "1234",
 		"x-rh-identity":    util.GeneratedXRhIdentity("1234", "1234"),
 	})
 
