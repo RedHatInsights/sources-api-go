@@ -155,3 +155,22 @@ func SecretEdit(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, secret.ToSecretResponse())
 }
+
+func SecretDelete(c echo.Context) error {
+	secretDao, err := getSecretDao(c)
+	if err != nil {
+		return err
+	}
+
+	secretID, err := util.InterfaceToInt64(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	err = secretDao.Delete(&secretID)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}

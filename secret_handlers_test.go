@@ -879,3 +879,147 @@ func TestSecretEditBadRequest(t *testing.T) {
 
 	templates.BadRequestTest(t, rec)
 }
+
+func TestSecretDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	util.OverrideEncryptionKey(strings.Repeat("test", 8))
+
+	tenantIDForSecret := int64(1)
+	testUserId := "testUser"
+
+	userDao := dao.GetUserDao(&tenantIDForSecret)
+	user, err := userDao.FindOrCreate(testUserId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secretExtra := map[string]interface{}{"extra": "params"}
+	password := "test"
+
+	requestBody := m.SecretEditRequest{
+		Extra:    &secretExtra,
+		Password: util.StringRef(password),
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	var userID *int64
+	for _, userScoped := range []bool{false, true} {
+		if userScoped {
+			userID = &user.Id
+		}
+
+		secret, err := dao.CreateSecretByName("Secret 1", &tenantIDForSecret, userID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		secretID, err := util.InterfaceToString(secret.DbID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		c, rec := request.CreateTestContext(
+			http.MethodDelete,
+			"/api/sources/v3.1/secrets/"+secretID,
+			bytes.NewReader(body),
+			map[string]interface{}{
+				"tenantID": tenantIDForSecret,
+			},
+		)
+
+		c.SetParamNames("id")
+		c.SetParamValues(secretID)
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+		tenancy := middleware.Tenancy(SecretDelete)
+		userCatcher := middleware.UserCatcher(tenancy)
+		identityHeader := testutils.IdentityHeaderForUser(testUserId)
+		c.Set("identity", identityHeader)
+
+		err = userCatcher(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusNoContent {
+			t.Error("Did not return 204")
+		}
+
+		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+		_, err = secretDao.GetById(&secret.DbID)
+		if err.Error() != "secret not found" {
+			t.Error("'secret not found' expected")
+		}
+	}
+}
+
+func TestSecretDeleteInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	tenantOther := int64(1)
+	secret, err := dao.CreateSecretByName("Secret 1", &tenantOther, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secretID, err := util.InterfaceToString(secret.DbID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/secrets/"+secretID,
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(secretID)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSecretEdit := ErrorHandlingContext(SecretDelete)
+	err = notFoundSecretEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+
+	cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantOther})
+}
+
+func TestSecretDeleteNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	tenantId := int64(1)
+	secretID := "5555"
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/secrets/"+secretID,
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(secretID)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSecretEdit := ErrorHandlingContext(SecretDelete)
+	err := notFoundSecretEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
