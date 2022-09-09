@@ -15,6 +15,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -113,7 +114,7 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	}
 
 	req.Header.Add("x-rh-sources-org-id", source.Tenant.OrgID)
-	req.Header.Add("x-rh-sources-account-number", source.Tenant.ExternalTenant)
+	req.Header.Add(h.AccountNumberKey, source.Tenant.ExternalTenant)
 	req.Header.Add("x-rh-identity", util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
 
@@ -187,7 +188,7 @@ func (acr availabilityCheckRequester) publishSatelliteMessage(writer *kafka.Writ
 		{Key: "event_type", Value: []byte("Source.availability_check")},
 		{Key: "encoding", Value: []byte("json")},
 		{Key: "x-rh-identity", Value: []byte(util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))},
-		{Key: "x-rh-sources-account-number", Value: []byte(endpoint.Tenant.ExternalTenant)},
+		{Key: h.AccountNumberKey, Value: []byte(endpoint.Tenant.ExternalTenant)},
 	})
 
 	if err = kafka.Produce(writer, msg); err != nil {

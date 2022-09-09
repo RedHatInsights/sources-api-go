@@ -90,7 +90,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 		t.Errorf("Headers not set properly from RaiseEvent")
 	}
 
-	expected := []string{"event_type", "x-rh-identity", "x-rh-sources-account-number", "x-rh-sources-org-id"}
+	expected := []string{"event_type", "x-rh-identity", h.AccountNumberKey, "x-rh-sources-org-id"}
 	for _, h := range s.Headers {
 		if !util.SliceContainsString(expected, h.Key) {
 			t.Errorf("Got bad header: [%v: %v]", h.Key, h.Value)
