@@ -143,6 +143,7 @@ type SecretDao interface {
 	Create(src *m.Authentication) error
 	Delete(id *int64) error
 	GetById(id *int64) (*m.Authentication, error)
+	List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error)
 	NameExistsInCurrentTenant(name string) bool
 }
 

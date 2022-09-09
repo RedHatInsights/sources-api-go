@@ -110,6 +110,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/application_types/:application_type_id/app_meta_data", ApplicationTypeListMetaData, append(listMiddleware, middleware.LoggerFields)...)
 
 		// Secrets
+		r.GET("/secrets", SecretList, tenancyWithListMiddleware...)
 		r.POST("/secrets", SecretCreate, permissionMiddlewareWithoutEvents...)
 
 		// SourceTypes

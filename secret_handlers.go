@@ -72,3 +72,32 @@ func SecretCreate(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, secret.ToSecretResponse())
 }
+
+func SecretList(c echo.Context) error {
+	secretDao, err := getSecretDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	secrets, count, err := secretDao.List(limit, offset, filters)
+	if err != nil {
+		return err
+	}
+
+	out := make([]interface{}, 0, len(secrets))
+	for _, secret := range secrets {
+		out = append(out, *secret.ToSecretResponse())
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}

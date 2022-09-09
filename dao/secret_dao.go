@@ -46,8 +46,13 @@ func (secret *secretDaoDbImpl) getDb() *gorm.DB {
 
 	query := DB.Debug().WithContext(secret.ctx)
 	query = query.Where("tenant_id = ?", secret.TenantID)
-
 	query = query.Where("resource_type = ?", secretResourceType)
+
+	if secret.UserID != nil {
+		query = query.Where("user_id IS NULL OR user_id = ?", secret.UserID)
+	} else {
+		query = query.Where("user_id IS NULL")
+	}
 
 	return query
 }
@@ -120,4 +125,29 @@ func (secret *secretDaoDbImpl) NameExistsInCurrentTenant(name string) bool {
 		Error
 
 	return err == nil
+}
+
+func (secret *secretDaoDbImpl) List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+	query := secret.getDbWithModel()
+
+	query, err := applyFilters(query, filters)
+	if err != nil {
+		return nil, 0, util.NewErrBadRequest(err)
+	}
+
+	count := int64(0)
+	query.Count(&count)
+
+	secrets := make([]m.Authentication, 0, limit)
+	err = query.
+		Limit(limit).
+		Offset(offset).
+		Find(&secrets).
+		Error
+
+	if err != nil {
+		return nil, 0, util.NewErrBadRequest(err)
+	}
+
+	return secrets, count, nil
 }
