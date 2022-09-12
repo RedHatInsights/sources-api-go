@@ -33,7 +33,7 @@ func TestUserCreationFromXRHID(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Set(h.TENANTID, tenantID)
+	c.Set(h.TenantIdKey, tenantID)
 	c.Set(h.ParsedIdentityKey, identity)
 
 	err := catchUserOrElse204(c)
@@ -77,7 +77,7 @@ func TestUserCreationFromPSK(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Set(h.TENANTID, tenantID)
+	c.Set(h.TenantIdKey, tenantID)
 	c.Set(h.UserIdKey, testUserID)
 
 	err := catchUserOrElse204(c)

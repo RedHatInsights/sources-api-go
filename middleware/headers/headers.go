@@ -8,6 +8,6 @@ const (
 	IdentityKey          = "x-rh-identity"
 	InsightsRequestIdKey = "x-rh-insights-request-id"
 	ParsedIdentityKey    = "identity"
-	TENANTID             = "tenantID"
+	TenantIdKey          = "tenantID"
 	USERID               = "userID"
 )
