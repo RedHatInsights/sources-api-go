@@ -51,12 +51,12 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 		// received, generate an identity struct from the given "OrgId" and "EBS account number". If the "x-rh-identity"
 		// header is present, simply decode it and use the decided identity.
 		var id *identity.XRHID
-		xRhIdentityRaw := c.Request().Header.Get(h.XRHID)
+		xRhIdentityRaw := c.Request().Header.Get(h.IdentityKey)
 		if xRhIdentityRaw == "" {
 			generatedIdentity := util.GeneratedXRhIdentity(c.Request().Header.Get(h.AccountNumberKey), c.Request().Header.Get(h.OrgIdKey))
 
 			// Store the raw, base64 encoded "xRhIdentity" string.
-			c.Set(h.XRHID, generatedIdentity)
+			c.Set(h.IdentityKey, generatedIdentity)
 
 			// Generate the identity which we will store in the context.
 			genId, err := util.ParseXRHIDHeader(generatedIdentity)
@@ -72,7 +72,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			// Store the raw identity header to forward it latter.
-			c.Set(h.XRHID, xRhIdentityRaw)
+			c.Set(h.IdentityKey, xRhIdentityRaw)
 
 			// Store whether this a cert-auth based request.
 			if xRhIdentity.Identity.System.CommonName != "" {

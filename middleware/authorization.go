@@ -47,7 +47,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
 			}
 
-		case c.Get(h.XRHID) != nil:
+		case c.Get(h.IdentityKey) != nil:
 			// first check the identity (already parsed) to see if it contains
 			// the system key and if it does do some extra checks to authorize
 			// based on some internal rules (operator + satellite)
@@ -85,7 +85,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			// otherwise, ship the xrhid off to rbac and check access rights.
-			rhid, ok := c.Get(h.XRHID).(string)
+			rhid, ok := c.Get(h.IdentityKey).(string)
 			if !ok {
 				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get("x-rh-identity"))
 			}
