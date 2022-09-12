@@ -108,7 +108,7 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 		orgIdHeader := headers[0]
 
 		{
-			want := "x-rh-sources-org-id"
+			want := h.OrgIdKey
 			got := orgIdHeader.Key
 
 			if want != got {
@@ -211,7 +211,7 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 	{
 		orgIdHeader := headers[1]
 		{
-			want := "x-rh-sources-org-id"
+			want := h.OrgIdKey
 			got := orgIdHeader.Key
 
 			if want != got {
@@ -291,7 +291,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 		orgIdHeader := headers[0]
 
 		{
-			want := "x-rh-sources-org-id"
+			want := h.OrgIdKey
 			got := orgIdHeader.Key
 
 			if want != got {
