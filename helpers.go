@@ -80,7 +80,7 @@ func setEventStreamResource(c echo.Context, model m.Event) {
 }
 
 func getAccountNumberFromEchoContext(c echo.Context) (string, error) {
-	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+	id, ok := c.Get(h.ParsedIdentityKey).(*identity.XRHID)
 	if !ok {
 		return "", fmt.Errorf("failed to pull identity from context")
 	}

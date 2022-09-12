@@ -21,7 +21,7 @@ func Notifier(next echo.HandlerFunc) echo.HandlerFunc {
 			return fmt.Errorf("unable to find emailNotificationInfo instance in middleware")
 		}
 
-		xRhIdentity, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+		xRhIdentity, ok := c.Get(h.ParsedIdentityKey).(*identity.XRHID)
 		if !ok {
 			return fmt.Errorf("failed to fetch the identity header")
 		}

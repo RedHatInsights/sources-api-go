@@ -7,7 +7,7 @@ const (
 	UserIdKey            = "x-rh-sources-user-id"
 	IdentityKey          = "x-rh-identity"
 	InsightsRequestIdKey = "x-rh-insights-request-id"
-	PARSED_IDENTITY      = "identity"
+	ParsedIdentityKey    = "identity"
 	TENANTID             = "tenantID"
 	USERID               = "userID"
 )
