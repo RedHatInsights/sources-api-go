@@ -23,6 +23,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	"github.com/RedHatInsights/sources-api-go/middleware"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -2345,8 +2346,8 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID":      int64(1),
-			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
+			"tenantID":    int64(1),
+			h.IdentityKey: util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 
@@ -2423,8 +2424,8 @@ func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID":      int64(1),
-			"x-rh-identity": util.GeneratedXRhIdentity("1234", "1234"),
+			"tenantID":    int64(1),
+			h.IdentityKey: util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 
