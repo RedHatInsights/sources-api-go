@@ -213,7 +213,7 @@ func createSecretRequest(t *testing.T, requestBody *m.SecretCreateRequest, tenan
 
 	testUserId := "testUser"
 	identityHeader := testutils.IdentityHeaderForUser(testUserId)
-	c.Set("identity", identityHeader)
+	c.Set(h.ParsedIdentityKey, identityHeader)
 
 	err = userCatcher(c)
 

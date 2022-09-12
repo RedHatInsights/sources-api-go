@@ -53,7 +53,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			// based on some internal rules (operator + satellite)
 			id, ok := c.Get(h.ParsedIdentityKey).(*identity.XRHID)
 			if !ok {
-				return fmt.Errorf("error casting identity to struct: %+v", c.Get("identity"))
+				return fmt.Errorf("error casting identity to struct: %+v", c.Get(h.ParsedIdentityKey))
 			}
 
 			// checking to see if we're going to change the results since
