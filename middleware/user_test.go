@@ -55,7 +55,7 @@ func TestUserCreationFromXRHID(t *testing.T) {
 		t.Errorf("unable to find user %v", testUserID)
 	}
 
-	if user.Id == 0 || c.Get(h.USERID) != user.Id {
+	if user.Id == 0 || c.Get(h.UserIdKey) != user.Id {
 		t.Errorf("unable to find user id %v in context", user.Id)
 	}
 
@@ -95,7 +95,7 @@ func TestUserCreationFromPSK(t *testing.T) {
 		t.Error(err)
 	}
 
-	if user.Id == 0 || c.Get(h.USERID) != user.Id {
+	if user.Id == 0 || c.Get(h.UserIdKey) != user.Id {
 		t.Errorf("unable to find user id %v in context", user.Id)
 	}
 

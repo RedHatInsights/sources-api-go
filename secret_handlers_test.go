@@ -109,7 +109,7 @@ func TestSecretCreate(t *testing.T) {
 		stringMatcher(t, "secret auth type", secret.AuthType, authType)
 
 		if userScoped {
-			secretUserID, ok := c.Get(h.USERID).(int64)
+			secretUserID, ok := c.Get(h.UserIdKey).(int64)
 			if ok {
 				userID = &secretUserID
 			}

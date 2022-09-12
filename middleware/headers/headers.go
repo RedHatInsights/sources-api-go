@@ -9,5 +9,5 @@ const (
 	InsightsRequestIdKey = "x-rh-insights-request-id"
 	ParsedIdentityKey    = "identity"
 	TenantIdKey          = "tenantID"
-	USERID               = "userID"
+	UserIdKey            = "userID"
 )

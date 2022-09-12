@@ -42,7 +42,7 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("unable to find or create user %v: %v", userIDFromContext, err)
 			}
 
-			c.Set(h.USERID, user.Id)
+			c.Set(h.UserIdKey, user.Id)
 		}
 
 		return next(c)
