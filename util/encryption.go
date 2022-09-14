@@ -26,7 +26,10 @@ func init() {
 // variable again. Useful for testing purposes outside the "util" package.
 func InitializeEncryption() {
 	key = os.Getenv("ENCRYPTION_KEY")
-
+	fmt.Println("Key", key)
+	if key == "" {
+		panic("No encryption key set in environment")
+	}
 	// the key is base64 encoded in the ENV
 	decoded, err := base64.RawStdEncoding.DecodeString(key)
 	if err != nil {
