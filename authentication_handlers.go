@@ -153,7 +153,7 @@ func AuthenticationEdit(c echo.Context) error {
 	updateRequest := &m.AuthenticationEditRequest{}
 	err = c.Bind(updateRequest)
 	if err != nil {
-		return util.NewErrBadRequest(err)
+		return err
 	}
 
 	err = service.ValidateAuthenticationEditRequest(updateRequest)

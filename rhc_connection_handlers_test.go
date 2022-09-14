@@ -649,10 +649,19 @@ func TestRhcConnectionEditInvalidParam(t *testing.T) {
 func TestRhcConnectionEditNotFound(t *testing.T) {
 	invalidId := "12345"
 
+	requestBody := model.RhcConnectionEditRequest{
+		Extra: nil,
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
 	c, rec := request.CreateTestContext(
 		http.MethodPatch,
 		"/api/sources/v3.1/rhc_connections/"+invalidId,
-		nil,
+		bytes.NewReader(body),
 		map[string]interface{}{
 			"tenantID": int64(1),
 		},
@@ -663,7 +672,8 @@ func TestRhcConnectionEditNotFound(t *testing.T) {
 	c.SetParamValues(invalidId)
 
 	notFoundRhcConnectionEdit := ErrorHandlingContext(RhcConnectionEdit)
-	err := notFoundRhcConnectionEdit(c)
+	err = notFoundRhcConnectionEdit(c)
+
 	if err != nil {
 		t.Error(err)
 	}

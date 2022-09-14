@@ -2565,9 +2565,6 @@ func TestSourceEditPausedIntegration(t *testing.T) {
 			"tenantID": int64(1),
 		},
 	)
-	// Make sure we are using the "NoUnknownFieldsBinder".
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
 
 	c.SetParamNames("id")
 	c.SetParamValues("1")
@@ -2600,9 +2597,6 @@ func TestSourceEditPausedIntegration(t *testing.T) {
 	if !strings.Contains(got, want) {
 		t.Errorf(`unexpected body returned. Want "%s" contained in what we got "%s"`, want, got)
 	}
-
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 // TestSourceEditPausedUnit tests that a "bad request" response is returned when a paused source is tried to be updated
@@ -2640,10 +2634,6 @@ func TestSourceEditPausedUnit(t *testing.T) {
 	pausedAt := time.Now()
 	fixtures.TestSourceData[0].PausedAt = &pausedAt
 
-	// Make sure we don't accept the "Name" field we set up above.
-	backupBinder := c.Echo().Binder
-	c.Echo().Binder = &NoUnknownFieldsBinder{}
-
 	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
 	err := badRequestSourceEdit(c)
 
@@ -2669,9 +2659,6 @@ func TestSourceEditPausedUnit(t *testing.T) {
 	if rec.Code != http.StatusBadRequest {
 		t.Errorf("Wrong return code, expected %v got %v", http.StatusBadRequest, rec.Code)
 	}
-
-	// Restore the binder to not affect any other tests.
-	c.Echo().Binder = backupBinder
 }
 
 // HELPERS:
