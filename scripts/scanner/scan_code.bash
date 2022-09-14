@@ -10,25 +10,13 @@
 set -euxo pipefail
 
 #
-# Include the Sonar scanner's binaries in the path so that we can issue a simple command without the full path.
-#
-export PATH="/sonar-scanner/sonar-scanner-${SCANNER_CLI_VERSION}-linux/bin:${PATH}"
-
-#
 # Copy the repository contents so we don't have to deal with changing permissions on the mounted volume.
 #
 source_dir=$(mktemp --directory)
 cp --recursive "/repository" "${source_dir}"
 
 #
-# Export the location and password of the keystore to make sure that the sonar scanner uses them to trust our internal
-# SonarQube instance.
-#
-export SONAR_SCANNER_OPTS="-Djavax.net.ssl.trustStore=/keystore/${KEYSTORE_NAME} -Djavax.net.ssl.trustStorePassword=${KEYSTORE_PASSWORD}"
-
-#
-# Run the sonar scanner. Since all the variables are passed via environment variables, there's nothing else to specify
-# here!
+# Run the sonar scanner.
 #
 
 sonar-scanner \
