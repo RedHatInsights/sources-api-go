@@ -37,10 +37,10 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 		switch {
 		case bypassRbac:
 			c.Logger().Debugf("Skipping authorization check -- disabled in ENV")
-		case c.Get(h.PskKey) != nil:
-			psk, ok := c.Get(h.PskKey).(string)
+		case c.Get(h.Psk) != nil:
+			psk, ok := c.Get(h.Psk).(string)
 			if !ok {
-				return fmt.Errorf("error casting psk to string: %v", c.Get(h.PskKey))
+				return fmt.Errorf("error casting psk to string: %v", c.Get(h.Psk))
 			}
 
 			if !pskMatches(psk) {

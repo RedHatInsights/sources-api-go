@@ -60,7 +60,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	s := mocks.MockSender{}
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
-		h.PskKey:      "1234",
+		h.Psk:         "1234",
 		h.IdentityKey: util.GeneratedXRhIdentity("1234", "1234"),
 	})
 
