@@ -41,7 +41,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 		s := dao.GetSourceDao(requestParams)
 
 		if s.IsSuperkey(id) {
-			xrhid, ok := c.Get(h.IdentityKey).(string)
+			xrhid, ok := c.Get(h.Identity).(string)
 			if !ok {
 				return fmt.Errorf("failed to pull x-rh-identity from request")
 			}
@@ -86,7 +86,7 @@ func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 		a := dao.GetApplicationDao(requestParams)
 
 		if a.IsSuperkey(id) {
-			xrhid, ok := c.Get(h.IdentityKey).(string)
+			xrhid, ok := c.Get(h.Identity).(string)
 			if !ok {
 				return fmt.Errorf("failed to pull x-rh-identity from request")
 			}

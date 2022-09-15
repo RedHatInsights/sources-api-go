@@ -5,7 +5,7 @@ const (
 	AccountNumber        = "x-rh-sources-account-number"
 	OrgId                = "x-rh-sources-org-id"
 	XrhUserId            = "x-rh-sources-user-id"
-	IdentityKey          = "x-rh-identity"
+	Identity             = "x-rh-identity"
 	InsightsRequestIdKey = "x-rh-insights-request-id"
 	ParsedIdentityKey    = "identity"
 	TenantIdKey          = "tenantID"

@@ -2346,8 +2346,8 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID":    int64(1),
-			h.IdentityKey: util.GeneratedXRhIdentity("1234", "1234"),
+			"tenantID": int64(1),
+			h.Identity: util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 
@@ -2424,8 +2424,8 @@ func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
 		"/api/sources/v3.1/sources/1/unpause",
 		nil,
 		map[string]interface{}{
-			"tenantID":    int64(1),
-			h.IdentityKey: util.GeneratedXRhIdentity("1234", "1234"),
+			"tenantID": int64(1),
+			h.Identity: util.GeneratedXRhIdentity("1234", "1234"),
 		},
 	)
 

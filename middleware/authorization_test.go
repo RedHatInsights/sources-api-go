@@ -111,7 +111,7 @@ func TestSystemClusterID(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey: "dummy",
+			h.Identity: "dummy",
 			h.ParsedIdentityKey: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
@@ -138,7 +138,7 @@ func TestSystemCN(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey: "dummy",
+			h.Identity: "dummy",
 			h.ParsedIdentityKey: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
@@ -165,7 +165,7 @@ func TestSystemPatch(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey: "dummy",
+			h.Identity: "dummy",
 			h.ParsedIdentityKey: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
@@ -192,7 +192,7 @@ func TestSystemDelete(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey: "dummy",
+			h.Identity: "dummy",
 			h.ParsedIdentityKey: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
@@ -219,7 +219,7 @@ func TestSystemDeleteSource(t *testing.T) {
 		"/sources/1235",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey: "dummy",
+			h.Identity: "dummy",
 			h.ParsedIdentityKey: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
@@ -246,7 +246,7 @@ func TestSystemDeleteSourceVersioned(t *testing.T) {
 		"/api/sources/v3.1/sources/1235",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey: "dummy",
+			h.Identity: "dummy",
 			h.ParsedIdentityKey: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
@@ -289,7 +289,7 @@ func TestRbacWithAccess(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey:       "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
+			h.Identity:          "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
 			h.ParsedIdentityKey: &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
@@ -312,7 +312,7 @@ func TestRbacWithoutAccess(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey:       "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
+			h.Identity:          "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
 			h.ParsedIdentityKey: &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
@@ -335,7 +335,7 @@ func TestRbacNoConnection(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.IdentityKey:       "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
+			h.Identity:          "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
 			h.ParsedIdentityKey: &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)

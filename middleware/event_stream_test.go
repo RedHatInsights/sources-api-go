@@ -60,8 +60,8 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	s := mocks.MockSender{}
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
-		h.Psk:         "1234",
-		h.IdentityKey: util.GeneratedXRhIdentity("1234", "1234"),
+		h.Psk:      "1234",
+		h.Identity: util.GeneratedXRhIdentity("1234", "1234"),
 	})
 
 	f := raiseMiddleware(func(c echo.Context) error {
@@ -90,7 +90,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 		t.Errorf("Headers not set properly from RaiseEvent")
 	}
 
-	expected := []string{"event_type", h.IdentityKey, h.AccountNumber, h.OrgId}
+	expected := []string{"event_type", h.Identity, h.AccountNumber, h.OrgId}
 	for _, h := range s.Headers {
 		if !util.SliceContainsString(expected, h.Key) {
 			t.Errorf("Got bad header: [%v: %v]", h.Key, h.Value)

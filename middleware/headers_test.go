@@ -27,7 +27,7 @@ func TestParseAll(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set(h.IdentityKey, xrhid)
+	c.Request().Header.Set(h.Identity, xrhid)
 	c.Request().Header.Set(h.Psk, "test-psk")
 	c.Request().Header.Set(h.AccountNumber, "test-ebs-account-number")
 	c.Request().Header.Set(h.XrhUserId, "test-psk-user")
@@ -158,7 +158,7 @@ func TestBadIdentityBase64(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	c.Request().Header.Set(h.IdentityKey, "not valid base64")
+	c.Request().Header.Set(h.Identity, "not valid base64")
 
 	err := parseOrElse204(c)
 	if err == nil {
@@ -184,7 +184,7 @@ func TestBadIdentityJson(t *testing.T) {
 	)
 
 	// base64 for: {"not a real field": true}
-	c.Request().Header.Set(h.IdentityKey, "eyJub3QgYSByZWFsIGZpZWxkIjogdHJ1ZX0gLW4K")
+	c.Request().Header.Set(h.Identity, "eyJub3QgYSByZWFsIGZpZWxkIjogdHJ1ZX0gLW4K")
 
 	err := parseOrElse204(c)
 	if err == nil {

@@ -22,7 +22,7 @@ type Tenant struct {
 
 func (t Tenant) GetHeadersWithGeneratedXRHID() []kafka.Header {
 	return append(t.GetHeaders(), kafka.Header{
-		Key: h.IdentityKey, Value: []byte(util.GeneratedXRhIdentity(t.ExternalTenant, t.OrgID)),
+		Key: h.Identity, Value: []byte(util.GeneratedXRhIdentity(t.ExternalTenant, t.OrgID)),
 	})
 }
 

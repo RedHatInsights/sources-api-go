@@ -42,7 +42,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 			outputIdentity.OrgID = string(header.Value)
 		}
 
-		if header.Key == h.IdentityKey {
+		if header.Key == h.Identity {
 			xRhIdentity, err := ParseXRHIDHeader(string(header.Value))
 			if err != nil {
 				return nil, err
@@ -53,7 +53,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 	}
 
 	if outputIdentity.AccountNumber == "" && outputIdentity.OrgID == "" {
-		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", h.AccountNumber, h.IdentityKey)
+		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", h.AccountNumber, h.Identity)
 	}
 
 	return &outputIdentity, nil

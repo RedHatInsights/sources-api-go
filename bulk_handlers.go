@@ -23,9 +23,9 @@ func BulkCreate(c echo.Context) error {
 		return fmt.Errorf("failed to pull tenant from request")
 	}
 
-	xrhid, ok := c.Get(h.IdentityKey).(string)
+	xrhid, ok := c.Get(h.Identity).(string)
 	if !ok {
-		c.Logger().Warnf("bad xrhid %v", c.Get(h.IdentityKey))
+		c.Logger().Warnf("bad xrhid %v", c.Get(h.Identity))
 	}
 	id, ok := c.Get(h.ParsedIdentityKey).(*identity.XRHID)
 	if !ok {

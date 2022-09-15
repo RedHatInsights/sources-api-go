@@ -57,8 +57,8 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 	}
 
 	// pull the xrhid OR generate one using the information from the PSK information.
-	if c.Get(h.IdentityKey) != nil {
-		rhid, ok := c.Get(h.IdentityKey).(string)
+	if c.Get(h.Identity) != nil {
+		rhid, ok := c.Get(h.Identity).(string)
 		if ok {
 			// set the xrhid to be passed on
 			xrhid = rhid
@@ -89,7 +89,7 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 		headers = append(headers, kafka.Header{Key: h.OrgId, Value: []byte(orgId)})
 	}
 
-	headers = append(headers, kafka.Header{Key: h.IdentityKey, Value: []byte(xrhid)})
+	headers = append(headers, kafka.Header{Key: h.Identity, Value: []byte(xrhid)})
 
 	return headers, nil
 }
