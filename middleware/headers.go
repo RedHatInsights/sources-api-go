@@ -35,8 +35,8 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.AccountNumber, c.Request().Header.Get(h.AccountNumber))
 		}
 
-		if c.Request().Header.Get(h.OrgIdKey) != "" {
-			c.Set(h.OrgIdKey, c.Request().Header.Get(h.OrgIdKey))
+		if c.Request().Header.Get(h.OrgId) != "" {
+			c.Set(h.OrgId, c.Request().Header.Get(h.OrgId))
 		}
 
 		if c.Request().Header.Get(h.XrhUserIdKey) != "" {
@@ -53,7 +53,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 		var id *identity.XRHID
 		xRhIdentityRaw := c.Request().Header.Get(h.IdentityKey)
 		if xRhIdentityRaw == "" {
-			generatedIdentity := util.GeneratedXRhIdentity(c.Request().Header.Get(h.AccountNumber), c.Request().Header.Get(h.OrgIdKey))
+			generatedIdentity := util.GeneratedXRhIdentity(c.Request().Header.Get(h.AccountNumber), c.Request().Header.Get(h.OrgId))
 
 			// Store the raw, base64 encoded "xRhIdentity" string.
 			c.Set(h.IdentityKey, generatedIdentity)

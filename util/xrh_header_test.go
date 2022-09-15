@@ -135,7 +135,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 			Value: []byte(accountNumber),
 		},
 		{
-			Key:   h.OrgIdKey,
+			Key:   h.OrgId,
 			Value: []byte(orgId),
 		},
 	}
