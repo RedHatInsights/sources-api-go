@@ -30,7 +30,7 @@ func (sc *SourcesContext) Logger() echo.Logger {
 }
 
 func GetUserFromEchoContext(c echo.Context) (*int64, error) {
-	userValue := c.Get(h.UserIdKey)
+	userValue := c.Get(h.UserId)
 	if userValue == nil {
 		return nil, nil
 	}
