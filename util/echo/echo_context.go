@@ -49,7 +49,7 @@ func GetUserFromEchoContext(c echo.Context) (*int64, error) {
 // GetTenantFromEchoContext tries to extract the tenant from the echo context. If the "tenantID" is missing from the
 // context, then a default value and nil are returned as the int64 and error values.
 func GetTenantFromEchoContext(c echo.Context) (int64, error) {
-	tenantValue := c.Get(h.TenantIdKey)
+	tenantValue := c.Get(h.TenantId)
 
 	// If no tenant is found in the context, that shouldn't imply an error.
 	if tenantValue == nil {

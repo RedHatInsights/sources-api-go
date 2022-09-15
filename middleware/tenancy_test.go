@@ -119,7 +119,7 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 
 		{
 			want := tenantId
-			got := c.Get(headers.TenantIdKey)
+			got := c.Get(headers.TenantId)
 
 			if want != got {
 				t.Errorf(`"%s" header set with value "%s. Invalid tenant id set when going through the "ParseHeaders" and "Tenancy" middlewares. Want "%d", got "%v"`, key, value, want, got)

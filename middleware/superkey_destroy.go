@@ -23,7 +23,7 @@ import (
 */
 func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tenantId, ok := c.Get(h.TenantIdKey).(int64)
+		tenantId, ok := c.Get(h.TenantId).(int64)
 		if !ok {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
@@ -68,7 +68,7 @@ func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 
 func SuperKeyDestroyApplication(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tenantId, ok := c.Get(h.TenantIdKey).(int64)
+		tenantId, ok := c.Get(h.TenantId).(int64)
 		if !ok {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
