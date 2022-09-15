@@ -78,7 +78,7 @@ func TestUserCreationFromPSK(t *testing.T) {
 	)
 
 	c.Set(h.TenantIdKey, tenantID)
-	c.Set(h.XrhUserIdKey, testUserID)
+	c.Set(h.XrhUserId, testUserID)
 
 	err := catchUserOrElse204(c)
 	if err != nil {

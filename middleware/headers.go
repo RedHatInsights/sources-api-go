@@ -39,8 +39,8 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.OrgId, c.Request().Header.Get(h.OrgId))
 		}
 
-		if c.Request().Header.Get(h.XrhUserIdKey) != "" {
-			c.Set(h.XrhUserIdKey, c.Request().Header.Get(h.XrhUserIdKey))
+		if c.Request().Header.Get(h.XrhUserId) != "" {
+			c.Set(h.XrhUserId, c.Request().Header.Get(h.XrhUserId))
 		}
 
 		if c.Request().Header.Get(h.InsightsRequestIdKey) != "" {

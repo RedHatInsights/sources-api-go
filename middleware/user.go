@@ -19,8 +19,8 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 		var userIDFromContext string
 
 		switch {
-		case c.Get(h.XrhUserIdKey) != nil:
-			userID, ok := c.Get(h.XrhUserIdKey).(string)
+		case c.Get(h.XrhUserId) != nil:
+			userID, ok := c.Get(h.XrhUserId).(string)
 			if !ok {
 				return fmt.Errorf("failed to pull user id from request")
 			}
