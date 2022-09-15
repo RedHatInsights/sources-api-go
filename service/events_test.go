@@ -19,7 +19,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 	testPskAccountValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set(h.AccountNumberKey, testPskAccountValue)
+	context.Set(h.AccountNumber, testPskAccountValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -40,7 +40,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 		pskHeader := headers[0]
 
 		{
-			want := h.AccountNumberKey
+			want := h.AccountNumber
 			got := pskHeader.Key
 
 			if want != got {
@@ -189,7 +189,7 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 	{
 		accountHeader := headers[0]
 		{
-			want := h.AccountNumberKey
+			want := h.AccountNumber
 			got := accountHeader.Key
 
 			if want != got {
