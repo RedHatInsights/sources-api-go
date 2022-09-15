@@ -77,7 +77,7 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 		}
 
 		{
-			id, ok := c.Get(headers.ParsedIdentityKey).(*identity.XRHID)
+			id, ok := c.Get(headers.ParsedIdentity).(*identity.XRHID)
 			if !ok {
 				t.Errorf("unable to correctly type cast the parsed identity from the context")
 			}

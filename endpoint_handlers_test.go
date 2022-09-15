@@ -756,7 +756,7 @@ func TestEndpointEdit(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("1")
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(EndpointEdit)
 	err := sourceEditHandlerWithNotifier(c)

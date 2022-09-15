@@ -27,8 +27,8 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 
 			userIDFromContext = userID
 
-		case c.Get(h.ParsedIdentityKey) != nil:
-			xRhIdentity, ok := c.Get(h.ParsedIdentityKey).(*identity.XRHID)
+		case c.Get(h.ParsedIdentity) != nil:
+			xRhIdentity, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 			if !ok {
 				return fmt.Errorf("failed to fetch the identity header")
 			}

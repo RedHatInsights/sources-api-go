@@ -41,7 +41,7 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 		},
 	)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	user, err := dao.GetUserDao(&fixtures.TestTenantData[0].Id).FindOrCreate(testUserId)
 	if err != nil {
@@ -89,7 +89,7 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, identityHeader)
+	c.Set(h.ParsedIdentity, identityHeader)
 
 	var user m.User
 	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).First(&user).Error
@@ -199,7 +199,7 @@ func TestBulkCreate(t *testing.T) {
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, identityHeader)
+	c.Set(h.ParsedIdentity, identityHeader)
 
 	err = BulkCreate(c)
 	if err != nil {
@@ -285,7 +285,7 @@ func TestBulkCreateSourceValidationBadRequest(t *testing.T) {
 	)
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	badRequestBulkCreate := ErrorHandlingContext(BulkCreate)
 	err = badRequestBulkCreate(c)

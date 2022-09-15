@@ -112,7 +112,7 @@ func TestSystemClusterID(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			h.Identity: "dummy",
-			h.ParsedIdentityKey: &identity.XRHID{
+			h.ParsedIdentity: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
 						ClusterId: "test_cluster",
@@ -139,7 +139,7 @@ func TestSystemCN(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			h.Identity: "dummy",
-			h.ParsedIdentityKey: &identity.XRHID{
+			h.ParsedIdentity: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
 						CommonName: "test_cert",
@@ -166,7 +166,7 @@ func TestSystemPatch(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			h.Identity: "dummy",
-			h.ParsedIdentityKey: &identity.XRHID{
+			h.ParsedIdentity: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
 						CommonName: "test_cert",
@@ -193,7 +193,7 @@ func TestSystemDelete(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			h.Identity: "dummy",
-			h.ParsedIdentityKey: &identity.XRHID{
+			h.ParsedIdentity: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
 						CommonName: "test_cert",
@@ -220,7 +220,7 @@ func TestSystemDeleteSource(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			h.Identity: "dummy",
-			h.ParsedIdentityKey: &identity.XRHID{
+			h.ParsedIdentity: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
 						CommonName: "test_cert",
@@ -247,7 +247,7 @@ func TestSystemDeleteSourceVersioned(t *testing.T) {
 		nil,
 		map[string]interface{}{
 			h.Identity: "dummy",
-			h.ParsedIdentityKey: &identity.XRHID{
+			h.ParsedIdentity: &identity.XRHID{
 				Identity: identity.Identity{
 					System: identity.System{
 						CommonName: "test_cert",
@@ -289,8 +289,8 @@ func TestRbacWithAccess(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.Identity:          "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
-			h.ParsedIdentityKey: &identity.XRHID{Identity: identity.Identity{}},
+			h.Identity:       "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
+			h.ParsedIdentity: &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
 
@@ -312,8 +312,8 @@ func TestRbacWithoutAccess(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.Identity:          "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
-			h.ParsedIdentityKey: &identity.XRHID{Identity: identity.Identity{}},
+			h.Identity:       "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
+			h.ParsedIdentity: &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
 
@@ -335,8 +335,8 @@ func TestRbacNoConnection(t *testing.T) {
 		"/",
 		nil,
 		map[string]interface{}{
-			h.Identity:          "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
-			h.ParsedIdentityKey: &identity.XRHID{Identity: identity.Identity{}},
+			h.Identity:       "a wild xrhid - i mean eyJlbnRpdGxlbWVudHMiOnsiaW5zaWdodHMiOnsiaXNfZW50aXRsZWQiOnRydWV9LCJtaWdyYXRpb25zIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwiaHlicmlkX2Nsb3VkIjp7ImlzX2VudGl0bGVkIjp0cnVlfSwib3BlbnNoaWZ0Ijp7ImlzX2VudGl0bGVkIjp0cnVlfSwic21hcnRfbWFuYWdlbWVudCI6eyJpc19lbnRpdGxlZCI6dHJ1Z",
+			h.ParsedIdentity: &identity.XRHID{Identity: identity.Identity{}},
 		},
 	)
 

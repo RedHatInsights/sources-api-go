@@ -503,7 +503,7 @@ func TestAuthenticationEdit(t *testing.T) {
 	c.SetParamNames("uid")
 	c.SetParamValues(uid)
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
+	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	authEditHandlerWithNotifier := middleware.Notifier(AuthenticationEdit)
 	err = authEditHandlerWithNotifier(c)

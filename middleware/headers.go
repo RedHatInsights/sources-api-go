@@ -82,7 +82,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			id = xRhIdentity
 		}
 
-		c.Set(h.ParsedIdentityKey, id)
+		c.Set(h.ParsedIdentity, id)
 
 		return next(c)
 	}

@@ -1159,7 +1159,7 @@ func TestSourceEdit(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(fmt.Sprintf("%d", source.ID))
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
+	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(SourceEdit)
 	err := sourceEditHandlerWithNotifier(c)
@@ -1362,7 +1362,7 @@ func TestSourceEditNoNameRequest(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(fmt.Sprintf("%d", source.ID))
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
-	c.Set(h.ParsedIdentityKey, &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
+	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(SourceEdit)
 	err := sourceEditHandlerWithNotifier(c)

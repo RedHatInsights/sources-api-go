@@ -34,7 +34,7 @@ func TestUserCreationFromXRHID(t *testing.T) {
 	)
 
 	c.Set(h.TenantIdKey, tenantID)
-	c.Set(h.ParsedIdentityKey, identity)
+	c.Set(h.ParsedIdentity, identity)
 
 	err := catchUserOrElse204(c)
 	if err != nil {
