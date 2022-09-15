@@ -43,8 +43,8 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.XrhUserId, c.Request().Header.Get(h.XrhUserId))
 		}
 
-		if c.Request().Header.Get(h.InsightsRequestIdKey) != "" {
-			c.Set(h.InsightsRequestIdKey, c.Request().Header.Get(h.InsightsRequestIdKey))
+		if c.Request().Header.Get(h.InsightsRequestId) != "" {
+			c.Set(h.InsightsRequestId, c.Request().Header.Get(h.InsightsRequestId))
 		}
 
 		// id is the XrhId struct we will store in the context. The idea is: if no "x-rh-identity" header has been
