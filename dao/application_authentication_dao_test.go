@@ -312,7 +312,7 @@ func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
 
 	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
-		   Test 1 - UserA tries to GET userA's application - expected result: success
+		   Test 1 - UserA tries to GET userA's application authentication - expected result: success
 		*/
 		applicationAuthenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
 		applicationAuthenticationUserA, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
@@ -321,34 +321,34 @@ func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
 		}
 
 		if applicationAuthenticationUserA.ID != suiteData.ApplicationAuthenticationUserA().ID {
-			t.Errorf("source %v returned but source %v was expected", applicationAuthenticationUserA.ID, suiteData.ApplicationAuthenticationUserA().ID)
+			t.Errorf("application authentication %v returned but application authentication %v was expected", applicationAuthenticationUserA.ID, suiteData.ApplicationAuthenticationUserA().ID)
 		}
 
 		/*
-			Test 2 - UserA tries to GET application without user - expected result: success
+			Test 2 - UserA tries to GET application authentication without user - expected result: success
 		*/
-		applicationNoUser, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
+		applicationAuthenticationNoUser, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
 		if err != nil {
-			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %s`, err)
 		}
 
-		if applicationNoUser.ID != suiteData.ApplicationAuthenticationNoUser().ID {
-			t.Errorf("application %v returned but application %v was expected", applicationNoUser.ID, suiteData.ApplicationAuthenticationNoUser().ID)
+		if applicationAuthenticationNoUser.ID != suiteData.ApplicationAuthenticationNoUser().ID {
+			t.Errorf("application authentication %v returned but application authentication %v was expected", applicationAuthenticationNoUser.ID, suiteData.ApplicationAuthenticationNoUser().ID)
 		}
 
 		/*
-		 Test 3 - User without any ownership records tries to GET userA's application - expected result: failure
+		 Test 3 - User without any ownership records tries to GET userA's application authentication - expected result: failure
 		*/
 		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
-		applicationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
+		applicationAuthenticationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
 
-		_, err = applicationDaoWithUser.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		_, err = applicationAuthenticationDaoWithUser.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
 		if err == nil {
-			t.Errorf(`unexpected error after calling GetById for the application: %v`, suiteData.ApplicationAuthenticationUserA())
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %v`, suiteData.ApplicationAuthenticationUserA())
 		}
 
 		if err.Error() != "application authentication not found" {
-			t.Errorf(`unexpected error after calling GetById for the application: %v`, err)
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %v`, err)
 		}
 
 		return nil
@@ -369,15 +369,15 @@ func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
 
 	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
 		/*
-		  Test 1 -UserA tries to delete application authentication for userA - expected result: success
+		  Test 1 - UserA tries to delete application authentication for userA - expected result: success
 		*/
-		authenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
-		_, err := authenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationUserA().ID)
+		applicationAuthenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+		_, err := applicationAuthenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationUserA().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Delete: %v`, err)
 		}
 
-		_, err = authenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		_, err = applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
 		if err.Error() != "application authentication not found" {
 			t.Errorf(`expected 'application authentication not found', got %s`, err)
 		}
@@ -385,29 +385,29 @@ func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
 		/*
 		  Test 2 - UserA tries to delete application authentication without user - expected result: success
 		*/
-		_, err = authenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationNoUser().ID)
+		_, err = applicationAuthenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationNoUser().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Delete: %v`, err)
 		}
 
-		_, err = authenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
+		_, err = applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
 		if err.Error() != "application authentication not found" {
-			t.Errorf(`expected 'authentication not found', got %s`, err)
+			t.Errorf(`expected 'application authentication not found', got %s`, err)
 		}
 
 		/*
-		  User without any ownership records tries to delete userB's application authentication - expected result: failure
+		  Test3 - User without any ownership records tries to delete userB's application authentication - expected result: failure
 		*/
 		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
-		authenticationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
+		applicationAuthenticationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
 
-		_, err = authenticationDaoWithUser.Delete(&suiteData.ApplicationAuthenticationUserB().ID)
+		_, err = applicationAuthenticationDaoWithUser.Delete(&suiteData.ApplicationAuthenticationUserB().ID)
 		if err.Error() != "application authentication not found" {
-			t.Errorf(`expected 'authentication not found', got %s`, err)
+			t.Errorf(`expected 'application authentication not found', got %s`, err)
 		}
 
-		authenticationDaoUserB := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserB())
-		_, err = authenticationDaoUserB.GetById(&suiteData.ApplicationAuthenticationUserB().ID)
+		applicationAuthenticationDaoUserB := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserB())
+		_, err = applicationAuthenticationDaoUserB.GetById(&suiteData.ApplicationAuthenticationUserB().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById: %v`, err)
 		}
