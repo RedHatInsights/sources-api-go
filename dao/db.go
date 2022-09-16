@@ -135,12 +135,14 @@ func Init() {
 
 func dbString() string {
 	return fmt.Sprintf(
-		"user=%s password=%s dbname=%s host=%s port=%d sslmode=disable",
+		"user=%s password=%s dbname=%s host=%s port=%d sslmode=%s sslrootcert=%s",
 		config.Get().DatabaseUser,
 		config.Get().DatabasePassword,
 		config.Get().DatabaseName,
 		config.Get().DatabaseHost,
 		config.Get().DatabasePort,
+		config.Get().DatabaseSSLMode,
+		config.Get().DatabaseCert,
 	)
 }
 
@@ -148,11 +150,13 @@ func dbString() string {
 // any management operations like creating or deleting a database.
 func dbStringDefaultDb() string {
 	return fmt.Sprintf(
-		"user=%s password=%s dbname=postgres host=%s port=%d sslmode=disable",
+		"user=%s password=%s dbname=postgres host=%s port=%d sslmode=%s sslrootcert=%s",
 		config.Get().DatabaseUser,
 		config.Get().DatabasePassword,
 		config.Get().DatabaseHost,
 		config.Get().DatabasePort,
+		config.Get().DatabaseSSLMode,
+		config.Get().DatabaseCert,
 	)
 }
 
