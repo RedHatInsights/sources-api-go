@@ -12,7 +12,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-const KafkaGroupId = "sources-api-go"
+const (
+	KafkaGroupId  = "sources-api-go"
+	RdsCaLocation = "/opt/rdsca.cert"
+)
 
 var parsedConfig *SourcesApiConfig
 
@@ -35,6 +38,8 @@ type SourcesApiConfig struct {
 	DatabaseUser            string
 	DatabasePassword        string
 	DatabaseName            string
+	DatabaseSSLMode         string
+	DatabaseCert            string
 	FeatureFlagsEnvironment string
 	FeatureFlagsUrl         string
 	FeatureFlagsAPIToken    string
@@ -55,7 +60,7 @@ type SourcesApiConfig struct {
 	Env                     string
 }
 
-//String() returns a string that shows the settings in which the pod is running in
+// String() returns a string that shows the settings in which the pod is running in
 func (s SourcesApiConfig) String() string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%s=%s ", "AppName", parsedConfig.AppName)
@@ -71,6 +76,8 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "DatabaseHost", parsedConfig.DatabaseHost)
 	fmt.Fprintf(&b, "%s=%v ", "DatabasePort", parsedConfig.DatabasePort)
 	fmt.Fprintf(&b, "%s=%v ", "DatabaseName", parsedConfig.DatabaseName)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseSSLMode", parsedConfig.DatabaseSSLMode)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseCert", parsedConfig.DatabaseCert)
 	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsEnvironment", parsedConfig.FeatureFlagsEnvironment)
 	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsUrl", parsedConfig.FeatureFlagsUrl)
 	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsService", parsedConfig.FeatureFlagsService)
@@ -122,6 +129,16 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("DatabaseUser", cfg.Database.Username)
 		options.SetDefault("DatabasePassword", cfg.Database.Password)
 		options.SetDefault("DatabaseName", cfg.Database.Name)
+		options.SetDefault("DatabaseSSLMode", cfg.Database.SslMode)
+
+		if cfg.Database.RdsCa != nil {
+			err := os.WriteFile(RdsCaLocation, []byte(*cfg.Database.RdsCa), 0644)
+			if err != nil {
+				panic(err)
+			}
+
+			options.SetDefault("DatabaseCert", RdsCaLocation)
+		}
 
 		options.SetDefault("CacheHost", cfg.InMemoryDb.Hostname)
 		options.SetDefault("CachePort", cfg.InMemoryDb.Port)
@@ -177,6 +194,8 @@ func Get() *SourcesApiConfig {
 		} else {
 			options.SetDefault("DatabaseName", "sources_api_development")
 		}
+		options.SetDefault("DatabaseSSLMode", "disable")
+
 		options.SetDefault("CacheHost", os.Getenv("REDIS_CACHE_HOST"))
 		options.SetDefault("CachePort", os.Getenv("REDIS_CACHE_PORT"))
 		options.SetDefault("CachePassword", os.Getenv("REDIS_CACHE_PASSWORD"))
@@ -266,6 +285,8 @@ func Get() *SourcesApiConfig {
 		DatabaseUser:            options.GetString("DatabaseUser"),
 		DatabasePassword:        options.GetString("DatabasePassword"),
 		DatabaseName:            options.GetString("DatabaseName"),
+		DatabaseSSLMode:         options.GetString("DatabaseSSLMode"),
+		DatabaseCert:            options.GetString("DatabaseCert"),
 		FeatureFlagsEnvironment: options.GetString("FeatureFlagsEnvironment"),
 		FeatureFlagsUrl:         options.GetString("FeatureFlagsUrl"),
 		FeatureFlagsAPIToken:    options.GetString("FeatureFlagsAPIToken"),
