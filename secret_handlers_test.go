@@ -529,8 +529,7 @@ func TestSecretGet(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues(secretID)
 
-		tenancy := middleware.Tenancy(SecretGet)
-		userCatcher := middleware.UserCatcher(tenancy)
+		userCatcher := middleware.UserCatcher(SecretGet)
 		identityHeader := testutils.IdentityHeaderForUser(testUserId)
 		c.Set("identity", identityHeader)
 
