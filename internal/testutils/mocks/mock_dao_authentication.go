@@ -15,13 +15,13 @@ type MockAuthenticationDao struct {
 	Authentications []m.Authentication
 }
 
-func (m MockAuthenticationDao) List(limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
-	count := int64(len(m.Authentications))
-	return m.Authentications, count, nil
+func (mockAuthDao MockAuthenticationDao) List(_, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+	count := int64(len(mockAuthDao.Authentications))
+	return mockAuthDao.Authentications, count, nil
 }
 
-func (m MockAuthenticationDao) GetById(id string) (*m.Authentication, error) {
-	for _, auth := range m.Authentications {
+func (mockAuthDao MockAuthenticationDao) GetById(id string) (*m.Authentication, error) {
+	for _, auth := range mockAuthDao.Authentications {
 		// If secret store is database, we compare given ID with different field
 		// than if secret store is vault
 		if conf.SecretStore == "database" {
@@ -38,7 +38,7 @@ func (m MockAuthenticationDao) GetById(id string) (*m.Authentication, error) {
 	return nil, util.NewErrNotFound("authentication")
 }
 
-func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+func (mockAuthDao MockAuthenticationDao) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	sourceExists := false
 
 	for _, src := range fixtures.TestSourceData {
@@ -53,7 +53,7 @@ func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset i
 
 	out := make([]m.Authentication, 0)
 
-	for _, auth := range mAuth.Authentications {
+	for _, auth := range mockAuthDao.Authentications {
 		if auth.SourceID == sourceID {
 			out = append(out, auth)
 		}
@@ -62,7 +62,7 @@ func (mAuth MockAuthenticationDao) ListForSource(sourceID int64, limit, offset i
 	return out, int64(len(out)), nil
 }
 
-func (mAuth MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
+func (mockAuthDao MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	var appExists bool
 	for _, app := range fixtures.TestApplicationData {
 		if app.ID == appId {
@@ -83,7 +83,7 @@ func (mAuth MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ [
 	return out, int64(len(out)), nil
 }
 
-func (mAuthDao MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+func (mockAuthDao MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	var appAuthExists bool
 	var authID int64
 
@@ -99,7 +99,7 @@ func (mAuthDao MockAuthenticationDao) ListForApplicationAuthentication(appAuthID
 		return nil, 0, util.NewErrNotFound("application authentication")
 	}
 
-	auth, err := mAuthDao.GetById(fmt.Sprintf("%d", authID))
+	auth, err := mockAuthDao.GetById(fmt.Sprintf("%d", authID))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -109,7 +109,7 @@ func (mAuthDao MockAuthenticationDao) ListForApplicationAuthentication(appAuthID
 	return authentications, int64(1), nil
 }
 
-func (mAuth MockAuthenticationDao) ListForEndpoint(endpointID int64, limit, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
+func (mockAuthDao MockAuthenticationDao) ListForEndpoint(endpointID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	endpointExists := false
 
 	for _, e := range fixtures.TestEndpointData {
@@ -125,7 +125,7 @@ func (mAuth MockAuthenticationDao) ListForEndpoint(endpointID int64, limit, offs
 
 	out := make([]m.Authentication, 0)
 
-	for _, auth := range mAuth.Authentications {
+	for _, auth := range mockAuthDao.Authentications {
 		if auth.ResourceType == "Endpoint" && auth.ResourceID == endpointID {
 			out = append(out, auth)
 		}
@@ -134,7 +134,7 @@ func (mAuth MockAuthenticationDao) ListForEndpoint(endpointID int64, limit, offs
 	return out, int64(len(out)), nil
 }
 
-func (m MockAuthenticationDao) Create(auth *m.Authentication) error {
+func (mockAuthDao MockAuthenticationDao) Create(auth *m.Authentication) error {
 	switch auth.ResourceType {
 	case "Application", "Endpoint", "Source":
 		return nil
@@ -143,15 +143,15 @@ func (m MockAuthenticationDao) Create(auth *m.Authentication) error {
 	}
 }
 
-func (m MockAuthenticationDao) Update(auth *m.Authentication) error {
+func (mockAuthDao MockAuthenticationDao) Update(auth *m.Authentication) error {
 	if auth.ID == fixtures.TestAuthenticationData[0].ID {
 		return nil
 	}
 	return util.NewErrNotFound("authentication")
 }
 
-func (m MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
-	for _, auth := range m.Authentications {
+func (mockAuthDao MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
+	for _, auth := range mockAuthDao.Authentications {
 		// If secret store is database, we compare given ID with different field
 		// than if secret store is vault
 		if conf.SecretStore == "database" {
@@ -167,32 +167,32 @@ func (m MockAuthenticationDao) Delete(id string) (*m.Authentication, error) {
 	return nil, util.NewErrNotFound("authentication")
 }
 
-func (m MockAuthenticationDao) Tenant() *int64 {
+func (mockAuthDao MockAuthenticationDao) Tenant() *int64 {
 	fakeTenantId := int64(12345)
 	return &fakeTenantId
 }
 
-func (m MockAuthenticationDao) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
+func (mockAuthDao MockAuthenticationDao) AuthenticationsByResource(_ *m.Authentication) ([]m.Authentication, error) {
 	panic("implement me")
 }
 
-func (m MockAuthenticationDao) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
+func (mockAuthDao MockAuthenticationDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
 	panic("implement me")
 }
 
-func (m MockAuthenticationDao) FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error) {
+func (mockAuthDao MockAuthenticationDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) (interface{}, error) {
 	panic("implement me")
 }
 
-func (m MockAuthenticationDao) ToEventJSON(resource util.Resource) ([]byte, error) {
+func (mockAuthDao MockAuthenticationDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	panic("implement me")
 }
 
-func (m MockAuthenticationDao) BulkCreate(auth *m.Authentication) error {
-	panic("AAA")
+func (mockAuthDao MockAuthenticationDao) BulkCreate(_ *m.Authentication) error {
+	panic("implement me")
 }
 
-func (mad MockAuthenticationDao) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
+func (mockAuthDao MockAuthenticationDao) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
 	var authsList []m.Authentication
 	for _, auth := range fixtures.TestAuthenticationData {
 		for _, rid := range resourceIds {
@@ -210,6 +210,6 @@ func (mad MockAuthenticationDao) ListIdsForResource(resourceType string, resourc
 }
 
 // BulkDelete deletes all the authentications given as a list, and returns the ones that were deleted.
-func (m MockAuthenticationDao) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
+func (mockAuthDao MockAuthenticationDao) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
 	return authentications, nil
 }

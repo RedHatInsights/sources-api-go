@@ -12,7 +12,7 @@ type MockEndpointDao struct {
 	Endpoints []m.Endpoint
 }
 
-func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
+func (mockEndpointDao *MockEndpointDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.Endpoint, int64, error) {
 	// Return not found err when the source doesn't exist
 	var sourceExist bool
 	var sourceId int64
@@ -35,7 +35,7 @@ func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit
 
 	// Get list of endpoints for existing source
 	var endpointsOut []m.Endpoint
-	for _, e := range a.Endpoints {
+	for _, e := range mockEndpointDao.Endpoints {
 		if e.SourceID == sourceId {
 			endpointsOut = append(endpointsOut, e)
 		}
@@ -44,13 +44,13 @@ func (a *MockEndpointDao) SubCollectionList(primaryCollection interface{}, limit
 	return endpointsOut, int64(len(endpointsOut)), nil
 }
 
-func (a *MockEndpointDao) List(limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
-	count := int64(len(a.Endpoints))
-	return a.Endpoints, count, nil
+func (mockEndpointDao *MockEndpointDao) List(_ int, _ int, _ []util.Filter) ([]m.Endpoint, int64, error) {
+	count := int64(len(mockEndpointDao.Endpoints))
+	return mockEndpointDao.Endpoints, count, nil
 }
 
-func (a *MockEndpointDao) GetById(id *int64) (*m.Endpoint, error) {
-	for _, app := range a.Endpoints {
+func (mockEndpointDao *MockEndpointDao) GetById(id *int64) (*m.Endpoint, error) {
+	for _, app := range mockEndpointDao.Endpoints {
 		if app.ID == *id {
 			return &app, nil
 		}
@@ -59,11 +59,11 @@ func (a *MockEndpointDao) GetById(id *int64) (*m.Endpoint, error) {
 	return nil, util.NewErrNotFound("endpoint")
 }
 
-func (a *MockEndpointDao) Create(src *m.Endpoint) error {
+func (mockEndpointDao *MockEndpointDao) Create(_ *m.Endpoint) error {
 	return nil
 }
 
-func (a *MockEndpointDao) Update(endpoint *m.Endpoint) error {
+func (mockEndpointDao *MockEndpointDao) Update(endpoint *m.Endpoint) error {
 	if endpoint.ID == fixtures.TestEndpointData[0].ID {
 		return nil
 	}
@@ -71,10 +71,10 @@ func (a *MockEndpointDao) Update(endpoint *m.Endpoint) error {
 	return util.NewErrNotFound("endpoint")
 }
 
-func (endpointDao *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {
-	for i, e := range endpointDao.Endpoints {
+func (mockEndpointDao *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {
+	for i, e := range mockEndpointDao.Endpoints {
 		if e.ID == *id {
-			endpointDao.Endpoints = append(endpointDao.Endpoints[:i], endpointDao.Endpoints[i+1:]...)
+			mockEndpointDao.Endpoints = append(mockEndpointDao.Endpoints[:i], mockEndpointDao.Endpoints[i+1:]...)
 
 			return &e, nil
 		}
@@ -82,35 +82,35 @@ func (endpointDao *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {
 	return nil, util.NewErrNotFound("endpoint")
 }
 
-func (m *MockEndpointDao) Tenant() *int64 {
+func (mockEndpointDao *MockEndpointDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
 
-func (m *MockEndpointDao) CanEndpointBeSetAsDefaultForSource(sourceId int64) bool {
+func (mockEndpointDao *MockEndpointDao) CanEndpointBeSetAsDefaultForSource(_ int64) bool {
 	return true
 }
 
-func (m *MockEndpointDao) IsRoleUniqueForSource(role string, sourceId int64) bool {
+func (mockEndpointDao *MockEndpointDao) IsRoleUniqueForSource(_ string, _ int64) bool {
 	return true
 }
 
-func (m *MockEndpointDao) SourceHasEndpoints(sourceId int64) bool {
+func (mockEndpointDao *MockEndpointDao) SourceHasEndpoints(_ int64) bool {
 	return true
 }
 
-func (m *MockEndpointDao) Exists(endpointId int64) (bool, error) {
+func (mockEndpointDao *MockEndpointDao) Exists(_ int64) (bool, error) {
 	return true, nil
 }
 
-func (m *MockEndpointDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
+func (mockEndpointDao *MockEndpointDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (m *MockEndpointDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) (interface{}, error) {
+func (mockEndpointDao *MockEndpointDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (m *MockEndpointDao) ToEventJSON(_ util.Resource) ([]byte, error) {
+func (mockEndpointDao *MockEndpointDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	return nil, nil
 }

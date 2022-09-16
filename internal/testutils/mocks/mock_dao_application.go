@@ -12,7 +12,7 @@ type MockApplicationDao struct {
 	Applications []m.Application
 }
 
-func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Application, int64, error) {
+func (mockAppDao *MockApplicationDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.Application, int64, error) {
 	var applications []m.Application
 
 	switch object := primaryCollection.(type) {
@@ -30,7 +30,7 @@ func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, li
 		}
 
 		// else return list of related applications
-		for _, app := range a.Applications {
+		for _, app := range mockAppDao.Applications {
 			if object.ID == app.SourceID {
 				applications = append(applications, app)
 			}
@@ -40,13 +40,13 @@ func (a *MockApplicationDao) SubCollectionList(primaryCollection interface{}, li
 	return applications, int64(len(applications)), nil
 }
 
-func (a *MockApplicationDao) List(limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
-	count := int64(len(a.Applications))
-	return a.Applications, count, nil
+func (mockAppDao *MockApplicationDao) List(_ int, _ int, _ []util.Filter) ([]m.Application, int64, error) {
+	count := int64(len(mockAppDao.Applications))
+	return mockAppDao.Applications, count, nil
 }
 
-func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
-	for _, app := range a.Applications {
+func (mockAppDao *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
+	for _, app := range mockAppDao.Applications {
 		if app.ID == *id {
 			return &app, nil
 		}
@@ -55,8 +55,8 @@ func (a *MockApplicationDao) GetById(id *int64) (*m.Application, error) {
 	return nil, util.NewErrNotFound("application")
 }
 
-func (a *MockApplicationDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
-	for _, app := range a.Applications {
+func (mockAppDao *MockApplicationDao) GetByIdWithPreload(id *int64, preloads ...string) (*m.Application, error) {
+	for _, app := range mockAppDao.Applications {
 		if app.ID == *id {
 			for _, preload := range preloads {
 				if strings.Contains(strings.ToLower(preload), "source") {
@@ -71,16 +71,16 @@ func (a *MockApplicationDao) GetByIdWithPreload(id *int64, preloads ...string) (
 	return nil, util.NewErrNotFound("application")
 }
 
-func (a *MockApplicationDao) Create(src *m.Application) error {
+func (mockAppDao *MockApplicationDao) Create(_ *m.Application) error {
 	return nil
 }
 
-func (a *MockApplicationDao) Update(src *m.Application) error {
+func (mockAppDao *MockApplicationDao) Update(_ *m.Application) error {
 	return nil
 }
 
-func (a *MockApplicationDao) Delete(id *int64) (*m.Application, error) {
-	for _, app := range a.Applications {
+func (mockAppDao *MockApplicationDao) Delete(id *int64) (*m.Application, error) {
+	for _, app := range mockAppDao.Applications {
 		if app.ID == *id {
 			return &app, nil
 		}
@@ -88,17 +88,17 @@ func (a *MockApplicationDao) Delete(id *int64) (*m.Application, error) {
 	return nil, util.NewErrNotFound("application")
 }
 
-func (a *MockApplicationDao) Tenant() *int64 {
+func (mockAppDao *MockApplicationDao) Tenant() *int64 {
 	tenant := int64(1)
 	return &tenant
 }
 
-func (a *MockApplicationDao) User() *int64 {
+func (mockAppDao *MockApplicationDao) User() *int64 {
 	user := int64(1)
 	return &user
 }
 
-func (a *MockApplicationDao) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
+func (mockAppDao *MockApplicationDao) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
 	var application *m.Application
 	for _, app := range fixtures.TestApplicationData {
 		if app.ID == applicationId {
@@ -113,8 +113,8 @@ func (a *MockApplicationDao) DeleteCascade(applicationId int64) ([]m.Application
 	return fixtures.TestApplicationAuthenticationData, application, nil
 }
 
-func (a *MockApplicationDao) Exists(applicationId int64) (bool, error) {
-	for _, application := range a.Applications {
+func (mockAppDao *MockApplicationDao) Exists(applicationId int64) (bool, error) {
+	for _, application := range mockAppDao.Applications {
 		if application.ID == applicationId {
 			return true, nil
 		}
@@ -123,26 +123,26 @@ func (a *MockApplicationDao) Exists(applicationId int64) (bool, error) {
 	return false, nil
 }
 
-func (m *MockApplicationDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
+func (mockAppDao *MockApplicationDao) BulkMessage(_ util.Resource) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (m *MockApplicationDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) (interface{}, error) {
+func (mockAppDao *MockApplicationDao) FetchAndUpdateBy(_ util.Resource, _ map[string]interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (m *MockApplicationDao) ToEventJSON(_ util.Resource) ([]byte, error) {
+func (mockAppDao *MockApplicationDao) ToEventJSON(_ util.Resource) ([]byte, error) {
 	return nil, nil
 }
 
-func (a *MockApplicationDao) Pause(_ int64) error {
+func (mockAppDao *MockApplicationDao) Pause(_ int64) error {
 	return nil
 }
 
-func (a *MockApplicationDao) Unpause(_ int64) error {
+func (mockAppDao *MockApplicationDao) Unpause(_ int64) error {
 	return nil
 }
 
-func (src *MockApplicationDao) IsSuperkey(id int64) bool {
+func (mockAppDao *MockApplicationDao) IsSuperkey(_ int64) bool {
 	return false
 }

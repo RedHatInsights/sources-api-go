@@ -11,12 +11,12 @@ type MockRhcConnectionDao struct {
 	RelatedRhcConnections []m.RhcConnection
 }
 
-func (m *MockRhcConnectionDao) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
-	count := int64(len(m.RhcConnections))
-	return m.RhcConnections, count, nil
+func (mockRhcConnectionDao *MockRhcConnectionDao) List(_, _ int, _ []util.Filter) ([]m.RhcConnection, int64, error) {
+	count := int64(len(mockRhcConnectionDao.RhcConnections))
+	return mockRhcConnectionDao.RhcConnections, count, nil
 }
 
-func (mr *MockRhcConnectionDao) GetById(id *int64) (*m.RhcConnection, error) {
+func (mockRhcConnectionDao *MockRhcConnectionDao) GetById(id *int64) (*m.RhcConnection, error) {
 	// The ".ToResponse" method of the RhcConnection expects to have at least one related source.
 	source := []m.Source{
 		{
@@ -24,7 +24,7 @@ func (mr *MockRhcConnectionDao) GetById(id *int64) (*m.RhcConnection, error) {
 		},
 	}
 
-	for _, rhcConnection := range mr.RhcConnections {
+	for _, rhcConnection := range mockRhcConnectionDao.RhcConnections {
 		if rhcConnection.ID == *id {
 			rhcConnection.Sources = source
 			return &rhcConnection, nil
@@ -34,7 +34,7 @@ func (mr *MockRhcConnectionDao) GetById(id *int64) (*m.RhcConnection, error) {
 	return nil, util.NewErrNotFound("rhcConnection")
 }
 
-func (mr *MockRhcConnectionDao) Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error) {
+func (mockRhcConnectionDao *MockRhcConnectionDao) Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error) {
 	// Check if in fixtures is a source with given source id
 	var sourceExists bool
 	for _, src := range fixtures.TestSourceData {
@@ -66,8 +66,8 @@ func (mr *MockRhcConnectionDao) Create(rhcConnection *m.RhcConnection) (*m.RhcCo
 	return rhcConnection, nil
 }
 
-func (m *MockRhcConnectionDao) Update(rhcConnection *m.RhcConnection) error {
-	for _, rhcTmp := range m.RhcConnections {
+func (mockRhcConnectionDao *MockRhcConnectionDao) Update(rhcConnection *m.RhcConnection) error {
+	for _, rhcTmp := range mockRhcConnectionDao.RhcConnections {
 		if rhcTmp.ID == rhcConnection.ID {
 			return nil
 		}
@@ -76,8 +76,8 @@ func (m *MockRhcConnectionDao) Update(rhcConnection *m.RhcConnection) error {
 	return util.NewErrNotFound("rhcConnection")
 }
 
-func (m *MockRhcConnectionDao) Delete(id *int64) (*m.RhcConnection, error) {
-	for _, rhcTmp := range m.RhcConnections {
+func (mockRhcConnectionDao *MockRhcConnectionDao) Delete(id *int64) (*m.RhcConnection, error) {
+	for _, rhcTmp := range mockRhcConnectionDao.RhcConnections {
 		if rhcTmp.ID == *id {
 			return &rhcTmp, nil
 		}
@@ -86,8 +86,8 @@ func (m *MockRhcConnectionDao) Delete(id *int64) (*m.RhcConnection, error) {
 	return nil, util.NewErrNotFound("rhcConnection")
 }
 
-func (m *MockRhcConnectionDao) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
-	count := int64(len(m.RelatedRhcConnections))
+func (mockRhcConnectionDao *MockRhcConnectionDao) ListForSource(_ *int64, _, _ int, _ []util.Filter) ([]m.RhcConnection, int64, error) {
+	count := int64(len(mockRhcConnectionDao.RelatedRhcConnections))
 
-	return m.RelatedRhcConnections, count, nil
+	return mockRhcConnectionDao.RelatedRhcConnections, count, nil
 }
