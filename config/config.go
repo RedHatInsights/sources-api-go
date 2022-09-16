@@ -14,7 +14,7 @@ import (
 
 const (
 	KafkaGroupId  = "sources-api-go"
-	RdsCaLocation = "/opt/rdsca.cert"
+	RdsCaLocation = "/app/rdsca.cert"
 )
 
 var parsedConfig *SourcesApiConfig
