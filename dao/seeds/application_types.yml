@@ -69,6 +69,12 @@
   dependent_applications: []
   supported_source_types:
     - amazon
+    - azure
+    - google
   supported_authentication_types:
     amazon:
       - provisioning-arn
+    azure:
+      - provisioning_lighthouse_subscription_id
+    google:
+      - provisioning_project_id
