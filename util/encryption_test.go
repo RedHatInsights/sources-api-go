@@ -85,12 +85,10 @@ func TestNoKey(t *testing.T) {
 }
 
 func TestInitNoKey(t *testing.T) {
-	defer func() {
-		err := recover()
-		if err == nil {
-			t.Errorf("execution should have panicked but did not")
-		}
-	}()
 	_ = os.Setenv("ENCRYPTION_KEY", "")
 	InitializeEncryption()
+	encryptionKey := os.Getenv("ENCRYPTION_KEY")
+	if encryptionKey != "YWFhYWFhYWFhYWFhYWFhYQ" {
+		t.Errorf("Wrong encryption key! Check did not work properly")
+	}
 }
