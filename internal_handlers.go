@@ -102,7 +102,7 @@ func InternalSecretGet(c echo.Context) error {
 
 	paramID, err := util.InterfaceToInt64(c.Param("id"))
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
 	secret, err := secretDao.GetById(&paramID)
