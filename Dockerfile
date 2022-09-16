@@ -11,5 +11,7 @@ RUN go build -o sources-api-go . && strip sources-api-go
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 WORKDIR /app
+RUN chmod 777 /app
+
 COPY --from=build /build/sources-api-go /app/sources-api-go
 ENTRYPOINT ["/app/sources-api-go"]
