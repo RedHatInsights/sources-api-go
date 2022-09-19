@@ -6,8 +6,11 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/RedHatInsights/sources-api-go/config"
 )
 
 var (
@@ -27,7 +30,10 @@ func init() {
 func InitializeEncryption() {
 	key = os.Getenv("ENCRYPTION_KEY")
 	if key == "" {
-		_ = os.Setenv("ENCRYPTION_KEY", "YWFhYWFhYWFhYWFhYWFhYQ")
+		err := setDefaultEncryptionKey()
+		if err != nil {
+			panic(err)
+		}
 	}
 	// the key is base64 encoded in the ENV
 	decoded, err := base64.RawStdEncoding.DecodeString(key)
@@ -36,6 +42,33 @@ func InitializeEncryption() {
 	}
 	key = string(decoded)
 	keyPresent = true
+}
+
+func setDefaultEncryptionKey() error {
+	if config.Get().Env != "stage" && config.Get().Env != "prod" {
+		_, err := os.Stat("encryption_key.dev")
+		if os.IsNotExist(err) {
+			panic("encryption_key.dev file does not exist. Please import encryption_key.dev file and create symlink encryption_key.dev to encryption_key using [ln -s FILE LINK].")
+		} else {
+			body, bodyErr := ioutil.ReadFile("encryption_key.dev")
+			if bodyErr != nil {
+				return fmt.Errorf("Unable to read file: %v", err)
+			}
+			//check if symlink is created if encryption_key.dev file exists
+			_, symErr := os.Stat("encryption_key")
+			if symErr == nil {
+				keyErr := os.Setenv("ENCRYPTION_KEY", string(body))
+				if keyErr != nil {
+					return fmt.Errorf("error in setting variable in environment: %v", keyErr)
+				}
+				key = string(body)
+			} else {
+				return fmt.Errorf("Please create symlink locally using: [ln -s encryption_key.dev encryption_key]")
+			}
+		}
+		return nil
+	}
+	panic("Unable to set up default encryption key")
 }
 
 // Encrypts str into a password_hash using the encryption key

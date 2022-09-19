@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/base64"
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -84,11 +85,57 @@ func TestNoKey(t *testing.T) {
 	}
 }
 
-func TestInitNoKey(t *testing.T) {
-	_ = os.Setenv("ENCRYPTION_KEY", "")
+func TestSetDefaultEncryptionKey(t *testing.T) {
+	setErr := os.Setenv("ENCRYPTION_KEY", "")
+	if setErr != nil {
+		t.Errorf("encryption key unable to set as empty string: %v", setErr)
+	}
 	InitializeEncryption()
 	encryptionKey := os.Getenv("ENCRYPTION_KEY")
 	if encryptionKey != "YWFhYWFhYWFhYWFhYWFhYQ" {
-		t.Errorf("Wrong encryption key! Check did not work properly")
+		t.Errorf("Wrong encryption key! setDefaultEncryptionKey() did not work properly")
 	}
+
+}
+func TestInitEncryptionNoKey(t *testing.T) {
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Errorf("execution should have panicked but did not")
+		}
+		f, fErr := os.Create("encryption_key.dev")
+		if fErr != nil {
+			t.Errorf("file encryption_key.dev was not able to be created")
+		}
+		_, err2 := f.WriteString("YWFhYWFhYWFhYWFhYWFhYQ")
+		if err2 != nil {
+			t.Errorf("Was unable to write key to file.")
+		}
+		closeErr := f.Close()
+		if closeErr != nil {
+			t.Errorf("Unable to close written file")
+		}
+		symErr := os.Symlink("encryption_key.dev", "encryption_key")
+		if symErr != nil {
+			t.Errorf("Error within symlink")
+		}
+
+		body, _ := ioutil.ReadFile("encryption_key.dev")
+		if string(body) != "YWFhYWFhYWFhYWFhYWFhYQ" {
+			t.Errorf("Wrong default key")
+		}
+	}()
+	e := os.Remove("encryption_key.dev")
+	_ = os.Setenv("ENCRYPTION_KEY", "")
+	if e != nil {
+		panic(e)
+	}
+	if _, sErr := os.Lstat("encryption_key"); sErr == nil {
+		if sErr := os.Remove("encryption_key"); sErr != nil {
+			t.Errorf("Failed to unlink: %v", sErr)
+		}
+	} else if os.IsNotExist(sErr) {
+		t.Errorf("Failed to check symlink: %v", sErr)
+	}
+	InitializeEncryption()
 }
