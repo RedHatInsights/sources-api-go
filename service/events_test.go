@@ -19,7 +19,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 	testPskAccountValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set(h.ACCOUNT_NUMBER, testPskAccountValue)
+	context.Set(h.AccountNumber, testPskAccountValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
