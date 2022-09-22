@@ -40,7 +40,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 		pskHeader := headers[0]
 
 		{
-			want := "x-rh-sources-account-number"
+			want := h.AccountNumber
 			got := pskHeader.Key
 
 			if want != got {
@@ -189,7 +189,7 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 	{
 		accountHeader := headers[0]
 		{
-			want := "x-rh-sources-account-number"
+			want := h.AccountNumber
 			got := accountHeader.Key
 
 			if want != got {
