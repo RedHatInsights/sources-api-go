@@ -11,10 +11,6 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-const (
-	xrhAccountNumberKey string = "x-rh-sources-account-number"
-)
-
 func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
 	var XRHIdentity *identity.XRHID
 	decodedIdentity, err := base64.StdEncoding.DecodeString(inputIdentity)
@@ -38,7 +34,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 	var outputIdentity identity.Identity
 
 	for _, header := range headers {
-		if header.Key == xrhAccountNumberKey {
+		if header.Key == h.AccountNumber {
 			outputIdentity.AccountNumber = string(header.Value)
 		}
 
@@ -57,7 +53,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 	}
 
 	if outputIdentity.AccountNumber == "" && outputIdentity.OrgID == "" {
-		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", xrhAccountNumberKey, h.XRHID)
+		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", h.AccountNumber, h.XRHID)
 	}
 
 	return &outputIdentity, nil
