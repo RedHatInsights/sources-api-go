@@ -30,7 +30,7 @@ func TestParseAll(t *testing.T) {
 	c.Request().Header.Set(h.XRHID, xrhid)
 	c.Request().Header.Set(h.PSK, "test-psk")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "test-ebs-account-number")
-	c.Request().Header.Set(h.PSK_USER, "test-psk-user")
+	c.Request().Header.Set(h.PSKUserID, "test-psk-user")
 	c.Request().Header.Set(h.ORGID, "test-orgid")
 
 	err := parseOrElse204(c)
@@ -50,8 +50,8 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "test-ebs-account-number")
 	}
 
-	if c.Get(h.PSK_USER).(string) != "test-psk-user" {
-		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "test-psk-user")
+	if c.Get(h.PSKUserID).(string) != "test-psk-user" {
+		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "test-psk-user")
 	}
 
 	if c.Get(h.ORGID).(string) != "test-orgid" {
@@ -84,7 +84,7 @@ func TestParseWithoutXrhid(t *testing.T) {
 
 	c.Request().Header.Set(h.PSK, "test-psk")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "test-ebs-account-number")
-	c.Request().Header.Set(h.PSK_USER, "test-psk-user")
+	c.Request().Header.Set(h.PSKUserID, "test-psk-user")
 	c.Request().Header.Set(h.ORGID, "test-orgid")
 
 	err := parseOrElse204(c)
@@ -104,8 +104,8 @@ func TestParseWithoutXrhid(t *testing.T) {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "test-ebs-account-number")
 	}
 
-	if c.Get(h.PSK_USER).(string) != "test-psk-user" {
-		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "test-psk-user")
+	if c.Get(h.PSKUserID).(string) != "test-psk-user" {
+		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "test-psk-user")
 	}
 
 	if c.Get(h.ORGID).(string) != "test-orgid" {
@@ -211,7 +211,7 @@ func TestOnlyPskHeaders(t *testing.T) {
 
 	c.Request().Header.Set(h.PSK, "1234")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "9876")
-	c.Request().Header.Set(h.PSK_USER, "555555")
+	c.Request().Header.Set(h.PSKUserID, "555555")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -230,7 +230,7 @@ func TestOnlyPskHeaders(t *testing.T) {
 		t.Errorf("%v was set as psk-account instead of %v", c.Get(h.ACCOUNT_NUMBER).(string), "9876")
 	}
 
-	if c.Get(h.PSK_USER).(string) != "555555" {
-		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSK_USER).(string), "555555")
+	if c.Get(h.PSKUserID).(string) != "555555" {
+		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "555555")
 	}
 }
