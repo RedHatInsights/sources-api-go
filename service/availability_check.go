@@ -22,7 +22,7 @@ import (
 
 const (
 	disconnectedRhc = "cloud-connector returned 'disconnected'"
-	unavailbleRhc   = "cloud-connector returned a non-ok exit code for this connection"
+	unavailableRhc  = "cloud-connector returned a non-ok exit code for this connection"
 
 	satelliteRequestedTopic = "platform.topological-inventory.operations-satellite"
 )
@@ -257,7 +257,7 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 		acr.Logger().Warnf("Body Returned from RHC ID [%v]: %s", rhcConnection.ID, b)
 
 		// updating status to unavailable
-		acr.updateRhcStatus(source, "unavailable", unavailbleRhc, rhcConnection, headers)
+		acr.updateRhcStatus(source, "unavailable", unavailableRhc, rhcConnection, headers)
 		return
 	}
 
