@@ -57,7 +57,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		// stored in the database.
 		c.Set(h.TENANTID, tenant.Id)
 		c.Set(h.ACCOUNT_NUMBER, tenant.ExternalTenant)
-		c.Set(h.ORGID, tenant.OrgID)
+		c.Set(h.OrgID, tenant.OrgID)
 
 		return next(c)
 	}

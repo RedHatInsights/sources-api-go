@@ -31,7 +31,7 @@ func TestParseAll(t *testing.T) {
 	c.Request().Header.Set(h.PSK, "test-psk")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "test-ebs-account-number")
 	c.Request().Header.Set(h.PSKUserID, "test-psk-user")
-	c.Request().Header.Set(h.ORGID, "test-orgid")
+	c.Request().Header.Set(h.OrgID, "test-orgid")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -54,8 +54,8 @@ func TestParseAll(t *testing.T) {
 		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "test-psk-user")
 	}
 
-	if c.Get(h.ORGID).(string) != "test-orgid" {
-		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.ORGID).(string))
+	if c.Get(h.OrgID).(string) != "test-orgid" {
+		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.OrgID).(string))
 	}
 
 	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
@@ -85,7 +85,7 @@ func TestParseWithoutXrhid(t *testing.T) {
 	c.Request().Header.Set(h.PSK, "test-psk")
 	c.Request().Header.Set(h.ACCOUNT_NUMBER, "test-ebs-account-number")
 	c.Request().Header.Set(h.PSKUserID, "test-psk-user")
-	c.Request().Header.Set(h.ORGID, "test-orgid")
+	c.Request().Header.Set(h.OrgID, "test-orgid")
 
 	err := parseOrElse204(c)
 	if err != nil {
@@ -108,8 +108,8 @@ func TestParseWithoutXrhid(t *testing.T) {
 		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "test-psk-user")
 	}
 
-	if c.Get(h.ORGID).(string) != "test-orgid" {
-		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.ORGID).(string))
+	if c.Get(h.OrgID).(string) != "test-orgid" {
+		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.OrgID).(string))
 	}
 
 	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)

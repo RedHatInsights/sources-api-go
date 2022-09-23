@@ -87,7 +87,7 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 	testOrgIdValue := "abcde"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set(h.ORGID, testOrgIdValue)
+	context.Set(h.OrgID, testOrgIdValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -270,7 +270,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 	testOrgIdValue := "12345"
 
 	context, _ := request.CreateTestContext("GET", "https://example.org/hello", nil, nil)
-	context.Set(h.ORGID, testOrgIdValue)
+	context.Set(h.OrgID, testOrgIdValue)
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)

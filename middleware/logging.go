@@ -15,7 +15,7 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		method := c.Request().Method
 		agent := c.Request().UserAgent()
 		acct := c.Get(h.ACCOUNT_NUMBER)
-		orgid := c.Get(h.ORGID)
+		orgid := c.Get(h.OrgID)
 		uuid := c.Get(h.INSIGHTS_REQUEST_ID)
 
 		baseFields := logrus.Fields{
