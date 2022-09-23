@@ -16,7 +16,7 @@ import (
 // account number or OrgId.
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+		id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 		if !ok {
 			return fmt.Errorf("invalid identity structure received: %#v", id)
 		}
@@ -46,7 +46,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		// Update the identity struct with the tenancy data from the database.
 		id.Identity.OrgID = tenant.OrgID
 		id.Identity.AccountNumber = tenant.ExternalTenant
-		c.Set(h.PARSED_IDENTITY, id)
+		c.Set(h.ParsedIdentity, id)
 
 		// Store the ID, EBS account number and OrgId from what we've got in the database. Prior to this, we stored
 		// the contents of the incoming headers, but this had a problem: if we only received an EBS account number, we

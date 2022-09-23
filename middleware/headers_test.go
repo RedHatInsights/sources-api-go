@@ -58,7 +58,7 @@ func TestParseAll(t *testing.T) {
 		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.OrgID).(string))
 	}
 
-	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+	id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 	if !ok {
 		t.Errorf(`unexpected type of identity received. Want "*identity.XRHID", got "%s"`, reflect.TypeOf(c.Get("identity")))
 	}
@@ -112,7 +112,7 @@ func TestParseWithoutXrhid(t *testing.T) {
 		t.Errorf(`invalid org id set. Want "%s", got "%s"`, "abcde", c.Get(h.OrgID).(string))
 	}
 
-	id, ok := c.Get(h.PARSED_IDENTITY).(*identity.XRHID)
+	id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 	if !ok {
 		t.Errorf(`unexpected type of identity received. Want "*identity.XRHID", got "%s"`, reflect.TypeOf(c.Get("identity")))
 	}
