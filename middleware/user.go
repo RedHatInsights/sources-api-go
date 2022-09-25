@@ -11,7 +11,7 @@ import (
 
 func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tenantId, ok := c.Get(h.TENANTID).(int64)
+		tenantId, ok := c.Get(h.TenantID).(int64)
 		if !ok {
 			return fmt.Errorf("failed to pull tenant from request")
 		}
