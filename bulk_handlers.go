@@ -34,7 +34,7 @@ func BulkCreate(c echo.Context) error {
 	}
 
 	user := &m.User{TenantID: tenantID}
-	userID, ok := c.Get(h.USERID).(int64)
+	userID, ok := c.Get(h.UserID).(int64)
 
 	if ok {
 		user.UserID = id.Identity.User.UserID
