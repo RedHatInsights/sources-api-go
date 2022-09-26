@@ -48,7 +48,7 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 		t.Error(err)
 	}
 
-	c.Set(h.USERID, user.Id)
+	c.Set(h.UserID, user.Id)
 
 	err = BulkCreate(c)
 	if !strings.Contains(err.Error(), "no source type present, need either [source_type_name] or [source_type_id]") {
