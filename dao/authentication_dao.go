@@ -614,11 +614,11 @@ func (a *authenticationDaoImpl) AuthenticationsByResource(authentication *m.Auth
 
 	switch authentication.ResourceType {
 	case "Source":
-		resourceAuthentications, _, err = a.ListForSource(authentication.ResourceID, DEFAULT_LIMIT, DEFAULT_OFFSET, nil)
+		resourceAuthentications, _, err = a.ListForSource(authentication.ResourceID, DefaultLimit, DefaultOffset, nil)
 	case "Endpoint":
-		resourceAuthentications, _, err = a.ListForEndpoint(authentication.ResourceID, DEFAULT_LIMIT, DEFAULT_OFFSET, nil)
+		resourceAuthentications, _, err = a.ListForEndpoint(authentication.ResourceID, DefaultLimit, DefaultOffset, nil)
 	case "Application":
-		resourceAuthentications, _, err = a.ListForApplication(authentication.ResourceID, DEFAULT_LIMIT, DEFAULT_OFFSET, nil)
+		resourceAuthentications, _, err = a.ListForApplication(authentication.ResourceID, DefaultLimit, DefaultOffset, nil)
 	default:
 		return nil, fmt.Errorf("unable to fetch authentications for %s", authentication.ResourceType)
 	}

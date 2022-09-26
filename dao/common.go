@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	DEFAULT_LIMIT  = 100
-	DEFAULT_OFFSET = 0
+	DefaultLimit  = 100
+	DefaultOffset = 0
 )
 
 func GetFromResourceType(resourceType string, tenantID int64) (m.EventModelDao, error) {
