@@ -101,7 +101,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 
 	headers := []kafka.Header{
 		{
-			Key:   xrhIdentityKey,
+			Key:   h.XRHID,
 			Value: []byte(base64Identity),
 		},
 	}

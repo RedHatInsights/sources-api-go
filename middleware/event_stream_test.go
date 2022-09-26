@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/events"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -60,7 +61,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: &s} }
 	c, rec := request.CreateTestContext(http.MethodGet, "/", nil, map[string]interface{}{
 		"x-rh-sources-psk": "1234",
-		"x-rh-identity":    util.GeneratedXRhIdentity("1234", "1234"),
+		h.XRHID:            util.GeneratedXRhIdentity("1234", "1234"),
 	})
 
 	f := raiseMiddleware(func(c echo.Context) error {
@@ -89,7 +90,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 		t.Errorf("Headers not set properly from RaiseEvent")
 	}
 
-	expected := []string{"event_type", "x-rh-identity", "x-rh-sources-account-number", "x-rh-sources-org-id"}
+	expected := []string{"event_type", h.XRHID, "x-rh-sources-account-number", "x-rh-sources-org-id"}
 	for _, h := range s.Headers {
 		if !util.SliceContainsString(expected, h.Key) {
 			t.Errorf("Got bad header: [%v: %v]", h.Key, h.Value)

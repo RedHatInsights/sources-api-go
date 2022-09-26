@@ -13,7 +13,6 @@ import (
 
 const (
 	xrhAccountNumberKey string = "x-rh-sources-account-number"
-	xrhIdentityKey      string = "x-rh-identity"
 )
 
 func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
@@ -47,7 +46,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 			outputIdentity.OrgID = string(header.Value)
 		}
 
-		if header.Key == xrhIdentityKey {
+		if header.Key == h.XRHID {
 			xRhIdentity, err := ParseXRHIDHeader(string(header.Value))
 			if err != nil {
 				return nil, err
@@ -58,7 +57,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 	}
 
 	if outputIdentity.AccountNumber == "" && outputIdentity.OrgID == "" {
-		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", xrhAccountNumberKey, xrhIdentityKey)
+		return nil, fmt.Errorf("unable to get identity number from headers, %s and %s are missing", xrhAccountNumberKey, h.XRHID)
 	}
 
 	return &outputIdentity, nil

@@ -15,6 +15,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/types"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -417,7 +418,7 @@ func TestConsumeStatusMessage(t *testing.T) {
 
 	header := kafkaGo.Header{Key: "event_type", Value: []byte("availability_status")}
 	// {"identity":{"account_number":"12345","user": {"is_org_admin":true}}, "internal": {"org_id": "000001"}}
-	header2 := kafkaGo.Header{Key: "x-rh-identity", Value: []byte("eyJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjEyMzQ1IiwidXNlciI6IHsiaXNfb3JnX2FkbWluIjp0cnVlfX0sICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fQo=")}
+	header2 := kafkaGo.Header{Key: h.XRHID, Value: []byte("eyJpZGVudGl0eSI6eyJhY2NvdW50X251bWJlciI6IjEyMzQ1IiwidXNlciI6IHsiaXNfb3JnX2FkbWluIjp0cnVlfX0sICJpbnRlcm5hbCI6IHsib3JnX2lkIjogIjAwMDAwMSJ9fQo=")}
 	header3 := kafkaGo.Header{Key: "x-rh-sources-account-number", Value: []byte("12345")}
 	headers := []kafkaGo.Header{header, header2, header3}
 	statusMessage := types.StatusMessage{ResourceType: "Source", ResourceID: "1", ResourceIDRaw: "1", Status: m.Available}

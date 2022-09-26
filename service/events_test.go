@@ -59,7 +59,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 	{
 		xRhIdHeader := headers[1]
 		{
-			want := "x-rh-identity"
+			want := h.XRHID
 			got := xRhIdHeader.Key
 			if want != got {
 				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
@@ -127,7 +127,7 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 	{
 		xRhIdHeader := headers[1]
 		{
-			want := "x-rh-identity"
+			want := h.XRHID
 			got := xRhIdHeader.Key
 			if want != got {
 				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
@@ -169,7 +169,7 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 		t.Errorf(`unexpected error when marshalling the XRHID: %s`, err)
 	}
 
-	context.Set("x-rh-identity", base64.StdEncoding.EncodeToString(result))
+	context.Set(h.XRHID, base64.StdEncoding.EncodeToString(result))
 
 	// Call the function under test.
 	headers, err := ForwadableHeaders(context)
@@ -232,7 +232,7 @@ func TestForwadableHeadersXrhId(t *testing.T) {
 		xRhIdentityHeader := headers[2]
 
 		{
-			want := "x-rh-identity"
+			want := h.XRHID
 			got := xRhIdentityHeader.Key
 
 			if want != got {
@@ -312,7 +312,7 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 		xRhIdentityHeader := headers[1]
 
 		{
-			want := "x-rh-identity"
+			want := h.XRHID
 			got := xRhIdentityHeader.Key
 
 			if want != got {

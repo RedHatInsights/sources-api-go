@@ -87,7 +87,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			// otherwise, ship the xrhid off to rbac and check access rights.
 			rhid, ok := c.Get(h.XRHID).(string)
 			if !ok {
-				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get("x-rh-identity"))
+				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get(h.XRHID))
 			}
 
 			allowed, err := rbacClient.Allowed(rhid)
