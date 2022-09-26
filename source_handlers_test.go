@@ -2661,6 +2661,161 @@ func TestSourceEditPausedUnit(t *testing.T) {
 	}
 }
 
+func TestSourceDeleteWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	accountNumber := "112567"
+	userIDWithOwnRecords := "user_based_user"
+	otherUserIDWithoutOwnRecords := "other_user"
+	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
+	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+	recordsWithUserID, _, err := dao.CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	src := recordsWithUserID.Sources[0]
+	tenantID := src.TenantID
+
+	otherUser, err := dao.CreateUserForUserID(otherUserIDWithoutOwnRecords, tenantID)
+	if err != nil {
+		t.Errorf("unable to create user: %v", err)
+	}
+
+	id := fmt.Sprintf("%d", src.ID)
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/"+id,
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantID,
+			"userID":   otherUser.Id,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(id)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSourceDelete := ErrorHandlingContext(SourceDelete)
+	err = notFoundSourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+
+	err = cleanSourceForTenant(recordsWithUserID.Sources[0].Name, &recordsWithUserID.Sources[0].TenantID)
+	if err != nil {
+		t.Errorf("unable to clean source: %v", err)
+	}
+}
+
+func TestSuperKeyDestroyWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	accountNumber := "112567"
+	userIDWithOwnRecords := "user_based_user"
+	otherUserIDWithoutOwnRecords := "other_user"
+
+	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
+	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+	recordsWithUserID, user, err := dao.CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	src := recordsWithUserID.Sources[0]
+	src.AppCreationWorkflow = m.AccountAuth
+	tenantID := src.TenantID
+
+	sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &tenantID, UserID: &user.Id})
+	err = sourceDao.Update(&m.Source{ID: src.ID, AppCreationWorkflow: m.AccountAuth})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !sourceDao.IsSuperkey(src.ID) {
+		t.Error("tested source is not super key")
+	}
+
+	otherUser, err := dao.CreateUserForUserID(otherUserIDWithoutOwnRecords, tenantID)
+	if err != nil {
+		t.Errorf("unable to create user: %v", err)
+	}
+
+	id := fmt.Sprintf("%d", src.ID)
+	c, _ := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/"+id,
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantID,
+			"userID":   otherUser.Id,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(id)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	superKeyDestroySource := middleware.SuperKeyDestroySource(SourceDelete)
+	err = superKeyDestroySource(c)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf("improper error occurred for super key destroy source operation %v", err)
+	}
+
+	err = cleanSourceForTenant(recordsWithUserID.Sources[0].Name, &recordsWithUserID.Sources[0].TenantID)
+	if err != nil {
+		t.Errorf("unable to clean source: %v", err)
+	}
+}
+
+func TestSourceDeleteWithOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+
+	accountNumber := "112567"
+	userIDWithOwnRecords := "user_based_user"
+
+	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
+	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+	recordsWithUserID, user, err := dao.CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
+	if err != nil {
+		t.Errorf("unable to create source: %v", err)
+	}
+
+	src := recordsWithUserID.Sources[0]
+	tenantID := src.TenantID
+
+	id := fmt.Sprintf("%d", src.ID)
+	c, _ := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/sources/"+id,
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantID,
+			"userID":   user.Id,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(id)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	err = SourceDelete(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	result := dao.DB.Where("id = ?", id).Delete(&user)
+	if result.Error != nil {
+		t.Errorf("unable delete user, error: %v", result.Error)
+	}
+}
+
 // HELPERS:
 
 // checkAllSourcesBelongToTenant checks that all returned sources belongs to given tenant
