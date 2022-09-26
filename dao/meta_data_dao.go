@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	AWS_WIZARD_ACCOUNT_NUMBER_SETTING = "aws_wizard_account_number"
-	RETRY_SOURCE_CREATION_SETTING     = "retry_source_creation"
+	AwsWizardAccountNumberSetting = "aws_wizard_account_number"
+	RetrySourceCreationSetting    = "retry_source_creation"
 )
 
 // GetMetaDataDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -107,7 +107,7 @@ func (md *metaDataDaoImpl) GetSuperKeyAccountNumber(applicationTypeId int64) (st
 		Select("payload").
 		Where("type = ?", m.AppMetaData).
 		Where("application_type_id = ?", applicationTypeId).
-		Where("name = ?", AWS_WIZARD_ACCOUNT_NUMBER_SETTING).
+		Where("name = ?", AwsWizardAccountNumberSetting).
 		First(&account)
 
 	// it gets stored as `"12345"` but we do not want the quotes - remove them here.
@@ -120,7 +120,7 @@ func (md *metaDataDaoImpl) ApplicationOptedIntoRetry(applicationTypeId int64) (b
 	result := DB.Debug().
 		Model(&m.MetaData{}).
 		Select(`payload::text = '"true"'`).
-		Where("name = ?", RETRY_SOURCE_CREATION_SETTING).
+		Where("name = ?", RetrySourceCreationSetting).
 		Where("type = ?", m.AppMetaData).
 		Where("application_type_id = ?", applicationTypeId).
 		Scan(&optIn)
