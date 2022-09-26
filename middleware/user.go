@@ -19,8 +19,8 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 		var userIDFromContext string
 
 		switch {
-		case c.Get(h.PSK_USER) != nil:
-			userID, ok := c.Get(h.PSK_USER).(string)
+		case c.Get(h.PSKUserID) != nil:
+			userID, ok := c.Get(h.PSKUserID).(string)
 			if !ok {
 				return fmt.Errorf("failed to pull user id from request")
 			}
