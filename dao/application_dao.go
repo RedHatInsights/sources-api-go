@@ -177,7 +177,7 @@ func (a *applicationDaoImpl) Create(app *m.Application) error {
 	var pgErr *pgconn.PgError
 	if errors.As(result.Error, &pgErr) {
 		// unique constraint violation for index (source id + app type id + tenant id)
-		if pgErr.Code == PG_UNIQUE_CONSTRAINT_VIOLATION && strings.Contains(pgErr.Detail, "Key (source_id, application_type_id, tenant_id)") {
+		if pgErr.Code == PgUniqueConstraintViolation && strings.Contains(pgErr.Detail, "Key (source_id, application_type_id, tenant_id)") {
 			message := fmt.Sprintf("Application of application type = %d already exists for the source id = %d", app.ApplicationTypeID, app.SourceID)
 			return util.NewErrBadRequest(message)
 		}
