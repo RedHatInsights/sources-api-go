@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	RETRY_MAX        = 5
-	RECORD_AGE_LIMIT = -1 * 30 * time.Minute
+	RetryMax       = 5
+	RecordAgeLimit = -1 * 30 * time.Minute
 )
 
 type RetryCreateJob struct{}
@@ -33,8 +33,8 @@ func (r *RetryCreateJob) Run() error {
 		// retry counter to 5 so they don't get picked up again.
 		result := tx.Debug().
 			Model(&m.Application{}).
-			Where("availability_status = ? AND retry_counter < ?", m.Available, RETRY_MAX).
-			Update("retry_counter", RETRY_MAX)
+			Where("availability_status = ? AND retry_counter < ?", m.Available, RetryMax).
+			Update("retry_counter", RetryMax)
 		if result.Error != nil {
 			l.Log.Errorf("Error updating available applications' retry counters")
 			return result.Error
@@ -52,8 +52,8 @@ func (r *RetryCreateJob) Run() error {
 			Select("id", "tenant_id", "application_type_id").
 			Model(&m.Application{}).
 			Where("availability_status IS DISTINCT FROM ? ", m.Available).
-			Where("created_at > ?", time.Now().Add(RECORD_AGE_LIMIT)).
-			Where("retry_counter < ?", RETRY_MAX).
+			Where("created_at > ?", time.Now().Add(RecordAgeLimit)).
+			Where("retry_counter < ?", RetryMax).
 			Scan(&apps)
 		if result.Error != nil {
 			l.Log.Errorf("Error listing applications that meet retry criteria")
