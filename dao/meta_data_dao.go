@@ -36,7 +36,7 @@ func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limi
 	}
 
 	query := relationObject.HasMany(&m.MetaData{}, DB.Debug())
-	query = query.Where("meta_data.type = ?", m.APP_META_DATA)
+	query = query.Where("meta_data.type = ?", m.AppMetaData)
 
 	query, err = applyFilters(query, filters)
 	if err != nil {
@@ -55,7 +55,7 @@ func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limi
 
 func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metaData := make([]m.MetaData, 0, limit)
-	query := DB.Debug().Model(&m.MetaData{}).Where("type = ?", m.APP_META_DATA)
+	query := DB.Debug().Model(&m.MetaData{}).Where("type = ?", m.AppMetaData)
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
@@ -93,7 +93,7 @@ func (md *metaDataDaoImpl) GetSuperKeySteps(applicationTypeId int64) ([]m.MetaDa
 	steps := make([]m.MetaData, 0)
 
 	result := DB.Model(&m.MetaData{}).
-		Where("type = ?", m.SUPERKEY_META_DATA).
+		Where("type = ?", m.SuperKeyMetaData).
 		Where("application_type_id = ?", applicationTypeId).
 		Order("step").
 		Scan(&steps)
@@ -105,7 +105,7 @@ func (md *metaDataDaoImpl) GetSuperKeyAccountNumber(applicationTypeId int64) (st
 	var account string
 	result := DB.Model(&m.MetaData{}).
 		Select("payload").
-		Where("type = ?", m.APP_META_DATA).
+		Where("type = ?", m.AppMetaData).
 		Where("application_type_id = ?", applicationTypeId).
 		Where("name = ?", AWS_WIZARD_ACCOUNT_NUMBER_SETTING).
 		First(&account)
@@ -121,7 +121,7 @@ func (md *metaDataDaoImpl) ApplicationOptedIntoRetry(applicationTypeId int64) (b
 		Model(&m.MetaData{}).
 		Select(`payload::text = '"true"'`).
 		Where("name = ?", RETRY_SOURCE_CREATION_SETTING).
-		Where("type = ?", m.APP_META_DATA).
+		Where("type = ?", m.AppMetaData).
 		Where("application_type_id = ?", applicationTypeId).
 		Scan(&optIn)
 
