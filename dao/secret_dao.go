@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"fmt"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -14,25 +13,11 @@ const secretResourceType = "Tenant"
 var GetSecretDao func(daoParams *RequestParams) SecretDao
 
 type secretDaoDbImpl struct {
-	TenantID *int64
-	UserID   *int64
-	ctx      context.Context
+	*RequestParams
 }
 
 func getDefaultSecretDao(daoParams *RequestParams) SecretDao {
-	var tenantID, userID *int64
-	var ctx context.Context
-	if daoParams != nil && daoParams.TenantID != nil {
-		tenantID = daoParams.TenantID
-		userID = daoParams.UserID
-		ctx = daoParams.ctx
-	}
-
-	return &secretDaoDbImpl{
-		TenantID: tenantID,
-		UserID:   userID,
-		ctx:      ctx,
-	}
+	return &secretDaoDbImpl{RequestParams: daoParams}
 }
 
 func init() {
