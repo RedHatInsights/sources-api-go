@@ -168,7 +168,7 @@ func TestInternalSecretGet(t *testing.T) {
 		c.SetParamValues(secretID)
 
 		if userID != nil {
-			c.Set(h.USERID, user.Id)
+			c.Set(h.UserID, user.Id)
 		}
 
 		err = InternalSecretGet(c)
