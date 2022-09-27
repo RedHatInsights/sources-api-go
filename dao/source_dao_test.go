@@ -14,7 +14,7 @@ import (
 )
 
 var sourceDao = sourceDaoImpl{
-	TenantID: &fixtures.TestTenantData[0].Id,
+	RequestParams: &RequestParams{TenantID: &fixtures.TestTenantData[0].Id},
 }
 
 // TestSourcesListForRhcConnections tests whether the correct sources are fetched from the related connection or not.

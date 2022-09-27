@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,26 +29,10 @@ var GetAuthenticationDao func(daoParams *RequestParams) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultAuthenticationDao(daoParams *RequestParams) AuthenticationDao {
-	var tenantID, userID *int64
-	var ctx context.Context
-	if daoParams != nil && daoParams.TenantID != nil {
-		tenantID = daoParams.TenantID
-		userID = daoParams.UserID
-		ctx = daoParams.ctx
-	}
-
 	if config.IsVaultOn() {
-		return &authenticationDaoImpl{
-			TenantID: tenantID,
-			UserID:   userID,
-			ctx:      ctx,
-		}
+		return &authenticationDaoImpl{RequestParams: daoParams}
 	} else {
-		return &authenticationDaoDbImpl{
-			TenantID: tenantID,
-			UserID:   userID,
-			ctx:      ctx,
-		}
+		return &authenticationDaoDbImpl{RequestParams: daoParams}
 	}
 }
 
@@ -59,19 +42,17 @@ func init() {
 }
 
 type authenticationDaoImpl struct {
-	TenantID *int64
-	UserID   *int64
-	ctx      context.Context
+	*RequestParams
 }
 
 /*
-	Listing is kind of tough here - it is basically O(N) where N is the results
-	returned from vault. It will get slow probably when there are 100 results to
-	fetch. In Vault's documentation they do say fetching is handled in parallel
-	so we could potentially fetch multiple at once.
+Listing is kind of tough here - it is basically O(N) where N is the results
+returned from vault. It will get slow probably when there are 100 results to
+fetch. In Vault's documentation they do say fetching is handled in parallel
+so we could potentially fetch multiple at once.
 
-	TODO: Maybe parallelize fetching multiple records with goroutines +
-	waitgroup
+TODO: Maybe parallelize fetching multiple records with goroutines +
+waitgroup
 */
 func (a *authenticationDaoImpl) List(limit int, offset int, filters []util.Filter) ([]m.Authentication, int64, error) {
 	keys, err := a.listKeys()
@@ -221,10 +202,10 @@ func (a *authenticationDaoImpl) getAuthsForAppAuth(appAuths []m.ApplicationAuthe
 }
 
 /*
-	Getting by the UID is tough as well - we have to list all the keys and find
-	the one with the right suffix before fetching it. So every "show" request
-	will always incur 2 reqs to vault. It may be slower but that is a casualty
-	of not having an RDMS.
+Getting by the UID is tough as well - we have to list all the keys and find
+the one with the right suffix before fetching it. So every "show" request
+will always incur 2 reqs to vault. It may be slower but that is a casualty
+of not having an RDMS.
 */
 func (a *authenticationDaoImpl) GetById(uid string) (*m.Authentication, error) {
 	keys, err := a.listKeys()
@@ -366,9 +347,9 @@ func (a *authenticationDaoImpl) Tenant() *int64 {
 }
 
 /*
-	This method lists all keys for a certain tenant - this is necessary because
-	of the fact that we can't search for a key based on name, type etc much like
-	a k/v store. (almost like the `vault kv get` and `vault kv put`)
+This method lists all keys for a certain tenant - this is necessary because
+of the fact that we can't search for a key based on name, type etc much like
+a k/v store. (almost like the `vault kv get` and `vault kv put`)
 */
 func (a *authenticationDaoImpl) listKeys() ([]string, error) {
 	// List all the keys
@@ -397,7 +378,7 @@ func (a *authenticationDaoImpl) listKeys() ([]string, error) {
 }
 
 /*
-	Fetch a key from Vault (full path, type and id included)
+Fetch a key from Vault (full path, type and id included)
 */
 func (a *authenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 	secret, err := Vault.Read(fmt.Sprintf("secret/data/%d/%s", *a.TenantID, path))
@@ -423,11 +404,11 @@ func (a *authenticationDaoImpl) getKey(path string) (*m.Authentication, error) {
 }
 
 /*
-	*VERY* important function. This is the function that parses data from Vault
-	into an Authentication object. It is basically the inverse of
-	Authentication#ToVaultMap().
+*VERY* important function. This is the function that parses data from Vault
+into an Authentication object. It is basically the inverse of
+Authentication#ToVaultMap().
 
-	If we are to add more fields - they will need to be added here.
+If we are to add more fields - they will need to be added here.
 */
 func authFromVault(secret *api.Secret) *m.Authentication {
 	// first step is to _actually_ extract the data/metadata hashes - which are

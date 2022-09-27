@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -12,9 +11,7 @@ import (
 )
 
 type authenticationDaoDbImpl struct {
-	TenantID *int64
-	UserID   *int64
-	ctx      context.Context
+	*RequestParams
 }
 
 func (add *authenticationDaoDbImpl) getDb() *gorm.DB {

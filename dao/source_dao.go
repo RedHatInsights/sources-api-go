@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -18,19 +17,7 @@ var GetSourceDao func(*RequestParams) SourceDao
 
 // getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultSourceDao(daoParams *RequestParams) SourceDao {
-	var tenantID, userID *int64
-	var ctx context.Context
-	if daoParams != nil && daoParams.TenantID != nil {
-		tenantID = daoParams.TenantID
-		userID = daoParams.UserID
-		ctx = daoParams.ctx
-	}
-
-	return &sourceDaoImpl{
-		TenantID: tenantID,
-		UserID:   userID,
-		ctx:      ctx,
-	}
+	return &sourceDaoImpl{RequestParams: daoParams}
 }
 
 // init sets the default DAO implementation so that other packages can request it easily.
@@ -39,9 +26,7 @@ func init() {
 }
 
 type sourceDaoImpl struct {
-	TenantID *int64
-	UserID   *int64
-	ctx      context.Context
+	*RequestParams
 }
 
 func (s *sourceDaoImpl) getDbWithTable(query *gorm.DB, table string) *gorm.DB {
