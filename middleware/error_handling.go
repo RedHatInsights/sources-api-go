@@ -25,7 +25,7 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 				message = util.ErrorDocWithoutLogging(err.Error(), "400")
 			default:
 				c.Logger().Error(err)
-				uuid, ok := c.Get(h.INSIGHTS_REQUEST_ID).(string)
+				uuid, ok := c.Get(h.InsightsRequestID).(string)
 				if !ok {
 					uuid = ""
 				}
