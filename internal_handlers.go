@@ -93,3 +93,22 @@ func TranslateTenants(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func InternalSecretGet(c echo.Context) error {
+	secretDao, err := getSecretDao(c)
+	if err != nil {
+		return err
+	}
+
+	paramID, err := util.InterfaceToInt64(c.Param("id"))
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	secret, err := secretDao.GetById(&paramID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, secret.ToInternalSecretResponse())
+}

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -12,6 +13,8 @@ func TestSecretListUserOwnership(t *testing.T) {
 	testutils.SkipIfNotSecretStoreDatabase(t)
 	schema := "user_ownership"
 	SwitchSchema(schema)
+	// Set the encryption key
+	util.OverrideEncryptionKey(strings.Repeat("test", 8))
 
 	userIDWithOwnRecords := "user_based_user"
 	otherUserIDWithOwnRecords := "other_user"

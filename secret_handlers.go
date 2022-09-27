@@ -101,3 +101,22 @@ func SecretList(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
+
+func SecretGet(c echo.Context) error {
+	secretDao, err := getSecretDao(c)
+	if err != nil {
+		return err
+	}
+
+	paramID, err := util.InterfaceToInt64(c.Param("id"))
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	secret, err := secretDao.GetById(&paramID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, secret.ToSecretResponse())
+}

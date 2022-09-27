@@ -489,3 +489,148 @@ func TestSecretListBadRequestInvalidFilter(t *testing.T) {
 
 	templates.BadRequestTest(t, rec)
 }
+
+func TestSecretGet(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantIDForSecret := int64(1)
+	testUserId := "testUser"
+
+	userDao := dao.GetUserDao(&tenantIDForSecret)
+	user, err := userDao.FindOrCreate(testUserId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var userID *int64
+	for _, userScoped := range []bool{false, true} {
+		if userScoped {
+			userID = &user.Id
+		}
+
+		secret, err := dao.CreateSecretByName("Secret 1", &tenantIDForSecret, userID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		secretID, err := util.InterfaceToString(secret.DbID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		c, rec := request.CreateTestContext(
+			http.MethodGet,
+			"/api/sources/v3.1/secrets/"+secretID,
+			nil,
+			map[string]interface{}{
+				"tenantID": tenantIDForSecret,
+			},
+		)
+
+		c.SetParamNames("id")
+		c.SetParamValues(secretID)
+
+		userCatcher := middleware.UserCatcher(SecretGet)
+		identityHeader := testutils.IdentityHeaderForUser(testUserId)
+		c.Set("identity", identityHeader)
+
+		err = userCatcher(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var outSecret m.SecretResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &outSecret)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if outSecret.ID != secretID {
+			t.Errorf(`wrong secret fetched. Want "%s", got "%s"`, secretID, outSecret.ID)
+		}
+
+		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+		secret, err = secretDao.GetById(&secret.DbID)
+		if err != nil {
+			t.Error("secret not found")
+		}
+
+		if userScoped && secret.UserID == nil || !userScoped && secret.UserID != nil {
+			t.Error("user id has to be nil as user ownership was not requested for secret")
+		}
+
+		cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+	}
+}
+
+func TestSecretGetTenantNotExist(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	tenantID := fixtures.NotExistingTenantId
+	tenantIDForSecret := int64(1)
+
+	secret, err := dao.CreateSecretByName("Secret 1", &tenantIDForSecret, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secretID, err := util.InterfaceToString(secret.DbID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/secrets/"+secretID,
+		nil,
+		map[string]interface{}{
+			"tenantID": tenantID,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(secretID)
+
+	notFoundSecretGet := ErrorHandlingContext(SecretGet)
+	err = notFoundSecretGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secretID, err = util.InterfaceToString(secret.DbID)
+	if err != nil {
+		t.Error(nil)
+	}
+	cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantIDForSecret})
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestSecretGetNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	id := "555555"
+
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/api/sources/v3.1/secrets/"+id,
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(id)
+
+	notFoundSecretGet := ErrorHandlingContext(SecretGet)
+	err := notFoundSecretGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}

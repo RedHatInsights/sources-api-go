@@ -292,6 +292,7 @@ func CreateSecretByName(name string, tenantID *int64, userID *int64) (*m.Authent
 		Username:     util.StringRef("Y"),
 		ResourceType: secretResourceType,
 		ResourceID:   *tenantID,
+		Password:     util.StringRef("password"),
 	}
 
 	if userID != nil {
