@@ -12,6 +12,15 @@ type Event interface {
 	ToEvent() interface{}
 }
 
+type updatingAttributes struct {
+	ApplicationsCollection               interface{}            `json:"applications"`
+	ApplicationAuthenticationsCollection interface{}            `json:"application_authentications"`
+	AuthenticationsCollection            interface{}            `json:"authentications"`
+	EndpointsCollection                  interface{}            `json:"endpoints"`
+	SourceRelation                       interface{}            `json:"source"`
+	Updated                              map[string]interface{} `json:"updated"`
+}
+
 type EventModelDao interface {
 	BulkMessage(resource util.Resource) (map[string]interface{}, error)
 	FetchAndUpdateBy(resource util.Resource, updateAttributes map[string]interface{}) (interface{}, error)
@@ -19,7 +28,7 @@ type EventModelDao interface {
 }
 
 func UpdateMessage(eventObject EventModelDao, resource util.Resource, attributes []string) ([]byte, error) {
-	updatedAttributes := map[string]interface{}{}
+	updatedAttributes := updatingAttributes{}
 
 	resourceID := ""
 	if resource.ResourceUID != "" && resource.ResourceID == 0 {
@@ -28,15 +37,18 @@ func UpdateMessage(eventObject EventModelDao, resource util.Resource, attributes
 		resourceID = strconv.Itoa(int(resource.ResourceID))
 	}
 
-	updatedAttributes["updated"] = map[string]interface{}{resource.ResourceType: map[string]interface{}{resourceID: attributes}}
+	updatedAttributes.Updated = map[string]interface{}{resource.ResourceType: map[string]interface{}{resourceID: attributes}}
 
 	bulkMessage, err := eventObject.BulkMessage(resource)
 	if err != nil {
 		return nil, fmt.Errorf("error in BulkMessage: %v", err.Error())
 	}
-	for k, m := range bulkMessage {
-		updatedAttributes[k] = m
-	}
+
+	updatedAttributes.ApplicationAuthenticationsCollection = bulkMessage["application_authentications"]
+	updatedAttributes.ApplicationsCollection = bulkMessage["applications"]
+	updatedAttributes.AuthenticationsCollection = bulkMessage["authentications"]
+	updatedAttributes.EndpointsCollection = bulkMessage["endpoints"]
+	updatedAttributes.SourceRelation = bulkMessage["source"]
 
 	data, err := json.Marshal(updatedAttributes)
 	if err != nil {
