@@ -20,7 +20,7 @@ var sourceDao = sourceDaoImpl{
 // TestSourcesListForRhcConnections tests whether the correct sources are fetched from the related connection or not.
 func TestSourcesListForRhcConnections(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	rhcConnectionId := int64(1)
 
@@ -57,7 +57,7 @@ func TestSourcesListForRhcConnections(t *testing.T) {
 
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // testSource holds the test source that will be used through tests. It is saved in a variable to avoid having to write

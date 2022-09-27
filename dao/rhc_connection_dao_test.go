@@ -13,7 +13,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-const RHC_CONNECTION_SCHEMA = "rhc_connection"
+const RhcConnectionSchema = "rhc_connection"
 
 var tenantId = fixtures.TestTenantData[0].Id
 var rhcConnectionDao = rhcConnectionDaoImpl{
@@ -38,7 +38,7 @@ func setUpValidRhcConnection() *model.RhcConnection {
 // associated row in the "rhc_connections" and "source_rhc_connections" tables.
 func TestRhcConnectionCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	want := setUpValidRhcConnection()
 	got, err := rhcConnectionDao.Create(want)
@@ -86,7 +86,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 		t.Errorf(`want "%d", got "%d"`, got.ID, gotJoinTable.SourceId)
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionCreateExistingSourceDifferentTenant tests that when querying for a source from a tenant that is not
@@ -94,7 +94,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 // able to link connections to sources from other tenants.
 func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	rhcConnection := setUpValidRhcConnection()
 
@@ -111,7 +111,7 @@ func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 
 	// Set the tenant back to its original value
 	rhcConnectionDao.TenantID = &tenantId
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionCreateExisting tests that when an already existing "RhcConnection" is given to the "Create"
@@ -119,7 +119,7 @@ func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 // an error.
 func TestRhcConnectionCreateExisting(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	want := setUpValidRhcConnection()
 	want.RhcId = fixtures.TestRhcConnectionData[2].RhcId
@@ -180,14 +180,14 @@ func TestRhcConnectionCreateExisting(t *testing.T) {
 		t.Errorf(`want to find "%d" in "%v", but it was not found`, want.Sources[0].ID, gotJoinTable)
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionCreateSourceNotExists tests that a proper error is returned when a non-existing related source is
 // given.
 func TestRhcConnectionCreateSourceNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	// Modify the valid object to make it point to a non-existing source.
 	rhcConnection := setUpValidRhcConnection()
@@ -203,14 +203,14 @@ func TestRhcConnectionCreateSourceNotExists(t *testing.T) {
 		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionCreateAlreadyExistingAssociation tests that when an error is returned when an already existing
 // association between the source and the rhcConnection exists in the join table.
 func TestRhcConnectionCreateAlreadyExistingAssociation(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	rhcConnection := setUpValidRhcConnection()
 
@@ -226,14 +226,14 @@ func TestRhcConnectionCreateAlreadyExistingAssociation(t *testing.T) {
 		t.Errorf(`want "%s", got "%s"`, want, err)
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionDelete tests that when an rhcConnection is deleted, its associations in the join table are also
 // deleted.
 func TestRhcConnectionDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	_, err := rhcConnectionDao.Delete(&fixtures.TestRhcConnectionData[0].ID)
 	if err != nil {
@@ -256,14 +256,14 @@ func TestRhcConnectionDelete(t *testing.T) {
 		t.Errorf(`want "rhcConnection" deleted, data found`)
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionDeleteNotFound tests that when a non-existent ID is given to the delete function, a "not found"
 // error is returned.
 func TestRhcConnectionDeleteNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	nonExistentId := int64(12345)
 
@@ -277,13 +277,13 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionListForSources tests whether the correct connections are fetched from the related source or not.
 func TestRhcConnectionListForSources(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	sourceId := int64(1)
 
@@ -320,7 +320,7 @@ func TestRhcConnectionListForSources(t *testing.T) {
 
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestRhcConnectionRowsClosed is a regression test for https://issues.redhat.com/browse/RHCLOUD-18192. It tests that
@@ -328,7 +328,7 @@ func TestRhcConnectionListForSources(t *testing.T) {
 // error.
 func TestRhcConnectionRowsClosed(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema(RHC_CONNECTION_SCHEMA)
+	SwitchSchema(RhcConnectionSchema)
 
 	// Find all the connections that we will remove from the DB.
 	dbRhcConnections := make([]model.RhcConnection, 0)
@@ -365,7 +365,7 @@ func TestRhcConnectionRowsClosed(t *testing.T) {
 		t.Errorf(`want "%d" connections from the database, got "%d"`, want, got)
 	}
 
-	DropSchema(RHC_CONNECTION_SCHEMA)
+	DropSchema(RhcConnectionSchema)
 }
 
 // TestDeleteRhcConnection tests that an rhcConnection gets correctly deleted, and its data returned.

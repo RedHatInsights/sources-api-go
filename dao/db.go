@@ -27,8 +27,8 @@ var (
 
 // PostgreSQL Error Codes
 const (
-	// PG_UNIQUE_CONSTRAINT_VIOLATION is PostgreSQL error code for unique index violation (more here: https://www.postgresql.org/docs/current/errcodes-appendix.html)
-	PG_UNIQUE_CONSTRAINT_VIOLATION = "23505"
+	// PgUniqueConstraintViolation is PostgreSQL error code for unique index violation (more here: https://www.postgresql.org/docs/current/errcodes-appendix.html)
+	PgUniqueConstraintViolation = "23505"
 )
 
 func Init() {
