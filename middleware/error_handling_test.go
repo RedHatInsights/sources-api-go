@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -30,7 +30,7 @@ func TestError(t *testing.T) {
 		t.Errorf("%v was returned instead of %v", rec.Code, 500)
 	}
 
-	body, _ := ioutil.ReadAll(rec.Body)
+	body, _ := io.ReadAll(rec.Body)
 
 	if !strings.Contains(string(body), "Internal Server Error:") {
 		t.Errorf("malformed body: %s", body)
