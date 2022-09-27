@@ -12,13 +12,17 @@ type Event interface {
 	ToEvent() interface{}
 }
 
+type bulkMessage struct {
+	ApplicationsCollection               interface{} `json:"applications"`
+	ApplicationAuthenticationsCollection interface{} `json:"application_authentications"`
+	AuthenticationsCollection            interface{} `json:"authentications"`
+	EndpointsCollection                  interface{} `json:"endpoints"`
+	SourceRelation                       interface{} `json:"source"`
+}
+
 type updatingAttributes struct {
-	ApplicationsCollection               interface{}            `json:"applications"`
-	ApplicationAuthenticationsCollection interface{}            `json:"application_authentications"`
-	AuthenticationsCollection            interface{}            `json:"authentications"`
-	EndpointsCollection                  interface{}            `json:"endpoints"`
-	SourceRelation                       interface{}            `json:"source"`
-	Updated                              map[string]interface{} `json:"updated"`
+	bulkMessage
+	Updated map[string]interface{} `json:"updated"`
 }
 
 type EventModelDao interface {
@@ -39,16 +43,16 @@ func UpdateMessage(eventObject EventModelDao, resource util.Resource, attributes
 
 	updatedAttributes.Updated = map[string]interface{}{resource.ResourceType: map[string]interface{}{resourceID: attributes}}
 
-	bulkMessage, err := eventObject.BulkMessage(resource)
+	bulkMessageFromEvent, err := eventObject.BulkMessage(resource)
 	if err != nil {
 		return nil, fmt.Errorf("error in BulkMessage: %v", err.Error())
 	}
 
-	updatedAttributes.ApplicationAuthenticationsCollection = bulkMessage["application_authentications"]
-	updatedAttributes.ApplicationsCollection = bulkMessage["applications"]
-	updatedAttributes.AuthenticationsCollection = bulkMessage["authentications"]
-	updatedAttributes.EndpointsCollection = bulkMessage["endpoints"]
-	updatedAttributes.SourceRelation = bulkMessage["source"]
+	updatedAttributes.ApplicationAuthenticationsCollection = bulkMessageFromEvent["application_authentications"]
+	updatedAttributes.ApplicationsCollection = bulkMessageFromEvent["applications"]
+	updatedAttributes.AuthenticationsCollection = bulkMessageFromEvent["authentications"]
+	updatedAttributes.EndpointsCollection = bulkMessageFromEvent["endpoints"]
+	updatedAttributes.SourceRelation = bulkMessageFromEvent["source"]
 
 	data, err := json.Marshal(updatedAttributes)
 	if err != nil {
