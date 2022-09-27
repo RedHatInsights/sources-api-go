@@ -303,3 +303,121 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		   Test 1 - UserA tries to GET userA's application authentication - expected result: success
+		*/
+		applicationAuthenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+		applicationAuthenticationUserA, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %s`, err)
+		}
+
+		if applicationAuthenticationUserA.ID != suiteData.ApplicationAuthenticationUserA().ID {
+			t.Errorf("application authentication %v returned but application authentication %v was expected", applicationAuthenticationUserA.ID, suiteData.ApplicationAuthenticationUserA().ID)
+		}
+
+		/*
+			Test 2 - UserA tries to GET application authentication without user - expected result: success
+		*/
+		applicationAuthenticationNoUser, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %s`, err)
+		}
+
+		if applicationAuthenticationNoUser.ID != suiteData.ApplicationAuthenticationNoUser().ID {
+			t.Errorf("application authentication %v returned but application authentication %v was expected", applicationAuthenticationNoUser.ID, suiteData.ApplicationAuthenticationNoUser().ID)
+		}
+
+		/*
+		 Test 3 - User without any ownership records tries to GET userA's application authentication - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		applicationAuthenticationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
+
+		_, err = applicationAuthenticationDaoWithUser.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err == nil {
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %v`, suiteData.ApplicationAuthenticationUserA())
+		}
+
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`unexpected error after calling GetById for the application authentication: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
+
+func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	testutils.SkipIfNotSecretStoreDatabase(t)
+	schema := "user_ownership"
+	SwitchSchema(schema)
+
+	err := TestSuiteForSourceWithOwnership(func(suiteData *SourceOwnershipDataTestSuite) error {
+		/*
+		  Test 1 - UserA tries to delete application authentication for userA - expected result: success
+		*/
+		applicationAuthenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+		_, err := applicationAuthenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Delete: %v`, err)
+		}
+
+		_, err = applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`expected 'application authentication not found', got %s`, err)
+		}
+
+		/*
+		  Test 2 - UserA tries to delete application authentication without user - expected result: success
+		*/
+		_, err = applicationAuthenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationNoUser().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling Delete: %v`, err)
+		}
+
+		_, err = applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`expected 'application authentication not found', got %s`, err)
+		}
+
+		/*
+		  Test3 - User without any ownership records tries to delete userB's application authentication - expected result: failure
+		*/
+		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
+		applicationAuthenticationDaoWithUser := GetApplicationAuthenticationDao(requestParams)
+
+		_, err = applicationAuthenticationDaoWithUser.Delete(&suiteData.ApplicationAuthenticationUserB().ID)
+		if err.Error() != "application authentication not found" {
+			t.Errorf(`expected 'application authentication not found', got %s`, err)
+		}
+
+		applicationAuthenticationDaoUserB := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserB())
+		_, err = applicationAuthenticationDaoUserB.GetById(&suiteData.ApplicationAuthenticationUserB().ID)
+		if err != nil {
+			t.Errorf(`unexpected error after calling GetById: %v`, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("test run was not successful %v", err)
+	}
+
+	DropSchema(schema)
+}
