@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	APP_META_DATA      = "AppMetaData"
-	SUPERKEY_META_DATA = "SuperKeyMetaData"
+	AppMetaData      = "AppMetaData"
+	SuperKeyMetaData = "SuperKeyMetaData"
 )
 
 type MetaData struct {

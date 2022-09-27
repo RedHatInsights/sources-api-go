@@ -266,7 +266,7 @@ func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 				Payload:           payload,
 				Substitutions:     substitutions,
 				ApplicationTypeID: appType.Id,
-				Type:              "SuperKeyMetaData",
+				Type:              m.SuperKeyMetaData,
 			}
 
 			result := DB.Create(&metadata)
@@ -315,7 +315,7 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 				Name:              key,
 				Payload:           payload,
 				ApplicationTypeID: appType.Id,
-				Type:              "AppMetaData",
+				Type:              m.AppMetaData,
 			}
 
 			result := DB.Create(&m)

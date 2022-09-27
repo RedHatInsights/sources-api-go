@@ -6,11 +6,11 @@ var TestMetaDataData = []m.MetaData{
 	{
 		ID:                1,
 		ApplicationTypeID: 1,
-		Type:              "AppMetaData",
+		Type:              m.AppMetaData,
 	},
 	{
 		ID:                2,
 		ApplicationTypeID: 1,
-		Type:              "AppMetaData",
+		Type:              m.AppMetaData,
 	},
 }

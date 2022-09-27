@@ -108,7 +108,7 @@ func TestSeedingSuperkeyMetadata(t *testing.T) {
 
 	skeymdata := make([]m.MetaData, 0)
 	result := DB.Model(&m.MetaData{}).
-		Where("type = ?", SuperKeyMetaData).
+		Where("type = ?", m.SuperKeyMetaData).
 		Scan(&skeymdata)
 	if result.Error != nil {
 		t.Fatalf("failed to list superkey: %v", result.Error)
@@ -148,7 +148,7 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 
 	appmdata := make([]m.MetaData, 0)
 	result := DB.Model(&m.MetaData{}).
-		Where("type = ?", AppMetaData).
+		Where("type = ?", m.AppMetaData).
 		Distinct("name").
 		Scan(&appmdata)
 	if result.Error != nil {
