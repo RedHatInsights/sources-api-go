@@ -114,7 +114,7 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	}
 
 	req.Header.Add(h.OrgID, source.Tenant.OrgID)
-	req.Header.Add("x-rh-sources-account-number", source.Tenant.ExternalTenant)
+	req.Header.Add(h.AccountNumber, source.Tenant.ExternalTenant)
 	req.Header.Add(h.XRHID, util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
 
@@ -188,7 +188,7 @@ func (acr availabilityCheckRequester) publishSatelliteMessage(writer *kafka.Writ
 		{Key: "event_type", Value: []byte("Source.availability_check")},
 		{Key: "encoding", Value: []byte("json")},
 		{Key: h.XRHID, Value: []byte(util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))},
-		{Key: "x-rh-sources-account-number", Value: []byte(endpoint.Tenant.ExternalTenant)},
+		{Key: h.AccountNumber, Value: []byte(endpoint.Tenant.ExternalTenant)},
 	})
 
 	if err = kafka.Produce(writer, msg); err != nil {
