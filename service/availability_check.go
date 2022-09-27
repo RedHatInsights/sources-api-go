@@ -113,7 +113,7 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 		return
 	}
 
-	req.Header.Add("x-rh-sources-org-id", source.Tenant.OrgID)
+	req.Header.Add(h.OrgID, source.Tenant.OrgID)
 	req.Header.Add("x-rh-sources-account-number", source.Tenant.ExternalTenant)
 	req.Header.Add(h.XRHID, util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")

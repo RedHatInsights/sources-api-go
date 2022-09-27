@@ -42,7 +42,7 @@ func IdentityFromKafkaHeaders(headers []kafka.Header) (*identity.Identity, error
 			outputIdentity.AccountNumber = string(header.Value)
 		}
 
-		if header.Key == h.ORGID {
+		if header.Key == h.OrgID {
 			outputIdentity.OrgID = string(header.Value)
 		}
 

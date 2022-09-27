@@ -49,8 +49,8 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 	}
 
 	// pulling the specified orgId if it exists
-	if c.Get(h.ORGID) != nil {
-		orgId, ok = c.Get(h.ORGID).(string)
+	if c.Get(h.OrgID) != nil {
+		orgId, ok = c.Get(h.OrgID).(string)
 		if !ok {
 			return nil, fmt.Errorf("failed to cast psk-account to string")
 		}
@@ -86,7 +86,7 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 		headers = append(headers, kafka.Header{Key: h.ACCOUNT_NUMBER, Value: []byte(account)})
 	}
 	if orgId != "" {
-		headers = append(headers, kafka.Header{Key: h.ORGID, Value: []byte(orgId)})
+		headers = append(headers, kafka.Header{Key: h.OrgID, Value: []byte(orgId)})
 	}
 
 	headers = append(headers, kafka.Header{Key: h.XRHID, Value: []byte(xrhid)})
