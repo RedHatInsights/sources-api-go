@@ -7,7 +7,7 @@ const (
 	PSKUserID           = "x-rh-sources-user-id"
 	XRHID               = "x-rh-identity"
 	INSIGHTS_REQUEST_ID = "x-rh-insights-request-id"
-	PARSED_IDENTITY     = "identity"
+	ParsedIdentity      = "identity"
 	TenantID            = "tenantID"
 	UserID              = "userID"
 )
