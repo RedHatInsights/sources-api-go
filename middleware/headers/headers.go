@@ -8,6 +8,6 @@ const (
 	XRHID               = "x-rh-identity"
 	INSIGHTS_REQUEST_ID = "x-rh-insights-request-id"
 	PARSED_IDENTITY     = "identity"
-	TENANTID            = "tenantID"
+	TenantID            = "tenantID"
 	UserID              = "userID"
 )

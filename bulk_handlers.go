@@ -18,7 +18,7 @@ func BulkCreate(c echo.Context) error {
 		return err
 	}
 
-	tenantID, ok := c.Get(h.TENANTID).(int64)
+	tenantID, ok := c.Get(h.TenantID).(int64)
 	if !ok {
 		return fmt.Errorf("failed to pull tenant from request")
 	}
