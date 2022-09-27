@@ -11,7 +11,8 @@ import (
 )
 
 // TestApplicationTypeSubCollectionListOffsetAndLimit tests that SubCollectionList() in application type dao returns
-//  correct count value and correct count of returned objects
+//
+//	correct count value and correct count of returned objects
 func TestApplicationTypeSubCollectionListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")

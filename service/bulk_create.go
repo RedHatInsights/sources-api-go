@@ -17,19 +17,19 @@ import (
 )
 
 /*
-	Oh boy. The big one.
+Oh boy. The big one.
 
-	So basically this function goes through a the parsed BulkCreateRequest model
-	and creates the resources in this order:
+So basically this function goes through a the parsed BulkCreateRequest model
+and creates the resources in this order:
 
-	1. Sources
-	2. Endpoints/Applications
+1. Sources
+2. Endpoints/Applications
 
-	It dynamically looks up both the SourceType as well as ApplicationType if
-	given the *_type_name paremeters.
+It dynamically looks up both the SourceType as well as ApplicationType if
+given the *_type_name paremeters.
 
-	3. Saving the Authentications
-	4. Saving the ApplicationAuthentications if necessary
+3. Saving the Authentications
+4. Saving the ApplicationAuthentications if necessary
 */
 func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.BulkCreateOutput, error) {
 	// the output from this request.

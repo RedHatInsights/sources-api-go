@@ -14,7 +14,7 @@ import (
 
 var echoInstance = echo.New()
 
-//duplicating helper function CreateTestContext() from internal/testutils/request/request.go in order to
+// duplicating helper function CreateTestContext() from internal/testutils/request/request.go in order to
 // effectively test and importing this to other packages to prevent import cycle
 func CreateTestContext(method string, path string, body io.Reader, context map[string]interface{}) (echo.Context, *httptest.ResponseRecorder) {
 	echoInstance.Binder = &NoUnknownFieldsBinder{}

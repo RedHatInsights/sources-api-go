@@ -149,7 +149,8 @@ func TestEndpointListOffsetAndLimit(t *testing.T) {
 }
 
 // TestEndpointSubCollectionListOffsetAndLimit tests that SubCollectionList() in endpoint dao returns
-//  correct count value and correct count of returned objects
+//
+//	correct count value and correct count of returned objects
 func TestEndpointSubCollectionListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")

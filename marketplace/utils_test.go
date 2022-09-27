@@ -96,9 +96,9 @@ func (mtcnc *marketplaceTokenCacherNotCached) CacheToken(token *BearerToken) err
 	return errors.New("unexpected caching error")
 }
 
-//---
+// ---
 // Provider mocks
-//---
+// ---
 // marketplaceTokenProviderSuccessful acts as if requesting a token to the marketplace returned a proper response.
 type marketplaceTokenProviderSuccessful struct {
 	ApiKey *string

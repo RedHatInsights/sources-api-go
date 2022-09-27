@@ -1,11 +1,11 @@
 package model
 
 /*
-	Bulk Create Request is a request creating 1..n resources in Sources API
-	which does all of the linking between resources automatically.
+Bulk Create Request is a request creating 1..n resources in Sources API
+which does all of the linking between resources automatically.
 
-	This outer request just contains slices of the possible resources that can
-	be created.
+This outer request just contains slices of the possible resources that can
+be created.
 */
 type BulkCreateRequest struct {
 	Sources         []BulkCreateSource         `json:"sources"`
@@ -55,7 +55,7 @@ type BulkCreateAuthentication struct {
 }
 
 /*
-	Output from the BulkCreate operation - stores the parsed resources that have been validated.
+Output from the BulkCreate operation - stores the parsed resources that have been validated.
 */
 type BulkCreateOutput struct {
 	Sources                    []Source

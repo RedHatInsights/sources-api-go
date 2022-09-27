@@ -10,11 +10,11 @@ import (
 var Static typeCache
 
 /*
-	typeCache is a small struct that just contains the map between
-	application/source types and their keys in the database.
+typeCache is a small struct that just contains the map between
+application/source types and their keys in the database.
 
-	The cache is populated at startup so one can fetch foreign keys when
-	building objects easily.
+The cache is populated at startup so one can fetch foreign keys when
+building objects easily.
 */
 type typeCache struct {
 	sourceTypes      map[string]int64
@@ -39,11 +39,11 @@ func (tc *typeCache) GetSourceTypeName(id int64) string {
 }
 
 /*
-    Returns the application type id for a given name, 0 if not found.
+	    Returns the application type id for a given name, 0 if not found.
 
-	Can search via name or display name for application types, there is also a
-	shortcut for the last place in the "path" of the name e.g. `/this/is/a/type`
-	is also available as `type`
+		Can search via name or display name for application types, there is also a
+		shortcut for the last place in the "path" of the name e.g. `/this/is/a/type`
+		is also available as `type`
 */
 func (tc *typeCache) GetApplicationTypeId(name string) int64 {
 	return tc.applicationTypes[name]
@@ -73,9 +73,9 @@ func (tc *typeCache) GetApplicationTypeFullName(id int64) string {
 }
 
 /*
-	Fetches every Source+Application Type record from the database and builds
-	out the cache. Returns an error if it fails (e.g. the app shouldn't be
-	running then)
+Fetches every Source+Application Type record from the database and builds
+out the cache. Returns an error if it fails (e.g. the app shouldn't be
+running then)
 */
 func PopulateStaticTypeCache() error {
 	tc := typeCache{}

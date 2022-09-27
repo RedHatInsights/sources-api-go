@@ -326,7 +326,8 @@ func TestApplicationNotExists(t *testing.T) {
 }
 
 // TestApplicationSubcollectionListWithOffsetAndLimit tests that SubCollectionList() in application dao returns
-//  correct count value and correct count of returned objects
+//
+//	correct count value and correct count of returned objects
 func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")

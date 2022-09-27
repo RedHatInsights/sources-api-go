@@ -75,12 +75,12 @@ func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, r
 }
 
 /*
-	Method generates bulk message for Source record.
-	authentication - specify resource (ResourceID and ResourceType) of
-                     which authentications are fetched to BulkMessage
-                   - specify application_authentications in BulkMessage otherwise
-                     application_authentications are obtained from authentications UIDs
-					 in BulkMessage
+		Method generates bulk message for Source record.
+		authentication - specify resource (ResourceID and ResourceType) of
+	                     which authentications are fetched to BulkMessage
+	                   - specify application_authentications in BulkMessage otherwise
+	                     application_authentications are obtained from authentications UIDs
+						 in BulkMessage
 */
 func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (map[string]interface{}, error) {
 	result := DB.

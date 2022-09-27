@@ -113,9 +113,9 @@ func stringContainAnySubString(stringToSearch string, subStrings []string) bool 
 }
 
 /*
-  example:
-	functionNameFromPath("github.com/RedHatInsights/sources-api-go/middleware.Timing.func1")
-	=> "middleware.Timing.func1"
+	  example:
+		functionNameFromPath("github.com/RedHatInsights/sources-api-go/middleware.Timing.func1")
+		=> "middleware.Timing.func1"
 */
 func functionNameFromPath(functionWithPath string) string {
 	functionPathParts := strings.Split(functionWithPath, "/")
@@ -149,7 +149,7 @@ type LogFormatter struct {
 	LogType  string
 }
 
-//Marshaler is an interface any type can implement to change its output in our production logs.
+// Marshaler is an interface any type can implement to change its output in our production logs.
 type Marshaler interface {
 	MarshalLog() map[string]interface{}
 }
