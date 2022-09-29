@@ -3,6 +3,7 @@ package kafka
 import (
 	"encoding/json"
 
+	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -45,6 +46,23 @@ func (message *Message) AddValueAsJSON(record interface{}) error {
 	message.AddValue(out)
 
 	return nil
+}
+
+/*
+Set the key on the kafka message from the headers, using this precedence:
+1. OrgID, every req _should_ have one of these.
+2. EBS Account Number, fallback
+3. XRHID, if we have neither...hopefully there is a x-rh-identity we can use!
+*/
+func (message *Message) SetKeyFromHeaders() {
+	var k string
+	if k = message.GetHeader(headers.OrgID); k != "" {
+		message.Key = []byte(k)
+	} else if k = message.GetHeader(headers.AccountNumber); k != "" {
+		message.Key = []byte(k)
+	} else if k = message.GetHeader(headers.XRHID); k != "" {
+		message.Key = []byte(k)
+	}
 }
 
 func (message *Message) isEmpty() bool {

@@ -53,6 +53,7 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 
 	m.AddHeaders(headers)
 	m.AddValue(payload)
+	m.SetKeyFromHeaders()
 
 	if err := kafka.Produce(kf, m); err != nil {
 		return err

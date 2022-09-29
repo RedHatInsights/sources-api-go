@@ -3,6 +3,7 @@ package kafka
 import (
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/segmentio/kafka-go/protocol"
 )
 
@@ -48,5 +49,62 @@ func TestIsEmpty(t *testing.T) {
 
 	if m.isEmpty() {
 		t.Error("Message#IsEmpty showed empty even though it is not an empty struct")
+	}
+}
+
+func TestSetKeyFromHeadersOrgId(t *testing.T) {
+	m := Message{Headers: []protocol.Header{
+		{Key: headers.OrgID, Value: []byte("one")},
+		{Key: headers.AccountNumber, Value: []byte("two")},
+		{Key: headers.XRHID, Value: []byte("three")},
+	}}
+	m.SetKeyFromHeaders()
+
+	if m.Key == nil || len(m.Key) == 0 {
+		t.Error("key was not set")
+	}
+
+	if string(m.Key) != "one" {
+		t.Error("key did not match")
+	}
+}
+
+func TestSetKeyFromHeadersAcctNumber(t *testing.T) {
+	m := Message{Headers: []protocol.Header{
+		{Key: headers.AccountNumber, Value: []byte("two")},
+		{Key: headers.XRHID, Value: []byte("three")},
+	}}
+	m.SetKeyFromHeaders()
+
+	if m.Key == nil || len(m.Key) == 0 {
+		t.Error("key was not set")
+	}
+
+	if string(m.Key) != "two" {
+		t.Error("key did not match")
+	}
+}
+
+func TestSetKeyFromHeadersXrhid(t *testing.T) {
+	m := Message{Headers: []protocol.Header{
+		{Key: headers.XRHID, Value: []byte("three")},
+	}}
+	m.SetKeyFromHeaders()
+
+	if m.Key == nil || len(m.Key) == 0 {
+		t.Error("key was not set")
+	}
+
+	if string(m.Key) != "three" {
+		t.Error("key did not match")
+	}
+}
+
+func TestSetKeyFromHeadersNone(t *testing.T) {
+	m := Message{Headers: []protocol.Header{}}
+	m.SetKeyFromHeaders()
+
+	if m.Key != nil || len(m.Key) != 0 {
+		t.Error("key was set when it should not have been set")
 	}
 }
