@@ -72,7 +72,7 @@ func cloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
 		awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
 		hook, err := lc.NewBatchingHook(group, stream, awsconf, 10*time.Second)
 		if err != nil {
-			Log.Info(err)
+			Log.Fatal(err)
 		}
 
 		return hook
