@@ -104,6 +104,10 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 }
 
 func (auth *Authentication) UpdateSecretFromRequest(update *SecretEditRequest) error {
+	if update.Username != nil {
+		auth.Username = update.Username
+	}
+
 	if update.Password != nil {
 		encrypted, err := util.Encrypt(*update.Password)
 		if err != nil {

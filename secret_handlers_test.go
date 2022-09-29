@@ -652,10 +652,12 @@ func TestSecretEdit(t *testing.T) {
 
 	secretExtra := map[string]interface{}{"extra": "params"}
 	password := "test"
+	username := "user_name"
 
 	requestBody := m.SecretEditRequest{
 		Extra:    &secretExtra,
 		Password: util.StringRef(password),
+		Username: util.StringRef(username),
 	}
 
 	body, err := json.Marshal(requestBody)
@@ -721,6 +723,8 @@ func TestSecretEdit(t *testing.T) {
 		if err != nil {
 			t.Error("secret not found")
 		}
+
+		stringMatcher(t, "secret username", *secret.Username, username)
 
 		encryptedPassword, err := util.Encrypt(password)
 		if err != nil {
