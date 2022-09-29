@@ -687,8 +687,7 @@ func TestSourceNotExists(t *testing.T) {
 }
 
 // TestSourceSubcollectionListWithOffsetAndLimit tests that SubCollectionList() in source dao returns
-//
-//	correct count value and correct count of returned objects
+// correct count value and correct count of returned objects
 func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
@@ -797,8 +796,7 @@ func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 }
 
 // TestSourceListForRhcConnectionWithOffsetAndLimit tests that ListForRhcConnection() in source dao returns
-//
-//	correct count value and correct count of returned objects
+// correct count value and correct count of returned objects
 func TestSourceListForRhcConnectionWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
