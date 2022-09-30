@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
 
 // Producer instance used to send messages - default just an empty instance of the struct.
@@ -17,16 +18,32 @@ var Producer = func() events.Sender { return events.EventStreamProducer{Sender: 
 
 // RaiseEvent raises an event with the provided resource.
 func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) error {
+	// Prepare the log fields to be able to log anything related to events. This will help debug issues with
+	// applications that may not receive certain events due to some error.
+	logFields := logrus.WithFields(
+		logrus.Fields{
+			"event_type": eventType,
+			"resource":   resource,
+			"headers":    headers,
+		},
+	)
+
 	msg, err := json.Marshal(resource.ToEvent())
 	if err != nil {
+		logFields.WithField("error", err).Error("unable to raise event due to a marshalling error")
+
 		return fmt.Errorf("failed to marshal %+v as event: %v", resource, err)
 	}
 
 	headers = append(headers, kafka.Header{Key: "event_type", Value: []byte(eventType)})
 	err = Producer().RaiseEvent(eventType, msg, headers)
 	if err != nil {
+		logFields.WithField("error", err).Error("unable to raise an event")
+
 		return fmt.Errorf("failed to raise event to kafka: %v", err)
 	}
+
+	logFields.Debug("event raised")
 
 	return nil
 }
