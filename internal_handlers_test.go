@@ -17,8 +17,6 @@ import (
 )
 
 func TestSourceListInternal(t *testing.T) {
-	t.Skip("Skipping test (it needs to match results correctly)")
-
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	c, rec := request.CreateTestContext(
@@ -36,7 +34,7 @@ func TestSourceListInternal(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 200 {
+	if rec.Code != http.StatusOK {
 		t.Error("Did not return 200")
 	}
 
@@ -55,10 +53,10 @@ func TestSourceListInternal(t *testing.T) {
 	}
 
 	if len(out.Data) != len(fixtures.TestSourceData) {
-		t.Error("not enough objects passed back from DB")
+		t.Errorf("not enough objects passed back from DB, want %d, got %d", len(fixtures.TestSourceData), len(out.Data))
 	}
 
-	for i, src := range out.Data {
+	for _, src := range out.Data {
 		s, ok := src.(map[string]interface{})
 		if !ok {
 			t.Error("model did not deserialize as a source")
@@ -75,23 +73,30 @@ func TestSourceListInternal(t *testing.T) {
 		responseAvailabilityStatus := s["availability_status"].(string)
 
 		// Check that the expected source data and the received data are the same
-		if want := fixtures.TestSourceData[i].ID; want != responseSourceId {
-			t.Errorf("Ids don't match. Want %d, got %d", want, responseSourceId)
+		wantTenant := fixtures.TestTenantData[0]
+
+		if wantTenant.ExternalTenant != responseExternalTenant {
+			t.Errorf("Tenants don't match. Want %#v, got %#v", wantTenant.ExternalTenant, responseExternalTenant)
 		}
 
-		if want := fixtures.TestTenantData[0].ExternalTenant; want != responseExternalTenant {
-			t.Errorf("Tenants don't match. Want %#v, got %#v", want, responseExternalTenant)
+		if wantTenant.OrgID != responseOrgId {
+			t.Errorf("Org Ids don't match. Want %#v, got %#v", wantTenant.OrgID, responseOrgId)
 		}
 
-		if want := fixtures.TestTenantData[0].OrgID; want != responseOrgId {
-			t.Errorf("Org Ids don't match. Want %#v, got %#v", want, responseOrgId)
+		sourceInFixtures := false
+		for _, source := range fixtures.TestSourceData {
+			if source.ID == responseSourceId {
+				if source.AvailabilityStatus != responseAvailabilityStatus {
+					t.Errorf("Availability statuses don't match. Want %s, got %s", source.AvailabilityStatus, responseAvailabilityStatus)
+				}
+				sourceInFixtures = true
+				break
+			}
 		}
-
-		if want := fixtures.TestSourceData[i].AvailabilityStatus; want != responseAvailabilityStatus {
-			t.Errorf("Availability statuses don't match. Want %s, got %s", want, responseAvailabilityStatus)
+		if !sourceInFixtures {
+			t.Errorf("Source ID %d not found in fixtures", responseSourceId)
 		}
 	}
-
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
