@@ -136,3 +136,9 @@ func (secret *secretDaoDbImpl) List(limit, offset int, filters []util.Filter) ([
 
 	return secrets, count, nil
 }
+
+func (secret *secretDaoDbImpl) Update(authentication *m.Authentication) error {
+	return secret.getDb().
+		Updates(authentication).
+		Error
+}

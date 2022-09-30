@@ -120,3 +120,38 @@ func SecretGet(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, secret.ToSecretResponse())
 }
+
+func SecretEdit(c echo.Context) error {
+	secretDao, err := getSecretDao(c)
+	if err != nil {
+		return err
+	}
+
+	updateRequest := &m.SecretEditRequest{}
+	err = c.Bind(updateRequest)
+	if err != nil {
+		return err
+	}
+
+	paramID, err := util.InterfaceToInt64(c.Param("id"))
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	secret, err := secretDao.GetById(&paramID)
+	if err != nil {
+		return err
+	}
+
+	err = secret.UpdateSecretFromRequest(updateRequest)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	err = secretDao.Update(secret)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, secret.ToSecretResponse())
+}

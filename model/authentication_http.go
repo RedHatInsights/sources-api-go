@@ -102,3 +102,27 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 
 	return nil
 }
+
+func (auth *Authentication) UpdateSecretFromRequest(update *SecretEditRequest) error {
+	if update.Username != nil {
+		auth.Username = update.Username
+	}
+
+	if update.Password != nil {
+		encrypted, err := util.Encrypt(*update.Password)
+		if err != nil {
+			return err
+		}
+		auth.Password = &encrypted
+	}
+
+	if update.Extra != nil {
+		var err error
+		auth.ExtraDb, err = json.Marshal(*update.Extra)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

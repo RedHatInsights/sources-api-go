@@ -19,6 +19,7 @@ import (
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo/v4"
 )
 
@@ -633,4 +634,248 @@ func TestSecretGetNotFound(t *testing.T) {
 	}
 
 	templates.NotFoundTest(t, rec)
+}
+
+func TestSecretEdit(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	util.OverrideEncryptionKey(strings.Repeat("test", 8))
+
+	tenantIDForSecret := int64(1)
+	testUserId := "testUser"
+
+	userDao := dao.GetUserDao(&tenantIDForSecret)
+	user, err := userDao.FindOrCreate(testUserId)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secretExtra := map[string]interface{}{"extra": "params"}
+	password := "test"
+	username := "user_name"
+
+	requestBody := m.SecretEditRequest{
+		Extra:    &secretExtra,
+		Password: util.StringRef(password),
+		Username: util.StringRef(username),
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	var userID *int64
+	for _, userScoped := range []bool{false, true} {
+		if userScoped {
+			userID = &user.Id
+		}
+
+		secret, err := dao.CreateSecretByName("Secret 1", &tenantIDForSecret, userID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		secretID, err := util.InterfaceToString(secret.DbID)
+		if err != nil {
+			t.Error(err)
+		}
+
+		c, rec := request.CreateTestContext(
+			http.MethodPatch,
+			"/api/sources/v3.1/secrets/"+secretID,
+			bytes.NewReader(body),
+			map[string]interface{}{
+				"tenantID": tenantIDForSecret,
+			},
+		)
+
+		c.SetParamNames("id")
+		c.SetParamValues(secretID)
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+		tenancy := middleware.Tenancy(SecretEdit)
+		userCatcher := middleware.UserCatcher(tenancy)
+		identityHeader := testutils.IdentityHeaderForUser(testUserId)
+		c.Set("identity", identityHeader)
+
+		err = userCatcher(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if rec.Code != http.StatusOK {
+			t.Error("Did not return 200")
+		}
+
+		var outSecret m.SecretResponse
+		err = json.Unmarshal(rec.Body.Bytes(), &outSecret)
+		if err != nil {
+			t.Error("Failed unmarshaling output")
+		}
+
+		if outSecret.ID != secretID {
+			t.Errorf(`wrong secret fetched. Want "%s", got "%s"`, secretID, outSecret.ID)
+		}
+
+		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+		secret, err = secretDao.GetById(&secret.DbID)
+		if err != nil {
+			t.Error("secret not found")
+		}
+
+		stringMatcher(t, "secret username", *secret.Username, username)
+
+		encryptedPassword, err := util.Encrypt(password)
+		if err != nil {
+			t.Error(err)
+		}
+
+		stringMatcher(t, "secret password", *secret.Password, encryptedPassword)
+
+		extra, err := json.Marshal(secretExtra)
+		if err != nil {
+			t.Error("Could not marshal JSON")
+		}
+
+		extraDb, err := json.Marshal(secret.ExtraDb)
+		if err != nil {
+			t.Error("Could not marshal JSON")
+		}
+
+		if !cmp.Equal(extraDb, extra) {
+			t.Errorf("extra fields doesn't match, expected %v, got %v", secret.Extra, secretExtra)
+		}
+
+		cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+	}
+}
+
+func TestSecretEditInvalidTenant(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	tenantId := int64(2)
+	tenantOther := int64(1)
+	secret, err := dao.CreateSecretByName("Secret 1", &tenantOther, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secretID, err := util.InterfaceToString(secret.DbID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	requestBody := m.SecretEditRequest{
+		Password: util.StringRef("test"),
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/secrets/"+secretID,
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(secretID)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSecretEdit := ErrorHandlingContext(SecretEdit)
+	err = notFoundSecretEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+
+	cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantOther})
+}
+
+func TestSecretEditNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	tenantId := int64(1)
+	secretID := "5555"
+	requestBody := m.SecretEditRequest{
+		Password: util.StringRef("test"),
+	}
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/secrets/"+secretID,
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(secretID)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	notFoundSecretEdit := ErrorHandlingContext(SecretEdit)
+	err = notFoundSecretEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.NotFoundTest(t, rec)
+}
+
+func TestSecretEditBadRequest(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	tenantId := int64(1)
+	secret, err := dao.CreateSecretByName("Secret 1", &tenantId, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	secretID, err := util.InterfaceToString(secret.DbID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	requestBody :=
+		`{
+              "name": 10
+         }`
+
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Error("Could not marshal JSON")
+	}
+
+	c, rec := request.CreateTestContext(
+		http.MethodPatch,
+		"/api/sources/v3.1/secrets/"+secretID,
+		bytes.NewReader(body),
+		map[string]interface{}{
+			"tenantID": tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues(secretID)
+	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+
+	badRequestSecretEdit := ErrorHandlingContext(SecretEdit)
+	err = badRequestSecretEdit(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	templates.BadRequestTest(t, rec)
 }

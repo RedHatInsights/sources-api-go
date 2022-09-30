@@ -27,3 +27,9 @@ type SecretCreateRequest struct {
 	Extra      map[string]interface{} `json:"extra,omitempty"`
 	UserScoped bool                   `json:"user_scoped"`
 }
+
+type SecretEditRequest struct {
+	Username *string                 `json:"username"`
+	Password *string                 `json:"password,omitempty"`
+	Extra    *map[string]interface{} `json:"extra,omitempty"`
+}
