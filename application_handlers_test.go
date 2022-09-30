@@ -2292,7 +2292,18 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 			t.Errorf("unable to get application authentication, there is err %s", err)
 		}
 
+		// Clean all created resources
+		err = cleanSourceForTenant(suiteData.SourceUserA().Name, suiteData.TenantID())
+		if err != nil {
+			return err
+		}
+
 		err = cleanSourceForTenant(suiteData.SourceUserB().Name, suiteData.TenantID())
+		if err != nil {
+			return err
+		}
+
+		err = cleanSourceForTenant(suiteData.SourceNoUser().Name, suiteData.TenantID())
 		if err != nil {
 			return err
 		}
