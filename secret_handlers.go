@@ -130,12 +130,12 @@ func SecretEdit(c echo.Context) error {
 	updateRequest := &m.SecretEditRequest{}
 	err = c.Bind(updateRequest)
 	if err != nil {
-		return util.NewErrBadRequest(err)
+		return err
 	}
 
 	paramID, err := util.InterfaceToInt64(c.Param("id"))
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
 	secret, err := secretDao.GetById(&paramID)
@@ -150,7 +150,7 @@ func SecretEdit(c echo.Context) error {
 
 	err = secretDao.Update(secret)
 	if err != nil {
-		return util.NewErrBadRequest(err)
+		return err
 	}
 
 	return c.JSON(http.StatusOK, secret.ToSecretResponse())

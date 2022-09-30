@@ -119,7 +119,6 @@ func (auth *Authentication) UpdateSecretFromRequest(update *SecretEditRequest) e
 	if update.Extra != nil {
 		var err error
 		auth.ExtraDb, err = json.Marshal(*update.Extra)
-
 		if err != nil {
 			return err
 		}
