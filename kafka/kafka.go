@@ -68,12 +68,7 @@ func GetReader(conf *Options) (*Reader, error) {
 
 	readerConfig := kafka.ReaderConfig{
 		Brokers: []string{fmt.Sprintf("%s:%d", conf.BrokerConfig.Hostname, *conf.BrokerConfig.Port)},
-		// Make the consumer reset the offset to the latest one available in the server. This makes the offset to be
-		// reset to the latest one available on the server. Check the Jira ticket below for more information.
-		//
-		// * https://issues.redhat.com/browse/RHCLOUD-21422
-		StartOffset: kafka.LastOffset,
-		Topic:       conf.Topic,
+		Topic:   conf.Topic,
 	}
 
 	// set up the logger
