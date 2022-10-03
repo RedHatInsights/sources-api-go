@@ -10,6 +10,7 @@ var (
 	uid3 = "36be1c27-ef96-42b0-9a13-72240b18cf83"
 	uid4 = "1c8b6c9a-af40-11ec-b909-0242ac120002"
 	uid5 = "5cbb40a8-f66a-4efb-8ed2-5f18c59ff7ca"
+	uid6 = "f6d1e4ae-781c-4be0-a4ed-8935af5d9f47"
 )
 
 var TestSourceData = []m.Source{
@@ -52,5 +53,13 @@ var TestSourceData = []m.Source{
 		TenantID:           1,
 		AvailabilityStatus: "available",
 		Uid:                &uid5,
+	},
+	{
+		ID:                 6,
+		Name:               "Source6 Satellite",
+		SourceTypeID:       5,
+		TenantID:           1,
+		AvailabilityStatus: "available",
+		Uid:                &uid6,
 	},
 }

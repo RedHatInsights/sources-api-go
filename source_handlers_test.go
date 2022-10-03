@@ -850,8 +850,17 @@ func TestSourceListSatellite(t *testing.T) {
 		t.Error("offset not set correctly")
 	}
 
-	if len(out.Data) != 0 {
+	if len(out.Data) != 1 {
 		t.Error("Objects were not filtered out of request")
+	}
+
+	sourceOut, ok := out.Data[0].(map[string]interface{})
+	if !ok {
+		t.Error("model did not deserialize as a source")
+	}
+
+	if sourceOut["name"] != "Source6 Satellite" {
+		t.Error("ghosts infected the return")
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)

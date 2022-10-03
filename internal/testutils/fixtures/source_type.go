@@ -23,4 +23,8 @@ var TestSourceTypeData = []m.SourceType{
 		Id:   100,
 		Name: "source type without sources in fixtures",
 	},
+	{
+		Id:   5,
+		Name: "satellite",
+	},
 }
