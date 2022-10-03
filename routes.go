@@ -114,7 +114,7 @@ func setupRoutes(e *echo.Echo) {
 		r.GET("/secrets/:id", SecretGet, tenancyMiddleware...)
 		r.POST("/secrets", SecretCreate, permissionMiddlewareWithoutEvents...)
 		r.PATCH("/secrets/:id", SecretEdit, permissionMiddlewareWithoutEvents...)
-		r.DELETE("/secrets/:uid", SecretDelete, permissionMiddleware...)
+		r.DELETE("/secrets/:id", SecretDelete, permissionMiddleware...)
 
 		// SourceTypes
 		r.GET("/source_types", SourceTypeList, append(listMiddleware, middleware.LoggerFields)...)
