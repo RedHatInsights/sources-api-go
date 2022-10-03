@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -894,19 +895,6 @@ func TestSecretDelete(t *testing.T) {
 		t.Error(err)
 	}
 
-	secretExtra := map[string]interface{}{"extra": "params"}
-	password := "test"
-
-	requestBody := m.SecretEditRequest{
-		Extra:    &secretExtra,
-		Password: util.StringRef(password),
-	}
-
-	body, err := json.Marshal(requestBody)
-	if err != nil {
-		t.Error("Could not marshal JSON")
-	}
-
 	var userID *int64
 	for _, userScoped := range []bool{false, true} {
 		if userScoped {
@@ -926,7 +914,7 @@ func TestSecretDelete(t *testing.T) {
 		c, rec := request.CreateTestContext(
 			http.MethodDelete,
 			"/api/sources/v3.1/secrets/"+secretID,
-			bytes.NewReader(body),
+			nil,
 			map[string]interface{}{
 				"tenantID": tenantIDForSecret,
 			},
@@ -952,7 +940,7 @@ func TestSecretDelete(t *testing.T) {
 
 		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
 		_, err = secretDao.GetById(&secret.DbID)
-		if err.Error() != "secret not found" {
+		if !errors.Is(err, util.ErrNotFoundEmpty) {
 			t.Error("'secret not found' expected")
 		}
 	}
