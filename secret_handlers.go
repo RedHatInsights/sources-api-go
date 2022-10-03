@@ -164,7 +164,7 @@ func SecretDelete(c echo.Context) error {
 
 	secretID, err := util.InterfaceToInt64(c.Param("id"))
 	if err != nil {
-		return err
+		return util.NewErrBadRequest(err)
 	}
 
 	err = secretDao.Delete(&secretID)
