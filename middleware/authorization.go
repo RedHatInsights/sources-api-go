@@ -23,14 +23,14 @@ var (
 )
 
 /*
-	Takes the information stored in the context and returns a 401 if we do not
-	have authorization to perform "write" things such as POST/PATCH/DELETE.
+Takes the information stored in the context and returns a 401 if we do not
+have authorization to perform "write" things such as POST/PATCH/DELETE.
 
-	1. Checks for PSK (if present) and if it is there and matches any of the
-	   PSKs we approve, lets it through.
+ 1. Checks for PSK (if present) and if it is there and matches any of the
+    PSKs we approve, lets it through.
 
-	2. Sends the x-rh-identity header off to rbac to get an ACL list, and
-	   returns whether or not it contains the correct `sources:*:*` permission.
+ 2. Sends the x-rh-identity header off to rbac to get an ACL list, and
+    returns whether or not it contains the correct `sources:*:*` permission.
 */
 func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

@@ -386,9 +386,9 @@ func TestDeleteSourceNotExists(t *testing.T) {
 
 // TestDeleteCascade is a long test function, but very simple in essence. Essentially what it does is:
 //
-//- It creates source with subresources (apps, endpoints, rhc-connections ...).
-//- Cascade deletes the source with the function under test.
-//- Checks that the deleted subresources and source are the ones that have been created in this very same test.
+// - It creates source with subresources (apps, endpoints, rhc-connections ...).
+// - Cascade deletes the source with the function under test.
+// - Checks that the deleted subresources and source are the ones that have been created in this very same test.
 func TestDeleteCascade(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
@@ -687,7 +687,7 @@ func TestSourceNotExists(t *testing.T) {
 }
 
 // TestSourceSubcollectionListWithOffsetAndLimit tests that SubCollectionList() in source dao returns
-//  correct count value and correct count of returned objects
+// correct count value and correct count of returned objects
 func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
@@ -796,7 +796,7 @@ func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 }
 
 // TestSourceListForRhcConnectionWithOffsetAndLimit tests that ListForRhcConnection() in source dao returns
-//  correct count value and correct count of returned objects
+// correct count value and correct count of returned objects
 func TestSourceListForRhcConnectionWithOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")

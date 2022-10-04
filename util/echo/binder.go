@@ -13,11 +13,11 @@ import (
 type NoUnknownFieldsBinder struct{}
 
 /*
-	The single "Bind" method implements the echo.Binder interface.
+The single "Bind" method implements the echo.Binder interface.
 
-	For our custom binder we want to not allow any fields that aren't declared
-	on the `*CreateRequest` structs. This is easily achieved by switching on the
-	`DisallowUnknownFields` Decoder setting for unmarshaling json.
+For our custom binder we want to not allow any fields that aren't declared
+on the `*CreateRequest` structs. This is easily achieved by switching on the
+`DisallowUnknownFields` Decoder setting for unmarshaling json.
 */
 func (binder *NoUnknownFieldsBinder) Bind(i interface{}, c echo.Context) error {
 	// Close the request's body after we're done with it.

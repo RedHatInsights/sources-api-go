@@ -10,8 +10,9 @@ import (
 // schedule.
 //
 // it has 2 fields:
-// 		Interval: how often to run the job
-// 		Job: self-explanatory.
+//
+//	Interval: how often to run the job
+//	Job: self-explanatory.
 type ScheduledJob struct {
 	Interval time.Duration
 	Job      Job

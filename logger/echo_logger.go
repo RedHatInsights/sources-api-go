@@ -25,7 +25,7 @@ type EchoLogger struct {
 	*logrus.Entry
 }
 
-/// Wrapping _level_j methods
+// Wrapping _level_j methods
 func (el EchoLogger) Printj(j log.JSON) { el.Logger.Printf("%+v", j) }
 func (el EchoLogger) Debugj(j log.JSON) { el.Logger.Debugf("%+v", j) }
 func (el EchoLogger) Infoj(j log.JSON)  { el.Logger.Infof("%+v", j) }
@@ -34,11 +34,11 @@ func (el EchoLogger) Warnj(j log.JSON)  { el.Logger.Warnf("%+v", j) }
 func (el EchoLogger) Fatalj(j log.JSON) { el.Logger.Fatalf("%+v", j) }
 func (el EchoLogger) Panicj(j log.JSON) { el.Logger.Panicf("%+v", j) }
 
-/// output is easy
+// output is easy
 func (el EchoLogger) SetOutput(out io.Writer) { el.Logger.SetOutput(out) }
 func (el EchoLogger) Output() io.Writer       { return el.Logger.Out }
 
-/// we don't use the "set level" on the echo logger since we're using a single unified logger
+// we don't use the "set level" on the echo logger since we're using a single unified logger
 func (el EchoLogger) SetLevel(log.Lvl) {
 	panic("DON'T USE THIS METHOD - SET IT ON THE LOGRUS LOGGER")
 }
@@ -46,9 +46,9 @@ func (el EchoLogger) Level() log.Lvl {
 	panic("DON'T USE THIS METHOD - SET IT ON THE LOGRUS LOGGER")
 }
 
-/// we don't set a prefix ever on the logger
+// we don't set a prefix ever on the logger
 func (el EchoLogger) SetPrefix(string) { panic("DON'T USE THIS METHOD") }
 func (el EchoLogger) Prefix() string   { panic("DON'T USE THIS METHOD") }
 
-/// we don't set a header on the logger either
+// we don't set a header on the logger either
 func (el EchoLogger) SetHeader(_ string) { panic("DON'T USE THIS METHOD") }

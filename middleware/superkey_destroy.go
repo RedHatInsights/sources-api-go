@@ -14,12 +14,12 @@ import (
 )
 
 /*
-	This middleware intercepts a superkey-related source on its way through the
-	stack and handles whether the requested resource is superkey related.
+This middleware intercepts a superkey-related source on its way through the
+stack and handles whether the requested resource is superkey related.
 
-	If it is then we will queue up a job that sends the request over to the
-	worker (to delete the resources in amazon), wait 15 seconds, then destroy
-	the actual resources.
+If it is then we will queue up a job that sends the request over to the
+worker (to delete the resources in amazon), wait 15 seconds, then destroy
+the actual resources.
 */
 func SuperKeyDestroySource(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

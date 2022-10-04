@@ -14,10 +14,10 @@ import (
 var AppTypeDao = dao.GetApplicationTypeDao(nil)
 
 /*
-	Go through and validate the application create request.
+Go through and validate the application create request.
 
-	Really not much here other than validating the application type is
-	compatible with the specified source type.
+Really not much here other than validating the application type is
+compatible with the specified source type.
 */
 func ValidateApplicationCreateRequest(requestParams *dao.RequestParams, appReq *m.ApplicationCreateRequest) error {
 	// need both source id + application type id

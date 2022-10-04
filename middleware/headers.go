@@ -10,19 +10,19 @@ import (
 )
 
 /*
-   Parse the required headers for processing this request. Currently this
-   involves _three_ major headers:
+Parse the required headers for processing this request. Currently this
+involves _three_ major headers:
 
-   1. `x-rh-identity`: contains the account number and various other information
-      about the request. This is set by 3scale.
+ 1. `x-rh-identity`: contains the account number and various other information
+    about the request. This is set by 3scale.
 
-   2. `x-rh-sources-psk`: a pre-shared-key (psk) which is used internally to
-      authenticate from within the CRC cluster. This is checked against a list
-      of known keys which are set in vault, if it matches any of them the
-      request is authorized.
+ 2. `x-rh-sources-psk`: a pre-shared-key (psk) which is used internally to
+    authenticate from within the CRC cluster. This is checked against a list
+    of known keys which are set in vault, if it matches any of them the
+    request is authorized.
 
-    3. `x-rh-sources-account-number`: used with a PSK to access a certain
-       account. Only accessible from within the CRC cluster.
+ 3. `x-rh-sources-account-number`: used with a PSK to access a certain
+    account. Only accessible from within the CRC cluster.
 */
 func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
