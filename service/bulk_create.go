@@ -144,7 +144,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 			// look up by id if an id was specified
 			id, err := util.InterfaceToInt64(source.SourceTypeIDRaw)
 			if err != nil {
-				return nil, err
+				return nil, util.NewErrBadRequest(fmt.Sprintf("invalid source type id, original error: %s", err))
 			}
 
 			sourceType, err = dao.GetSourceTypeDao().GetById(&id)
