@@ -338,3 +338,33 @@ func TestParseSourcesBadRequestInvalidSourceTypeName(t *testing.T) {
 		t.Error("ghost infected the return")
 	}
 }
+
+// TestParseSourcesBadRequestMissingSourceType tests that bad request is returned
+// when source type id or name is missing in the request
+func TestParseSourcesBadRequestMissingSourceType(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	sourceName := "Source for TestParseSources()"
+	var reqSources = []model.BulkCreateSource{
+		{
+			SourceCreateRequest: model.SourceCreateRequest{
+				Name: util.StringRef(sourceName),
+			},
+		},
+	}
+
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	// Parse the sources and check the results
+	var err error
+	sources, err := parseSources(reqSources, &tenant, &userResource)
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf("expected bad request error, got <%s>", err)
+	}
+
+	if sources != nil {
+		t.Error("ghost infected the return")
+	}
+}
