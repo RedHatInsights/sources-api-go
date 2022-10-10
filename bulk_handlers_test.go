@@ -34,7 +34,7 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 
 	c, _ := request.CreateTestContext(
 		http.MethodPost,
-		"/api/sources/v3.1/bulkc_reate",
+		"/api/sources/v3.1/bulk_create",
 		bytes.NewReader(body),
 		map[string]interface{}{
 			"tenantID": int64(1),
