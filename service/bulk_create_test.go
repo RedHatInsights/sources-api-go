@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/model"
@@ -397,5 +398,54 @@ func TestParseSourcesBadRequestValidationFails(t *testing.T) {
 
 	if sources != nil {
 		t.Error("ghost infected the return")
+	}
+}
+
+// TestParseSourcesWithSourceOwnership tests that user id is correctly set
+// when ownership is present for the source
+func TestParseSourcesWithSourceOwnership(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	sourceTypeName := "bitbucket"
+	applicationTypeName := "app-studio"
+	sourceName := "Source for TestParseSources()"
+	var reqSources = []model.BulkCreateSource{
+		{
+			SourceCreateRequest: model.SourceCreateRequest{
+				Name: util.StringRef(sourceName),
+			},
+			SourceTypeName: sourceTypeName,
+		},
+	}
+
+	userID := "test_user"
+	tenant := fixtures.TestTenantData[0]
+	userDao := dao.GetUserDao(&tenant.Id)
+
+	user, err := userDao.FindOrCreate(userID)
+	if err != nil {
+		t.Errorf(`Error getting or creating the tenant. Want nil error, got "%s"`, err)
+	}
+
+	userResource := model.UserResource{
+		User:                  user,
+		SourceNames:           []string{sourceName},
+		ApplicationTypesNames: []string{applicationTypeName},
+	}
+
+	// Parse the sources
+	sources, err := parseSources(reqSources, &tenant, &userResource)
+	if err != nil {
+		t.Errorf(`unexpected error when parsing the sources from bulk create: %s`, err)
+	}
+
+	// Check the results
+	if len(sources) != 1 {
+		t.Errorf("expected 1 source returned from parseSources() but got %d", len(sources))
+	}
+
+	if *sources[0].UserID != user.Id {
+		t.Errorf("expected user id %d, got %d", user.Id, *sources[0].UserID)
 	}
 }
