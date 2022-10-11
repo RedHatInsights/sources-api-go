@@ -523,3 +523,39 @@ func TestParseApplications(t *testing.T) {
 		}
 	}
 }
+
+// TestParseApplicationsBadRequestApplicationNotLinked tests situation when all of the applications
+// did not get linked up
+func TestParseApplicationsBadRequestApplicationNotLinked(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	source := fixtures.TestSourceData[0]
+	anotherSource := fixtures.TestSourceData[1]
+
+	appType := fixtures.TestApplicationTypeData[5]
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	bulkCreateOutput := model.BulkCreateOutput{
+		Sources: []model.Source{anotherSource},
+	}
+
+	reqApplications := []model.BulkCreateApplication{
+		{
+			ApplicationTypeName: appType.Name,
+			SourceName:          source.Name,
+		},
+	}
+
+	// Parse the applications
+	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
+	}
+
+	// Check the results
+	if apps != nil {
+		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
+	}
+}
