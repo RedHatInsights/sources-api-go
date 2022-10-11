@@ -449,3 +449,77 @@ func TestParseSourcesWithSourceOwnership(t *testing.T) {
 		t.Errorf("expected user id %d, got %d", user.Id, *sources[0].UserID)
 	}
 }
+
+// TestParseApplications tests that correct output is returned for valid inputs
+func TestParseApplications(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	source := fixtures.TestSourceData[0]
+	sourceType := fixtures.TestSourceTypeData[0]
+	source.SourceType = sourceType
+
+	appType := fixtures.TestApplicationTypeData[5]
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	bulkCreateOutput := model.BulkCreateOutput{
+		Sources: []model.Source{source},
+	}
+
+	// 2 combinations for bulk create application
+	// 		1) with app type id raw
+	// 		2) with app type name
+
+	reqApplicationsAppTypeId := []model.BulkCreateApplication{
+		{
+			ApplicationCreateRequest: model.ApplicationCreateRequest{
+				ApplicationTypeIDRaw: appType.Id,
+			},
+			SourceName: source.Name,
+		},
+	}
+
+	reqApplicationsAppTypeName := []model.BulkCreateApplication{
+		{
+			ApplicationTypeName: appType.Name,
+			SourceName:          source.Name,
+		},
+	}
+
+	reqApplicationsList := [][]model.BulkCreateApplication{
+		reqApplicationsAppTypeId,
+		reqApplicationsAppTypeName,
+	}
+
+	// Parse the applications
+	for _, reqApplications := range reqApplicationsList {
+		apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
+		if err != nil {
+			t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
+		}
+
+		// Check the results
+		if len(apps) != 1 {
+			t.Errorf("expected 1 application returned from parseApplications() but got %d", len(apps))
+		}
+
+		appOut := apps[0]
+
+		if appOut.SourceID != source.ID {
+			t.Errorf("expected source id %d, got %d", source.ID, appOut.SourceID)
+		}
+
+		if appOut.ApplicationTypeID != appType.Id {
+			t.Errorf("expected application type id %d, got %d", appType.Id, appOut.ApplicationTypeID)
+		}
+
+		if appOut.TenantID != tenant.Id {
+			t.Errorf("expected tenant id %d, got %d", tenant.Id, appOut.TenantID)
+		}
+
+		if appOut.UserID != nil {
+			t.Errorf("expected user id = nil, got %d", appOut.UserID)
+		}
+	}
+}
