@@ -1,13 +1,11 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/config"
-	"github.com/RedHatInsights/sources-api-go/logger"
+	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/datatypes"
 )
@@ -17,14 +15,17 @@ type Authentication struct {
 	ID        string    `json:"id"`
 	CreatedAt time.Time `json:"created_at" gorm:"-"`
 
-	Name        *string                `json:"name,omitempty"`
-	AuthType    string                 `gorm:"column:authtype" json:"authtype"`
-	Username    *string                `json:"username"`
+	Name     *string `json:"name,omitempty"`
+	AuthType string  `gorm:"column:authtype" json:"authtype"`
+	Username *string `json:"username"`
+	Version  string  `json:"version" gorm:"-"`
+
+	// DO NOT set these fields directly, instead see secret_store_util.go for
+	// interacting with store-specific fields.
 	Password    *string                `json:"password_hash" gorm:"column:password_hash"`
 	MiqPassword *string                `json:"password" gorm:"column:password"`
 	Extra       map[string]interface{} `gorm:"-" json:"extra,omitempty"`
 	ExtraDb     datatypes.JSON         `gorm:"column:extra"`
-	Version     string                 `json:"version" gorm:"-"`
 
 	AvailabilityStatus      *string    `gorm:"default:in_progress;not null" json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
@@ -59,13 +60,12 @@ func (auth *Authentication) BulkMessage() map[string]interface{} {
 func (auth *Authentication) ToResponse() *AuthenticationResponse {
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 
-	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationResponse{
-		ID:                      id,
+		ID:                      auth.GetID(),
 		Name:                    util.ValueOrBlank(auth.Name),
 		AuthType:                auth.AuthType,
 		Username:                util.ValueOrBlank(auth.Username),
-		Extra:                   extra,
+		Extra:                   auth.GetExtra(),
 		AvailabilityStatus:      util.ValueOrBlank(auth.AvailabilityStatus),
 		AvailabilityStatusError: util.ValueOrBlank(auth.AvailabilityStatusError),
 		ResourceType:            auth.ResourceType,
@@ -74,60 +74,52 @@ func (auth *Authentication) ToResponse() *AuthenticationResponse {
 }
 
 func (auth *Authentication) ToSecretResponse() *SecretResponse {
-	id, extra := unmarshalExtraFields(auth)
 	return &SecretResponse{
-		ID:       id,
+		ID:       auth.GetID(),
 		Name:     util.ValueOrBlank(auth.Name),
 		AuthType: auth.AuthType,
 		Username: util.ValueOrBlank(auth.Username),
-		Extra:    extra,
+		Extra:    auth.GetExtra(),
 	}
 }
 
 func (auth *Authentication) ToInternalSecretResponse() *SecretInternalResponse {
-	id, extra := mapIdExtraFields(auth)
-
-	var password string
-	if auth.Password != nil {
-		decrypted, err := util.Decrypt(*auth.Password)
-		if err != nil {
-			logger.Log.Errorf("failed to decrypt password id %v: %v", id, err)
-		}
-		password = decrypted
+	pass, err := auth.GetPassword()
+	if err != nil {
+		panic("failed to get password from secret: " + err.Error())
 	}
 
 	return &SecretInternalResponse{
-		ID:       id,
+		ID:       auth.GetID(),
 		Name:     util.ValueOrBlank(auth.Name),
 		AuthType: auth.AuthType,
 		Username: util.ValueOrBlank(auth.Username),
-		Extra:    extra,
-		Password: password,
+		Extra:    auth.GetExtra(),
+		Password: *pass,
 	}
 }
 
 func (auth *Authentication) ToInternalResponse() *AuthenticationInternalResponse {
-	id, extra := mapIdExtraFields(auth)
 	resourceID := strconv.FormatInt(auth.ResourceID, 10)
 
-	var pass string
-	if auth.Password != nil {
-		decrypted, err := util.Decrypt(*auth.Password)
-		if err != nil {
-			logger.Log.Errorf("failed to decrypt password id %v: %v", id, err)
-		}
-		pass = decrypted
+	pass, err := auth.GetPassword()
+	if err != nil {
+		l.Log.Warnf("Failed to get password from authentication: %v", err)
+	}
+	// pass can be nil - but we can't have that for the response below.
+	if pass == nil {
+		pass = util.StringRef("")
 	}
 
 	return &AuthenticationInternalResponse{
-		ID:                      id,
+		ID:                      auth.GetID(),
 		CreatedAt:               auth.CreatedAt,
 		Name:                    util.ValueOrBlank(auth.Name),
 		Version:                 auth.Version,
 		AuthType:                auth.AuthType,
 		Username:                util.ValueOrBlank(auth.Username),
-		Password:                pass,
-		Extra:                   extra,
+		Password:                *pass,
+		Extra:                   auth.GetExtra(),
 		AvailabilityStatus:      util.ValueOrBlank(auth.AvailabilityStatus),
 		AvailabilityStatusError: util.ValueOrBlank(auth.AvailabilityStatusError),
 		ResourceType:            auth.ResourceType,
@@ -163,15 +155,14 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 }
 
 func (auth *Authentication) ToEvent() interface{} {
-	id, extra := mapIdExtraFields(auth)
 	return &AuthenticationEvent{
-		ID:                      id,
+		ID:                      auth.GetID(),
 		CreatedAt:               auth.CreatedAt,
 		Name:                    util.ValueOrBlank(auth.Name),
 		AuthType:                auth.AuthType,
 		Version:                 auth.Version,
 		Username:                util.ValueOrBlank(auth.Username),
-		Extra:                   extra,
+		Extra:                   auth.GetExtra(),
 		AvailabilityStatus:      util.StringValueOrNil(auth.AvailabilityStatus),
 		LastAvailableAt:         util.DateTimePointerToRecordFormat(auth.LastAvailableAt),
 		LastCheckedAt:           util.DateTimePointerToRecordFormat(auth.LastCheckedAt),
@@ -225,33 +216,4 @@ func (auth *Authentication) ToEmail(previousStatus string) *EmailNotificationInf
 		SourceID:                   strconv.FormatInt(auth.SourceID, 10),
 		TenantID:                   strconv.FormatInt(auth.TenantID, 10),
 	}
-}
-
-// mapIdExtraFields returns the ID and the Extra fields ready to be assigned to the response model, depending on
-func mapIdExtraFields(auth *Authentication) (string, map[string]interface{}) {
-	var id string
-	var extra map[string]interface{}
-	if config.IsVaultOn() {
-		id = auth.ID
-		extra = auth.Extra
-	} else {
-		return unmarshalExtraFields(auth)
-	}
-
-	return id, extra
-}
-
-func unmarshalExtraFields(auth *Authentication) (string, map[string]interface{}) {
-	var id string
-	var extra map[string]interface{}
-	id = strconv.FormatInt(auth.DbID, 10)
-
-	if auth.ExtraDb != nil {
-		err := json.Unmarshal(auth.ExtraDb, &extra)
-		if err != nil {
-			logger.Log.Errorf(`could not unmarshal "extra" field from authentication with ID "%s"`, id)
-		}
-	}
-
-	return id, extra
 }

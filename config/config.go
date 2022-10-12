@@ -15,6 +15,10 @@ import (
 const (
 	KafkaGroupId  = "sources-api-go"
 	RdsCaLocation = "/app/rdsca.cert"
+
+	DatabaseStore       = "database"
+	VaultStore          = "vault"
+	SecretsManagerStore = "secrets-manager"
 )
 
 var parsedConfig *SourcesApiConfig
@@ -319,6 +323,7 @@ func (sourceConfig *SourcesApiConfig) KafkaTopic(requestedTopic string) string {
 }
 
 // IsVaultOn returns true if the authentications are backed by Vault. False, if they are backed by the database.
+// DEPRECATED: should be using methods on the authentication object instead of checking the config directly.
 func IsVaultOn() bool {
 	return parsedConfig.SecretStore == "vault"
 }

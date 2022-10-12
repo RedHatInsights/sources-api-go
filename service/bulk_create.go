@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -299,8 +298,11 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		a.AuthType = auth.AuthType
 		a.Username = util.StringValueOrNil(auth.Username)
 		a.Password = auth.Password
-		// TODO: set based on vault or not.
-		a.ExtraDb, _ = json.Marshal(auth.Extra)
+		// pull extra properly per secret store
+		err := a.SetExtra(auth.Extra)
+		if err != nil {
+			return nil, err
+		}
 		a.Name = auth.Name
 		a.Tenant = *tenant
 		a.TenantID = tenant.Id

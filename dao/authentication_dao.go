@@ -29,10 +29,15 @@ var GetAuthenticationDao func(daoParams *RequestParams) AuthenticationDao
 
 // getDefaultAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultAuthenticationDao(daoParams *RequestParams) AuthenticationDao {
-	if config.IsVaultOn() {
-		return &authenticationDaoImpl{RequestParams: daoParams}
-	} else {
+	switch config.Get().SecretStore {
+	case config.DatabaseStore:
 		return &authenticationDaoDbImpl{RequestParams: daoParams}
+	case config.VaultStore:
+		return &authenticationDaoImpl{RequestParams: daoParams}
+	case config.SecretsManagerStore:
+		panic(m.ErrBadSecretStore)
+	default:
+		panic(m.ErrBadSecretStore)
 	}
 }
 
