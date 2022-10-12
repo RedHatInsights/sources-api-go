@@ -358,6 +358,15 @@ func SourceCheckAvailability(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	scheduledParam := c.QueryParam("scheduled")
+	if scheduledParam == "" {
+		scheduledParam = "false"
+	}
+	scheduled, err := strconv.ParseBool(scheduledParam)
+	if err != nil {
+		scheduled = false
+	}
+
 	exists, err := sourceDao.Exists(sourceID)
 	if !exists || err != nil {
 		cancel()
@@ -386,7 +395,7 @@ func SourceCheckAvailability(c echo.Context) error {
 			c.Logger().Warn(err)
 			return
 		}
-		service.RequestAvailabilityCheck(c, src, h)
+		service.RequestAvailabilityCheck(c, src, scheduled, h)
 		cancel()
 	}()
 

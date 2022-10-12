@@ -35,12 +35,12 @@ type availabilityCheckRequester struct {
 
 type availabilityChecker interface {
 	// public methods
-	ApplicationAvailabilityCheck(source *m.Source)
+	ApplicationAvailabilityCheck(source *m.Source, scheduled bool)
 	EndpointAvailabilityCheck(source *m.Source)
 	RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header)
 
 	// private methods
-	httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
+	httpAvailabilityRequest(source *m.Source, scheduled bool, app *m.Application, uri *url.URL)
 	publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint)
 	pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header)
 	updateRhcStatus(source *m.Source, status string, errstr string, rhcConnection *m.RhcConnection, headers []kafka.Header)
@@ -60,12 +60,12 @@ var (
 )
 
 // requests both types of availability checks for a source
-func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.Header) {
+func RequestAvailabilityCheck(c echo.Context, source *m.Source, scheduled bool, headers []kafka.Header) {
 	var ac availabilityChecker = &availabilityCheckRequester{c: c}
 	ac.Logger().Infof("[source_id: %d] Requesting availability check for source", source.ID)
 
 	if len(source.Applications) != 0 {
-		ac.ApplicationAvailabilityCheck(source)
+		ac.ApplicationAvailabilityCheck(source, scheduled)
 	}
 
 	if len(source.Endpoints) != 0 {
@@ -81,7 +81,7 @@ func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.
 
 // sends off an availability check http request for each of the source's
 // applications
-func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source) {
+func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source, scheduled bool) {
 	for _, app := range source.Applications {
 		acr.Logger().Infof("[source_id :%d][application_id: %d] Requesting availability check for application", source.ID, app.ID)
 
@@ -91,12 +91,15 @@ func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Sou
 			continue
 		}
 
-		acr.httpAvailabilityRequest(source, &app, uri)
+		acr.httpAvailabilityRequest(source, scheduled, &app, uri)
 	}
 }
 
-func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL) {
-	body := map[string]string{"source_id": strconv.FormatInt(app.SourceID, 10)}
+func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, scheduled bool, app *m.Application, uri *url.URL) {
+	body := map[string]interface{}{
+		"source_id": strconv.FormatInt(app.SourceID, 10),
+		"scheduled": scheduled,
+	}
 	raw, err := json.Marshal(body)
 	if err != nil {
 		acr.Logger().Errorf("[source_id: %d] Failed to marshal source body: %s", app.SourceID, err)

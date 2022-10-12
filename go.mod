@@ -17,14 +17,14 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/vault/api v1.1.1
 	github.com/iancoleman/strcase v0.2.0
-	github.com/jackc/pgconn v1.11.0 // indirect
+	github.com/jackc/pgconn v1.11.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/labstack/gommon v0.3.1
 	github.com/lib/pq v1.10.2 // indirect
-	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9 // indirect
+	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9
 	github.com/prometheus/client_golang v1.12.1
 	github.com/redhatinsights/app-common-go v1.6.3
 	github.com/redhatinsights/platform-go-middlewares v0.19.0

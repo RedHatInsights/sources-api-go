@@ -25,9 +25,9 @@ func (c dummyChecker) Logger() echo.Logger {
 }
 
 // send out a http response per application
-func (c *dummyChecker) ApplicationAvailabilityCheck(source *m.Source) {
+func (c *dummyChecker) ApplicationAvailabilityCheck(source *m.Source, scheduled bool) {
 	for i := 0; i < len(source.Applications); i++ {
-		c.httpAvailabilityRequest(source, &source.Applications[i], &url.URL{})
+		c.httpAvailabilityRequest(source, scheduled, &source.Applications[i], &url.URL{})
 	}
 }
 
@@ -46,7 +46,7 @@ func (c *dummyChecker) RhcConnectionAvailabilityCheck(source *m.Source, headers 
 }
 
 // dummy methods making sure they're getting called.
-func (c *dummyChecker) httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL) {
+func (c *dummyChecker) httpAvailabilityRequest(source *m.Source, scheduled bool, app *m.Application, uri *url.URL) {
 	c.ApplicationCounter++
 }
 func (c *dummyChecker) publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint) {
@@ -58,12 +58,24 @@ func (c *dummyChecker) pingRHC(source *m.Source, rhcConnection *m.RhcConnection,
 func (c *dummyChecker) updateRhcStatus(source *m.Source, status string, errstr string, rhcConnection *m.RhcConnection, headers []kafka.Header) {
 }
 
-func TestApplicationAvailability(t *testing.T) {
+func TestScheduledApplicationAvailability(t *testing.T) {
 	var acr = &dummyChecker{}
 	acr.ApplicationAvailabilityCheck(&m.Source{
 		// 2 applications on this source.
 		Applications: []m.Application{{}, {}},
-	})
+	}, true)
+
+	if acr.ApplicationCounter != 2 {
+		t.Errorf("availability check not called for both applications, got %v expected %v", acr.ApplicationCounter, 2)
+	}
+}
+
+func TestUserApplicationAvailability(t *testing.T) {
+	var acr = &dummyChecker{}
+	acr.ApplicationAvailabilityCheck(&m.Source{
+		// 2 applications on this source.
+		Applications: []m.Application{{}, {}},
+	}, false)
 
 	if acr.ApplicationCounter != 2 {
 		t.Errorf("availability check not called for both applications, got %v expected %v", acr.ApplicationCounter, 2)
@@ -104,7 +116,7 @@ func TestAllAvailability(t *testing.T) {
 		// ...and 1 rhc connection
 		SourceRhcConnections: []m.SourceRhcConnection{{RhcConnection: m.RhcConnection{RhcId: "asdf"}}},
 	}
-	acr.ApplicationAvailabilityCheck(src)
+	acr.ApplicationAvailabilityCheck(src, true)
 	acr.EndpointAvailabilityCheck(src)
 	acr.RhcConnectionAvailabilityCheck(src, []kafka.Header{})
 

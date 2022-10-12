@@ -1718,6 +1718,52 @@ func TestAvailabilityStatusCheck(t *testing.T) {
 	}
 }
 
+func TestScheduledAvailabilityStatusCheck(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id", "scheduled")
+	c.SetParamValues("1", "true")
+
+	err := SourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 202 {
+		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 202)
+	}
+}
+
+func TestUserAvailabilityStatusCheck(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/1/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(1),
+		},
+	)
+
+	c.SetParamNames("source_id", "scheduled")
+	c.SetParamValues("1", "false")
+
+	err := SourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 202 {
+		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 202)
+	}
+}
+
 // TestAvailabilityStatusCheckInvalidTenant tests availability status check
 // with a tenant who doesn't own the source
 func TestAvailabilityStatusCheckInvalidTenant(t *testing.T) {
