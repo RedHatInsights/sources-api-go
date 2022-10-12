@@ -1,6 +1,8 @@
 package statuslistener
 
 import (
+	"fmt"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -20,6 +22,8 @@ const (
 	sourcesStatusRequestedTopic = "platform.sources.status"
 	groupID                     = "sources-api-status-worker"
 	eventAvailabilityStatus     = "availability_status"
+	eventHealthcheck            = "healthcheck"
+	healthCheckInterval         = 30
 )
 
 var (
@@ -29,12 +33,17 @@ var (
 
 type AvailabilityStatusListener struct {
 	*events.EventStreamProducer
+	healthcheck chan struct{}
+	lastMsg     time.Time
 }
 
 func Run(shutdown chan struct{}) {
 	l.Log.Infof("Starting Availability Status Listener on topic [%v]", sourcesStatusTopic)
 
-	avs := AvailabilityStatusListener{EventStreamProducer: NewEventStreamProducer()}
+	avs := AvailabilityStatusListener{
+		EventStreamProducer: NewEventStreamProducer(),
+		healthcheck:         make(chan struct{}, 10),
+	}
 	avs.subscribeToAvailabilityStatus(shutdown)
 }
 
@@ -60,9 +69,11 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 	}
 
 	// run async for graceful shutdown handling
-	go func() {
-		kafka.Consume(kf, avs.ConsumeStatusMessage)
-	}()
+	go kafka.Consume(kf, avs.ConsumeStatusMessage)
+	go avs.Healthcheck()
+
+	// let the healthcheck thread know we are good to go since we connected successfully
+	avs.healthcheck <- struct{}{}
 
 	<-shutdown
 	kafka.CloseReader(kf, "subscribe availability status. Shutdown signal received")
@@ -70,6 +81,13 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 }
 
 func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Message) {
+	// if it's a healthcheck message it isn't really an invalid type, but we
+	// don't need to do anything with it other than send it to the healthcheck channel
+	if message.GetHeader("event_type") == eventHealthcheck {
+		avs.healthcheck <- struct{}{}
+		return
+	}
+
 	if message.GetHeader("event_type") != eventAvailabilityStatus {
 		l.Log.Warnf("Skipping invalid event_type %q", message.GetHeader("event_type"))
 		return
@@ -206,4 +224,63 @@ func (avs *AvailabilityStatusListener) attributesForUpdate(statusMessage types.S
 	}
 
 	return updateAttributes
+}
+
+func (avs *AvailabilityStatusListener) Healthcheck() {
+	// run the healthcheck consumer/producer in the background
+	go avs.healthCheckProducer()
+	go avs.healthCheckConsumer()
+
+	http.Handle("/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// /health should return a 500 if there hasn't been a message yet OR it has
+		// been more than 30 seconds since the last kafka message came through
+		if avs.lastMsg.IsZero() || avs.lastMsg.Before(time.Now().Add(-healthCheckInterval*time.Second)) {
+			l.Log.Warnf("no message received in %v seconds or more", healthCheckInterval)
+			http.Error(w, fmt.Sprintf("no message received in %v seconds or more", healthCheckInterval), 500)
+			return
+		}
+
+		// we're good!
+		w.WriteHeader(204)
+	}))
+	l.Log.Fatal(http.ListenAndServe(":8000", nil))
+}
+
+// healthCheckConsumer runs a loop against the availability status listener's
+// healthcheck channel and updates the shared timestamp with the last time we
+// got a message
+func (avs *AvailabilityStatusListener) healthCheckConsumer() {
+	for range avs.healthcheck {
+		avs.lastMsg = time.Now()
+	}
+}
+
+// healthCheckProducer produces a message on the platform.sources.status topic
+// with the event_type of "healthcheck" so that we know that kafka is working
+// even when we don't have any traffic coming through
+func (avs *AvailabilityStatusListener) healthCheckProducer() {
+	// send a message every <healthCheckInterval> seconds
+	for range time.NewTicker(healthCheckInterval * time.Second).C {
+		w, err := kafka.GetWriter(&kafka.Options{
+			BrokerConfig: &config.KafkaBrokerConfig,
+			Topic:        sourcesStatusTopic,
+			Logger:       l.Log,
+		})
+		if err != nil {
+			l.Log.Fatal(err)
+		}
+
+		msg := kafka.Message{}
+		msg.AddHeaders([]kafka.Header{
+			{Key: "event_type", Value: []byte(eventHealthcheck)},
+		})
+		msg.AddValue([]byte(eventHealthcheck))
+
+		err = kafka.Produce(w, &msg)
+		if err != nil {
+			l.Log.Warnf("Failed to produce healthcheck msg at %v", time.Now())
+		}
+
+		kafka.CloseWriter(w, "healthcheck producer")
+	}
 }

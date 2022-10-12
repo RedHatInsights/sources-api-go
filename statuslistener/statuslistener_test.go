@@ -446,7 +446,10 @@ func TestConsumeStatusMessage(t *testing.T) {
 
 		sender := MockEventStreamSender{TestSuite: t, StatusMessage: testEntry.StatusMessage}
 		esp := &events.EventStreamProducer{Sender: &sender}
-		avs := AvailabilityStatusListener{EventStreamProducer: esp}
+
+		avs := AvailabilityStatusListener{EventStreamProducer: esp, healthcheck: make(chan struct{}, 10)}
+		go avs.healthCheckConsumer()
+
 		message, _ := json.Marshal(testEntry)
 		avs.ConsumeStatusMessage(kafka.Message{Value: message, Headers: testEntry.MessageHeaders})
 

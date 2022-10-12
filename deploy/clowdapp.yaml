@@ -85,6 +85,17 @@ objects:
           requests:
             cpu: ${AVAILABILITY_LISTENER_CPU_REQUEST}
             memory: ${AVAILABILITY_LISTENER_MEMORY_REQUEST}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
     - name: svc
       minReplicas: ${{MIN_REPLICAS}}
       webServices:
