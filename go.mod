@@ -22,8 +22,9 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/labstack/echo-contrib v0.12.0
 	github.com/labstack/echo/v4 v4.9.0
-	github.com/labstack/gommon v0.3.1
+	github.com/labstack/gommon v0.4.0
 	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/prometheus/client_golang v1.12.1
 	github.com/redhatinsights/app-common-go v1.6.3
 	github.com/redhatinsights/platform-go-middlewares v0.19.0
@@ -32,8 +33,10 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.10.0
 	github.com/vektah/gqlparser/v2 v2.4.0
-	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
-	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6 // indirect
+	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
+	golang.org/x/net v0.0.0-20221012135044-0b7e1fb9d458 // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	gorm.io/datatypes v1.0.1
 	gorm.io/driver/postgres v1.3.1
 	gorm.io/gorm v1.23.2
