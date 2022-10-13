@@ -16,7 +16,7 @@ const (
 // Source struct that includes all of the fields on the table
 // used internally for business logic
 type Source struct {
-	AvailabilityStatus string     `json:"availability_status,omitempty"`
+	AvailabilityStatus string     `gorm:"default:in_progress;not null" json:"availability_status,omitempty"`
 	LastCheckedAt      *time.Time `json:"last_checked_at,omitempty"`
 	LastAvailableAt    *time.Time `json:"last_available_at,omitempty"`
 

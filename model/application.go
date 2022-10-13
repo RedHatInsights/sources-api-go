@@ -15,7 +15,7 @@ type Application struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	PausedAt  *time.Time `json:"paused_at"`
 
-	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	AvailabilityStatus      string     `gorm:"default:in_progress;not null" json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
 	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
 	AvailabilityStatusError string     `json:"availability_status_error,omitempty"`

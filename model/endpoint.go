@@ -23,7 +23,7 @@ type Endpoint struct {
 	CertificateAuthority *string `json:"certificate_authority,omitempty"`
 	ReceptorNode         *string `json:"receptor_node,omitempty"`
 
-	AvailabilityStatus      string     `json:"availability_status,omitempty"`
+	AvailabilityStatus      string     `gorm:"default:in_progress;not null" json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`
 	LastAvailableAt         *time.Time `json:"last_available_at,omitempty"`
 	AvailabilityStatusError *string    `json:"availability_status_error,omitempty"`
