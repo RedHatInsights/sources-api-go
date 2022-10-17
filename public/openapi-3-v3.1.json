@@ -2583,6 +2583,7 @@
             "description": "The availability status of the authentication",
             "example": "available",
             "enum": [
+              "in_progress",
               "available",
               "unavailable"
             ]
@@ -2671,6 +2672,7 @@
             "description": "The availability status of the authentication",
             "example": "available",
             "enum": [
+              "in_progress",
               "available",
               "unavailable"
             ]
@@ -2843,6 +2845,7 @@
             "example": "available",
             "enum": [
               "",
+              "in_progress",
               "available",
               "unavailable"
             ],
@@ -2941,6 +2944,7 @@
             "example": "available",
             "enum": [
               "",
+              "in_progress",
               "available",
               "unavailable"
             ],
@@ -3022,6 +3026,7 @@
             "example": "available",
             "enum": [
               "",
+              "in_progress",
               "available",
               "unavailable"
             ],
@@ -3138,6 +3143,7 @@
             "example": "available",
             "enum": [
               "",
+              "in_progress",
               "available",
               "unavailable"
             ],
@@ -3880,9 +3886,9 @@
                 "resource_type": {
                   "description": "The type of the resource this authentication relates to",
                   "enum": [
-                    "application",
-                    "endpoint",
-                    "source"
+                    "Application",
+                    "Endpoint",
+                    "Source"
                   ],
                   "example": "application",
                   "type": "string"
