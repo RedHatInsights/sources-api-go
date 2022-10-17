@@ -3886,9 +3886,9 @@
                 "resource_type": {
                   "description": "The type of the resource this authentication relates to",
                   "enum": [
-                    "application",
-                    "endpoint",
-                    "source"
+                    "Application",
+                    "Endpoint",
+                    "Source"
                   ],
                   "example": "application",
                   "type": "string"
