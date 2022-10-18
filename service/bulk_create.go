@@ -481,7 +481,7 @@ func applicationFromBulkCreateApplication(reqApplication *m.BulkCreateApplicatio
 		// look up by id if an id was specified
 		id, err := util.InterfaceToInt64(reqApplication.ApplicationTypeIDRaw)
 		if err != nil {
-			return nil, err
+			return nil, util.NewErrBadRequest("application type id cannot be converted to an integer")
 		}
 
 		appType, err := dao.GetApplicationTypeDao(&tenant.Id).GetById(&id)

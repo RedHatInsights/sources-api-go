@@ -559,3 +559,149 @@ func TestParseApplicationsBadRequestApplicationNotLinked(t *testing.T) {
 		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
 	}
 }
+
+// TestParseApplicationsBadRequestWithoutAppType tests that bad request is returned
+// when application type id or name is missing in the request
+func TestParseApplicationsBadRequestWithoutAppType(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	source := fixtures.TestSourceData[0]
+	anotherSource := fixtures.TestSourceData[1]
+
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	bulkCreateOutput := model.BulkCreateOutput{
+		Sources: []model.Source{anotherSource},
+	}
+
+	reqApplications := []model.BulkCreateApplication{
+		{
+			SourceName: source.Name,
+		},
+	}
+
+	// Parse the applications
+	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
+	}
+
+	// Check the results
+	if apps != nil {
+		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
+	}
+}
+
+// TestParseApplicationsBadRequestInvalidAppTypeId tests that bad request is returned
+// for invalid application type raw id in the request
+func TestParseApplicationsBadRequestInvalidAppTypeId(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	source := fixtures.TestSourceData[0]
+	anotherSource := fixtures.TestSourceData[1]
+	appTypeIdRaw := "amazon"
+
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	bulkCreateOutput := model.BulkCreateOutput{
+		Sources: []model.Source{anotherSource},
+	}
+
+	reqApplications := []model.BulkCreateApplication{
+		{
+			ApplicationCreateRequest: model.ApplicationCreateRequest{
+				ApplicationTypeIDRaw: appTypeIdRaw,
+			},
+			SourceName: source.Name,
+		},
+	}
+
+	// Parse the applications
+	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
+	}
+
+	// Check the results
+	if apps != nil {
+		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
+	}
+}
+
+// TestParseApplicationsAppTypeIdNotFound tests that not found is returned
+// for not existing application type id
+func TestParseApplicationsAppTypeIdNotFound(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	source := fixtures.TestSourceData[0]
+	anotherSource := fixtures.TestSourceData[1]
+	appTypeIdRaw := "1000"
+
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	bulkCreateOutput := model.BulkCreateOutput{
+		Sources: []model.Source{anotherSource},
+	}
+
+	reqApplications := []model.BulkCreateApplication{
+		{
+			ApplicationCreateRequest: model.ApplicationCreateRequest{
+				ApplicationTypeIDRaw: appTypeIdRaw,
+			},
+			SourceName: source.Name,
+		},
+	}
+
+	// Parse the applications
+	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
+	if !errors.Is(err, util.ErrNotFoundEmpty) {
+		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
+	}
+
+	// Check the results
+	if apps != nil {
+		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
+	}
+}
+
+// TestParseApplicationsBadRequestInvalidAppTypeName tests that bad request is returned
+// for invalid application type name in the request
+func TestParseApplicationsBadRequestInvalidAppTypeName(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	source := fixtures.TestSourceData[0]
+	anotherSource := fixtures.TestSourceData[1]
+	appTypeName := "not existing app type name"
+
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	bulkCreateOutput := model.BulkCreateOutput{
+		Sources: []model.Source{anotherSource},
+	}
+
+	reqApplications := []model.BulkCreateApplication{
+		{
+			ApplicationTypeName: appTypeName,
+			SourceName:          source.Name,
+		},
+	}
+
+	// Parse the applications
+	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
+	}
+
+	// Check the results
+	if apps != nil {
+		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
+	}
+}
