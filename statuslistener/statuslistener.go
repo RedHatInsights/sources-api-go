@@ -16,6 +16,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/labstack/echo/v4"
 )
 
 const (
@@ -82,9 +83,8 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 
 func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Message) {
 	// if it's a healthcheck message it isn't really an invalid type, but we
-	// don't need to do anything with it other than send it to the healthcheck channel
+	// don't need to do anything with it
 	if message.GetHeader("event_type") == eventHealthcheck {
-		avs.healthcheck <- struct{}{}
 		return
 	}
 
@@ -231,19 +231,25 @@ func (avs *AvailabilityStatusListener) Healthcheck() {
 	go avs.healthCheckProducer()
 	go avs.healthCheckConsumer()
 
-	http.Handle("/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// /health should return a 500 if there hasn't been a message yet OR it has
-		// been more than 30 seconds since the last kafka message came through
+	// using echo rather than stdlib so we can have many independent endpoints
+	e := echo.New()
+	e.HideBanner = true
+	e.HidePort = true
+
+	e.GET("/health", func(c echo.Context) error {
+		// /health should return a 500 if there hasn't been a message yet OR it
+		// has been more than <healthcheckinterval> seconds since the last
+		// successful kafka message production
 		if avs.lastMsg.IsZero() || avs.lastMsg.Before(time.Now().Add(-healthCheckInterval*time.Second)) {
-			l.Log.Warnf("no message received in %v seconds or more", healthCheckInterval)
-			http.Error(w, fmt.Sprintf("no message received in %v seconds or more", healthCheckInterval), 500)
-			return
+			errstr := fmt.Sprintf("no successful kafka production in %v seconds or more", healthCheckInterval)
+			l.Log.Warn(errstr)
+			return c.String(http.StatusInternalServerError, errstr)
 		}
 
 		// we're good!
-		w.WriteHeader(204)
-	}))
-	l.Log.Fatal(http.ListenAndServe(":8000", nil))
+		return c.NoContent(204)
+	})
+	l.Log.Fatal(e.Start(":8000"))
 }
 
 // healthCheckConsumer runs a loop against the availability status listener's
@@ -251,7 +257,9 @@ func (avs *AvailabilityStatusListener) Healthcheck() {
 // got a message
 func (avs *AvailabilityStatusListener) healthCheckConsumer() {
 	for range avs.healthcheck {
-		avs.lastMsg = time.Now()
+		now := time.Now()
+		avs.lastMsg = now
+		l.Log.Debugf("Got Healthcheck Messsage %v", now.Format(time.Kitchen))
 	}
 }
 
@@ -267,18 +275,33 @@ func (avs *AvailabilityStatusListener) healthCheckProducer() {
 			Logger:       l.Log,
 		})
 		if err != nil {
-			l.Log.Fatal(err)
+			l.Log.Warn(err)
+			return
 		}
 
 		msg := kafka.Message{}
 		msg.AddHeaders([]kafka.Header{
 			{Key: "event_type", Value: []byte(eventHealthcheck)},
 		})
-		msg.AddValue([]byte(eventHealthcheck))
+		now := time.Now()
 
+		// should be 0, since we have produced 0 messages.
+		before := w.Stats().Writes
+
+		l.Log.Debugf("Producing Healthcheck message %v", now.Format(time.Kitchen))
 		err = kafka.Produce(w, &msg)
 		if err != nil {
-			l.Log.Warnf("Failed to produce healthcheck msg at %v", time.Now())
+			l.Log.Warnf("Failed to produce healthcheck msg at %v", now.Format(time.Kitchen))
+		}
+
+		// should be 1, since we successfully produced a message. Otherwise
+		// it'll be the same and we don't send the signal to the consumer
+		// routine.
+		after := w.Stats().Writes
+
+		// send the message if and only if we successfully wrote a message
+		if after > before {
+			avs.healthcheck <- struct{}{}
 		}
 
 		kafka.CloseWriter(w, "healthcheck producer")
