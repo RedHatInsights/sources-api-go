@@ -3726,6 +3726,11 @@
                   "example": "My shiny source",
                   "type": "string"
                 },
+                "source_ref": {
+                  "description": "The external referece or ID for the source",
+                  "example": "my-long-external-ref",
+                  "type": "string"
+                },
                 "source_type_name": {
                   "description": "The type of the source that will be created",
                   "example": "amazon",
@@ -3762,6 +3767,11 @@
                 "source_name": {
                   "description": "The name of the source this endpoint will be attached to",
                   "example": "My shiny source",
+                  "type": "string"
+                },
+                "certificate_authority": {
+                  "description": "Optional X.509 Certificate Authority.",
+                  "example": "Let's Encrypt",
                   "type": "string"
                 },
                 "host": {
