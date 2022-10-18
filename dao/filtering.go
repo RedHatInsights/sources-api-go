@@ -17,6 +17,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 	}
 
 	var filterName string
+	var alreadyJoined = make(map[string]bool)
 	for _, filter := range filters {
 		// subresource filtering!
 		if filter.Subresource != "" {
@@ -26,21 +27,30 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					return nil, fmt.Errorf("cannot filter based on source_type subresource for table %q", query.Statement.Table)
 				}
 
-				query = query.Joins("SourceType")
+				if !alreadyJoined[filter.Subresource] {
+					query = query.Joins("SourceType")
+					alreadyJoined[filter.Subresource] = true
+				}
 				filterName = fmt.Sprintf("%v.%v", `"SourceType"`, filter.Name)
 			case "application_type":
 				if query.Statement.Table != "applications" {
 					return nil, fmt.Errorf("cannot filter based on application_type subresource for table %q", query.Statement.Table)
 				}
 
-				query = query.Joins("ApplicationType")
+				if !alreadyJoined[filter.Subresource] {
+					query = query.Joins("ApplicationType")
+					alreadyJoined[filter.Subresource] = true
+				}
 				filterName = fmt.Sprintf("%v.%v", `"ApplicationType"`, filter.Name)
 			case "application":
 				if query.Statement.Table != "sources" {
 					return nil, fmt.Errorf("cannot filter based on applications subresource for table %q", query.Statement.Table)
 				}
 
-				query = query.Joins(`Applications`)
+				if !alreadyJoined[filter.Subresource] {
+					query = query.Joins(`Applications`)
+					alreadyJoined[filter.Subresource] = true
+				}
 				filterName = fmt.Sprintf("%v.%v", `"Applications"`, filter.Name)
 			default:
 				return nil, fmt.Errorf("invalid subresource type [%v]", filter.Subresource)
@@ -96,6 +106,8 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 		case "ends_with_i":
 			query = query.Where(fmt.Sprintf("%v ILIKE ?", filterName), fmt.Sprintf("%%%s", filter.Value[0]))
 		case "sort_by":
+			// prepend the table name if it was set
+			filter.Value[0] = filterName + filter.Value[0]
 			query = query.Order(strings.Join(filter.Value, " "))
 		default:
 			return nil, fmt.Errorf("unsupported operation %v", filter.Operation)
