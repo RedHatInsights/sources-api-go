@@ -3,7 +3,6 @@ package jobs
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -130,7 +129,6 @@ func (hc *BackgroundWorkerHealthChecker) healthChecker() {
 func (hc *BackgroundWorkerHealthChecker) healthCheckConsumer() {
 	for range hc.timeChannel {
 		hc.timeStamp = time.Now()
-		fmt.Println("timeStamp", hc.timeStamp)
 	}
 }
 
@@ -140,6 +138,8 @@ func (hc *BackgroundWorkerHealthChecker) healthcheckLoop() {
 		err := redis.Client.Ping(context.Background()).Err()
 		if err == nil {
 			hc.timeChannel <- time.Now()
+		} else {
+			l.Log.Fatalf("Failed to hit redis: %v", err)
 		}
 	}
 }
