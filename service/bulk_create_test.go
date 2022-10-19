@@ -701,3 +701,38 @@ func TestParseApplicationsBadRequestInvalidAppTypeName(t *testing.T) {
 		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
 	}
 }
+
+// TestParseApplicationsBadRequestNotCompatible tests that bad request is returned
+// for not compatible app type with source type
+func TestParseApplicationsBadRequestNotCompatible(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+
+	// Prepare test data
+	source := fixtures.TestSourceData[0]
+	appType := fixtures.TestApplicationTypeData[1]
+
+	tenant := fixtures.TestTenantData[0]
+	userResource := model.UserResource{}
+
+	bulkCreateOutput := model.BulkCreateOutput{
+		Sources: []model.Source{source},
+	}
+
+	reqApplications := []model.BulkCreateApplication{
+		{
+			ApplicationTypeName: appType.Name,
+			SourceName:          source.Name,
+		},
+	}
+
+	// Parse the applications
+	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
+	if !errors.Is(err, util.ErrBadRequestEmpty) {
+		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
+	}
+
+	// Check the results
+	if apps != nil {
+		t.Errorf("expected nil returned from parseApplications() but got %d applications", len(apps))
+	}
+}
