@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/dao/vault"
 	"github.com/RedHatInsights/sources-api-go/db/migrations"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	vault "github.com/hashicorp/vault/api"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -19,8 +19,7 @@ import (
 var (
 	DB *gorm.DB
 
-	vaultClient *vault.Client
-	Vault       VaultClient
+	Vault vault.VaultClient
 
 	conf = config.Get()
 )
@@ -101,22 +100,13 @@ func Init() {
 	// Perform database migrations.
 	migrations.Migrate(DB)
 
-	// Open up the conn to Vault
-	cfg := vault.DefaultConfig()
-	if cfg == nil {
-		panic("Failed to parse Vault Config")
+	// per secret-store setup
+	switch config.Get().SecretStore {
+	case config.VaultStore:
+		Vault = vault.NewClient()
+	case config.SecretsManagerStore:
+		// secrets-manager client populated here...
 	}
-	err = cfg.ReadEnvironment()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to read Vault Environment: %v", err))
-	}
-
-	vaultClient, err = vault.NewClient(cfg)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to Create Vault Client: %v", err))
-	}
-
-	Vault = vaultClient.Logical()
 
 	// we only want to seed the database when running the api pod - not the status listener
 	if !conf.StatusListener && !conf.BackgroundWorker {
