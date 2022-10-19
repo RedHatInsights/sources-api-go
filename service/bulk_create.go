@@ -217,9 +217,9 @@ func parseApplications(reqApplications []m.BulkCreateApplication, current *m.Bul
 			}
 
 			// check compatibility with the source type
-			err := dao.GetApplicationTypeDao(&tenant.Id).ApplicationTypeCompatibleWithSourceType(a.ApplicationType.Id, src.SourceType.Id)
+			err = dao.GetApplicationTypeDao(&tenant.Id).ApplicationTypeCompatibleWithSourceType(a.ApplicationType.Id, src.SourceType.Id)
 			if err != nil {
-				return nil, err
+				return nil, util.NewErrBadRequest("the application type is not compatible with the source type")
 			}
 
 			// fill out whats left of the application (spoiler: not much)
