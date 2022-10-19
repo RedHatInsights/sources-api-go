@@ -567,13 +567,12 @@ func TestParseApplicationsBadRequestWithoutAppType(t *testing.T) {
 
 	// Prepare test data
 	source := fixtures.TestSourceData[0]
-	anotherSource := fixtures.TestSourceData[1]
 
 	tenant := fixtures.TestTenantData[0]
 	userResource := model.UserResource{}
 
 	bulkCreateOutput := model.BulkCreateOutput{
-		Sources: []model.Source{anotherSource},
+		Sources: []model.Source{source},
 	}
 
 	reqApplications := []model.BulkCreateApplication{
@@ -601,14 +600,13 @@ func TestParseApplicationsBadRequestInvalidAppTypeId(t *testing.T) {
 
 	// Prepare test data
 	source := fixtures.TestSourceData[0]
-	anotherSource := fixtures.TestSourceData[1]
 	appTypeIdRaw := "amazon"
 
 	tenant := fixtures.TestTenantData[0]
 	userResource := model.UserResource{}
 
 	bulkCreateOutput := model.BulkCreateOutput{
-		Sources: []model.Source{anotherSource},
+		Sources: []model.Source{source},
 	}
 
 	reqApplications := []model.BulkCreateApplication{
@@ -639,14 +637,13 @@ func TestParseApplicationsAppTypeIdNotFound(t *testing.T) {
 
 	// Prepare test data
 	source := fixtures.TestSourceData[0]
-	anotherSource := fixtures.TestSourceData[1]
 	appTypeIdRaw := "1000"
 
 	tenant := fixtures.TestTenantData[0]
 	userResource := model.UserResource{}
 
 	bulkCreateOutput := model.BulkCreateOutput{
-		Sources: []model.Source{anotherSource},
+		Sources: []model.Source{source},
 	}
 
 	reqApplications := []model.BulkCreateApplication{
@@ -677,14 +674,13 @@ func TestParseApplicationsBadRequestInvalidAppTypeName(t *testing.T) {
 
 	// Prepare test data
 	source := fixtures.TestSourceData[0]
-	anotherSource := fixtures.TestSourceData[1]
 	appTypeName := "not existing app type name"
 
 	tenant := fixtures.TestTenantData[0]
 	userResource := model.UserResource{}
 
 	bulkCreateOutput := model.BulkCreateOutput{
-		Sources: []model.Source{anotherSource},
+		Sources: []model.Source{source},
 	}
 
 	reqApplications := []model.BulkCreateApplication{
