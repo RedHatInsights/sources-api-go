@@ -225,9 +225,9 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
-	// The secret store defaults to the database in case an empty or an incorrect value are provided.
 	secretStore := os.Getenv("SECRET_STORE")
-	if secretStore != "database" && secretStore != "vault" {
+	// The secret store defaults to the database in case an empty string
+	if secretStore == "" {
 		secretStore = "database"
 	}
 	options.SetDefault("SecretStore", secretStore)

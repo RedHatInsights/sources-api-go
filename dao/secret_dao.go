@@ -3,6 +3,7 @@ package dao
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
@@ -17,7 +18,16 @@ type secretDaoDbImpl struct {
 }
 
 func getDefaultSecretDao(daoParams *RequestParams) SecretDao {
-	return &secretDaoDbImpl{RequestParams: daoParams}
+	switch config.Get().SecretStore {
+	case config.DatabaseStore:
+		return &secretDaoDbImpl{RequestParams: daoParams}
+	case config.VaultStore:
+		return &noSecretStoreSecretsDao{}
+	case config.SecretsManagerStore:
+		return &noSecretStoreSecretsDao{}
+	default:
+		return &noSecretStoreSecretsDao{}
+	}
 }
 
 func init() {

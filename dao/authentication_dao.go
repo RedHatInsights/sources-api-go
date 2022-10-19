@@ -35,9 +35,9 @@ func getDefaultAuthenticationDao(daoParams *RequestParams) AuthenticationDao {
 	case config.VaultStore:
 		return &authenticationDaoImpl{RequestParams: daoParams}
 	case config.SecretsManagerStore:
-		panic(m.ErrBadSecretStore)
+		return &noSecretStoreAuthenticationDao{}
 	default:
-		panic(m.ErrBadSecretStore)
+		return &noSecretStoreAuthenticationDao{}
 	}
 }
 
