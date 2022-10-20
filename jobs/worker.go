@@ -117,7 +117,7 @@ func (hc *BackgroundWorkerHealthChecker) healthChecker() {
 	e.GET("/health", func(c echo.Context) error {
 		//health should return a 500 if there hasn't been a response from ping request within 30 seconds
 		if hc.timeStamp.Before(time.Now().Add(-30 * time.Second)) {
-			return c.String(http.StatusInternalServerError, "500")
+			return c.String(http.StatusInternalServerError, "Failed to hit redis for more than 30 seconds.")
 		}
 		return c.String(http.StatusOK, "OK")
 	})
@@ -139,7 +139,7 @@ func (hc *BackgroundWorkerHealthChecker) healthcheckLoop() {
 		if err == nil {
 			hc.timeChannel <- time.Now()
 		} else {
-			l.Log.Fatalf("Failed to hit redis: %v", err)
+			l.Log.Warnf("Failed to hit redis: %v", err)
 		}
 	}
 }
