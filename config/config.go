@@ -62,6 +62,10 @@ type SourcesApiConfig struct {
 	SecretStore             string
 	TenantTranslatorUrl     string
 	Env                     string
+
+	SecretsManagerAccessKey string
+	SecretsManagerSecretKey string
+	SecretsManagerPrefix    string
 }
 
 // String() returns a string that shows the settings in which the pod is running in
@@ -92,6 +96,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretStore", parsedConfig.SecretStore)
 	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", parsedConfig.TenantTranslatorUrl)
 	fmt.Fprintf(&b, "%s=%v ", "Env", parsedConfig.Env)
+	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
 	return b.String()
 }
 
@@ -231,6 +236,7 @@ func Get() *SourcesApiConfig {
 		secretStore = "database"
 	}
 	options.SetDefault("SecretStore", secretStore)
+	// TODO: read aws SM keys from disk
 	options.SetDefault("TenantTranslatorUrl", os.Getenv("TENANT_TRANSLATOR_URL"))
 
 	// Parse any Flags (using our own flag set to not conflict with the global flag)

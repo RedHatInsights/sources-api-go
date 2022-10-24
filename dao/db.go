@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/dao/amazon"
 	"github.com/RedHatInsights/sources-api-go/dao/vault"
 	"github.com/RedHatInsights/sources-api-go/db/migrations"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
@@ -19,7 +20,8 @@ import (
 var (
 	DB *gorm.DB
 
-	Vault vault.VaultClient
+	Vault          vault.VaultClient
+	SecretsManager amazon.SecretsManagerClient
 
 	conf = config.Get()
 )
@@ -105,7 +107,10 @@ func Init() {
 	case config.VaultStore:
 		Vault = vault.NewClient()
 	case config.SecretsManagerStore:
-		// secrets-manager client populated here...
+		SecretsManager, err = amazon.NewSecretsManagerClient()
+		if err != nil {
+			logging.Log.Fatal(err)
+		}
 	}
 
 	// we only want to seed the database when running the api pod - not the status listener
