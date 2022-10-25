@@ -105,7 +105,7 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 
 func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
-	query := s.getDbWithModel()
+	query := s.getDbWithTable(DB.Debug(), "sources").Model(&m.Source{})
 
 	query, err := applyFilters(query, filters)
 	if err != nil {
