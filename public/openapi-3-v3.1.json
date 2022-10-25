@@ -1134,10 +1134,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RhcConnectionRead"
-                  }
+                  "$ref": "#/components/schemas/RhcConnectionCollection"
                 }
               }
             }
@@ -1308,10 +1305,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SourcesCollection"
-                  }
+                  "$ref": "#/components/schemas/SourcesCollection"
                 }
               }
             }
@@ -1356,10 +1350,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RhcConnectionCollection"
-                  }
+                  "$ref": "#/components/schemas/RhcConnectionCollection"
                 }
               }
             }
