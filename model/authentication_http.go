@@ -1,11 +1,7 @@
 package model
 
 import (
-	"encoding/json"
 	"time"
-
-	"github.com/RedHatInsights/sources-api-go/config"
-	"github.com/RedHatInsights/sources-api-go/util"
 )
 
 type AuthenticationResponse struct {
@@ -73,23 +69,16 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 		auth.Username = update.Username
 	}
 	if update.Password != nil {
-		encrypted, err := util.Encrypt(*update.Password)
+		err := auth.SetPassword(*update.Password)
 		if err != nil {
 			return err
 		}
-		auth.Password = &encrypted
 	}
 
 	if update.Extra != nil {
-		if config.IsVaultOn() {
-			auth.Extra = *update.Extra
-		} else {
-			var err error
-			auth.ExtraDb, err = json.Marshal(*update.Extra)
-
-			if err != nil {
-				return err
-			}
+		err := auth.SetExtra(*update.Extra)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -109,16 +98,14 @@ func (auth *Authentication) UpdateSecretFromRequest(update *SecretEditRequest) e
 	}
 
 	if update.Password != nil {
-		encrypted, err := util.Encrypt(*update.Password)
+		err := auth.SetPassword(*update.Password)
 		if err != nil {
 			return err
 		}
-		auth.Password = &encrypted
 	}
 
 	if update.Extra != nil {
-		var err error
-		auth.ExtraDb, err = json.Marshal(*update.Extra)
+		err := auth.SetExtra(*update.Extra)
 		if err != nil {
 			return err
 		}

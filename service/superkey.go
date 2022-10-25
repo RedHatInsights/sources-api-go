@@ -44,12 +44,7 @@ func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Heade
 		return err
 	}
 
-	var superKeyId string
-	if config.IsVaultOn() {
-		superKeyId = superKey.ID
-	} else {
-		superKeyId = strconv.FormatInt(superKey.DbID, 10)
-	}
+	superKeyId := superKey.GetID()
 
 	req := superkey.CreateRequest{
 		TenantID:        application.Tenant.ExternalTenant,
@@ -103,12 +98,7 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 		return nil
 	}
 
-	var superKeyId string
-	if config.IsVaultOn() {
-		superKeyId = superKey.ID
-	} else {
-		superKeyId = strconv.FormatInt(superKey.DbID, 10)
-	}
+	superKeyId := superKey.GetID()
 
 	req := superkey.DestroyRequest{
 		TenantID:       application.Tenant.ExternalTenant,

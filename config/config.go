@@ -15,6 +15,10 @@ import (
 const (
 	KafkaGroupId  = "sources-api-go"
 	RdsCaLocation = "/app/rdsca.cert"
+
+	DatabaseStore       = "database"
+	VaultStore          = "vault"
+	SecretsManagerStore = "secrets-manager"
 )
 
 var parsedConfig *SourcesApiConfig
@@ -221,9 +225,9 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
-	// The secret store defaults to the database in case an empty or an incorrect value are provided.
 	secretStore := os.Getenv("SECRET_STORE")
-	if secretStore != "database" && secretStore != "vault" {
+	// The secret store defaults to the database in case an empty string
+	if secretStore == "" {
 		secretStore = "database"
 	}
 	options.SetDefault("SecretStore", secretStore)
@@ -319,6 +323,7 @@ func (sourceConfig *SourcesApiConfig) KafkaTopic(requestedTopic string) string {
 }
 
 // IsVaultOn returns true if the authentications are backed by Vault. False, if they are backed by the database.
+// DEPRECATED: should be using methods on the authentication object instead of checking the config directly.
 func IsVaultOn() bool {
 	return parsedConfig.SecretStore == "vault"
 }
