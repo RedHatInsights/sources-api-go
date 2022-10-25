@@ -223,7 +223,7 @@ func TestFindKeysByResourceTypeAndId(t *testing.T) {
 	}
 
 	// We use a RAW impl without the "GetAuthenticationDao" function since we want to access the unexported function.
-	implDao := authenticationDaoImpl{&RequestParams{TenantID: &fixtures.TestTenantData[0].Id}}
+	implDao := authenticationDaoVaultImpl{&RequestParams{TenantID: &fixtures.TestTenantData[0].Id}}
 	for _, tt := range testData {
 		// Call the function under test.
 		foundKeys, err := implDao.findKeysByResourceTypeAndId(tt.Keys, tt.ResourceType, tt.ResourceIds)
