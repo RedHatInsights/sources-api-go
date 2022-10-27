@@ -10,8 +10,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awsConfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 )
@@ -27,24 +25,11 @@ var (
 )
 
 func NewSecretsManagerClient() (SecretsManagerClient, error) {
-	// first time initialization
 	if sourcesConfig == nil {
-		if conf.SecretsManagerAccessKey == "" || conf.SecretsManagerSecretKey == "" || conf.SecretsManagerPrefix == "" {
-			return nil, ErrNoCredentials
-		}
-
-		cfg, err := awsConfig.LoadDefaultConfig(context.Background(), awsConfig.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(
-				conf.SecretsManagerAccessKey,
-				conf.SecretsManagerSecretKey,
-				"sources-api-go-sm",
-			),
-		))
+		err := initConfig()
 		if err != nil {
 			return nil, err
 		}
-
-		sourcesConfig = &cfg
 	}
 
 	return &SecretsManagerClientImpl{

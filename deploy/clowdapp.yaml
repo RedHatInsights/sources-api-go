@@ -36,6 +36,16 @@ objects:
   type: Opaque
   data:
     CLIENT_ACCESS_TOKEN: ''
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: sources-secrets-manager
+  type: Opaque
+  stringData:
+    aws_access_key_id: ""
+    aws_secret_access_key: ""
+    secrets_prefix: "sources-ephemeral"
+    localstack_url: "http://localstack:4566"
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
@@ -158,6 +168,30 @@ objects:
           value: ${SOURCE_TYPE_SKIP_LIST}
         - name: APPLICATION_TYPE_SKIP_LIST
           value: ${APPLICATION_TYPE_SKIP_LIST}
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
         readinessProbe:
           tcpSocket:
             port: 8000
