@@ -68,12 +68,13 @@ func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.
 		ac.ApplicationAvailabilityCheck(source)
 	}
 
-	if len(source.Endpoints) != 0 {
-		ac.EndpointAvailabilityCheck(source)
-	}
-
+	// we only want to send endpoint requests if we _do not_ have any endpoints
+	// associated with this source. This way the satellite worker has no chance
+	// of overwriting the status set by the RHC check
 	if len(source.SourceRhcConnections) != 0 {
 		ac.RhcConnectionAvailabilityCheck(source, headers)
+	} else if len(source.Endpoints) != 0 {
+		ac.EndpointAvailabilityCheck(source)
 	}
 
 	ac.Logger().Infof("Finished Publishing Availability Messages for Source %v", source.ID)
