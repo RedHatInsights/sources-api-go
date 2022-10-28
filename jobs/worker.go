@@ -3,10 +3,12 @@ package jobs
 import (
 	"context"
 	"errors"
+	"net/http"
 	"time"
 
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/labstack/echo/v4"
 )
 
 // the queue on redis we'll be sending the jobs to
@@ -57,8 +59,13 @@ func Run(shutdown chan struct{}) {
 		}
 	}()
 
+	//create struct for healthcheck struct and run the healthcheck thread
+	healthCheck := BackgroundWorkerHealthChecker{timeStamp: time.Now(), timeChannel: make(chan time.Time, 10)}
+	go healthCheck.healthChecker()
+
 	<-shutdown
 	shutdown <- struct{}{}
+
 }
 
 // Run a Job with a delay but in the background so it does _not_ block the
@@ -90,4 +97,49 @@ func RunJobNow(j Job) {
 		return
 	}
 	l.Log.Infof("Finished Job %v with %v", j.Name(), j.Arguments())
+}
+
+// BackgroundWorkerHealthChecker is a struct that contains the time for the health checker and a channel to pass the shared memory for the time through time channel
+type BackgroundWorkerHealthChecker struct {
+	timeStamp   time.Time
+	timeChannel chan time.Time
+}
+
+func (hc *BackgroundWorkerHealthChecker) healthChecker() {
+	//run healthcheck loop and consumer in the background
+	go hc.healthcheckLoop()
+	go hc.healthCheckConsumer()
+
+	//create new GET request through echo with the same path name "/health"
+	e := echo.New()
+	e.HideBanner = true
+	e.HidePort = true
+	e.GET("/health", func(c echo.Context) error {
+		//health should return a 500 if there hasn't been a response from ping request within 30 seconds
+		if hc.timeStamp.Before(time.Now().Add(-30 * time.Second)) {
+			return c.String(http.StatusInternalServerError, "Failed to hit redis for more than 30 seconds.")
+		}
+		return c.String(http.StatusOK, "OK")
+	})
+
+	l.Log.Fatal(e.Start(":8000"))
+}
+
+// healthcheckConsumer runs a loop against the healthcheck time channel and updates the shared timestamp with the last time we received a response
+func (hc *BackgroundWorkerHealthChecker) healthCheckConsumer() {
+	for range hc.timeChannel {
+		hc.timeStamp = time.Now()
+	}
+}
+
+func (hc *BackgroundWorkerHealthChecker) healthcheckLoop() {
+	//every 30 seconds, send a ping request to redis server. If ping request returns a <nil> error, then update the time
+	for range time.NewTicker(30 * time.Second).C {
+		err := redis.Client.Ping(context.Background()).Err()
+		if err == nil {
+			hc.timeChannel <- time.Now()
+		} else {
+			l.Log.Warnf("Failed to hit redis: %v", err)
+		}
+	}
 }
