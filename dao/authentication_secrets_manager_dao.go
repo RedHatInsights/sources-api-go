@@ -2,7 +2,9 @@ package dao
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao/amazon"
 	m "github.com/RedHatInsights/sources-api-go/model"
 )
@@ -72,7 +74,7 @@ func (a *authenticationSecretsManagerDaoImpl) BulkCreate(auth *m.Authentication)
 func (a *authenticationSecretsManagerDaoImpl) Update(auth *m.Authentication) error {
 	// only reach out to amazon if there is a password present, otherwise pass
 	// straight through to the db dao.
-	if auth.Password != nil {
+	if auth.Password != nil && !strings.HasPrefix(*auth.Password, config.Get().SecretsManagerPrefix) {
 		// fetch the ARN of the current password (since we overwrote it in memory)
 		arns := make([]*string, 1)
 		err := a.getDbWithModel().

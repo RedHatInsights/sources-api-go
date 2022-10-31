@@ -47,12 +47,16 @@ func SecretCreate(c echo.Context) error {
 		Name:     createRequest.Name,
 		AuthType: createRequest.AuthType,
 		Username: createRequest.Username,
-		Password: createRequest.Password,
 	}
 
 	err = secret.SetExtra(createRequest.Extra)
 	if err != nil {
 		return err
+	}
+
+	err = secret.SetPassword(createRequest.Password)
+	if err != nil {
+		return util.NewErrBadRequest(err)
 	}
 
 	if createRequest.UserScoped && requestParams.UserID != nil {
