@@ -32,6 +32,9 @@ func parseSortBy(sortBy []*generated_model.SortBy) []util.Filter {
 		sorts[i] = filter
 	}
 
+	if len(sorts) == 0 {
+		sorts = append(sorts, util.Filter{Operation: "sort_by", Value: []string{"id ASC"}})
+	}
 	return sorts
 }
 
