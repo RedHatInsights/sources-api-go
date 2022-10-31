@@ -65,7 +65,7 @@ func (auth *Authentication) GetPassword() (*string, error) {
 		return auth.Password, nil
 
 	case config.SecretsManagerStore:
-		return nil, ErrBadSecretStore
+		return auth.Password, nil
 
 	default:
 		return nil, ErrBadSecretStore

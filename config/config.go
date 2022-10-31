@@ -242,7 +242,11 @@ func Get() *SourcesApiConfig {
 	case SecretsManagerStore:
 		options.SetDefault("SecretsManagerAccessKey", os.Getenv("SECRETS_MANAGER_ACCESS_KEY"))
 		options.SetDefault("SecretsManagerSecretKey", os.Getenv("SECRETS_MANAGER_SECRET_KEY"))
-		options.SetDefault("SecretsManagerPrefix", os.Getenv("SECRETS_MANAGER_PREFIX"))
+		prefix := os.Getenv("SECRETS_MANAGER_PREFIX")
+		if prefix == "" {
+			prefix = "sources-development"
+		}
+		options.SetDefault("SecretsManagerPrefix", prefix)
 		options.SetDefault("LocalStackURL", os.Getenv("LOCALSTACK_URL"))
 	}
 
