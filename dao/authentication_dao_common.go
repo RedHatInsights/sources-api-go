@@ -1,6 +1,8 @@
 package dao
 
-import "github.com/RedHatInsights/sources-api-go/config"
+import (
+	"github.com/RedHatInsights/sources-api-go/config"
+)
 
 /*
 	Common DAO code for the 1..n authentication DAOs we support.

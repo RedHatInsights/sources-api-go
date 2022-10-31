@@ -15,14 +15,11 @@ var ErrBadSecretStore = fmt.Errorf("invalid secret-store: %s", config.Get().Secr
 // fetches the secret-store dependent ID from the authentication
 func (auth *Authentication) GetID() string {
 	switch config.Get().SecretStore {
-	case config.DatabaseStore:
+	case config.DatabaseStore, config.SecretsManagerStore:
 		return strconv.FormatInt(auth.DbID, 10)
 
 	case config.VaultStore:
 		return auth.ID
-
-	case config.SecretsManagerStore:
-		return ""
 
 	default:
 		panic(ErrBadSecretStore)
@@ -32,7 +29,7 @@ func (auth *Authentication) GetID() string {
 // fetches the secret-store dependent extra field from the authentication
 func (auth *Authentication) GetExtra() map[string]interface{} {
 	switch config.Get().SecretStore {
-	case config.DatabaseStore:
+	case config.DatabaseStore, config.SecretsManagerStore:
 		var extra map[string]interface{}
 
 		if auth.ExtraDb != nil {
@@ -46,9 +43,6 @@ func (auth *Authentication) GetExtra() map[string]interface{} {
 
 	case config.VaultStore:
 		return auth.Extra
-
-	case config.SecretsManagerStore:
-		return nil
 
 	default:
 		panic(ErrBadSecretStore)
@@ -85,7 +79,7 @@ func (auth *Authentication) SetExtra(extra map[string]interface{}) error {
 	}
 
 	switch config.Get().SecretStore {
-	case config.DatabaseStore:
+	case config.DatabaseStore, config.SecretsManagerStore:
 		var err error
 		auth.ExtraDb, err = json.Marshal(extra)
 		if err != nil {
@@ -94,9 +88,6 @@ func (auth *Authentication) SetExtra(extra map[string]interface{}) error {
 
 	case config.VaultStore:
 		auth.Extra = extra
-
-	case config.SecretsManagerStore:
-		return ErrBadSecretStore
 
 	default:
 		return ErrBadSecretStore
@@ -109,7 +100,7 @@ func (auth *Authentication) SetExtra(extra map[string]interface{}) error {
 // the secret store.
 func (auth *Authentication) SetExtraField(key string, value interface{}) error {
 	switch config.Get().SecretStore {
-	case config.DatabaseStore:
+	case config.DatabaseStore, config.SecretsManagerStore:
 		var err error
 		var extra = make(map[string]interface{})
 
@@ -133,18 +124,20 @@ func (auth *Authentication) SetExtraField(key string, value interface{}) error {
 
 		return nil
 
-	case config.SecretsManagerStore:
-		return ErrBadSecretStore
-
 	default:
 		return ErrBadSecretStore
 	}
 }
 
-func (auth *Authentication) SetPassword(pass string) error {
+func (auth *Authentication) SetPassword(pass *string) error {
+	// if there isn't a password - just return since we don't have anything to do.
+	if pass == nil {
+		return nil
+	}
+
 	switch config.Get().SecretStore {
 	case config.DatabaseStore:
-		encrypted, err := util.Encrypt(pass)
+		encrypted, err := util.Encrypt(*pass)
 		if err != nil {
 			return err
 		}
@@ -153,11 +146,12 @@ func (auth *Authentication) SetPassword(pass string) error {
 		return nil
 
 	case config.VaultStore:
-		auth.Password = &pass
+		auth.Password = pass
 		return nil
 
 	case config.SecretsManagerStore:
-		return ErrBadSecretStore
+		auth.Password = pass
+		return nil
 
 	default:
 		return ErrBadSecretStore

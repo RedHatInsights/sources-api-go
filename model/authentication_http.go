@@ -69,7 +69,7 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 		auth.Username = update.Username
 	}
 	if update.Password != nil {
-		err := auth.SetPassword(*update.Password)
+		err := auth.SetPassword(update.Password)
 		if err != nil {
 			return err
 		}
@@ -98,7 +98,7 @@ func (auth *Authentication) UpdateSecretFromRequest(update *SecretEditRequest) e
 	}
 
 	if update.Password != nil {
-		err := auth.SetPassword(*update.Password)
+		err := auth.SetPassword(update.Password)
 		if err != nil {
 			return err
 		}

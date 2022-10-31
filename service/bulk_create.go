@@ -297,12 +297,17 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		a.ResourceType = util.Capitalize(auth.ResourceType)
 		a.AuthType = auth.AuthType
 		a.Username = util.StringValueOrNil(auth.Username)
-		a.Password = auth.Password
-		// pull extra properly per secret store
-		err := a.SetExtra(auth.Extra)
+
+		// pull the password & extra properly per secret store
+		err := a.SetPassword(auth.Password)
 		if err != nil {
 			return nil, err
 		}
+		err = a.SetExtra(auth.Extra)
+		if err != nil {
+			return nil, err
+		}
+
 		a.Name = auth.Name
 		a.Tenant = *tenant
 		a.TenantID = tenant.Id
