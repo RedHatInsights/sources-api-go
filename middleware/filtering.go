@@ -76,5 +76,5 @@ func parseSorting(c echo.Context) *util.Filter {
 		}
 	}
 
-	return nil
+	return &util.Filter{Operation: "sort_by", Value: []string{"id ASC"}}
 }
