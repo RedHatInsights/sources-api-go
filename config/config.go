@@ -62,6 +62,11 @@ type SourcesApiConfig struct {
 	SecretStore             string
 	TenantTranslatorUrl     string
 	Env                     string
+
+	SecretsManagerAccessKey string
+	SecretsManagerSecretKey string
+	SecretsManagerPrefix    string
+	LocalStackURL           string
 }
 
 // String() returns a string that shows the settings in which the pod is running in
@@ -92,6 +97,8 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretStore", parsedConfig.SecretStore)
 	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", parsedConfig.TenantTranslatorUrl)
 	fmt.Fprintf(&b, "%s=%v ", "Env", parsedConfig.Env)
+	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
+	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", parsedConfig.LocalStackURL)
 	return b.String()
 }
 
@@ -231,6 +238,14 @@ func Get() *SourcesApiConfig {
 		secretStore = "database"
 	}
 	options.SetDefault("SecretStore", secretStore)
+	switch secretStore {
+	case SecretsManagerStore:
+		options.SetDefault("SecretsManagerAccessKey", os.Getenv("SECRETS_MANAGER_ACCESS_KEY"))
+		options.SetDefault("SecretsManagerSecretKey", os.Getenv("SECRETS_MANAGER_SECRET_KEY"))
+		options.SetDefault("SecretsManagerPrefix", os.Getenv("SECRETS_MANAGER_PREFIX"))
+		options.SetDefault("LocalStackURL", os.Getenv("LOCALSTACK_URL"))
+	}
+
 	options.SetDefault("TenantTranslatorUrl", os.Getenv("TENANT_TRANSLATOR_URL"))
 
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
@@ -308,6 +323,10 @@ func Get() *SourcesApiConfig {
 		SecretStore:             options.GetString("SecretStore"),
 		TenantTranslatorUrl:     options.GetString("TenantTranslatorUrl"),
 		Env:                     options.GetString("Env"),
+		SecretsManagerAccessKey: options.GetString("SecretsManagerAccessKey"),
+		SecretsManagerSecretKey: options.GetString("SecretsManagerSecretKey"),
+		SecretsManagerPrefix:    options.GetString("SecretsManagerPrefix"),
+		LocalStackURL:           options.GetString("LocalStackURL"),
 	}
 
 	return parsedConfig
