@@ -212,6 +212,7 @@ func (s *rhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
 		// We need to use the "Omit" clause since otherwise Gorm tries to create the associate source for the
 		// connection as well.
 		Omit(clause.Associations).
+		Select("*").
 		Updates(rhcConnection).
 		Error
 	return err
