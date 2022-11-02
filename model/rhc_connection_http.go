@@ -24,8 +24,8 @@ type RhcConnectionResponse struct {
 	RhcId                   *string        `json:"rhc_id"`
 	Extra                   datatypes.JSON `json:"extra,omitempty"`
 	AvailabilityStatus      string         `json:"availability_status,omitempty"`
-	LastCheckedAt           time.Time      `json:"last_checked_at,omitempty"`
-	LastAvailableAt         time.Time      `json:"last_available_at,omitempty"`
+	LastCheckedAt           *time.Time     `json:"last_checked_at,omitempty"`
+	LastAvailableAt         *time.Time     `json:"last_available_at,omitempty"`
 	AvailabilityStatusError string         `json:"availability_status_error,omitempty"`
 	SourceIds               []string       `json:"source_ids,omitempty"`
 }
