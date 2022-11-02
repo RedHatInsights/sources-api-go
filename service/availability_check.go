@@ -328,7 +328,8 @@ func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status s
 	}
 
 	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d] RHC Connection's status updated to "%s"`, source.ID, rhcConnection.ID, status)
-
+	// we have to populate the Sources field in order to pass along the source_ids on the message.
+	rhcConnection.Sources = []m.Source{*source}
 	err = RaiseEvent("RhcConnection.update", rhcConnection, headers)
 	if err != nil {
 		acr.Logger().Warnf("error raising RhcConnection.update event: %v", err)
