@@ -43,45 +43,26 @@ func MapRowToRhcConnection(row map[string]interface{}) (*model.RhcConnection, er
 	}
 
 	if value, ok := row["last_checked_at"]; ok {
-		if lastCheckedAtStr, ok := value.(string); ok {
-			lastCheckedAt, err := time.Parse(time.RFC3339, lastCheckedAtStr)
-			if err != nil {
-				return nil, err
-			}
-
-			rhcConnection.LastCheckedAt = &lastCheckedAt
+		if t, ok := value.(time.Time); ok {
+			rhcConnection.LastCheckedAt = &t
 		}
 	}
 
 	if value, ok := row["last_available_at"]; ok {
-		if lastAvailableAtStr, ok := value.(string); ok {
-			lastAvailableAt, err := time.Parse(time.RFC3339, lastAvailableAtStr)
-			if err != nil {
-				return nil, err
-			}
-
-			rhcConnection.LastAvailableAt = &lastAvailableAt
+		if t, ok := value.(time.Time); ok {
+			rhcConnection.LastAvailableAt = &t
 		}
 	}
 
 	if value, ok := row["created_at"]; ok {
-		if createdAtStr, ok := value.(string); ok {
-			createdAt, err := time.Parse(time.RFC3339, createdAtStr)
-			if err != nil {
-				return nil, err
-			}
-
-			rhcConnection.CreatedAt = createdAt
+		if t, ok := value.(time.Time); ok {
+			rhcConnection.CreatedAt = t
 		}
 	}
 
 	if value, ok := row["updated_at"]; ok {
-		if updatedAtStr, ok := value.(string); ok {
-			updatedAt, err := time.Parse(time.RFC3339, updatedAtStr)
-			if err != nil {
-				return nil, err
-			}
-			rhcConnection.UpdatedAt = updatedAt
+		if t, ok := value.(time.Time); ok {
+			rhcConnection.UpdatedAt = t
 		}
 	}
 
