@@ -38,6 +38,11 @@ func localStackConfig() (aws.Config, error) {
 	return awsConfig.LoadDefaultConfig(context.Background(),
 		awsConfig.WithRegion(defaultRegion),
 		awsConfig.WithEndpointResolverWithOptions(customResolver),
+		awsConfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
+			conf.SecretsManagerAccessKey,
+			conf.SecretsManagerSecretKey,
+			"sources-api-go-secret-manager-store",
+		)),
 	)
 }
 
