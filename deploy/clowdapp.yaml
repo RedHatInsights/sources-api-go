@@ -42,10 +42,10 @@ objects:
     name: sources-secrets-manager
   type: Opaque
   stringData:
-    aws_access_key_id: ""
-    aws_secret_access_key: ""
+    aws_access_key_id: "asdfasdfasf"
+    aws_secret_access_key: "asdfsadf"
     secrets_prefix: "sources-ephemeral"
-    localstack_url: "http://localstack:4566"
+    localstack_url: "http://localstack-ephemeral-svc:10000"
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
@@ -60,6 +60,8 @@ objects:
         - -background-worker
         image: ${IMAGE}:${IMAGE_TAG}
         env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
         - name: ENCRYPTION_KEY
@@ -67,6 +69,30 @@ objects:
             secretKeyRef:
               name: sources-api-secrets
               key: encryption-key
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
         resources:
           limits:
             cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
@@ -92,6 +118,8 @@ objects:
         - -listener
         image: ${IMAGE}:${IMAGE_TAG}
         env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
         - name: ENCRYPTION_KEY
@@ -99,6 +127,30 @@ objects:
             secretKeyRef:
               name: sources-api-secrets
               key: encryption-key
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
         resources:
           limits:
             cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
@@ -126,6 +178,8 @@ objects:
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
         - name: CLOUD_METER_AVAILABILITY_CHECK_URL
@@ -381,3 +435,6 @@ parameters:
 - description: Specify any application_types to not seed into the database
   name: APPLICATION_TYPE_SKIP_LIST
   value: ''
+- description: Which secret-store should sources use for authentications
+  name: SECRET_STORE
+  value: "database"
