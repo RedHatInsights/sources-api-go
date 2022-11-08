@@ -3940,7 +3940,7 @@
             "description": "An array containing the created authentications",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AuthenticationCreate"
+              "$ref": "#/components/schemas/AuthenticationRead"
             }
           }
         }
