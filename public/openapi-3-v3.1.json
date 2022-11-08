@@ -3753,8 +3753,7 @@
               },
               "required": [
                 "name",
-                "source_type_name",
-                "app_creation_workflow"
+                "source_type_name"
               ]
             }
           },
