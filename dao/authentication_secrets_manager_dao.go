@@ -24,6 +24,8 @@ type authenticationSecretsManagerDaoImpl struct {
 }
 
 func (a *authenticationSecretsManagerDaoImpl) Create(auth *m.Authentication) error {
+	var hitAmazon bool
+
 	// only reach out to amazon if there is a password present, otherwise pass
 	// straight through to the db dao.
 	if auth.Password != nil {
@@ -42,12 +44,34 @@ func (a *authenticationSecretsManagerDaoImpl) Create(auth *m.Authentication) err
 		if err != nil {
 			return err
 		}
+
+		hitAmazon = true
 	}
 
-	return a.authenticationDaoDbImpl.Create(auth)
+	// TODO: clean this up. yuck.
+	// basically we want to destroy the secret if it was created
+	err := a.authenticationDaoDbImpl.Create(auth)
+	if err != nil {
+		if hitAmazon {
+			sm, err := amazon.NewSecretsManagerClient()
+			if err != nil {
+				return err
+			}
+
+			err = sm.DeleteSecret(*auth.Password)
+			if err != nil {
+				return err
+			}
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (a *authenticationSecretsManagerDaoImpl) BulkCreate(auth *m.Authentication) error {
+	var hitAmazon bool
 	// only reach out to amazon if there is a password present, otherwise pass
 	// straight through to the db dao.
 	if auth.Password != nil {
@@ -66,9 +90,27 @@ func (a *authenticationSecretsManagerDaoImpl) BulkCreate(auth *m.Authentication)
 		if err != nil {
 			return err
 		}
+		hitAmazon = true
 	}
 
-	return a.authenticationDaoDbImpl.BulkCreate(auth)
+	err := a.authenticationDaoDbImpl.BulkCreate(auth)
+	if err != nil {
+		if hitAmazon {
+			sm, err := amazon.NewSecretsManagerClient()
+			if err != nil {
+				return err
+			}
+
+			err = sm.DeleteSecret(*auth.Password)
+			if err != nil {
+				return err
+			}
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (a *authenticationSecretsManagerDaoImpl) Update(auth *m.Authentication) error {

@@ -17,6 +17,7 @@ type secretDaoSecretsManagerImpl struct {
 }
 
 func (s *secretDaoSecretsManagerImpl) Create(auth *m.Authentication) error {
+	var hitAmazon bool
 	// only reach out to amazon if there is a password present, otherwise pass
 	// straight through to the db dao.
 	if auth.Password != nil {
@@ -35,9 +36,27 @@ func (s *secretDaoSecretsManagerImpl) Create(auth *m.Authentication) error {
 		if err != nil {
 			return err
 		}
+
+		hitAmazon = true
 	}
 
-	return s.secretDaoDbImpl.Create(auth)
+	err := s.secretDaoDbImpl.Create(auth)
+	if err != nil {
+		if hitAmazon {
+			sm, err := amazon.NewSecretsManagerClient()
+			if err != nil {
+				return err
+			}
+			err = sm.DeleteSecret(*auth.Password)
+			if err != nil {
+				return err
+			}
+
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *secretDaoSecretsManagerImpl) Delete(id *int64) error {
