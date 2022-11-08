@@ -3741,11 +3741,20 @@
                     "ibm"
                   ],
                   "type": "string"
+                },
+                "app_creation_workflow": {
+                  "description": "The way the source is going to be created: manually, or using superkey?",
+                  "enum": [
+                    "manual_configuration",
+                    "account_authorization"
+                  ],
+                  "type": "string"
                 }
               },
               "required": [
                 "name",
-                "source_type_name"
+                "source_type_name",
+                "app_creation_workflow"
               ]
             }
           },
