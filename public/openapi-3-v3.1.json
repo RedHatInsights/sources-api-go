@@ -3741,6 +3741,14 @@
                     "ibm"
                   ],
                   "type": "string"
+                },
+                "app_creation_workflow": {
+                  "description": "The way the source is going to be created: manually, or using superkey?",
+                  "enum": [
+                    "manual_configuration",
+                    "account_authorization"
+                  ],
+                  "type": "string"
                 }
               },
               "required": [
@@ -3931,7 +3939,7 @@
             "description": "An array containing the created authentications",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AuthenticationCreate"
+              "$ref": "#/components/schemas/AuthenticationRead"
             }
           }
         }
