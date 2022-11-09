@@ -3,35 +3,13 @@ package dao
 import (
 	"fmt"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
 )
 
-const secretResourceType = "Tenant"
-
-var GetSecretDao func(daoParams *RequestParams) SecretDao
-
 type secretDaoDbImpl struct {
 	*RequestParams
-}
-
-func getDefaultSecretDao(daoParams *RequestParams) SecretDao {
-	switch config.Get().SecretStore {
-	case config.DatabaseStore:
-		return &secretDaoDbImpl{RequestParams: daoParams}
-	case config.VaultStore:
-		return &noSecretStoreSecretsDao{}
-	case config.SecretsManagerStore:
-		return &noSecretStoreSecretsDao{}
-	default:
-		return &noSecretStoreSecretsDao{}
-	}
-}
-
-func init() {
-	GetSecretDao = getDefaultSecretDao
 }
 
 func (secret *secretDaoDbImpl) getDb() *gorm.DB {
@@ -75,14 +53,6 @@ func (secret *secretDaoDbImpl) Create(authentication *m.Authentication) error {
 	authentication.TenantID = *secret.TenantID // the TenantID gets injected in the middleware
 	authentication.ResourceType = secretResourceType
 	authentication.ResourceID = *secret.TenantID
-	if authentication.Password != nil {
-		encryptedValue, err := util.Encrypt(*authentication.Password)
-		if err != nil {
-			return err
-		}
-
-		authentication.Password = &encryptedValue
-	}
 
 	return DB.
 		Debug().

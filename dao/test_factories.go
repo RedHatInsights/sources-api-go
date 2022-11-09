@@ -285,6 +285,7 @@ func TestSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnership
 
 func CreateSecretByName(name string, tenantID *int64, userID *int64) (*m.Authentication, error) {
 	secretDao := GetSecretDao(&RequestParams{TenantID: tenantID})
+	pass, _ := util.Encrypt("password")
 
 	secret := &m.Authentication{
 		Name:         util.StringRef(name),
@@ -292,7 +293,7 @@ func CreateSecretByName(name string, tenantID *int64, userID *int64) (*m.Authent
 		Username:     util.StringRef("Y"),
 		ResourceType: secretResourceType,
 		ResourceID:   *tenantID,
-		Password:     util.StringRef("password"),
+		Password:     util.StringRef(pass),
 	}
 
 	if userID != nil {

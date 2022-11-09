@@ -77,7 +77,7 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentic
 	query := a.getDb().Preload("Tenant")
 
 	switch config.Get().SecretStore {
-	case config.DatabaseStore:
+	case config.DatabaseStore, config.SecretsManagerStore:
 		authIds := make([]int64, len(authentications))
 
 		for _, value := range authentications {
@@ -94,9 +94,6 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentic
 		}
 
 		query.Where("authentication_uid IN ?", authUuids)
-
-	case config.SecretsManagerStore:
-		return nil, m.ErrBadSecretStore
 
 	default:
 		return nil, m.ErrBadSecretStore

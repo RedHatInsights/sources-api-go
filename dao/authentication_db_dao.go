@@ -300,14 +300,6 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 	}
 
 	authentication.TenantID = *add.TenantID // the TenantID gets injected in the middleware
-	if authentication.Password != nil {
-		encryptedValue, err := util.Encrypt(*authentication.Password)
-		if err != nil {
-			return err
-		}
-
-		authentication.Password = &encryptedValue
-	}
 
 	return DB.
 		Debug().
@@ -319,15 +311,6 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 // resource doesn't exist yet and we know the source ID is set beforehand.
 func (add *authenticationDaoDbImpl) BulkCreate(auth *m.Authentication) error {
 	auth.TenantID = *add.TenantID // the TenantID gets injected in the middleware
-	if auth.Password != nil {
-		encryptedValue, err := util.Encrypt(*auth.Password)
-		if err != nil {
-			return err
-		}
-
-		auth.Password = &encryptedValue
-	}
-
 	return DB.Debug().Create(auth).Error
 }
 

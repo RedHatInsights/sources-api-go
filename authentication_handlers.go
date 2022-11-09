@@ -100,12 +100,16 @@ func AuthenticationCreate(c echo.Context) error {
 		Name:         createRequest.Name,
 		AuthType:     createRequest.AuthType,
 		Username:     createRequest.Username,
-		Password:     createRequest.Password,
 		ResourceType: createRequest.ResourceType,
 		ResourceID:   createRequest.ResourceID,
 	}
 
 	err = auth.SetExtra(createRequest.Extra)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	err = auth.SetPassword(createRequest.Password)
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}

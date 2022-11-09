@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/google/uuid"
 )
 
 var (
@@ -61,8 +62,11 @@ func (s *SecretsManagerClientImpl) GetSecret(arn string) (*string, error) {
 }
 
 func (s *SecretsManagerClientImpl) CreateSecret(auth *model.Authentication, value string) (*string, error) {
+	// for unique names, just spin up a guid.
+	guid := uuid.NewString()[0:8]
+
 	secret, err := s.sm.CreateSecret(context.Background(), &secretsmanager.CreateSecretInput{
-		Name:         util.StringRef(fmt.Sprintf("%s/%d/%s-%d", s.prefix, auth.TenantID, auth.ResourceType, auth.ResourceID)),
+		Name:         util.StringRef(fmt.Sprintf("%s/%d/%s-%d-%s", s.prefix, auth.TenantID, auth.ResourceType, auth.ResourceID, guid)),
 		SecretString: &value,
 		Tags: []types.Tag{
 			{Key: util.StringRef("tenant"), Value: util.StringRef(strconv.Itoa(int(auth.TenantID)))},
