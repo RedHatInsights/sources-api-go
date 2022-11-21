@@ -19,6 +19,10 @@ const (
 	DatabaseStore       = "database"
 	VaultStore          = "vault"
 	SecretsManagerStore = "secrets-manager"
+
+	StageEnv   = "stage"
+	ProdEnv    = "prod"
+	FedRampEnv = "fedramp"
 )
 
 var parsedConfig *SourcesApiConfig
@@ -219,7 +223,7 @@ func Get() *SourcesApiConfig {
 
 	options.SetDefault("FeatureFlagsService", os.Getenv("FEATURE_FLAGS_SERVICE"))
 
-	if os.Getenv("SOURCES_ENV") == "prod" {
+	if os.Getenv("SOURCES_ENV") == ProdEnv {
 		options.SetDefault("FeatureFlagsEnvironment", "production")
 	} else {
 		options.SetDefault("FeatureFlagsEnvironment", "development")
@@ -349,4 +353,13 @@ func (sourceConfig *SourcesApiConfig) KafkaTopic(requestedTopic string) string {
 // DEPRECATED: should be using methods on the authentication object instead of checking the config directly.
 func IsVaultOn() bool {
 	return parsedConfig.SecretStore == "vault"
+}
+
+func (sourceConfig *SourcesApiConfig) IsDevEnv() bool {
+	switch sourceConfig.Env {
+	case StageEnv, ProdEnv, FedRampEnv:
+		return false
+	default:
+		return true
+	}
 }

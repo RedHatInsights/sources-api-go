@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/config"
@@ -137,7 +136,7 @@ func setupRoutes(e *echo.Echo) {
 
 		// run the graphQL playground if running locally or in ephemeral. really handy for development!
 		// https://github.com/graphql/graphiql
-		if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
+		if config.Get().IsDevEnv() {
 			r.GET("/graphql_playground", echo.WrapHandler(playground.Handler("Sources API GraphQL Playground", "/api/sources/v3.1/graphql")))
 		}
 	}

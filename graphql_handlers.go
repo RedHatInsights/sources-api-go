@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/graph"
 	"github.com/RedHatInsights/sources-api-go/graph/generated"
@@ -28,7 +28,7 @@ func init() {
 	srv.AddTransport(transport.POST{})
 
 	// only set up introspection if we're not on stage/prod
-	if os.Getenv("SOURCES_ENV") != "stage" && os.Getenv("SOURCES_ENV") != "prod" {
+	if config.Get().IsDevEnv() {
 		srv.Use(extension.Introspection{})
 	}
 

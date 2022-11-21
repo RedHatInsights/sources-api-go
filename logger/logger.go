@@ -49,7 +49,7 @@ func AddHooksTo(logger *logrus.Logger, config *appconf.SourcesApiConfig) {
 	}
 
 	// add a hook to a Zinc search instance if defined in the ENV and we aren't in stage/prod
-	if config.Env != "stage" && config.Env != "prod" {
+	if config.IsDevEnv() {
 		zinc, err := logrus_zinc.FromEnv()
 		if err != nil {
 			Log.Warnf("Not adding local zinc: %v", err)

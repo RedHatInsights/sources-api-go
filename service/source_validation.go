@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -31,6 +32,12 @@ func ValidateSourceCreationRequest(sourceDao dao.SourceDao, req *model.SourceCre
 	generatedUuid := uuid.New()
 	uuids := generatedUuid.String()
 	req.Uid = &uuids
+
+	// for fedRAMP we won't have superkey deployed - so do not allow
+	// account_authorization sources to be created.
+	if config.Get().Env == config.FedRampEnv && req.AppCreationWorkflow == model.AccountAuth {
+		return fmt.Errorf("account_authorization is not allowed in the fedRAMP environment")
+	}
 
 	if !util.SliceContainsString(validWorkflowStatuses, req.AppCreationWorkflow) {
 		req.AppCreationWorkflow = model.ManualConfig
