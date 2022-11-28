@@ -70,7 +70,7 @@ func (st *sourceTypeDaoImpl) GetById(ctx context.Context, id *int64) (*m.SourceT
 	return &sourceType, nil
 }
 
-func (st *sourceTypeDaoImpl) GetByName(name string, ctx context.Context) (*m.SourceType, error) {
+func (st *sourceTypeDaoImpl) GetByName(ctx context.Context, name string) (*m.SourceType, error) {
 	sourceTypes := make([]m.SourceType, 0)
 	result := DB.WithContext(ctx).Debug().
 		Where("name LIKE ?", "%"+name+"%").

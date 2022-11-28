@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -19,7 +20,7 @@ type mockTenantDao struct {
 	OrgId         string
 }
 
-func (mtd mockTenantDao) GetOrCreateTenant(_ *identity.Identity) (*m.Tenant, error) {
+func (mtd mockTenantDao) GetOrCreateTenant(ctx context.Context, _ *identity.Identity) (*m.Tenant, error) {
 	tenant := m.Tenant{
 		Id:             mtd.TenantId,
 		ExternalTenant: mtd.AccountNumber,

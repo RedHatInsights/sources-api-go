@@ -154,7 +154,7 @@ type SourceTypeDao interface {
 	Create(src *m.SourceType) error
 	Update(src *m.SourceType) error
 	Delete(id *int64) error
-	GetByName(name string, ctx context.Context) (*m.SourceType, error)
+	GetByName(ctx context.Context, name string) (*m.SourceType, error)
 }
 
 type RhcConnectionDao interface {

@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
@@ -9,12 +10,12 @@ type MockSourceTypeDao struct {
 	SourceTypes []m.SourceType
 }
 
-func (mockSourceTypeDao *MockSourceTypeDao) List(_ int, _ int, _ []util.Filter) ([]m.SourceType, int64, error) {
+func (mockSourceTypeDao *MockSourceTypeDao) List(_ context.Context, _ int, _ int, _ []util.Filter) ([]m.SourceType, int64, error) {
 	count := int64(len(mockSourceTypeDao.SourceTypes))
 	return mockSourceTypeDao.SourceTypes, count, nil
 }
 
-func (mockSourceTypeDao *MockSourceTypeDao) GetById(id *int64) (*m.SourceType, error) {
+func (mockSourceTypeDao *MockSourceTypeDao) GetById(_ context.Context, id *int64) (*m.SourceType, error) {
 	for _, i := range mockSourceTypeDao.SourceTypes {
 		if i.Id == *id {
 			return &i, nil
@@ -24,7 +25,7 @@ func (mockSourceTypeDao *MockSourceTypeDao) GetById(id *int64) (*m.SourceType, e
 	return nil, util.NewErrNotFound("source type")
 }
 
-func (mockSourceTypeDao *MockSourceTypeDao) GetByName(_ string) (*m.SourceType, error) {
+func (mockSourceTypeDao *MockSourceTypeDao) GetByName(_ context.Context, _ string) (*m.SourceType, error) {
 	return nil, nil
 }
 

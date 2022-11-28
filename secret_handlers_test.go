@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -498,7 +499,7 @@ func TestSecretGet(t *testing.T) {
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
-	user, err := userDao.FindOrCreate(testUserId)
+	user, err := userDao.FindOrCreate(context.Background(), testUserId)
 	if err != nil {
 		t.Error(err)
 	}
@@ -646,7 +647,7 @@ func TestSecretEdit(t *testing.T) {
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
-	user, err := userDao.FindOrCreate(testUserId)
+	user, err := userDao.FindOrCreate(context.Background(), testUserId)
 	if err != nil {
 		t.Error(err)
 	}
@@ -890,7 +891,7 @@ func TestSecretDelete(t *testing.T) {
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
-	user, err := userDao.FindOrCreate(testUserId)
+	user, err := userDao.FindOrCreate(context.Background(), testUserId)
 	if err != nil {
 		t.Error(err)
 	}

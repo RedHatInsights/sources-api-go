@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -824,7 +825,7 @@ func TestApplicationEdit(t *testing.T) {
 	application, _ := applicationDao.GetById(&applicationID)
 	previousApplicationStatus := application.AvailabilityStatus
 
-	src, err := sourceDao.GetById(&application.SourceID)
+	src, err := sourceDao.GetById(context.Background(), &application.SourceID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -880,7 +881,7 @@ func TestApplicationEdit(t *testing.T) {
 		t.Errorf("Invalid application availability status.")
 	}
 
-	src, err = sourceDao.GetById(&application.SourceID)
+	src, err = sourceDao.GetById(context.Background(), &application.SourceID)
 	if err != nil {
 		t.Error(err)
 	}

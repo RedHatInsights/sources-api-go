@@ -51,7 +51,7 @@ func TestSourceTypeGetByName(t *testing.T) {
 	wantSourceType := fixtures.TestSourceTypeData[1]
 
 	sourceTypeDao := GetSourceTypeDao()
-	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name, nil)
+	gotSourceType, err := sourceTypeDao.GetByName(nil, wantSourceType.Name)
 	if err != nil {
 		t.Error(err)
 	}
@@ -69,7 +69,7 @@ func TestSourceTypeGetByNameNotFound(t *testing.T) {
 	wantSourceType := m.SourceType{Name: "not existing name"}
 
 	sourceTypeDao := GetSourceTypeDao()
-	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name, nil)
+	gotSourceType, err := sourceTypeDao.GetByName(nil, wantSourceType.Name)
 	if gotSourceType != nil {
 		t.Error("got source type object, want nil")
 	}
@@ -87,7 +87,7 @@ func TestSourceTypeGetByNameBadRequest(t *testing.T) {
 	wantSourceType := m.SourceType{Name: "amazon"}
 
 	sourceTypeDao := GetSourceTypeDao()
-	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name, nil)
+	gotSourceType, err := sourceTypeDao.GetByName(nil, wantSourceType.Name)
 	if gotSourceType != nil {
 		t.Error("got source type object, want nil")
 	}

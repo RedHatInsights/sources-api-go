@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -43,7 +44,7 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
-	user, err := dao.GetUserDao(&fixtures.TestTenantData[0].Id).FindOrCreate(testUserId)
+	user, err := dao.GetUserDao(&fixtures.TestTenantData[0].Id).FindOrCreate(context.Background(), testUserId)
 	if err != nil {
 		t.Error(err)
 	}

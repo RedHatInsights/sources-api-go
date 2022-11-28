@@ -154,7 +154,7 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 
 		case source.SourceTypeName != "":
 			// look up the source type dynamically....or set it by ID later
-			sourceType, err = dao.GetSourceTypeDao().GetByName(source.SourceTypeName, nil)
+			sourceType, err = dao.GetSourceTypeDao().GetByName(nil, source.SourceTypeName)
 			if err != nil {
 				return nil, util.NewErrBadRequest(fmt.Sprintf("invalid source_type_name for lookup: %v", source.SourceTypeName))
 			}
