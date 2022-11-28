@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -146,14 +147,14 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 				return nil, util.NewErrBadRequest(fmt.Sprintf("invalid source type id, original error: %s", err))
 			}
 
-			sourceType, err = dao.GetSourceTypeDao().GetById(&id)
+			sourceType, err = dao.GetSourceTypeDao().GetById(nil, &id)
 			if err != nil {
 				return nil, util.NewErrNotFound(fmt.Sprintf("the specified source type was not found: %s", err))
 			}
 
 		case source.SourceTypeName != "":
 			// look up the source type dynamically....or set it by ID later
-			sourceType, err = dao.GetSourceTypeDao().GetByName(source.SourceTypeName)
+			sourceType, err = dao.GetSourceTypeDao().GetByName(source.SourceTypeName, nil)
 			if err != nil {
 				return nil, util.NewErrBadRequest(fmt.Sprintf("invalid source_type_name for lookup: %v", source.SourceTypeName))
 			}
@@ -319,7 +320,8 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 			var err error
 			switch strings.ToLower(auth.ResourceType) {
 			case "source":
-				_, err = dao.GetSourceDao(&dao.RequestParams{TenantID: &tenant.Id, UserID: &userResource.User.Id}).GetById(&id)
+				_, err = dao.GetSourceDao(&dao.RequestParams{TenantID: &tenant.Id, UserID: &userResource.User.Id}).
+					GetById(context.Background(), &id) // TODO wrong ctx
 				if err == nil {
 					l.Log.Debugf("Found existing Source with id %v, adding to list and continuing", id)
 					a.ResourceID = id

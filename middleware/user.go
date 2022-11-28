@@ -37,7 +37,7 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if userIDFromContext != "" {
-			user, err := dao.GetUserDao(&tenantId).FindOrCreate(userIDFromContext)
+			user, err := dao.GetUserDao(&tenantId).FindOrCreate(c.Request().Context(), userIDFromContext)
 			if err != nil {
 				return fmt.Errorf("unable to find or create user %v: %v", userIDFromContext, err)
 			}

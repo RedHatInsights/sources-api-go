@@ -1,7 +1,9 @@
 package dao
 
 import (
+	"context"
 	"fmt"
+	"github.com/uptrace/opentelemetry-go-extra/otelgorm"
 	"log"
 	"os"
 	"time"
@@ -32,7 +34,7 @@ const (
 	PgUniqueConstraintViolation = "23505"
 )
 
-func Init() {
+func Init(ctx context.Context) {
 	l := &logging.GormLogger{
 		SkipErrorRecordNotFound: true,
 		Logger:                  logging.Log,
@@ -45,14 +47,14 @@ func Init() {
 
 		// Terminate any other connections to the database, since otherwise Postgres will not allow deleting a database.
 		disconnectSql := fmt.Sprintf(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s'`, conf.DatabaseName)
-		err := DB.Exec(disconnectSql).Error
+		err := DB.WithContext(ctx).Exec(disconnectSql).Error
 		if err != nil {
 			log.Fatalln(err)
 		}
 
 		// Perform the database deletion.
 		dropDbSql := fmt.Sprintf(`DROP DATABASE %s`, conf.DatabaseName)
-		err = DB.Exec(dropDbSql).Error
+		err = DB.WithContext(ctx).Exec(dropDbSql).Error
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -92,6 +94,10 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+	if err := db.Use(otelgorm.NewPlugin()); err != nil {
+		log.Fatalln(err)
+	}
+
 	DB = db
 	rawDB, err := db.DB()
 	if err != nil {
@@ -162,6 +168,9 @@ func dbStringDefaultDb() string {
 func openPostgresConnection(logger *logging.GormLogger) {
 	db, err := gorm.Open(postgres.Open(dbStringDefaultDb()), &gorm.Config{Logger: logger})
 	if err != nil {
+		log.Fatalln(err)
+	}
+	if err := db.Use(otelgorm.NewPlugin()); err != nil {
 		log.Fatalln(err)
 	}
 

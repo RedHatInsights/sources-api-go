@@ -127,7 +127,7 @@ func (r *queryResolver) Sources(ctx context.Context, limit *int, offset *int, so
 	f := parseArgs(sortBy, filter)
 
 	// list the sources with filters en tote!
-	srces, count, err := dao.GetSourceDao(&dao.RequestParams{TenantID: tenantIdFromCtx(ctx), UserID: userIdFromCtx(ctx)}).List(*limit, *offset, f)
+	srces, count, err := dao.GetSourceDao(&dao.RequestParams{TenantID: tenantIdFromCtx(ctx), UserID: userIdFromCtx(ctx)}).List(ctx, *limit, *offset, f)
 
 	sendCount(ctx, count)
 

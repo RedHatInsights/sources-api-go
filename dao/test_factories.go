@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
@@ -16,7 +17,7 @@ func CreateTenantForAccountNumber(accountNumber string) (*int64, error) {
 	}
 
 	tenantDao := GetTenantDao()
-	tenant, err := tenantDao.GetOrCreateTenant(&identityStruct)
+	tenant, err := tenantDao.GetOrCreateTenant(context.Background(), &identityStruct)
 	if err != nil {
 		return nil, fmt.Errorf("error getting or creating the tenant")
 	}
@@ -26,7 +27,7 @@ func CreateTenantForAccountNumber(accountNumber string) (*int64, error) {
 
 func CreateUserForUserID(userIDFromHeader string, tenantID int64) (*m.User, error) {
 	userDao := GetUserDao(&tenantID)
-	user, err := userDao.FindOrCreate(userIDFromHeader)
+	user, err := userDao.FindOrCreate(context.Background(), userIDFromHeader)
 	if err != nil {
 		return nil, fmt.Errorf("error getting or creating the user")
 	}

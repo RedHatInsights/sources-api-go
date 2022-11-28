@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,14 +26,28 @@ import (
 )
 
 var conf = config.Get()
+var tracer trace.Tracer
 
 func main() {
 	l.InitLogger(conf)
 
+	tp, err := TracerSetup()
+	if err != nil {
+		l.Log.Fatal(err)
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			l.Log.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
+
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
 	// a time can run the migrations.
+	ctx := context.Background()
+	newCtx, span := otel.Tracer("sources").Start(ctx, "Init")
 	redis.Init()
-	dao.Init()
+	dao.Init(newCtx)
+	span.End()
 
 	shutdown := make(chan struct{})
 	interrupts := make(chan os.Signal, 1)
@@ -76,7 +93,7 @@ func runServer(shutdown chan struct{}) {
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
 	p := echoMetrics.NewPrometheus("sources", nil)
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return p.HandlerFunc(next) })
-
+	e.Use(otelecho.Middleware("sources-api"))
 	setupRoutes(e)
 
 	// setting up the DAO functions

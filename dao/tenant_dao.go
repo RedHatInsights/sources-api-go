@@ -36,12 +36,13 @@ func init() {
 
 type tenantDaoImpl struct{}
 
-func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenant, error) {
+func (t *tenantDaoImpl) GetOrCreateTenant(ctx context.Context, identity *identity.Identity) (*m.Tenant, error) {
 	// Try to find the tenant. Prefer fetching it by its OrgId first, since EBS account numbers are deprecated.
 	var tenant m.Tenant
 	var err error
 
 	err = DB.
+		WithContext(ctx).
 		Debug().
 		Model(&m.Tenant{}).
 		Where("org_id = ? AND org_id != ''", identity.OrgID).
@@ -56,6 +57,7 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 	// Try to fetch the tenant by its EBS account number otherwise.
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		err = DB.
+			WithContext(ctx).
 			Debug().
 			Model(&m.Tenant{}).
 			Where("external_tenant = ? AND external_tenant != ''", identity.AccountNumber).
@@ -78,6 +80,7 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 		tenant.OrgID = identity.OrgID
 
 		err := DB.
+			WithContext(ctx).
 			Debug().
 			Create(&tenant).
 			Error

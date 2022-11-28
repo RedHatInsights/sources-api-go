@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -395,7 +396,7 @@ func (add *authenticationDaoDbImpl) FetchAndUpdateBy(resource util.Resource, upd
 	}
 
 	sourceDao := GetSourceDao(&RequestParams{TenantID: add.TenantID})
-	source, err := sourceDao.GetById(&authentication.SourceID)
+	source, err := sourceDao.GetById(context.Background(), &authentication.SourceID) // TODO wrong ctx
 	if err != nil {
 		return nil, err
 	}

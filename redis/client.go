@@ -2,8 +2,8 @@ package redis
 
 import (
 	"fmt"
-
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -18,4 +18,6 @@ func Init() {
 		Addr:     fmt.Sprintf("%s:%d", cfg.CacheHost, cfg.CachePort),
 		Password: cfg.CachePassword,
 	})
+
+	Client.AddHook(redisotel.NewTracingHook())
 }
