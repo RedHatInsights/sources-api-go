@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"os"
 	"regexp"
@@ -34,6 +36,9 @@ have authorization to perform "write" things such as POST/PATCH/DELETE.
 */
 func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+
+		trcCtx := c.Request().Context()
+
 		switch {
 		case bypassRbac:
 			c.Logger().Debugf("Skipping authorization check -- disabled in ENV")
@@ -90,8 +95,12 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get(h.XRHID))
 			}
 
-			allowed, err := rbacClient.Allowed(rhid)
+			span := trace.SpanFromContext(trcCtx)
+			span.AddEvent("Calling RBAC")
+			allowed, err := rbacClient.Allowed(trcCtx, rhid)
 			if err != nil {
+				span.RecordError(err)
+				span.SetStatus(codes.Error, "Calling RBAC failed")
 				return fmt.Errorf("error hitting rbac: %v", err)
 			}
 
@@ -120,7 +129,7 @@ func pskMatches(psk string) bool {
 }
 
 type Rbac interface {
-	Allowed(string) (bool, error)
+	Allowed(context.Context, string) (bool, error)
 }
 
 type RbacClient struct {
@@ -129,8 +138,8 @@ type RbacClient struct {
 
 // fetches an access list from RBAC based on RBAC_URL and returns whether or not
 // the xrhid has the `sources:*:*` permission
-func (r *RbacClient) Allowed(xrhid string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+func (r *RbacClient) Allowed(ctx context.Context, xrhid string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	acl, err := r.client.GetAccess(ctx, xrhid, "")

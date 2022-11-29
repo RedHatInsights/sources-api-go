@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"testing"
@@ -273,7 +274,7 @@ type dummyRbac struct {
 	blowup bool
 }
 
-func (d dummyRbac) Allowed(_ string) (bool, error) {
+func (d dummyRbac) Allowed(ctx context.Context, _ string) (bool, error) {
 	if d.blowup {
 		return false, errors.New("kablooey!")
 	}
