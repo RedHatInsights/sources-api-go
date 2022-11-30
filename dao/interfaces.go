@@ -9,11 +9,11 @@ import (
 
 type SourceDao interface {
 	// List lists all the sources from a given tenant, which should be specified in the request.
-	List(ctx context.Context, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	// ListInternal lists all the existing sources.
-	ListInternal(ctx context.Context, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
-	GetById(ctx context.Context, id *int64) (*m.Source, error)
+	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error
 	Update(src *m.Source) error
 	Delete(id *int64) (*m.Source, error)

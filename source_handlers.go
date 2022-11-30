@@ -56,7 +56,7 @@ func SourceList(c echo.Context) error {
 		filters = append(filters, util.Filter{Name: "source_type_id", Value: []string{satelliteId}})
 	}
 
-	sources, count, err = sourcesDB.List(c.Request().Context(), limit, offset, filters)
+	sources, count, err = sourcesDB.List(limit, offset, filters)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func SourceGet(c echo.Context) error {
 
 	c.Logger().Infof("Getting Source Id %v", id)
 
-	s, err := sourcesDB.GetById(c.Request().Context(), &id)
+	s, err := sourcesDB.GetById(&id)
 
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func SourceEdit(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	s, err := sourcesDB.GetById(c.Request().Context(), &id)
+	s, err := sourcesDB.GetById(&id)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func SourceDelete(c echo.Context) (err error) {
 		return util.NewErrBadRequest(err)
 	}
 
-	s, err := sourcesDB.GetById(c.Request().Context(), &id)
+	s, err := sourcesDB.GetById(&id)
 
 	if err != nil {
 		return err
@@ -418,7 +418,7 @@ func SourcesRhcConnectionList(c echo.Context) error {
 		return err
 	}
 
-	_, err = sourceDao.GetById(c.Request().Context(), &sourceId)
+	_, err = sourceDao.GetById(&sourceId)
 	if err != nil {
 		return err
 	}

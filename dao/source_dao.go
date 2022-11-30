@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"go.opentelemetry.io/otel/codes"
@@ -106,7 +105,7 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 	return sources, count, nil
 }
 
-func (s *sourceDaoImpl) List(ctx context.Context, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
 	sources := make([]m.Source, 0, limit)
 	query := s.getDbWithTable(DB.Debug(), "sources").Model(&m.Source{})
 
@@ -117,10 +116,11 @@ func (s *sourceDaoImpl) List(ctx context.Context, limit, offset int, filters []u
 
 	// getting the total count (filters included) for pagination
 	count := int64(0)
-	query.WithContext(ctx).Count(&count)
+	trcCtx := s.RequestParams.ctx
+	query.WithContext(trcCtx).Count(&count)
 
 	// limiting + running the actual query.
-	result := query.WithContext(ctx).Limit(limit).Offset(offset).Find(&sources)
+	result := query.WithContext(trcCtx).Limit(limit).Offset(offset).Find(&sources)
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
@@ -128,8 +128,9 @@ func (s *sourceDaoImpl) List(ctx context.Context, limit, offset int, filters []u
 	return sources, count, nil
 }
 
-func (s *sourceDaoImpl) ListInternal(ctx context.Context, limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
-	query := DB.WithContext(ctx).Debug().
+func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+	trcCtx := s.RequestParams.ctx
+	query := DB.WithContext(trcCtx).Debug().
 		Model(&m.Source{}).
 		Select(`sources.id, sources.availability_status, "Tenant".external_tenant, "Tenant".org_id`)
 
@@ -140,13 +141,13 @@ func (s *sourceDaoImpl) ListInternal(ctx context.Context, limit, offset int, fil
 
 	// Getting the total count (filters included) for pagination
 	count := int64(0)
-	query.WithContext(ctx).Count(&count)
+	query.WithContext(trcCtx).Count(&count)
 
 	sources := make([]m.Source, 0, limit)
-	result := query.WithContext(ctx).Joins("Tenant").Limit(limit).Offset(offset).Order("sources.id ASC").Find(&sources)
+	result := query.WithContext(trcCtx).Joins("Tenant").Limit(limit).Offset(offset).Order("sources.id ASC").Find(&sources)
 
 	if result.Error != nil {
-		span := trace.SpanFromContext(ctx)
+		span := trace.SpanFromContext(trcCtx)
 		span.RecordError(result.Error)
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
@@ -154,17 +155,19 @@ func (s *sourceDaoImpl) ListInternal(ctx context.Context, limit, offset int, fil
 	return sources, count, nil
 }
 
-func (s *sourceDaoImpl) GetById(ctx context.Context, id *int64) (*m.Source, error) {
+func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 	var src m.Source
 
+	trcCtx := s.RequestParams.ctx
+
 	err := s.getDbWithModel().
-		WithContext(ctx).
+		WithContext(trcCtx).
 		Where("id = ?", *id).
 		First(&src).
 		Error
 
 	if err != nil {
-		span := trace.SpanFromContext(ctx)
+		span := trace.SpanFromContext(trcCtx)
 		span.SetStatus(codes.Error, "Source with id #{id} not found")
 		return nil, util.NewErrNotFound("source")
 	}
@@ -282,7 +285,7 @@ func (s *sourceDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribute
 		return nil, fmt.Errorf("source not found %v", resource)
 	}
 
-	source, err := s.GetById(context.Background(), &resource.ResourceID) // TODO wrong ctx
+	source, err := s.GetById(&resource.ResourceID)
 	if err != nil {
 		return nil, err
 	}

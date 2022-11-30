@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -70,7 +69,7 @@ func (a *authenticationDaoVaultImpl) List(limit int, offset int, filters []util.
 
 func (a *authenticationDaoVaultImpl) ListForSource(sourceID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	// Check if sourceID exists
-	_, err := GetSourceDao(&RequestParams{TenantID: a.TenantID}).GetById(context.Background(), &sourceID) // TODO wrong ctx
+	_, err := GetSourceDao(&RequestParams{TenantID: a.TenantID}).GetById(&sourceID)
 	if err != nil {
 		return nil, 0, util.NewErrNotFound("source")
 	}
@@ -544,7 +543,7 @@ func (a *authenticationDaoVaultImpl) FetchAndUpdateBy(resource util.Resource, up
 	}
 
 	sourceDao := GetSourceDao(&RequestParams{TenantID: a.TenantID})
-	source, err := sourceDao.GetById(context.Background(), &authentication.SourceID) // TODO wrong ctx
+	source, err := sourceDao.GetById(&authentication.SourceID)
 	if err != nil {
 		return nil, err
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -1577,7 +1576,7 @@ func TestSourceDelete(t *testing.T) {
 	}
 
 	// Check that source doesn't exist
-	_, err = sourceDao.GetById(context.Background(), &src.ID)
+	_, err = sourceDao.GetById(&src.ID)
 	if !errors.Is(err, util.ErrNotFoundEmpty) {
 		t.Errorf("expected 'source not found', got %s", err)
 	}
@@ -2022,7 +2021,7 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	// Check that the source is paused
 	daoParams := dao.RequestParams{TenantID: &tenantId}
 	sourceDao := dao.GetSourceDao(&daoParams)
-	src, err := sourceDao.GetById(context.Background(), &sourceId)
+	src, err := sourceDao.GetById(&sourceId)
 	if err != nil {
 		t.Error(err)
 	}
@@ -2197,7 +2196,7 @@ func TestUnpauseSourceAndItsApplications(t *testing.T) {
 	}
 
 	// Check that the source is not paused
-	src, err := sourceDao.GetById(context.Background(), &sourceId)
+	src, err := sourceDao.GetById(&sourceId)
 	if err != nil {
 		t.Error(err)
 	}
@@ -2513,7 +2512,7 @@ func sourceEventTestHelper(t *testing.T, c echo.Context, expectedEventType strin
 	}
 
 	// Grab the source from the fixtures.
-	expectedSource, err := sourceDao.GetById(context.Background(), &fixtures.TestSourceData[0].ID)
+	expectedSource, err := sourceDao.GetById(&fixtures.TestSourceData[0].ID)
 	if err != nil {
 		t.Errorf(`could not fetch the source: %s`, err)
 		return err

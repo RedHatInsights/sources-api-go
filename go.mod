@@ -2,6 +2,8 @@ module github.com/RedHatInsights/sources-api-go
 
 go 1.17
 
+replace github.com/RedHatInsights/rbac-client-go => /Users/hrupp/insights/rbac-client-go
+
 require (
 	github.com/99designs/gqlgen v0.17.2
 	github.com/RedHatInsights/rbac-client-go v1.0.0
@@ -59,13 +61,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.17.1 // indirect
 	github.com/aws/smithy-go v1.13.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/extra/rediscmd/v8 v8.11.5 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.0 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.1.17 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.36.4 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.11.1 // indirect
-	go.opentelemetry.io/otel/metric v0.32.1 // indirect
+	go.opentelemetry.io/otel/metric v0.33.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.50.1 // indirect

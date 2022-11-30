@@ -177,7 +177,7 @@ func AuthenticationEdit(c echo.Context) error {
 		return err
 	}
 
-	source, err := sourceDao.GetById(c.Request().Context(), &auth.SourceID)
+	source, err := sourceDao.GetById(&auth.SourceID)
 	if err != nil {
 		return err
 	}

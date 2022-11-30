@@ -1,7 +1,6 @@
 package dao
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -39,7 +38,7 @@ func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, r
 		if err != nil {
 			return "", err
 		}
-		resource, err := GetSourceDao(&RequestParams{TenantID: &tenantID}).GetById(context.Background(), &recordID) // TODO wrong ctx
+		resource, err := GetSourceDao(&RequestParams{TenantID: &tenantID}).GetById(&recordID)
 		if err != nil {
 			return "", err
 		}

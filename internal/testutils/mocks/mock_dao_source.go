@@ -1,7 +1,6 @@
 package mocks
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -63,17 +62,17 @@ func (mockSourceDao *MockSourceDao) SubCollectionList(primaryCollection interfac
 	return sources, count, nil
 }
 
-func (mockSourceDao *MockSourceDao) List(_ context.Context, _, _ int, _ []util.Filter) ([]m.Source, int64, error) {
+func (mockSourceDao *MockSourceDao) List(_, _ int, _ []util.Filter) ([]m.Source, int64, error) {
 	count := int64(len(mockSourceDao.Sources))
 	return mockSourceDao.Sources, count, nil
 }
 
-func (mockSourceDao *MockSourceDao) ListInternal(_ context.Context, _, _ int, _ []util.Filter) ([]m.Source, int64, error) {
+func (mockSourceDao *MockSourceDao) ListInternal(_, _ int, _ []util.Filter) ([]m.Source, int64, error) {
 	count := int64(len(mockSourceDao.Sources))
 	return mockSourceDao.Sources, count, nil
 }
 
-func (mockSourceDao *MockSourceDao) GetById(_ context.Context, id *int64) (*m.Source, error) {
+func (mockSourceDao *MockSourceDao) GetById(id *int64) (*m.Source, error) {
 	for _, i := range mockSourceDao.Sources {
 		if i.ID == *id {
 			return &i, nil
