@@ -302,13 +302,10 @@ oracle-cloud-infrastructure:
             initialValue: ocid
             name: authentication.authtype
           - component: text-field
-            isRequired: true
-            label: Oracle Cloud ID (OCID)
+            hideField: true
+            initializeOnMount: true
+            initialValue: ocid.uuid
             name: authentication.username
-            validate:
-              - type: required
-              - type: pattern
-                pattern: "^ocid1\\..*"
           - component: text-field
             name: application.extra.bucket
             label: Bucket Namespace
