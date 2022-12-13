@@ -309,6 +309,24 @@ oracle-cloud-infrastructure:
               - type: required
               - type: pattern
                 pattern: "^ocid1\\..*"
+          - component: text-field
+            name: application.extra.bucket
+            label: Bucket Namespace
+            isRequired: true
+            validate:
+              - type: required
+          - component: text-field
+            name: application.extra.bucket_namespace
+            label: Bucket Name
+            isRequired: true
+            validate:
+              - type: required
+          - component: text-field
+            name: application.extra.bucket_region
+            label: Bucket Name
+            isRequired: true
+            validate:
+              - type: required
 openshift:
   product_name: Red Hat OpenShift Container Platform
   category: Red Hat
