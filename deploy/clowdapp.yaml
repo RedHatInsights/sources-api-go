@@ -188,6 +188,8 @@ objects:
           value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
         - name: CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL
           value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_CHECK_PATH}
+        - name: PROVISIONING_AVAILABILITY_CHECK_URL
+          value: ${PROVISIONING_SCHEME}://${PROVISIONING_HOST}:${PROVISIONING_PORT}${PROVISIONING_CHECK_PATH}
         - name: SOURCES_ENV
           value: ${SOURCES_ENV}
         - name: MARKETPLACE_HOST
@@ -426,6 +428,18 @@ parameters:
 - name: CLOUD_CONNECTOR_CHECK_PATH
   required: true
   value: "/connection_status"
+- name: PROVISIONING_SCHEME
+  required: true
+  value: "http"
+- name: PROVISIONING_HOST
+  required: true
+  value: "provisioning-backend-api"
+- name: PROVISIONING_PORT
+  required: true
+  value: "8000"
+- name: PROVISIONING_CHECK_PATH
+  required: true
+  value: "/availability_status/sources"
 - description: Specify name of service for Feature Flags
   name: FEATURE_FLAGS_SERVICE
   value: 'unleash'
