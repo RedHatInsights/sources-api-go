@@ -308,19 +308,19 @@ oracle-cloud-infrastructure:
             name: authentication.username
           - component: text-field
             name: application.extra.bucket
-            label: Bucket Namespace
+            label: Bucket Name
             isRequired: true
             validate:
               - type: required
           - component: text-field
             name: application.extra.bucket_namespace
-            label: Bucket Name
+            label: Bucket Namespace
             isRequired: true
             validate:
               - type: required
           - component: text-field
             name: application.extra.bucket_region
-            label: Bucket Name
+            label: Bucket Region
             isRequired: true
             validate:
               - type: required
