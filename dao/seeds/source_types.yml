@@ -302,13 +302,28 @@ oracle-cloud-infrastructure:
             initialValue: ocid
             name: authentication.authtype
           - component: text-field
-            isRequired: true
-            label: Oracle Cloud ID (OCID)
+            hideField: true
+            initializeOnMount: true
+            initialValue: ocid.uuid
             name: authentication.username
+          - component: text-field
+            name: application.extra.bucket
+            label: Bucket Name
+            isRequired: true
             validate:
               - type: required
-              - type: pattern
-                pattern: "^ocid1\\..*"
+          - component: text-field
+            name: application.extra.bucket_namespace
+            label: Bucket Namespace
+            isRequired: true
+            validate:
+              - type: required
+          - component: text-field
+            name: application.extra.bucket_region
+            label: Bucket Region
+            isRequired: true
+            validate:
+              - type: required
 openshift:
   product_name: Red Hat OpenShift Container Platform
   category: Red Hat
