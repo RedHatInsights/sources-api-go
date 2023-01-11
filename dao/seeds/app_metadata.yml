@@ -26,6 +26,8 @@ stage:
     aws_wizard_account_number: "998366406740"
     azure_lighthouse_template: "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fcloudigrade-stage-azure-offer-cloudigrade-stage.apps.crcs02ue1.urby.p1.openshiftapps.com%2Fapi%2Fcloudigrade%2Fv2%2Fazure-offer-template%2F"
     retry_source_creation: true
+  "/insights/platform/provisioning":
+    aws_wizard_account_number: "351356922033"
 prod:
   "/insights/platform/cost-management":
     gcp_service_account: billing-export@red-hat-cost-management.iam.gserviceaccount.com
@@ -35,3 +37,5 @@ prod:
     aws_wizard_account_number: "998366406740"
     azure_lighthouse_template: "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fconsole.redhat.com%2Fapi%2Fcloudigrade%2Fv2%2Fazure-offer-template%2F"
     retry_source_creation: true
+  "/insights/platform/provisioning":
+    aws_wizard_account_number: "296389277756"
