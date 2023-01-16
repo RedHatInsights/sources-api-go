@@ -180,7 +180,7 @@
             {
               "Effect": "Allow",
               "Principal": {
-                "AWS": "arn:aws:iam::ACCOUNT:role"
+                "AWS": "arn:aws:iam::ACCOUNT:root"
               },
               "Action": "sts:AssumeRole",
               "Condition": {}
