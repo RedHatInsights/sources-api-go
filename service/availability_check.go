@@ -114,9 +114,16 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 		return
 	}
 
+	// yoink the xrhid from the parent request
+	xrhid, ok := acr.c.Get(h.XRHID).(string)
+	if !ok {
+		acr.Logger().Warnf("couldn't pull xrhid from request")
+		return
+	}
+
+	req.Header.Add(h.XRHID, xrhid)
 	req.Header.Add(h.OrgID, source.Tenant.OrgID)
 	req.Header.Add(h.AccountNumber, source.Tenant.ExternalTenant)
-	req.Header.Add(h.XRHID, util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	resp, err := http.DefaultClient.Do(req)
