@@ -84,14 +84,13 @@ func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.
 // applications
 func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source) {
 	for _, app := range source.Applications {
-		acr.Logger().Infof("[source_id :%d][application_id: %d] Requesting availability check for application", source.ID, app.ID)
-
 		uri := app.ApplicationType.AvailabilityCheckURL()
 		if uri == nil {
 			acr.Logger().Errorf("[source_id: %d][application_id: %d][application_type: %s] Failed to fetch availability check url - continuing", source.ID, app.ID, app.ApplicationType.Name)
 			continue
 		}
 
+		acr.Logger().Infof("[source_id :%d][application_id: %d][uri: %s] Requesting availability check for application", source.ID, app.ID, uri)
 		acr.httpAvailabilityRequest(source, &app, uri)
 	}
 }
