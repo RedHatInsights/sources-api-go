@@ -125,14 +125,6 @@ google:
         - component: text-field
           name: authentication.username
           label: Project ID
-    endpoint:
-      hidden: true
-      fields:
-      - component: text-field
-        name: endpoint.role
-        hideField: true
-        initializeOnMount: true
-        initialValue: google
 azure:
   product_name: Microsoft Azure
   category: Cloud
@@ -198,14 +190,6 @@ azure:
         name: authentication.password
         label: Client Secret
         type: password
-    endpoint:
-      hidden: true
-      fields:
-      - component: text-field
-        name: endpoint.role
-        hideField: true
-        initializeOnMount: true
-        initialValue: azure
 bitbucket:
   product_name: Bitbucket
   category: Developer sources
