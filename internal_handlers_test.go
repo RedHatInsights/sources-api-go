@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -134,7 +135,7 @@ func TestInternalSecretGet(t *testing.T) {
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
-	user, err := userDao.FindOrCreate(testUserId)
+	user, err := userDao.FindOrCreate(context.Background(), testUserId)
 	if err != nil {
 		t.Error(err)
 	}

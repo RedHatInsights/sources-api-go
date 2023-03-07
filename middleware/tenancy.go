@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"fmt"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -16,8 +18,11 @@ import (
 // account number or OrgId.
 func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		span := trace.SpanFromContext(c.Request().Context())
+
 		id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 		if !ok {
+			span.SetStatus(codes.Error, "Invalid id structure received")
 			return fmt.Errorf("invalid identity structure received: %#v", id)
 		}
 
@@ -36,8 +41,9 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", id.Identity.OrgID, id.Identity.AccountNumber)
 
 		tenantDao := dao.GetTenantDao()
-		tenant, err := tenantDao.GetOrCreateTenant(&id.Identity)
+		tenant, err := tenantDao.GetOrCreateTenant(c.Request().Context(), &id.Identity)
 		if err != nil {
+			span.RecordError(err)
 			c.Logger().Errorf("[identity struct: %v] unable to get or create the tenant: %w", err)
 
 			return fmt.Errorf("failed to get or create tenant for request: %w", err)

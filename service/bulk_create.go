@@ -146,14 +146,14 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 				return nil, util.NewErrBadRequest(fmt.Sprintf("invalid source type id, original error: %s", err))
 			}
 
-			sourceType, err = dao.GetSourceTypeDao().GetById(&id)
+			sourceType, err = dao.GetSourceTypeDao().GetById(nil, &id)
 			if err != nil {
 				return nil, util.NewErrNotFound(fmt.Sprintf("the specified source type was not found: %s", err))
 			}
 
 		case source.SourceTypeName != "":
 			// look up the source type dynamically....or set it by ID later
-			sourceType, err = dao.GetSourceTypeDao().GetByName(source.SourceTypeName)
+			sourceType, err = dao.GetSourceTypeDao().GetByName(nil, source.SourceTypeName)
 			if err != nil {
 				return nil, util.NewErrBadRequest(fmt.Sprintf("invalid source_type_name for lookup: %v", source.SourceTypeName))
 			}

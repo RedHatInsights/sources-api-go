@@ -35,7 +35,7 @@ func SourceTypeList(c echo.Context) error {
 		return err
 	}
 
-	sourceTypes, count, err := sourceTypeDB.List(limit, offset, filters)
+	sourceTypes, count, err := sourceTypeDB.List(c.Request().Context(), limit, offset, filters)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func SourceTypeGet(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
-	sourceType, err := SourceTypeDB.GetById(&id)
+	sourceType, err := SourceTypeDB.GetById(c.Request().Context(), &id)
 
 	if err != nil {
 		return err

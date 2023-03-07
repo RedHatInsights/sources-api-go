@@ -1,6 +1,8 @@
 package main
 
 import (
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -89,6 +91,9 @@ func SecretList(c echo.Context) error {
 
 	secrets, count, err := secretDao.List(limit, offset, filters)
 	if err != nil {
+		span := trace.SpanFromContext(c.Request().Context())
+		span.SetStatus(codes.Error, err.Error())
+
 		return err
 	}
 
@@ -108,6 +113,9 @@ func SecretGet(c echo.Context) error {
 
 	paramID, err := util.InterfaceToInt64(c.Param("id"))
 	if err != nil {
+		span := trace.SpanFromContext(c.Request().Context())
+		span.SetStatus(codes.Error, err.Error())
+
 		return util.NewErrBadRequest(err)
 	}
 

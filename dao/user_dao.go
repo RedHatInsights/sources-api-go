@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"fmt"
 
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -24,14 +25,14 @@ type userDaoImpl struct {
 	TenantID *int64
 }
 
-func (u *userDaoImpl) FindOrCreate(userID string) (*m.User, error) {
+func (u *userDaoImpl) FindOrCreate(ctx context.Context, userID string) (*m.User, error) {
 	var user m.User
 
 	if u.TenantID == nil {
 		return nil, fmt.Errorf("tenant id is missing to call FindOrCreate")
 	}
 
-	err := DB.Model(&m.User{}).
+	err := DB.WithContext(ctx).Model(&m.User{}).
 		Where("user_id = ?", userID).
 		Where("tenant_id = ?", *u.TenantID).
 		First(&user).
@@ -40,7 +41,7 @@ func (u *userDaoImpl) FindOrCreate(userID string) (*m.User, error) {
 	if err != nil {
 		user.TenantID = *u.TenantID
 		user.UserID = userID
-		err = DB.Debug().Create(&user).Error
+		err = DB.WithContext(ctx).Debug().Create(&user).Error
 		if err != nil {
 			return nil, err
 		}

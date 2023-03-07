@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -148,12 +149,12 @@ type SecretDao interface {
 }
 
 type SourceTypeDao interface {
-	List(limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error)
-	GetById(id *int64) (*m.SourceType, error)
+	List(ctx context.Context, limit, offset int, filters []util.Filter) ([]m.SourceType, int64, error)
+	GetById(ctx context.Context, id *int64) (*m.SourceType, error)
 	Create(src *m.SourceType) error
 	Update(src *m.SourceType) error
 	Delete(id *int64) error
-	GetByName(name string) (*m.SourceType, error)
+	GetByName(ctx context.Context, name string) (*m.SourceType, error)
 }
 
 type RhcConnectionDao interface {
@@ -169,7 +170,7 @@ type RhcConnectionDao interface {
 type TenantDao interface {
 	// GetOrCreateTenant returns the tenant associated with the provided identity. It tries to fetch the tenant by its
 	// OrgId, and if it is not present, by its EBS account number.
-	GetOrCreateTenant(identity *identity.Identity) (*m.Tenant, error)
+	GetOrCreateTenant(ctx context.Context, identity *identity.Identity) (*m.Tenant, error)
 	// TenantByIdentity returns the tenant associated to the given identity. It tries to fetch the tenant by its OrgId,
 	// and if it is not preset, by its EBS account number.
 	TenantByIdentity(identity *identity.Identity) (*m.Tenant, error)
@@ -185,5 +186,5 @@ type TenantDao interface {
 }
 
 type UserDao interface {
-	FindOrCreate(userID string) (*m.User, error)
+	FindOrCreate(ctx context.Context, userID string) (*m.User, error)
 }

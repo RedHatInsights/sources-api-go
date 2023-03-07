@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"fmt"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
@@ -13,6 +15,11 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := next(c)
 		if err != nil {
+
+			span := trace.SpanFromContext(c.Request().Context())
+			span.SetStatus(codes.Error, err.Error())
+			span.RecordError(err)
+
 			var statusCode int
 			var message interface{}
 
