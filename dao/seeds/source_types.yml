@@ -181,6 +181,14 @@ azure:
         label: Subscription ID
         stepKey: service-principle
       - component: text-field
+        name: application.extra.scope
+        label: Cost export scope
+        stepKey: azure-1
+      - component: text-field
+        name: application.extra.export_name
+        label: Export name
+        stepKey: azure-3
+      - component: text-field
         name: authentication.extra.azure.tenant_id
         label: Tenant ID
       - component: text-field
