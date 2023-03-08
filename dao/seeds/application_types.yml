@@ -65,7 +65,7 @@
     satellite:
     - receptor_node
 "/insights/platform/provisioning":
-  display_name: Provisioning
+  display_name: Launch images
   dependent_applications: []
   supported_source_types:
     - amazon
