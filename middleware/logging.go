@@ -17,6 +17,7 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		acct := c.Get(h.AccountNumber)
 		orgid := c.Get(h.OrgID)
 		uuid := c.Get(h.InsightsRequestID)
+		edgeId := c.Get(h.EdgeRequestID)
 
 		baseFields := logrus.Fields{
 			"uri":            uri,
@@ -25,6 +26,7 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 			"org_id":         orgid,
 			"user_agent":     agent,
 			"request_id":     uuid,
+			"edge_id":        edgeId,
 		}
 
 		baseLoggerEntry := l.Log.WithFields(baseFields)
