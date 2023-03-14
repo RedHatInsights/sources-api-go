@@ -52,6 +52,8 @@ objects:
     name: sources-api
   spec:
     envName: ${ENV_NAME}
+    testing:
+      iqePlugin: sources
     deployments:
     - name: background-worker
       minReplicas: ${{BACKGROUND_WORKER_MIN_REPLICAS}}
