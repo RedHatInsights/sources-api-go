@@ -416,7 +416,7 @@ func TestDeleteCascade(t *testing.T) {
 	applicationsDao := GetApplicationDao(&daoParams)
 	authenticationDao := GetAuthenticationDao(&daoParams)
 	endpointDao := GetEndpointDao(&fixtures.TestTenantData[0].Id)
-	rhcConnectionsDao := GetRhcConnectionDao(&fixtures.TestTenantData[0].Id)
+	rhcConnectionsDao := GetRhcConnectionDao(&daoParams)
 
 	// Create all the subresources.
 	// Create the related application.
@@ -1102,7 +1102,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 			t.Errorf("Expected source IDs %v are not same with obtained IDs: %v", suiteData.SourceIDsUserA(), subCollectionSourcesIDs)
 		}
 
-		rhcDAO := GetRhcConnectionDao(suiteData.TenantID())
+		rhcDAO := GetRhcConnectionDao(requestParams)
 		rhcSourceUserA, errRhc := rhcDAO.Create(&m.RhcConnection{Sources: suiteData.resourcesUserA.Sources})
 		if errRhc != nil {
 			t.Errorf(`unexpected error after calling Create for rhc connection: %v`, errRhc)

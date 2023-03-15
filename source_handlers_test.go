@@ -1538,7 +1538,7 @@ func TestSourceDelete(t *testing.T) {
 	auths = append(auths, auth)
 
 	// Create a rhc connection
-	rhcConnectionDao := dao.GetRhcConnectionDao(&tenantID)
+	rhcConnectionDao := dao.GetRhcConnectionDao(&requestParams)
 
 	rhc := &m.RhcConnection{
 		RhcId:   "123e4567-e89b-12d3-a456-426614174000",
