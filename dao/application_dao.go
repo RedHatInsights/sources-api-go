@@ -171,7 +171,7 @@ func (a *applicationDaoImpl) Create(app *m.Application) error {
 }
 
 func (a *applicationDaoImpl) Update(app *m.Application) error {
-	result := a.getDb().Updates(app)
+	result := a.getDb().Omit(clause.Associations).Updates(app)
 	return result.Error
 }
 

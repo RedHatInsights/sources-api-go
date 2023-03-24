@@ -192,7 +192,7 @@ func (s *sourceDaoImpl) Create(src *m.Source) error {
 }
 
 func (s *sourceDaoImpl) Update(src *m.Source) error {
-	result := s.getDb().Updates(src)
+	result := s.getDb().Omit(clause.Associations).Updates(src)
 	return result.Error
 }
 
