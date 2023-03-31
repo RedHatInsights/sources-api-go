@@ -116,11 +116,11 @@ google:
         stepKey: cost-management
         label: Cloud storage bucket name
         validate:
-          - type: required
-          - type: pattern
-            pattern: "^[a-z0-9_.-]+$"
-          - type: min-length
-              threshold: 3
+        - type: required
+        - type: pattern
+          pattern: "^[a-z0-9_.-]+$"
+        - type: min-length
+          threshold: 3
     - type: provisioning_project_id
       name: Provisioning — project ID
       fields:
