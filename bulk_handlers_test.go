@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
@@ -313,6 +314,8 @@ func cleanSourceForTenant(sourceName string, tenantID *int64) error {
 	}
 
 	err = service.DeleteCascade(tenantID, nil, "Source", source.ID, []kafka.Header{})
+	// Have to sleep due to the async nature of this
+	time.Sleep(2 * time.Second)
 
 	return err
 }

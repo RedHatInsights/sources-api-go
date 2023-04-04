@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
@@ -35,6 +36,10 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 	authenticationsDao := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: tenantId})
 
 	var authentications []model.Authentication
+	// locking a lock right at the beginning to ensure messages are raised in order and then unlocking it when ready to
+	// do the final authentication cleanup
+	var lock sync.Mutex
+	lock.Lock()
 
 	switch resourceType {
 	case "Source":
@@ -44,66 +49,70 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 			return fmt.Errorf(`could not completely delete the source: %s`, err)
 		}
 
-		// Raise an event for the deleted application authentications.
-		for _, appAuth := range applicationAuthentications {
-			err = RaiseEvent("ApplicationAuthentication.destroy", &appAuth, headers)
-			if err != nil {
-				logging.Log.Errorf(`Event "ApplicationAuthentication.destroy" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
-			}
-		}
-
-		// Raise events for the deleted applications.
-		var appIds []int64
-		for _, app := range applications {
-			appIds = append(appIds, app.ID)
-			err := RaiseEvent("Application.destroy", &app, headers)
-			if err != nil {
-				logging.Log.Errorf(`Event "Application.destroy" could not be raised for application %v: %s`, app.ToEvent(), err)
-			}
-		}
-
-		// Raise events for the deleted endpoints.
-		var endpointIds []int64
-		for _, endpoint := range endpoints {
-			endpointIds = append(endpointIds, endpoint.ID)
-			err := RaiseEvent("Endpoint.destroy", &endpoint, headers)
-			if err != nil {
-				logging.Log.Errorf(`Event "Endpoint.destroy" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
-			}
-		}
-
-		// Raise events for the deleted connections.
-		for _, connection := range rhcConnections {
-			err := RaiseEvent("RhcConnection.destroy", &connection, headers)
-			if err != nil {
-				logging.Log.Errorf(`Event "RhcConnection.destroy" could not be raised for rhcConnection %v: %s`, connection.ToEvent(), err)
-			}
-		}
-
-		// Raise an event for the source itself.
-		err = RaiseEvent("Source.destroy", source, headers)
-		if err != nil {
-			logging.Log.Errorf(`Event "Source.destroy" could not be raised for source %v: %s`, source.ToEvent(), err)
-		}
-
-		// Fetch all the authentications from the resources.
-		resourceTypes := []struct {
-			ResourceType string
-			ResourceIds  []int64
-		}{
-			{ResourceType: "Application", ResourceIds: appIds},
-			{ResourceType: "Endpoint", ResourceIds: endpointIds},
-			{ResourceType: "Source", ResourceIds: []int64{resourceId}},
-		}
-
-		for _, res := range resourceTypes {
-			auths, err := authenticationsDao.ListIdsForResource(res.ResourceType, res.ResourceIds)
-			if err != nil {
-				logging.Log.Errorf(`[resource_type: "%s"][resource_ids: "%v"] Could not fetch authentications: %s`, res.ResourceType, res.ResourceIds, err)
+		go func() {
+			// Raise an event for the deleted application authentications.
+			for _, appAuth := range applicationAuthentications {
+				err = RaiseEvent("ApplicationAuthentication.destroy", &appAuth, headers)
+				if err != nil {
+					logging.Log.Errorf(`Event "ApplicationAuthentication.destroy" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
+				}
 			}
 
-			authentications = append(authentications, auths...)
-		}
+			// Raise events for the deleted applications.
+			var appIds []int64
+			for _, app := range applications {
+				appIds = append(appIds, app.ID)
+				err := RaiseEvent("Application.destroy", &app, headers)
+				if err != nil {
+					logging.Log.Errorf(`Event "Application.destroy" could not be raised for application %v: %s`, app.ToEvent(), err)
+				}
+			}
+
+			// Raise events for the deleted endpoints.
+			var endpointIds []int64
+			for _, endpoint := range endpoints {
+				endpointIds = append(endpointIds, endpoint.ID)
+				err := RaiseEvent("Endpoint.destroy", &endpoint, headers)
+				if err != nil {
+					logging.Log.Errorf(`Event "Endpoint.destroy" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
+				}
+			}
+
+			// Raise events for the deleted connections.
+			for _, connection := range rhcConnections {
+				err := RaiseEvent("RhcConnection.destroy", &connection, headers)
+				if err != nil {
+					logging.Log.Errorf(`Event "RhcConnection.destroy" could not be raised for rhcConnection %v: %s`, connection.ToEvent(), err)
+				}
+			}
+
+			// Raise an event for the source itself.
+			err = RaiseEvent("Source.destroy", source, headers)
+			if err != nil {
+				logging.Log.Errorf(`Event "Source.destroy" could not be raised for source %v: %s`, source.ToEvent(), err)
+			}
+
+			// Fetch all the authentications from the resources.
+			resourceTypes := []struct {
+				ResourceType string
+				ResourceIds  []int64
+			}{
+				{ResourceType: "Application", ResourceIds: appIds},
+				{ResourceType: "Endpoint", ResourceIds: endpointIds},
+				{ResourceType: "Source", ResourceIds: []int64{resourceId}},
+			}
+
+			for _, res := range resourceTypes {
+				auths, err := authenticationsDao.ListIdsForResource(res.ResourceType, res.ResourceIds)
+				if err != nil {
+					logging.Log.Errorf(`[resource_type: "%s"][resource_ids: "%v"] Could not fetch authentications: %s`, res.ResourceType, res.ResourceIds, err)
+				}
+
+				authentications = append(authentications, auths...)
+			}
+
+			lock.Unlock()
+		}()
 
 	case "Application":
 		applicationsDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: tenantId, UserID: userId})
@@ -112,27 +121,30 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 			return fmt.Errorf(`could not completely delete the application: %s`, err)
 		}
 
-		// Raise an event for the deleted application authentications.
-		for _, appAuth := range applicationAuthentications {
-			err = RaiseEvent("ApplicationAuthentication.destroy", &appAuth, headers)
-			if err != nil {
-				logging.Log.Errorf(`Event "ApplicationAuthentication.destroy" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
+		go func() {
+			// Raise an event for the deleted application authentications.
+			for _, appAuth := range applicationAuthentications {
+				err = RaiseEvent("ApplicationAuthentication.destroy", &appAuth, headers)
+				if err != nil {
+					logging.Log.Errorf(`Event "ApplicationAuthentication.destroy" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)
+				}
 			}
-		}
 
-		// Raise an event for the deleted application itself.
-		err = RaiseEvent("Application.destroy", application, headers)
-		if err != nil {
-			logging.Log.Errorf(`Event "Application.destroy" could not be raised for application %v: %s`, application.ToEvent(), err)
-		}
+			// Raise an event for the deleted application itself.
+			err = RaiseEvent("Application.destroy", application, headers)
+			if err != nil {
+				logging.Log.Errorf(`Event "Application.destroy" could not be raised for application %v: %s`, application.ToEvent(), err)
+			}
 
-		// Fetch all the application's authentications.
-		auths, err := authenticationsDao.ListIdsForResource("Application", []int64{resourceId})
-		if err != nil {
-			logging.Log.Errorf(`[resource_type: "Application"][resource_id: "%v"] Could not fetch authentications: %s`, resourceId, err)
-		}
+			// Fetch all the application's authentications.
+			auths, err := authenticationsDao.ListIdsForResource("Application", []int64{resourceId})
+			if err != nil {
+				logging.Log.Errorf(`[resource_type: "Application"][resource_id: "%v"] Could not fetch authentications: %s`, resourceId, err)
+			}
 
-		authentications = append(authentications, auths...)
+			authentications = append(authentications, auths...)
+			lock.Unlock()
+		}()
 	case "Endpoint":
 		// Delete the endpoint.
 		endpointDao := dao.GetEndpointDao(tenantId)
@@ -141,34 +153,43 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 			return fmt.Errorf(`could not delete the endpoint: %s`, err)
 		}
 
-		// Raise an event for the deleted endpoint.
-		err = RaiseEvent("Endpoint.destroy", endpoint, headers)
-		if err != nil {
-			logging.Log.Errorf(`Event "Endpoint.destroy" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
-		}
+		go func() {
+			// Raise an event for the deleted endpoint.
+			err = RaiseEvent("Endpoint.destroy", endpoint, headers)
+			if err != nil {
+				logging.Log.Errorf(`Event "Endpoint.destroy" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
+			}
 
-		// Fetch all the endpoint's authentications.
-		auths, err := authenticationsDao.ListIdsForResource("Endpoint", []int64{resourceId})
-		if err != nil {
-			logging.Log.Errorf(`[resource_type: "Endpoint"][resource_id: "%v"] Could not fetch authentications: %s`, resourceId, err)
-		}
+			// Fetch all the endpoint's authentications.
+			auths, err := authenticationsDao.ListIdsForResource("Endpoint", []int64{resourceId})
+			if err != nil {
+				logging.Log.Errorf(`[resource_type: "Endpoint"][resource_id: "%v"] Could not fetch authentications: %s`, resourceId, err)
+			}
 
-		authentications = append(authentications, auths...)
+			authentications = append(authentications, auths...)
+			lock.Unlock()
+		}()
 	}
 
-	// Delete all the authentications.
-	deletedAuths, err := authenticationsDao.BulkDelete(authentications)
-	if err != nil {
-		logging.Log.Errorf(`Could not delete authentications: %s`, err)
-	}
+	go func() {
+		// this goroutine will wait until the case statement appropriate above completes.
+		lock.Lock()
+		defer lock.Unlock()
 
-	for _, deletedAuth := range deletedAuths {
-		// Raise an event for the deleted authentication.
-		err = RaiseEvent("Authentication.destroy", &deletedAuth, headers)
+		// Delete all the authentications.
+		deletedAuths, err := authenticationsDao.BulkDelete(authentications)
 		if err != nil {
-			logging.Log.Errorf(`Could not raise "Authentication.destroy" event for authentication %v`, err)
+			logging.Log.Errorf(`Could not delete authentications: %s`, err)
 		}
-	}
+
+		for _, deletedAuth := range deletedAuths {
+			// Raise an event for the deleted authentication.
+			err = RaiseEvent("Authentication.destroy", &deletedAuth, headers)
+			if err != nil {
+				logging.Log.Errorf(`Could not raise "Authentication.destroy" event for authentication %v`, err)
+			}
+		}
+	}()
 
 	return nil
 }
