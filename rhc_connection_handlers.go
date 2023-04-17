@@ -9,20 +9,18 @@ import (
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
-	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
 var getRhcConnectionDao func(c echo.Context) (dao.RhcConnectionDao, error)
 
 func getDefaultRhcConnectionDao(c echo.Context) (dao.RhcConnectionDao, error) {
-	tenantId, err := echoUtils.GetTenantFromEchoContext(c)
-
+	requestParams, err := dao.NewRequestParamsFromContext(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return dao.GetRhcConnectionDao(&tenantId), nil
+	return dao.GetRhcConnectionDao(requestParams), nil
 }
 
 func RhcConnectionList(c echo.Context) error {

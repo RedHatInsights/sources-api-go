@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -13,12 +14,13 @@ import (
 
 // GetRhcConnectionDao is a function definition that can be replaced in runtime in case some other DAO provider is
 // needed.
-var GetRhcConnectionDao func(*int64) RhcConnectionDao
+var GetRhcConnectionDao func(*RequestParams) RhcConnectionDao
 
 // getDefaultRhcConnectionDao gets the default DAO implementation which will have the given tenant ID.
-func getDefaultRhcConnectionDao(tenantId *int64) RhcConnectionDao {
+func getDefaultRhcConnectionDao(params *RequestParams) RhcConnectionDao {
 	return &rhcConnectionDaoImpl{
-		TenantID: tenantId,
+		TenantID: params.TenantID,
+		ctx:      params.ctx,
 	}
 }
 
@@ -29,11 +31,15 @@ func init() {
 
 type rhcConnectionDaoImpl struct {
 	TenantID *int64
+	ctx      context.Context
+}
+
+func (s *rhcConnectionDaoImpl) getDb() *gorm.DB {
+	return DB.Debug().WithContext(s.ctx)
 }
 
 func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
-	query := DB.
-		Debug().
+	query := s.getDb().
 		Model(&m.RhcConnection{}).
 		Select(`"rhc_connections".*, STRING_AGG(CAST ("jt"."source_id" AS TEXT), ',') AS "source_ids"`).
 		Joins(`INNER JOIN "source_rhc_connections" AS "jt" ON "rhc_connections"."id" = "jt"."rhc_connection_id"`).
@@ -88,8 +94,7 @@ func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 }
 
 func (s *rhcConnectionDaoImpl) GetById(id *int64) (*m.RhcConnection, error) {
-	query := DB.
-		Debug().
+	query := s.getDb().
 		Model(&m.RhcConnection{}).
 		Select(`"rhc_connections".*, STRING_AGG(CAST ("jt"."source_id" AS TEXT), ',') AS "source_ids"`).
 		Joins(`INNER JOIN "source_rhc_connections" AS "jt" ON "rhc_connections"."id" = "jt"."rhc_connection_id"`).
@@ -138,7 +143,7 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 	// If the source doesn't exist we cannot create the RhcConnection, since it needs to be linked to at least one
 	// source.
 	var sourceExists bool
-	err := DB.Debug().
+	err := s.getDb().
 		Model(&m.Source{}).
 		Select(`1`).
 		Where(`id = ?`, rhcConnection.Sources[0].ID).
@@ -207,8 +212,7 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 }
 
 func (s *rhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
-	err := DB.
-		Debug().
+	err := s.getDb().
 		// We need to use the "Omit" clause since otherwise Gorm tries to create the associate source for the
 		// connection as well.
 		Omit(clause.Associations).
@@ -229,8 +233,7 @@ func (s *rhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
 
 	// The foreign key and the "cascade on delete" in the join table takes care of deleting the related
 	// "source_rhc_connection" row.
-	result := DB.
-		Debug().
+	result := s.getDb().
 		Clauses(clause.Returning{}).
 		Where("id = ?", id).
 		Delete(&rhcConnection)
@@ -245,7 +248,7 @@ func (s *rhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
 func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
 	rhcConnections := make([]m.RhcConnection, 0)
 
-	query := DB.Debug().
+	query := s.getDb().
 		Model(&m.RhcConnection{}).
 		Joins(`INNER JOIN "source_rhc_connections" "sr" ON "rhc_connections"."id" = "sr"."rhc_connection_id"`).
 		Where(`"sr"."source_id" = ?`, sourceId).

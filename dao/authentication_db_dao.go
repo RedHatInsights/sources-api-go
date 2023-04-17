@@ -8,6 +8,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type authenticationDaoDbImpl struct {
@@ -316,6 +317,7 @@ func (add *authenticationDaoDbImpl) BulkCreate(auth *m.Authentication) error {
 
 func (add *authenticationDaoDbImpl) Update(authentication *m.Authentication) error {
 	return add.getDb().
+		Omit(clause.Associations).
 		Updates(authentication).
 		Error
 }

@@ -321,13 +321,19 @@ func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status s
 		rhcConnection.AvailabilityStatusError = errstr
 	}
 
-	err := dao.GetSourceDao(&dao.RequestParams{TenantID: &source.TenantID}).Update(source)
+	requestParams, err := dao.NewRequestParamsFromContext(acr.c)
+	if err != nil {
+		acr.Logger().Warnf("failed to fetch request params from context: %v", err)
+		return
+	}
+
+	err = dao.GetSourceDao(requestParams).Update(source)
 	if err != nil {
 		acr.Logger().Warnf("failed to update source availability status: %v", err)
 		return
 	}
 
-	err = dao.GetRhcConnectionDao(&source.TenantID).Update(rhcConnection)
+	err = dao.GetRhcConnectionDao(requestParams).Update(rhcConnection)
 	if err != nil {
 		acr.Logger().Warnf("failed to update RHC Connection availability status: %v", err)
 		return

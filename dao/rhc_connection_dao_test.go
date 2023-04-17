@@ -419,7 +419,7 @@ func TestDeleteRhcConnectionNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
 
-	RhcConnectionDao := GetRhcConnectionDao(&fixtures.TestSourceData[0].TenantID)
+	RhcConnectionDao := GetRhcConnectionDao(&RequestParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	nonExistentId := int64(12345)
 	_, err := RhcConnectionDao.Delete(&nonExistentId)

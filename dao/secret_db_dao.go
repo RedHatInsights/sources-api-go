@@ -6,6 +6,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type secretDaoDbImpl struct {
@@ -119,6 +120,7 @@ func (secret *secretDaoDbImpl) List(limit, offset int, filters []util.Filter) ([
 
 func (secret *secretDaoDbImpl) Update(authentication *m.Authentication) error {
 	return secret.getDb().
+		Omit(clause.Associations).
 		Updates(authentication).
 		Error
 }
