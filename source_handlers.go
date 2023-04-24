@@ -343,7 +343,7 @@ func SourceCheckAvailability(c echo.Context) error {
 	var ctx context.Context
 	var cancel context.CancelFunc
 	ctx = context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
-	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 20*time.Second)
 	c.Set("override_context", ctx)
 
 	sourceDao, err := getSourceDao(c)
