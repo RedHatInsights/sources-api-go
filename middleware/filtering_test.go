@@ -16,7 +16,7 @@ func TestParseFilterWithOperation(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[name][eq]=test", nil)
 	c := e.NewContext(req, nil)
 
-	filters := parseFilter(c)
+	filters, _ := parseFilter(c)
 
 	if len(filters) != 1 {
 		t.Error("wrong number of filters")
@@ -41,7 +41,7 @@ func TestParseFilterWithoutOperation(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[name]=test", nil)
 	c := e.NewContext(req, nil)
 
-	filters := parseFilter(c)
+	filters, _ := parseFilter(c)
 
 	if len(filters) != 1 {
 		t.Error("wrong number of filters")
@@ -112,7 +112,7 @@ func TestParseSubresourceFilterWithOperation(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[source_type][name][eq]=test", nil)
 	c := e.NewContext(req, nil)
 
-	filters := parseFilter(c)
+	filters, _ := parseFilter(c)
 
 	if len(filters) != 1 {
 		t.Error("wrong number of filters")
@@ -141,7 +141,7 @@ func TestParseSubresourceFilterWithoutOperation(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[source_type][name]=test", nil)
 	c := e.NewContext(req, nil)
 
-	filters := parseFilter(c)
+	filters, _ := parseFilter(c)
 
 	if len(filters) != 1 {
 		t.Error("wrong number of filters")
@@ -170,7 +170,7 @@ func TestParseFilteringWithoutFilterArg(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?name=test", nil)
 	c := e.NewContext(req, nil)
 
-	filters := parseFilter(c)
+	filters, _ := parseFilter(c)
 	f := filters[0]
 
 	if f.Name != "name" {
@@ -186,7 +186,7 @@ func TestParseFilteringWithoutFilterArgWithLimit(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?name=test&limit=100", nil)
 	c := e.NewContext(req, nil)
 
-	filters := parseFilter(c)
+	filters, _ := parseFilter(c)
 	f := filters[0]
 
 	if f.Name != "name" {
@@ -199,5 +199,20 @@ func TestParseFilteringWithoutFilterArgWithLimit(t *testing.T) {
 
 	if len(filters) != 1 {
 		t.Errorf("too many filters were parsed - should have been one")
+	}
+}
+
+func TestParseFilteringBadFilter(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter=filter[name][eq]=test", nil)
+	c := e.NewContext(req, nil)
+
+	filters, err := parseFilter(c)
+
+	if err == nil {
+		t.Error("got no error when there should have been one")
+	}
+
+	if len(filters) != 0 {
+		t.Error("got a filter when there should not have been one")
 	}
 }
