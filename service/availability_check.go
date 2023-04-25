@@ -211,7 +211,7 @@ type rhcConnectionStatusResponse struct {
 // status for each RHC id is connected or disconnected
 func (acr availabilityCheckRequester) RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header) {
 	for i := range source.SourceRhcConnections {
-		go acr.pingRHC(source, &source.SourceRhcConnections[i].RhcConnection, headers)
+		acr.pingRHC(source, &source.SourceRhcConnections[i].RhcConnection, headers)
 	}
 }
 
