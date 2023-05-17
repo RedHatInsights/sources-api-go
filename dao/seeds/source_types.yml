@@ -40,6 +40,7 @@ amazon:
       - component: select
         name: application.extra.bucket_region
         label: AWS region
+        isRequired: true
         validate:
         - type: required
       - name: authentication.username
