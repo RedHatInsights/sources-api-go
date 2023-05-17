@@ -37,12 +37,11 @@ amazon:
         - type: required
         - type: pattern
           pattern: "^[A-Za-z0-9]+[A-Za-z0-9_-]*$"
-      - component: text-field
+      - component: select
         name: application.extra.bucket_region
-        label: S3 bucket region
+        label: AWS region
         validate:
-        - type: pattern
-          pattern: "^[a-z]+[a-z0-9-]*$"
+        - type: required
       - name: authentication.username
         stepKey: arn
         component: text-field
