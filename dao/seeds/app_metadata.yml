@@ -5,18 +5,6 @@
 # string is valid json. So plain key/value works fine.
 #####
 
-ci:
-  "/insights/platform/cost-management":
-    gcp_service_account: test-billing-service-account@cloud-billing-292519.iam.gserviceaccount.com
-    aws_wizard_account_number: "589173575009"
-  "/insights/platform/cloud-meter":
-    aws_wizard_account_number: "372779871274"
-qa:
-  "/insights/platform/cost-management":
-    gcp_service_account: test-billing-service-account@cloud-billing-292519.iam.gserviceaccount.com
-    aws_wizard_account_number: "589173575009"
-  "/insights/platform/cloud-meter":
-    aws_wizard_account_number: "372779871274"
 eph:
   "/insights/platform/cost-management":
     gcp_service_account: test-billing-service-account@cloud-billing-292519.iam.gserviceaccount.com
