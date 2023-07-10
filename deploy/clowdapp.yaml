@@ -405,7 +405,7 @@ parameters:
 - description: Env name for seed
   name: SOURCES_ENV
   required: true
-  value: stage
+  value: eph
 - description: Scheme for the EAN to OrgId translator.
   name: TENANT_TRANSLATOR_SCHEME
   required: true
