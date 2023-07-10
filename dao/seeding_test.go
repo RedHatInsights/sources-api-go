@@ -149,13 +149,15 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 	appmdata := make([]m.MetaData, 0)
 	result := DB.Model(&m.MetaData{}).
 		Where("type = ?", m.AppMetaData).
-		Distinct("name").
 		Scan(&appmdata)
 	if result.Error != nil {
 		t.Fatalf("failed to list appmetadata: %v", result.Error)
 	}
 
-	count := len(seeds["ci"])
+	count := 0
+	for _, v := range seeds["eph"] {
+		count += len(v)
+	}
 
 	if len(appmdata) != count {
 		t.Errorf("Seeding did not match values, got %v expected %v", len(appmdata), count)
