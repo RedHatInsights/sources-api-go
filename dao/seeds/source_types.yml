@@ -54,6 +54,10 @@ amazon:
           pattern: "^arnaws:.*"
         - type: min-length
           threshold: 10
+      - name: authentication.credentials.external_id
+        component: text-field
+        hideField: true
+        initializeOnMount: true    
     - type: cloud-meter-arn
       name: Subscription Watch ARN
       fields:
