@@ -43,6 +43,10 @@ amazon:
         isRequired: true
         validate:
         - type: required
+      - name: application.extra.external_id
+        component: text-field
+        hideField: true
+        initializeOnMount: true   
       - name: authentication.username
         stepKey: arn
         component: text-field
@@ -54,10 +58,6 @@ amazon:
           pattern: "^arnaws:.*"
         - type: min-length
           threshold: 10
-      - name: authentication.credentials.external_id
-        component: text-field
-        hideField: true
-        initializeOnMount: true    
     - type: cloud-meter-arn
       name: Subscription Watch ARN
       fields:
