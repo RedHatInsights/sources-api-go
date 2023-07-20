@@ -7,6 +7,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/google/uuid"
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 	"gorm.io/datatypes"
 )
@@ -78,7 +79,8 @@ func getExtraValues(application *m.Application, provider string) (map[string]str
 			return nil, err
 		}
 		extra["result_type"] = authType
-
+		externalID := uuid.New().String()
+		extra["external_id"] = externalID
 	default:
 		return nil, fmt.Errorf("invalid provider for superkey %v", provider)
 	}
