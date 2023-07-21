@@ -43,7 +43,7 @@ amazon:
         isRequired: true
         validate:
         - type: required
-      - name: application.extra.external_id
+      - name: authentication.extra.external_id
         component: text-field
         hideField: true
         initializeOnMount: true   
