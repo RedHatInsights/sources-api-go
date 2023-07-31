@@ -158,6 +158,7 @@
                   "iam:GetPolicy",
                   "iam:ListAttachedRolePolicies",
                   "iam:GetRolePolicy",
+                  "iam:ListRolePolicies",
                   "ec2:CreateKeyPair",
                   "ec2:CreateLaunchTemplate",
                   "ec2:CreateLaunchTemplateVersion",
