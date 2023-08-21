@@ -1,0 +1,3207 @@
+apiVersion: v1
+data:
+  grafana-dashboard-sources.json: |-
+    {
+      "__inputs": [
+        {
+          "name": "DS_TELEMETER-RECENT-PRODUCTION",
+          "label": "telemeter-recent-production",
+          "description": "",
+          "type": "datasource",
+          "pluginId": "prometheus",
+          "pluginName": "Prometheus"
+        }
+      ],
+      "__elements": {},
+      "__requires": [
+        {
+          "type": "panel",
+          "id": "bargauge",
+          "name": "Bar gauge",
+          "version": ""
+        },
+        {
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "9.3.8"
+        },
+        {
+          "type": "panel",
+          "id": "graph",
+          "name": "Graph (old)",
+          "version": ""
+        },
+        {
+          "type": "datasource",
+          "id": "prometheus",
+          "name": "Prometheus",
+          "version": "1.0.0"
+        },
+        {
+          "type": "panel",
+          "id": "stat",
+          "name": "Stat",
+          "version": ""
+        },
+        {
+          "type": "panel",
+          "id": "text",
+          "name": "Text",
+          "version": ""
+        },
+        {
+          "type": "panel",
+          "id": "timeseries",
+          "name": "Time series",
+          "version": ""
+        }
+      ],
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "datasource",
+              "uid": "grafana"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "target": {
+              "limit": 100,
+              "matchAny": false,
+              "tags": [],
+              "type": "dashboard"
+            },
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "collapsed": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PD776AFABBE26000A"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 6,
+          "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PD776AFABBE26000A"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "General",
+          "type": "row"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_TELEMETER-RECENT-PRODUCTION}"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 4,
+            "x": 0,
+            "y": 1
+          },
+          "id": 14,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "\n\n",
+            "mode": "markdown"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_TELEMETER-RECENT-PRODUCTION}"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "Pods Up",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_TELEMETER-RECENT-PRODUCTION}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 1,
+            "w": 4,
+            "x": 4,
+            "y": 1
+          },
+          "id": 16,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "\n\n",
+            "mode": "markdown"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_TELEMETER-RECENT-PRODUCTION}"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "Restarts Count",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_TELEMETER-RECENT-PRODUCTION}"
+          },
+          "description": "",
+          "gridPos": {
+            "h": 1,
+            "w": 4,
+            "x": 8,
+            "y": 1
+          },
+          "id": 57,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "\n\n",
+            "mode": "markdown"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_TELEMETER-RECENT-PRODUCTION}"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "Errors Count",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: Down for 2m",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 0,
+            "y": 2
+          },
+          "id": 8,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "sum(up{service=~\"sources-api(-svc)?\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "API",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: Down for 2m",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 2,
+            "y": 2
+          },
+          "id": 75,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "sum(up{service=\"sources-satellite-operations\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Satellite",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: > 5 [30m] for 1h",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "options": {
+                    "match": "null",
+                    "result": {
+                      "text": "N/A"
+                    }
+                  },
+                  "type": "special"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 4,
+            "y": 2
+          },
+          "id": 12,
+          "interval": "",
+          "links": [],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "round(sum(increase(kube_pod_container_status_restarts_total{container=\"sources-api-svc\"}[$__range])))",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "API",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: > 50 [5m] for 10m",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 6,
+            "y": 2
+          },
+          "id": 76,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "round(sum(increase(kube_pod_container_status_restarts_total{container=\"sources-satellite-operations\"}[$__range])))",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Satellite",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+          },
+          "description": "Alert: > 50 [5m] for 10m",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 8,
+            "y": 2
+          },
+          "id": 56,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(increase(sources_requests_total{status=~\"^5.*\"}[$__range]))",
+              "interval": "",
+              "legendFormat": "",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "API (5xx)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+          },
+          "description": "Alert: > 10 errors in 10mins for 30 minutes",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "options": {
+                    "match": "null",
+                    "result": {
+                      "text": "N/A"
+                    }
+                  },
+                  "type": "special"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 10,
+            "y": 2
+          },
+          "id": 63,
+          "interval": "",
+          "links": [],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "editorMode": "code",
+              "expr": "round(sum(increase(sources_satellite_operations_errors_total[$__range])))+round(sum(increase(sources_satellite_operations_status_counter{status=\"error\"}[$__range])))",
+              "interval": "",
+              "legendFormat": "",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Satellite",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: Down for 2m",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 0,
+            "y": 5
+          },
+          "id": 64,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "sum(up{service=\"sources-superkey-worker-svc\"})",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "SuperKey",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: > 5 [30m] for 1h",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                {
+                  "options": {
+                    "match": "null",
+                    "result": {
+                      "text": "N/A"
+                    }
+                  },
+                  "type": "special"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 4,
+            "y": 5
+          },
+          "id": 66,
+          "interval": "",
+          "links": [],
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "round(sum(increase(kube_pod_container_status_restarts_total{container=\"sources-superkey-worker-svc\"}[$__range])))",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "SuperKey",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: > 50 [5m] for 10m",
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "noValue": "0",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "orange",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 3,
+            "w": 2,
+            "x": 8,
+            "y": 5
+          },
+          "id": 77,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "auto"
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "-1",
+              "interval": "",
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "title": "Superkey",
+          "type": "stat"
+        },
+        {
+          "collapsed": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PD776AFABBE26000A"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 8
+          },
+          "id": 10,
+          "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PD776AFABBE26000A"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "Kafka Lag",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "uid": "$Datasource"
+          },
+          "description": "Alert: > 1000 [10m]",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 9
+          },
+          "hiddenSeries": false,
+          "id": 18,
+          "interval": "",
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "expr": "sum(kafka_consumergroup_group_lag{topic=~'platform.sources..*'}) by (group, topic)",
+              "interval": "",
+              "legendFormat": "{{topic}}/{{group}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [
+            {
+              "$$hashKey": "object:80",
+              "colorMode": "critical",
+              "fill": false,
+              "line": true,
+              "op": "gt",
+              "value": 1000,
+              "yaxis": "left"
+            }
+          ],
+          "timeRegions": [],
+          "title": "Kafka lag",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "collapsed": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PD776AFABBE26000A"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 15
+          },
+          "id": 20,
+          "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PD776AFABBE26000A"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "Sources API Requests Duration",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+          },
+          "description": "",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 16
+          },
+          "hiddenSeries": false,
+          "id": 22,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "editorMode": "code",
+              "expr": "rate(sources_request_duration_seconds_sum[5m]) / rate(sources_request_duration_seconds_count[5m]) * 1000 > 0",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Request Duration",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "ms",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+          },
+          "description": "Alert: Request with duration under 500ms > 95%",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "line"
+                }
+              },
+              "links": [],
+              "mappings": [],
+              "min": 0.8,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "transparent",
+                    "value": null
+                  },
+                  {
+                    "color": "blue",
+                    "value": 0.95
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 16
+          },
+          "id": 26,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "9.3.8",
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "editorMode": "code",
+              "exemplar": false,
+              "expr": "sum(rate(api_3scale_gateway_api_time_bucket{le=\"0500.0\", exported_service=\"sources\"}[5m])) / sum(rate(api_3scale_gateway_api_time_count{exported_service=\"sources\"}[5m]))",
+              "format": "heatmap",
+              "hide": false,
+              "instant": false,
+              "interval": "",
+              "legendFormat": "Latency Uptime",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Latency SLO",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PD776AFABBE26000A"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 23
+          },
+          "id": 34,
+          "panels": [],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PD776AFABBE26000A"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "Sources API Requests Count",
+          "type": "row"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "links": []
+            },
+            "overrides": []
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 24
+          },
+          "hiddenSeries": false,
+          "id": 24,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(sources_requests_total{status=~\"^[45].*\"}[5m])) by (status) > 0",
+              "interval": "",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Requests / s",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "$Datasource"
+          },
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 24
+          },
+          "hiddenSeries": false,
+          "id": 28,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "alertThreshold": true
+          },
+          "percentage": false,
+          "pluginVersion": "9.3.8",
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "editorMode": "code",
+              "expr": "sum(rate(sources_requests_total{status=~\"^[45].*\"}[5m])) by (status) > 0",
+              "interval": "",
+              "legendFormat": "{{status}}",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeRegions": [],
+          "title": "Error Requests / s",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            },
+            {
+              "format": "short",
+              "logBase": 1,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false
+          }
+        },
+        {
+          "collapsed": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PD776AFABBE26000A"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 31
+          },
+          "id": 36,
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 0,
+                "y": 32
+              },
+              "hiddenSeries": false,
+              "id": 78,
+              "interval": "",
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "9.3.8",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "sum (rate (container_cpu_usage_seconds_total{container=\"sources-api-svc\"}[1m])) by (pod)",
+                  "interval": "",
+                  "legendFormat": "{{ pod }}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "API CPU Usage",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 12,
+                "y": 32
+              },
+              "hiddenSeries": false,
+              "id": 32,
+              "interval": "",
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "9.3.8",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "sum (container_memory_working_set_bytes{container=\"sources-api-svc\"}) by (pod)",
+                  "interval": "",
+                  "legendFormat": "{{ pod }}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "API Memory Usage",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 0,
+                "y": 38
+              },
+              "hiddenSeries": false,
+              "id": 81,
+              "interval": "",
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "9.3.8",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "sum (rate (container_cpu_usage_seconds_total{container=\"sources-superkey-worker-svc\"}[1m])) by (pod)",
+                  "interval": "",
+                  "legendFormat": "{{ pod }}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "Superkey CPU Usage",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 12,
+                "y": 38
+              },
+              "hiddenSeries": false,
+              "id": 79,
+              "interval": "",
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "9.3.8",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "sum (container_memory_working_set_bytes{container=\"sources-superkey-worker-svc\"}) by (pod)",
+                  "interval": "",
+                  "legendFormat": "{{ pod }}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "Superkey Memory Usage",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 0,
+                "y": 44
+              },
+              "hiddenSeries": false,
+              "id": 82,
+              "interval": "",
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "9.3.8",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "sum (rate (container_cpu_usage_seconds_total{container=\"sources-satellite-operations\"}[1m])) by (pod)",
+                  "interval": "",
+                  "legendFormat": "{{ pod }}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "Satellite CPU Usage",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 6,
+                "w": 12,
+                "x": 12,
+                "y": 44
+              },
+              "hiddenSeries": false,
+              "id": 84,
+              "interval": "",
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "9.3.8",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "sum (container_memory_working_set_bytes{container=\"sources-satellite-operations\"}) by (pod)",
+                  "interval": "",
+                  "legendFormat": "{{ pod }}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "Satellite Memory Usage",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            }
+          ],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PD776AFABBE26000A"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "CPU & Memory",
+          "type": "row"
+        },
+        {
+          "collapsed": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PD776AFABBE26000A"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 32
+          },
+          "id": 68,
+          "panels": [
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "description": "",
+              "fieldConfig": {
+                "defaults": {
+                  "mappings": [],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "dark-blue",
+                        "value": null
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 0,
+                "y": 33
+              },
+              "id": 70,
+              "options": {
+                "displayMode": "basic",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showUnfilled": true
+              },
+              "pluginVersion": "9.3.8",
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "round(sum(increase(sources_satellite_operations_status_counter[$__range])) by (name, status))",
+                  "interval": "",
+                  "legendFormat": "{{name}} [{{status}}]",
+                  "refId": "A"
+                }
+              ],
+              "title": "Operations statuses",
+              "type": "bargauge"
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "type": "prometheus",
+                "uid": "$Datasource"
+              },
+              "description": "",
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 6,
+                "w": 10,
+                "x": 8,
+                "y": 33
+              },
+              "hiddenSeries": false,
+              "id": 72,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "9.3.8",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "editorMode": "code",
+                  "expr": "rate(sources_satellite_operations_duration_seconds_sum[5m]) / rate(sources_satellite_operations_duration_seconds_count[5m]) * 1000",
+                  "interval": "",
+                  "legendFormat": "{{name}} / {{pod}}",
+                  "range": true,
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "Operation duration",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "ms",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "datasource": {
+                "uid": "$Datasource"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "mappings": [],
+                  "noValue": "0",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "green",
+                        "value": null
+                      },
+                      {
+                        "color": "orange",
+                        "value": 1
+                      },
+                      {
+                        "color": "red",
+                        "value": 20
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "gridPos": {
+                "h": 6,
+                "w": 6,
+                "x": 18,
+                "y": 33
+              },
+              "id": 74,
+              "options": {
+                "displayMode": "gradient",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showUnfilled": true
+              },
+              "pluginVersion": "9.3.8",
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$Datasource"
+                  },
+                  "expr": "sum(increase(sources_satellite_operations_errors_total[$__range])) by (type)",
+                  "interval": "",
+                  "legendFormat": "{{type}}",
+                  "refId": "A"
+                }
+              ],
+              "title": "Operations Errors",
+              "type": "bargauge"
+            }
+          ],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PD776AFABBE26000A"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "Satellite Operations",
+          "type": "row"
+        },
+        {
+          "collapsed": true,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PD776AFABBE26000A"
+          },
+          "gridPos": {
+            "h": 1,
+            "w": 24,
+            "x": 0,
+            "y": 33
+          },
+          "id": 38,
+          "panels": [
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {}
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 6
+              },
+              "hiddenSeries": false,
+              "id": 40,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "sum(aws_rds_database_connections_average{dbinstance_identifier=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Connections",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS database connections average",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "description": "",
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {}
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 6
+              },
+              "hiddenSeries": false,
+              "id": 42,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "sum(aws_rds_cpuutilization_average{dbinstance_identifier=\"$namespace\"})",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "CPU utilization average",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "sum(rdsosmetrics_cpuUtilization_total{exported_instance=\"$namespace\"})",
+                  "hide": false,
+                  "instant": false,
+                  "interval": "",
+                  "legendFormat": "OS Metrics Total Util",
+                  "refId": "B"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "sum(rdsosmetrics_cpuUtilization_system{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "OS Metrics System Util",
+                  "refId": "C"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS CPU Utilization",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {}
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 14
+              },
+              "hiddenSeries": false,
+              "id": 44,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_fileSys_total{exported_instance=\"$namespace\", mount_point=\"/rdsdbdata\"})",
+                  "interval": "",
+                  "legendFormat": "Storage total ",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_fileSys_used{exported_instance=\"$namespace\", mount_point=\"/rdsdbdata\"})",
+                  "interval": "",
+                  "legendFormat": "Storage used",
+                  "refId": "B"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS storage space",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {},
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 14
+              },
+              "hiddenSeries": false,
+              "id": 46,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_memory_total{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Memory total",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_memory_free{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Memory free",
+                  "refId": "B"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_memory_cached{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Memory cached",
+                  "refId": "C"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_memory_buffers{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Memory buffers",
+                  "refId": "D"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_memory_active{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Memory active",
+                  "refId": "E"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS memory",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "deckbytes",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {},
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 22
+              },
+              "hiddenSeries": false,
+              "id": 48,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_tasks_sleeping{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Tasks sleeping",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_tasks_running{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Tasks running",
+                  "refId": "B"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_tasks_blocked{exported_instance=\"$namespace\"})",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "Tasks blocked",
+                  "refId": "C"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_tasks_stopped{exported_instance=\"$namespace\"})",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "Tasks stopped",
+                  "refId": "D"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_tasks_total{exported_instance=\"$namespace\"})",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "Tasks total",
+                  "refId": "E"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_tasks_zombie{exported_instance=\"$namespace\"})",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "Tasks zombie",
+                  "refId": "F"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS tasks",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {},
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 22
+              },
+              "hiddenSeries": false,
+              "id": 50,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_diskIO_util{exported_instance=\"$namespace\"}) by (device)",
+                  "interval": "",
+                  "legendFormat": "Device: {{device}}",
+                  "refId": "A"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS DIsk IO util",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "percent",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {},
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 30
+              },
+              "hiddenSeries": false,
+              "id": 52,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_network_rx{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Network receive",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(rdsosmetrics_network_tx{exported_instance=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Network transmit",
+                  "refId": "B"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS network",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "binBps",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            },
+            {
+              "aliasColors": {},
+              "bars": false,
+              "dashLength": 10,
+              "dashes": false,
+              "datasource": {
+                "uid": "$DatasourceRDS"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {},
+                  "links": []
+                },
+                "overrides": []
+              },
+              "fill": 1,
+              "fillGradient": 0,
+              "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 30
+              },
+              "hiddenSeries": false,
+              "id": 54,
+              "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+              },
+              "lines": true,
+              "linewidth": 1,
+              "nullPointMode": "null",
+              "options": {
+                "alertThreshold": true
+              },
+              "percentage": false,
+              "pluginVersion": "7.2.1",
+              "pointradius": 2,
+              "points": false,
+              "renderer": "flot",
+              "seriesOverrides": [],
+              "spaceLength": 10,
+              "stack": false,
+              "steppedLine": false,
+              "targets": [
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(aws_rds_read_latency_average{dbinstance_identifier=\"$namespace\"})",
+                  "hide": false,
+                  "interval": "",
+                  "legendFormat": "Read Latency Average",
+                  "refId": "A"
+                },
+                {
+                  "datasource": {
+                    "uid": "$DatasourceRDS"
+                  },
+                  "expr": "max(aws_rds_write_latency_average{dbinstance_identifier=\"$namespace\"})",
+                  "interval": "",
+                  "legendFormat": "Write Latency Average",
+                  "refId": "B"
+                }
+              ],
+              "thresholds": [],
+              "timeRegions": [],
+              "title": "RDS latency average",
+              "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+              },
+              "type": "graph",
+              "xaxis": {
+                "mode": "time",
+                "show": true,
+                "values": []
+              },
+              "yaxes": [
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                },
+                {
+                  "format": "short",
+                  "logBase": 1,
+                  "show": true
+                }
+              ],
+              "yaxis": {
+                "align": false
+              }
+            }
+          ],
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "PD776AFABBE26000A"
+              },
+              "refId": "A"
+            }
+          ],
+          "title": "RDS Database",
+          "type": "row"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 37,
+      "style": "dark",
+      "tags": [],
+      "templating": {
+        "list": [
+          {
+            "current": {
+              "selected": false,
+              "text": "crcp01ue1-prometheus",
+              "value": "crcp01ue1-prometheus"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "Datasource",
+            "options": [],
+            "query": "prometheus",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "/(crcp01ue1|crcs02ue1)-prometheus/",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "allValue": ".*",
+            "current": {},
+            "datasource": {
+              "type": "prometheus",
+              "uid": "$Datasource"
+            },
+            "definition": "",
+            "hide": 0,
+            "includeAll": true,
+            "label": "Controller (API)",
+            "multi": false,
+            "name": "controller",
+            "options": [],
+            "query": {
+              "query": "label_values(sources_api_http_requests_total,controller)",
+              "refId": "crcp01ue1-prometheus-controller-Variable-Query"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": ".*",
+            "current": {},
+            "datasource": {
+              "type": "prometheus",
+              "uid": "$Datasource"
+            },
+            "definition": "",
+            "hide": 0,
+            "includeAll": true,
+            "label": "Action (API)",
+            "multi": false,
+            "name": "action",
+            "options": [],
+            "query": {
+              "query": "label_values(sources_api_http_requests_total{controller=~\"$controller\"},action)",
+              "refId": "crcp01ue1-prometheus-action-Variable-Query"
+            },
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 1,
+            "tagValuesQuery": "",
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "app-sre-prod-01-prometheus",
+              "value": "app-sre-prod-01-prometheus"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource (RDS)",
+            "multi": false,
+            "name": "DatasourceRDS",
+            "options": [],
+            "query": "prometheus",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "app-sre-stage-01-prometheus|app-sre-prod-01-prometheus",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "sources-prod",
+              "value": "sources-prod"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": "namespace (RDS)",
+            "multi": false,
+            "name": "namespace",
+            "options": [
+              {
+                "selected": false,
+                "text": "sources-stage",
+                "value": "sources-stage"
+              },
+              {
+                "selected": true,
+                "text": "sources-prod",
+                "value": "sources-prod"
+              }
+            ],
+            "query": "sources-stage,sources-prod",
+            "queryValue": "",
+            "skipUrlSync": false,
+            "type": "custom"
+          }
+        ]
+      },
+      "time": {
+        "from": "now-24h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "Sources (new)",
+      "uid": "zxZKNnAMz",
+      "version": 1,
+      "weekStart": ""
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: grafana-dashboard-insights-sources-new
+  labels:
+    grafana_dashboard: "true"
+  annotations:
+    grafana-folder: /grafana-dashboard-definitions/Insights
