@@ -3729,4 +3729,8 @@ data:
 kind: ConfigMap
 metadata:
   creationTimestamp: null
-  name: grafana-dashboard-sources
+  name: grafana-dashboard-insights-sources-new
+  labels:
+    grafana_dashboard: "true"
+  annotations:
+    grafana-folder: /grafana-dashboard-definitions/Insights
