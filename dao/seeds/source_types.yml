@@ -58,6 +58,11 @@ amazon:
           pattern: "^arnaws:.*"
         - type: min-length
           threshold: 10
+      - component: text-field
+        name: application.extra.metered
+        label: Metered Product
+        isRequired: false
+        hideField: true
     - type: cloud-meter-arn
       name: Subscription Watch ARN
       fields:
