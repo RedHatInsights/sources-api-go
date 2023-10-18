@@ -169,7 +169,7 @@ func TestSourceEndpointSubcollectionListTenantNotExist(t *testing.T) {
 }
 
 // TestSourceEndpointSubcollectionListInvalidTenant tests that not found is returned
-// for existing tenant who doesnt't own the source
+// for existing tenant who doesn't own the source
 func TestSourceEndpointSubcollectionListInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	tenantId := int64(2)
@@ -639,7 +639,7 @@ func TestEndpointCreate(t *testing.T) {
 	}
 
 	if endpointOut.SourceID != fmt.Sprintf("%d", sourceId) {
-		t.Error("shosts infected the return")
+		t.Error("ghosts infected the return")
 	}
 
 	endpointOutId, err := strconv.ParseInt(endpointOut.ID, 10, 64)
@@ -1139,7 +1139,7 @@ func TestEndpointEditPaused(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set("accountNumber", fixtures.TestTenantData[0].ExternalTenant)
 
-	// Store the original "getEndopintDao" function to restore it later.
+	// Store the original "getEndpointDao" function to restore it later.
 	backupGetEndpointDao := getEndpointDao
 	getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) {
 		return &mocks.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
@@ -1196,7 +1196,7 @@ func TestEndpointEditPausedInvalidFields(t *testing.T) {
 	pausedAt := time.Now()
 	fixtures.TestEndpointData[0].PausedAt = &pausedAt
 
-	// Store the original "getEndopintDao" function to restore it later.
+	// Store the original "getEndpointDao" function to restore it later.
 	backupGetEndpointDao := getEndpointDao
 	getEndpointDao = func(c echo.Context) (dao.EndpointDao, error) {
 		return &mocks.MockEndpointDao{Endpoints: fixtures.TestEndpointData}, nil
