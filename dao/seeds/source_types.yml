@@ -58,9 +58,15 @@ amazon:
           pattern: "^arnaws:.*"
         - type: min-length
           threshold: 10
-      - component: text-field
+      - component: select
         name: application.extra.metered
         label: Metered Product
+        simpleValue: true
+        options: 
+          - label: None
+            value: ""
+          - label: Red Hat Enterprise Linux
+            value": rhel
         isRequired: false
         hideField: false
     - type: cloud-meter-arn
