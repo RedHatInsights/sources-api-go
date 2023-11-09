@@ -10,14 +10,6 @@ data:
           "type": "datasource",
           "pluginId": "prometheus",
           "pluginName": "Prometheus"
-        },
-        {
-          "name": "DS_TELEMETER-RECENT-PRODUCTION",
-          "label": "telemeter-recent-production",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
         }
       ],
       "__elements": {},
@@ -1156,6 +1148,7 @@ data:
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"0500.0\"}[5m])) > 0",
+                  "hide": false,
                   "legendFormat": "< 500 ms",
                   "range": true,
                   "refId": "A"
@@ -3085,7 +3078,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "dark-blue"
+                        "color": "dark-blue",
+                        "value": null
                       }
                     ]
                   }
@@ -3227,7 +3221,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green"
+                        "color": "green",
+                        "value": null
                       },
                       {
                         "color": "orange",
@@ -4274,7 +4269,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-6h",
+        "from": "now-24h",
         "to": "now"
       },
       "timepicker": {},
