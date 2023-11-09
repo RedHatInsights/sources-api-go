@@ -589,7 +589,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                "uid": "$Datasource"
               },
               "description": "Alert: Down for 2m",
               "fieldConfig": {
@@ -637,7 +637,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "expr": "sum(up{service=\"sources-superkey-worker-svc\"})",
                   "interval": "",
@@ -1017,7 +1017,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                "uid": "$Datasource"
               },
               "fieldConfig": {
                 "defaults": {
@@ -1069,7 +1069,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(api_3scale_gateway_api_time_bucket{le=\"0500.0\", exported_service=\"sources\"}[28d])) / sum(rate(api_3scale_gateway_api_time_count{exported_service=\"sources\"}[28d]))",
@@ -1098,7 +1098,7 @@ data:
               "dashes": false,
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                "uid": "$Datasource"
               },
               "fieldConfig": {
                 "defaults": {
@@ -1144,7 +1144,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"0500.0\"}[5m])) > 0",
@@ -1156,7 +1156,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"1000.0\"}[5m])) - sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"0500.0\"}[5m])) > 0",
@@ -1167,7 +1167,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"2500.0\"}[5m])) - sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"1000.0\"}[5m])) > 0",
@@ -1179,7 +1179,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"+Inf\"}[5m])) - sum(rate(api_3scale_gateway_api_time_bucket{exported_service=\"sources\", le=\"2500.0\"}[5m])) > 0",
@@ -1348,7 +1348,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                "uid": "$Datasource"
               },
               "fieldConfig": {
                 "defaults": {
@@ -1400,7 +1400,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "avg_over_time(service:sli:status_5xx:pctl5rate5m{exported_service=\"sources\"}[28d])",
@@ -1516,7 +1516,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                "uid": "$Datasource"
               },
               "fieldConfig": {
                 "defaults": {
@@ -1717,7 +1717,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(increase(api_3scale_gateway_api_status{status=\"2xx\", exported_service=\"sources\"}[5m]))",
@@ -1728,7 +1728,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(increase(api_3scale_gateway_api_status{status=\"3xx\", exported_service=\"sources\"}[5m]))",
@@ -1740,7 +1740,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(increase(api_3scale_gateway_api_status{status=\"4xx\", exported_service=\"sources\"}[5m]))",
@@ -1752,7 +1752,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_CRCP01UE1-PROMETHEUS}"
+                    "uid": "$Datasource"
                   },
                   "editorMode": "code",
                   "expr": "sum(increase(api_3scale_gateway_api_status{status=\"5xx\", exported_service=\"sources\"}[5m]))",
