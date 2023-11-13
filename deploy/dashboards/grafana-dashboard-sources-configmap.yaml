@@ -1454,8 +1454,10 @@ data:
                       "mode": "line"
                     }
                   },
+                  "decimals": 0,
                   "links": [],
                   "mappings": [],
+                  "max": 1,
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -1465,7 +1467,7 @@ data:
                       },
                       {
                         "color": "red",
-                        "value": 0.95
+                        "value": 0.05
                       }
                     ]
                   },
