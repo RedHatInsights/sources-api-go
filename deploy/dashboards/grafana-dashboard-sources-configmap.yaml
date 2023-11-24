@@ -2,24 +2,9 @@ apiVersion: v1
 data:
   grafana-dashboard-sources.json: |-
     {
-      "__inputs": [
-        {
-          "name": "DS_CRCP01UE1-PROMETHEUS",
-          "label": "crcp01ue1-prometheus",
-          "description": "",
-          "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
-        }
-      ],
+      "__inputs": [],
       "__elements": {},
       "__requires": [
-        {
-          "type": "panel",
-          "id": "bargauge",
-          "name": "Bar gauge",
-          "version": ""
-        },
         {
           "type": "panel",
           "id": "gauge",
@@ -173,7 +158,7 @@ data:
                 "mode": "markdown"
               },
               "pluginVersion": "9.3.8",
-              "title": "Errors Count",
+              "title": "Errors Count for Sources service",
               "type": "text"
             },
             {
@@ -270,7 +255,7 @@ data:
                 "x": 2,
                 "y": 2
               },
-              "id": 75,
+              "id": 64,
               "options": {
                 "colorMode": "value",
                 "graphMode": "none",
@@ -289,17 +274,16 @@ data:
               "targets": [
                 {
                   "datasource": {
+                    "type": "prometheus",
                     "uid": "$Datasource"
                   },
-                  "editorMode": "code",
-                  "expr": "sum(up{service=\"sources-satellite-operations\"})",
+                  "expr": "sum(up{service=\"sources-superkey-worker-svc\"})",
                   "interval": "",
                   "legendFormat": "",
-                  "range": true,
                   "refId": "A"
                 }
               ],
-              "title": "Satellite",
+              "title": "SuperKey",
               "type": "stat"
             },
             {
@@ -383,11 +367,20 @@ data:
               "datasource": {
                 "uid": "$Datasource"
               },
-              "description": "Alert: > 50 [5m] for 10m",
+              "description": "Alert: > 5 [30m] for 1h",
               "fieldConfig": {
                 "defaults": {
-                  "mappings": [],
-                  "noValue": "0",
+                  "mappings": [
+                    {
+                      "options": {
+                        "match": "null",
+                        "result": {
+                          "text": "N/A"
+                        }
+                      },
+                      "type": "special"
+                    }
+                  ],
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -404,7 +397,8 @@ data:
                         "value": 10
                       }
                     ]
-                  }
+                  },
+                  "unit": "none"
                 },
                 "overrides": []
               },
@@ -414,12 +408,14 @@ data:
                 "x": 6,
                 "y": 2
               },
-              "id": 76,
+              "id": 66,
+              "interval": "",
+              "links": [],
               "options": {
                 "colorMode": "value",
-                "graphMode": "none",
+                "graphMode": "area",
                 "justifyMode": "auto",
-                "orientation": "auto",
+                "orientation": "horizontal",
                 "reduceOptions": {
                   "calcs": [
                     "lastNotNull"
@@ -435,13 +431,13 @@ data:
                   "datasource": {
                     "uid": "$Datasource"
                   },
-                  "expr": "round(sum(increase(kube_pod_container_status_restarts_total{container=\"sources-satellite-operations\"}[$__range])))",
+                  "expr": "round(sum(increase(kube_pod_container_status_restarts_total{container=\"sources-superkey-worker-svc\"}[$__range])))",
                   "interval": "",
                   "legendFormat": "",
                   "refId": "A"
                 }
               ],
-              "title": "Satellite",
+              "title": "SuperKey",
               "type": "stat"
             },
             {
@@ -584,290 +580,6 @@ data:
                 }
               ],
               "title": "API (4xx)",
-              "type": "stat"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "$Datasource"
-              },
-              "description": "Alert: Down for 2m",
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "red",
-                        "value": null
-                      },
-                      {
-                        "color": "green",
-                        "value": 1
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              },
-              "gridPos": {
-                "h": 3,
-                "w": 2,
-                "x": 0,
-                "y": 5
-              },
-              "id": 64,
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "pluginVersion": "9.3.8",
-              "targets": [
-                {
-                  "datasource": {
-                    "type": "prometheus",
-                    "uid": "$Datasource"
-                  },
-                  "expr": "sum(up{service=\"sources-superkey-worker-svc\"})",
-                  "interval": "",
-                  "legendFormat": "",
-                  "refId": "A"
-                }
-              ],
-              "title": "SuperKey",
-              "type": "stat"
-            },
-            {
-              "datasource": {
-                "uid": "$Datasource"
-              },
-              "description": "Alert: > 5 [30m] for 1h",
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [
-                    {
-                      "options": {
-                        "match": "null",
-                        "result": {
-                          "text": "N/A"
-                        }
-                      },
-                      "type": "special"
-                    }
-                  ],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "orange",
-                        "value": 1
-                      },
-                      {
-                        "color": "red",
-                        "value": 10
-                      }
-                    ]
-                  },
-                  "unit": "none"
-                },
-                "overrides": []
-              },
-              "gridPos": {
-                "h": 3,
-                "w": 2,
-                "x": 4,
-                "y": 5
-              },
-              "id": 66,
-              "interval": "",
-              "links": [],
-              "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "orientation": "horizontal",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "pluginVersion": "9.3.8",
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "expr": "round(sum(increase(kube_pod_container_status_restarts_total{container=\"sources-superkey-worker-svc\"}[$__range])))",
-                  "interval": "",
-                  "legendFormat": "",
-                  "refId": "A"
-                }
-              ],
-              "title": "SuperKey",
-              "type": "stat"
-            },
-            {
-              "datasource": {
-                "uid": "$Datasource"
-              },
-              "description": "Alert: > 50 [5m] for 10m",
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [],
-                  "noValue": "0",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "orange",
-                        "value": 1
-                      },
-                      {
-                        "color": "red",
-                        "value": 10
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              },
-              "gridPos": {
-                "h": 3,
-                "w": 2,
-                "x": 8,
-                "y": 5
-              },
-              "id": 77,
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "pluginVersion": "9.3.8",
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "expr": "-1",
-                  "interval": "",
-                  "legendFormat": "",
-                  "refId": "A"
-                }
-              ],
-              "title": "Superkey",
-              "type": "stat"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "$Datasource"
-              },
-              "description": "Alert: > 10 errors in 10mins for 30 minutes",
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [
-                    {
-                      "options": {
-                        "match": "null",
-                        "result": {
-                          "text": "N/A"
-                        }
-                      },
-                      "type": "special"
-                    }
-                  ],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "orange",
-                        "value": 1
-                      },
-                      {
-                        "color": "red",
-                        "value": 10
-                      }
-                    ]
-                  },
-                  "unit": "none"
-                },
-                "overrides": []
-              },
-              "gridPos": {
-                "h": 3,
-                "w": 2,
-                "x": 10,
-                "y": 5
-              },
-              "id": 63,
-              "interval": "",
-              "links": [],
-              "options": {
-                "colorMode": "value",
-                "graphMode": "area",
-                "justifyMode": "auto",
-                "orientation": "horizontal",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "pluginVersion": "9.3.8",
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "editorMode": "code",
-                  "expr": "round(sum(increase(sources_satellite_operations_errors_total[$__range])))+round(sum(increase(sources_satellite_operations_status_counter{status=\"error\"}[$__range])))",
-                  "interval": "",
-                  "legendFormat": "",
-                  "range": true,
-                  "refId": "A"
-                }
-              ],
-              "title": "Satellite",
               "type": "stat"
             }
           ],
@@ -2862,186 +2574,6 @@ data:
               "yaxis": {
                 "align": false
               }
-            },
-            {
-              "aliasColors": {},
-              "bars": false,
-              "dashLength": 10,
-              "dashes": false,
-              "datasource": {
-                "uid": "$Datasource"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "links": []
-                },
-                "overrides": []
-              },
-              "fill": 1,
-              "fillGradient": 0,
-              "gridPos": {
-                "h": 6,
-                "w": 12,
-                "x": 0,
-                "y": 18
-              },
-              "hiddenSeries": false,
-              "id": 82,
-              "interval": "",
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 1,
-              "nullPointMode": "null",
-              "options": {
-                "alertThreshold": true
-              },
-              "percentage": false,
-              "pluginVersion": "9.3.8",
-              "pointradius": 2,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [],
-              "spaceLength": 10,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "expr": "sum (rate (container_cpu_usage_seconds_total{container=\"sources-satellite-operations\"}[1m])) by (pod)",
-                  "interval": "",
-                  "legendFormat": "{{ pod }}",
-                  "refId": "A"
-                }
-              ],
-              "thresholds": [],
-              "timeRegions": [],
-              "title": "Satellite CPU Usage",
-              "tooltip": {
-                "shared": true,
-                "sort": 0,
-                "value_type": "individual"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "short",
-                  "logBase": 1,
-                  "show": true
-                },
-                {
-                  "format": "short",
-                  "logBase": 1,
-                  "show": true
-                }
-              ],
-              "yaxis": {
-                "align": false
-              }
-            },
-            {
-              "aliasColors": {},
-              "bars": false,
-              "dashLength": 10,
-              "dashes": false,
-              "datasource": {
-                "uid": "$Datasource"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "links": []
-                },
-                "overrides": []
-              },
-              "fill": 1,
-              "fillGradient": 0,
-              "gridPos": {
-                "h": 6,
-                "w": 12,
-                "x": 12,
-                "y": 18
-              },
-              "hiddenSeries": false,
-              "id": 84,
-              "interval": "",
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 1,
-              "nullPointMode": "null",
-              "options": {
-                "alertThreshold": true
-              },
-              "percentage": false,
-              "pluginVersion": "9.3.8",
-              "pointradius": 2,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [],
-              "spaceLength": 10,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "expr": "sum (container_memory_working_set_bytes{container=\"sources-satellite-operations\"}) by (pod)",
-                  "interval": "",
-                  "legendFormat": "{{ pod }}",
-                  "refId": "A"
-                }
-              ],
-              "thresholds": [],
-              "timeRegions": [],
-              "title": "Satellite Memory Usage",
-              "tooltip": {
-                "shared": true,
-                "sort": 0,
-                "value_type": "individual"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "short",
-                  "logBase": 1,
-                  "show": true
-                },
-                {
-                  "format": "short",
-                  "logBase": 1,
-                  "show": true
-                }
-              ],
-              "yaxis": {
-                "align": false
-              }
             }
           ],
           "targets": [
@@ -3066,238 +2598,6 @@ data:
             "x": 0,
             "y": 6
           },
-          "id": 68,
-          "panels": [
-            {
-              "datasource": {
-                "uid": "$Datasource"
-              },
-              "description": "",
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "dark-blue",
-                        "value": null
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              },
-              "gridPos": {
-                "h": 6,
-                "w": 8,
-                "x": 0,
-                "y": 7
-              },
-              "id": 70,
-              "options": {
-                "displayMode": "basic",
-                "minVizHeight": 10,
-                "minVizWidth": 0,
-                "orientation": "horizontal",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showUnfilled": true
-              },
-              "pluginVersion": "9.3.8",
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "expr": "round(sum(increase(sources_satellite_operations_status_counter[$__range])) by (name, status))",
-                  "interval": "",
-                  "legendFormat": "{{name}} [{{status}}]",
-                  "refId": "A"
-                }
-              ],
-              "title": "Operations statuses",
-              "type": "bargauge"
-            },
-            {
-              "aliasColors": {},
-              "bars": false,
-              "dashLength": 10,
-              "dashes": false,
-              "datasource": {
-                "type": "prometheus",
-                "uid": "$Datasource"
-              },
-              "description": "",
-              "fill": 1,
-              "fillGradient": 0,
-              "gridPos": {
-                "h": 6,
-                "w": 10,
-                "x": 8,
-                "y": 7
-              },
-              "hiddenSeries": false,
-              "id": 72,
-              "legend": {
-                "avg": false,
-                "current": false,
-                "max": false,
-                "min": false,
-                "show": true,
-                "total": false,
-                "values": false
-              },
-              "lines": true,
-              "linewidth": 1,
-              "nullPointMode": "null",
-              "options": {
-                "alertThreshold": true
-              },
-              "percentage": false,
-              "pluginVersion": "9.3.8",
-              "pointradius": 2,
-              "points": false,
-              "renderer": "flot",
-              "seriesOverrides": [],
-              "spaceLength": 10,
-              "stack": false,
-              "steppedLine": false,
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "editorMode": "code",
-                  "expr": "rate(sources_satellite_operations_duration_seconds_sum[5m]) / rate(sources_satellite_operations_duration_seconds_count[5m]) * 1000",
-                  "interval": "",
-                  "legendFormat": "{{name}} / {{pod}}",
-                  "range": true,
-                  "refId": "A"
-                }
-              ],
-              "thresholds": [],
-              "timeRegions": [],
-              "title": "Operation duration",
-              "tooltip": {
-                "shared": true,
-                "sort": 0,
-                "value_type": "individual"
-              },
-              "type": "graph",
-              "xaxis": {
-                "mode": "time",
-                "show": true,
-                "values": []
-              },
-              "yaxes": [
-                {
-                  "format": "ms",
-                  "logBase": 1,
-                  "show": true
-                },
-                {
-                  "format": "short",
-                  "logBase": 1,
-                  "show": true
-                }
-              ],
-              "yaxis": {
-                "align": false
-              }
-            },
-            {
-              "datasource": {
-                "uid": "$Datasource"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "mappings": [],
-                  "noValue": "0",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "orange",
-                        "value": 1
-                      },
-                      {
-                        "color": "red",
-                        "value": 20
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              },
-              "gridPos": {
-                "h": 6,
-                "w": 6,
-                "x": 18,
-                "y": 7
-              },
-              "id": 74,
-              "options": {
-                "displayMode": "gradient",
-                "minVizHeight": 10,
-                "minVizWidth": 0,
-                "orientation": "horizontal",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showUnfilled": true
-              },
-              "pluginVersion": "9.3.8",
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "expr": "sum(increase(sources_satellite_operations_errors_total[$__range])) by (type)",
-                  "interval": "",
-                  "legendFormat": "{{type}}",
-                  "refId": "A"
-                }
-              ],
-              "title": "Operations Errors",
-              "type": "bargauge"
-            }
-          ],
-          "targets": [
-            {
-              "datasource": {
-                "uid": "$Datasource"
-              },
-              "refId": "A"
-            }
-          ],
-          "title": "Satellite Operations",
-          "type": "row"
-        },
-        {
-          "collapsed": true,
-          "datasource": {
-            "uid": "$Datasource"
-          },
-          "gridPos": {
-            "h": 1,
-            "w": 24,
-            "x": 0,
-            "y": 7
-          },
           "id": 38,
           "panels": [
             {
@@ -3314,7 +2614,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 8
+                "y": 7
               },
               "hiddenSeries": false,
               "id": 40,
@@ -3398,7 +2698,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 8
+                "y": 7
               },
               "hiddenSeries": false,
               "id": 42,
@@ -3502,7 +2802,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 16
+                "y": 15
               },
               "hiddenSeries": false,
               "id": 44,
@@ -3600,7 +2900,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 16
+                "y": 15
               },
               "hiddenSeries": false,
               "id": 46,
@@ -3725,7 +3025,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 24
+                "y": 23
               },
               "hiddenSeries": false,
               "id": 48,
@@ -3863,7 +3163,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 24
+                "y": 23
               },
               "hiddenSeries": false,
               "id": 50,
@@ -3952,7 +3252,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 32
+                "y": 31
               },
               "hiddenSeries": false,
               "id": 52,
@@ -4050,7 +3350,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 32
+                "y": 31
               },
               "hiddenSeries": false,
               "id": 54,
