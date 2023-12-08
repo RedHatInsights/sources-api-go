@@ -226,6 +226,17 @@ azure:
         name: authentication.password
         label: Client Secret
         type: password
+      - component: select
+        name: application.extra.metered
+        label: Metered Product
+        simpleValue: true
+        options: 
+          - label: None
+            value: ""
+          - label: Red Hat Enterprise Linux
+            value: rhel
+        isRequired: false
+        hideField: false
 bitbucket:
   product_name: Bitbucket
   category: Developer sources
