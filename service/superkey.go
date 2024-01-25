@@ -122,7 +122,7 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 
 func produceSuperkeyRequest(m *kafka.Message) error {
 	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: &conf.KafkaBrokerConfig,
+		BrokerConfig: conf.KafkaBrokerConfig,
 		Topic:        superkeyTopic,
 		Logger:       l.Log,
 	})

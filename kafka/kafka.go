@@ -58,16 +58,23 @@ func GetReader(conf *Options) (*Reader, error) {
 		return nil, errors.New("could not create Kafka reader: the provided configuration is empty")
 	}
 
-	if conf.BrokerConfig.Port == nil || *conf.BrokerConfig.Port == 0 {
-		return nil, errors.New("could not create a Kafka reader: the provided port is empty")
+	for _, c := range conf.BrokerConfig {
+		if c.Port == nil || *c.Port == 0 {
+			return nil, errors.New("could not create a Kafka reader: a provided port is empty")
+		}
 	}
 
 	if conf.Topic == "" {
 		return nil, errors.New("could not create a Kafka reader: a topic is required")
 	}
 
+	brokers := make([]string, len(conf.BrokerConfig))
+	for i, c := range conf.BrokerConfig {
+		brokers[i] = fmt.Sprintf("%s:%d", c.Hostname, *c.Port)
+	}
+
 	readerConfig := kafka.ReaderConfig{
-		Brokers: []string{fmt.Sprintf("%s:%d", conf.BrokerConfig.Hostname, *conf.BrokerConfig.Port)},
+		Brokers: brokers,
 		Topic:   conf.Topic,
 	}
 
@@ -84,8 +91,8 @@ func GetReader(conf *Options) (*Reader, error) {
 
 	// When using managed Kafka, Clowder will add some Sasl authentication details so that the services can connect to
 	// it. The following code block sets up "kafka-go" to work with these settings.
-	if conf.BrokerConfig.Authtype != nil {
-		dialer, err := CreateDialer(conf.BrokerConfig)
+	if conf.BrokerConfig[0].Authtype != nil {
+		dialer, err := CreateDialer(&conf.BrokerConfig[0])
 		if err != nil {
 			return nil, fmt.Errorf(`unable to create the dialer for the Kafka reader: %w`, err)
 		}
@@ -98,20 +105,27 @@ func GetReader(conf *Options) (*Reader, error) {
 
 // GetWriter returns a Kafka writer configured with the specified settings.
 func GetWriter(conf *Options) (*Writer, error) {
-	if conf.BrokerConfig == nil {
+	if conf.BrokerConfig == nil || len(conf.BrokerConfig) == 0 {
 		return nil, errors.New("could not create Kafka writer: the provided configuration is empty")
 	}
 
-	if conf.BrokerConfig.Port == nil || *conf.BrokerConfig.Port == 0 {
-		return nil, errors.New("could not create a Kafka writer: the provided port is empty")
+	for _, c := range conf.BrokerConfig {
+		if c.Port == nil || *c.Port == 0 {
+			return nil, errors.New("could not create a Kafka reader: a provided port is empty")
+		}
 	}
 
 	if conf.Topic == "" {
 		return nil, errors.New("could not create a Kafka writer: a topic is required")
 	}
 
+	brokers := make([]string, len(conf.BrokerConfig))
+	for i, c := range conf.BrokerConfig {
+		brokers[i] = fmt.Sprintf("%s:%d", c.Hostname, *c.Port)
+	}
+
 	kafkaWriter := &kafka.Writer{
-		Addr:  kafka.TCP(fmt.Sprintf("%s:%d", conf.BrokerConfig.Hostname, *conf.BrokerConfig.Port)),
+		Addr:  kafka.TCP(brokers...),
 		Topic: conf.Topic,
 	}
 
@@ -120,10 +134,10 @@ func GetWriter(conf *Options) (*Writer, error) {
 		kafkaWriter.ErrorLogger = kafka.LoggerFunc(conf.Logger.Errorf)
 	}
 
-	if conf.BrokerConfig.Authtype != nil {
-		tls := CreateTLSConfig(conf.BrokerConfig.Cacert)
+	if conf.BrokerConfig[0].Authtype != nil {
+		tls := CreateTLSConfig(conf.BrokerConfig[0].Cacert)
 
-		mechanism, err := CreateSaslMechanism(conf.BrokerConfig.Sasl)
+		mechanism, err := CreateSaslMechanism(conf.BrokerConfig[0].Sasl)
 		if err != nil {
 			return nil, fmt.Errorf(`unable to create Kafka producer's Sasl mechanism: %w`, err)
 		}
