@@ -8,7 +8,7 @@ import (
 // Options is a struct for creating a reader/writer
 type Options struct {
 	// REQUIRED FIELDS
-	BrokerConfig *clowder.BrokerConfig
+	BrokerConfig []clowder.BrokerConfig
 	Topic        string
 
 	// only used for reader, optional.

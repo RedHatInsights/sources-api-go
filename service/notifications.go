@@ -76,7 +76,7 @@ type notificationMessage struct {
 
 func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(id *identity.Identity, emailNotificationInfo *m.EmailNotificationInfo, sourceIdentification string) error {
 	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: &conf.KafkaBrokerConfig,
+		BrokerConfig: conf.KafkaBrokerConfig,
 		Topic:        notificationTopic,
 		Logger:       l.Log,
 	})

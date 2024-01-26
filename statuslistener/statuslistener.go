@@ -59,7 +59,7 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 	}
 
 	kf, err := kafka.GetReader(&kafka.Options{
-		BrokerConfig: &config.KafkaBrokerConfig,
+		BrokerConfig: config.KafkaBrokerConfig,
 		GroupID:      util.StringRef(groupID),
 		Topic:        sourcesStatusTopic,
 		Logger:       l.Log,
@@ -270,7 +270,7 @@ func (avs *AvailabilityStatusListener) healthCheckProducer() {
 	// send a message every <healthCheckInterval> seconds
 	for range time.NewTicker(healthCheckInterval * time.Second).C {
 		w, err := kafka.GetWriter(&kafka.Options{
-			BrokerConfig: &config.KafkaBrokerConfig,
+			BrokerConfig: config.KafkaBrokerConfig,
 			Topic:        sourcesStatusTopic,
 			Logger:       l.Log,
 		})

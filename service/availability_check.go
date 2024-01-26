@@ -159,7 +159,7 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 
 	// instantiate a producer for this source
 	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: &conf.KafkaBrokerConfig,
+		BrokerConfig: conf.KafkaBrokerConfig,
 		Topic:        satelliteTopic,
 		Logger:       acr.Logger(),
 	})
