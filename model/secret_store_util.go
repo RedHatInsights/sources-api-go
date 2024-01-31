@@ -10,7 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
-var ErrBadSecretStore = fmt.Errorf("invalid secret-store: %s", config.Get().SecretStore)
+var ErrBadSecretStore = fmt.Errorf("invalid secret-store, check the SECRET_STORE environment variable. needs to be one of [database, secrets-manager, vault]")
 
 // fetches the secret-store dependent ID from the authentication
 func (auth *Authentication) GetID() string {
