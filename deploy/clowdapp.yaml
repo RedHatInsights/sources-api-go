@@ -261,6 +261,8 @@ objects:
               name: sources-secrets-manager
               key: localstack_url
               optional: true
+        - name: HANDLE_TENANT_REFRESH
+          value: ${HANDLE_TENANT_REFRESH}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -451,3 +453,6 @@ parameters:
 - description: Which secret-store should sources use for authentications
   name: SECRET_STORE
   value: "database"
+- description: Whether to handle conflicts on user_ids during a tenant refresh
+  name: HANDLE_TENANT_REFRESH
+  value: "false"

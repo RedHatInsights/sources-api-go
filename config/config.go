@@ -62,6 +62,7 @@ type SourcesApiConfig struct {
 	SecretStore             string
 	TenantTranslatorUrl     string
 	Env                     string
+	HandleTenantRefresh     bool
 
 	SecretsManagerAccessKey string
 	SecretsManagerSecretKey string
@@ -97,6 +98,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretStore", parsedConfig.SecretStore)
 	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", parsedConfig.TenantTranslatorUrl)
 	fmt.Fprintf(&b, "%s=%v ", "Env", parsedConfig.Env)
+	fmt.Fprintf(&b, "%s=%v ", "HandleTenantRefresh", parsedConfig.HandleTenantRefresh)
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", parsedConfig.LocalStackURL)
 	return b.String()
@@ -217,6 +219,9 @@ func Get() *SourcesApiConfig {
 
 	options.SetDefault("Env", os.Getenv("SOURCES_ENV"))
 
+	handleTenantRefresh, _ := strconv.ParseBool(os.Getenv("HANDLE_TENANT_REFRESH"))
+	options.SetDefault("HandleTenantRefresh", handleTenantRefresh)
+
 	options.SetDefault("FeatureFlagsService", os.Getenv("FEATURE_FLAGS_SERVICE"))
 
 	if os.Getenv("SOURCES_ENV") == "prod" {
@@ -327,6 +332,7 @@ func Get() *SourcesApiConfig {
 		SecretStore:             options.GetString("SecretStore"),
 		TenantTranslatorUrl:     options.GetString("TenantTranslatorUrl"),
 		Env:                     options.GetString("Env"),
+		HandleTenantRefresh:     options.GetBool("HandleTenantRefresh"),
 		SecretsManagerAccessKey: options.GetString("SecretsManagerAccessKey"),
 		SecretsManagerSecretKey: options.GetString("SecretsManagerSecretKey"),
 		SecretsManagerPrefix:    options.GetString("SecretsManagerPrefix"),
