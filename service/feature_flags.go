@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -60,11 +59,7 @@ func init() {
 		}
 
 		authorizationHeader := ""
-		if conf.FeatureFlagsBearerToken != "" {
-			authorizationHeader = fmt.Sprintf("Bearer %s", conf.FeatureFlagsBearerToken)
-		} else {
-			authorizationHeader = conf.FeatureFlagsAPIToken
-		}
+		authorizationHeader = conf.FeatureFlagsAPIToken
 
 		unleashConfig := []unleash.ConfigOption{unleash.WithAppName(appName),
 			unleash.WithListener(&FeatureFlagListener{}),
