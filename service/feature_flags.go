@@ -6,7 +6,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v4"
 )
 
 const appName = "sources-api"

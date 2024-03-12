@@ -168,7 +168,7 @@ func Get() *SourcesApiConfig {
 			if cfg.FeatureFlags.ClientAccessToken != nil {
 				clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 			}
-                        options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
+			options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 		}
 
 	} else {
