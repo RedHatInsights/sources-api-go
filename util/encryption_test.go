@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/base64"
+	"os"
 	"testing"
 )
 
@@ -81,4 +82,17 @@ func TestNoKey(t *testing.T) {
 	if err.Error() != "no encryption key present" {
 		t.Errorf("bad error message: %v", err.Error())
 	}
+}
+
+func TestSetDefaultEncryptionKey(t *testing.T) {
+	setErr := os.Setenv("ENCRYPTION_KEY", "")
+	if setErr != nil {
+		t.Errorf("encryption key unable to set as empty string: %v", setErr)
+	}
+	InitializeEncryption()
+	encryptionKey := os.Getenv("ENCRYPTION_KEY")
+	if encryptionKey != "YWFhYWFhYWFhYWFhYWFhYQ" {
+		t.Errorf("Wrong encryption key! setDefaultEncryptionKey() did not work properly")
+	}
+
 }
