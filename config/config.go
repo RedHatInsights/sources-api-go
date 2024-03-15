@@ -48,7 +48,6 @@ type SourcesApiConfig struct {
 	FeatureFlagsUrl         string
 	FeatureFlagsAPIToken    string
 	FeatureFlagsService     string
-	FeatureFlagsBearerToken string
 	CacheHost               string
 	CachePort               int
 	CachePassword           string
@@ -169,7 +168,7 @@ func Get() *SourcesApiConfig {
 			if cfg.FeatureFlags.ClientAccessToken != nil {
 				clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 			}
-			options.SetDefault("FeatureFlagsBearerToken", clientAccessToken)
+			options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 		}
 
 	} else {
@@ -318,7 +317,6 @@ func Get() *SourcesApiConfig {
 		FeatureFlagsEnvironment: options.GetString("FeatureFlagsEnvironment"),
 		FeatureFlagsUrl:         options.GetString("FeatureFlagsUrl"),
 		FeatureFlagsAPIToken:    options.GetString("FeatureFlagsAPIToken"),
-		FeatureFlagsBearerToken: options.GetString("FeatureFlagsBearerToken"),
 		FeatureFlagsService:     options.GetString("FeatureFlagsService"),
 		CacheHost:               options.GetString("CacheHost"),
 		CachePort:               options.GetInt("CachePort"),
