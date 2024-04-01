@@ -42,7 +42,7 @@ docker run -d \
     -e POSTGRESQL_USER=root \
     -e POSTGRESQL_PASSWORD=toor \
     -e POSTGRESQL_DATABASE=sources_api_test_go \
-    quay.io/cloudservices/postgresql-rds:12-1
+    quay.io/cloudservices/postgresql-rds:12
 
 PORT=$(docker inspect $DB_CONTAINER | grep HostPort | sort | uniq | grep -o [0-9]*)
 echo "DB Listening on Port: ${PORT}"
