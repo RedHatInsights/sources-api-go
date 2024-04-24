@@ -55,7 +55,7 @@ export DATABASE_NAME=sources_api_test_go
 
 echo "Running tests...here we go"
 
-export GOROOT="/opt/go/1.17.8"
+export GOROOT="/opt/go/1.18.1"
 export PATH="${GOROOT}/bin:${PATH}"
 make alltest
 
