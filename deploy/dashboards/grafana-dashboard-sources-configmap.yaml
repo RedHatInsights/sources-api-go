@@ -4,8 +4,8 @@ data:
     {
       "__inputs": [
         {
-          "name": "DS_APP-SRE-PROD-01-PROMETHEUS",
-          "label": "app-sre-prod-01-prometheus",
+          "name": "DS_APPSREP07UE1-PROMETHEUS",
+          "label": "appsrep07ue1-prometheus",
           "description": "",
           "type": "datasource",
           "pluginId": "prometheus",
@@ -306,6 +306,7 @@ data:
         },
         {
           "datasource": {
+            "type": "prometheus",
             "uid": "$Datasource"
           },
           "description": "Alert: > 5 [30m] for 1h",
@@ -373,9 +374,11 @@ data:
               "datasource": {
                 "uid": "$Datasource"
               },
+              "editorMode": "code",
               "expr": "round(sum(increase(kube_pod_container_status_restarts_total{container=\"sources-api-svc\"}[$__range])))",
               "interval": "",
               "legendFormat": "",
+              "range": true,
               "refId": "A"
             }
           ],
@@ -687,8 +690,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent",
-                        "value": null
+                        "color": "transparent"
                       },
                       {
                         "color": "red",
@@ -758,8 +760,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "red",
-                        "value": null
+                        "color": "red"
                       },
                       {
                         "color": "green",
@@ -860,8 +861,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -1017,8 +1017,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent",
-                        "value": null
+                        "color": "transparent"
                       },
                       {
                         "color": "red",
@@ -1088,8 +1087,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "red",
-                        "value": null
+                        "color": "red"
                       },
                       {
                         "color": "green",
@@ -1192,8 +1190,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent",
-                        "value": null
+                        "color": "transparent"
                       },
                       {
                         "color": "red",
@@ -1293,8 +1290,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -1565,8 +1561,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent",
-                        "value": null
+                        "color": "transparent"
                       },
                       {
                         "color": "red",
@@ -1664,8 +1659,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -1787,8 +1781,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -1992,8 +1985,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       }
                     ]
                   },
@@ -2087,8 +2079,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2184,8 +2175,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2305,8 +2295,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2400,8 +2389,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2495,8 +2483,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2590,8 +2577,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2666,7 +2652,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_APP-SRE-PROD-01-PROMETHEUS}"
+                "uid": "${DS_APPSREP07UE1-PROMETHEUS}"
               },
               "fieldConfig": {
                 "defaults": {
@@ -2727,7 +2713,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 7
+                "y": 11
               },
               "id": 40,
               "options": {
@@ -2747,7 +2733,7 @@ data:
                 {
                   "datasource": {
                     "type": "prometheus",
-                    "uid": "${DS_APP-SRE-PROD-01-PROMETHEUS}"
+                    "uid": "${DS_APPSREP07UE1-PROMETHEUS}"
                   },
                   "editorMode": "code",
                   "expr": "sum(aws_rds_database_connections_average)",
@@ -2824,7 +2810,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 7
+                "y": 11
               },
               "id": 42,
               "options": {
@@ -2938,7 +2924,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 15
+                "y": 19
               },
               "id": 44,
               "options": {
@@ -3041,7 +3027,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 15
+                "y": 19
               },
               "id": 46,
               "options": {
@@ -3171,7 +3157,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 23
+                "y": 27
               },
               "id": 48,
               "options": {
@@ -3314,7 +3300,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 23
+                "y": 27
               },
               "id": 50,
               "options": {
@@ -3408,7 +3394,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 31
+                "y": 35
               },
               "id": 52,
               "options": {
@@ -3511,7 +3497,7 @@ data:
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 31
+                "y": 35
               },
               "id": 54,
               "options": {
@@ -3644,9 +3630,9 @@ data:
           },
           {
             "current": {
-              "selected": true,
-              "text": "app-sre-prod-01-prometheus",
-              "value": "P465885893AA82E04"
+              "selected": false,
+              "text": "appsrep07ue1-prometheus",
+              "value": "P7E8E1698DF0AC988"
             },
             "hide": 0,
             "includeAll": false,
@@ -3657,13 +3643,13 @@ data:
             "query": "prometheus",
             "queryValue": "",
             "refresh": 1,
-            "regex": "app-sre-stage-01-prometheus|app-sre-prod-01-prometheus",
+            "regex": "appsres07ue1-prometheus|appsrep07ue1-prometheus",
             "skipUrlSync": false,
             "type": "datasource"
           },
           {
             "current": {
-              "selected": true,
+              "selected": false,
               "text": "sources-prod",
               "value": "sources-prod"
             },
@@ -3699,7 +3685,7 @@ data:
       "timezone": "",
       "title": "Sources Dashboard",
       "uid": "zxZKNnAMz",
-      "version": 1,
+      "version": 2,
       "weekStart": ""
     }
 kind: ConfigMap
