@@ -10,7 +10,7 @@ import (
 
 type Filter struct {
 	Name      string   `json:"name"`
-	Operation *string  `json:"operation"`
+	Operation *string  `json:"operation,omitempty"`
 	Value     []string `json:"value"`
 }
 
@@ -18,9 +18,12 @@ type Meta struct {
 	Count int `json:"count"`
 }
 
+type Query struct {
+}
+
 type SortBy struct {
 	Name      string     `json:"name"`
-	Direction *Direction `json:"direction"`
+	Direction *Direction `json:"direction,omitempty"`
 }
 
 type Direction string
