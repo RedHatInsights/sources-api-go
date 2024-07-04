@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-go@v5.0.1
         with:
           go-version: "1.18"
-      - uses: Jerome1337/gofmt-action@v1.0.4
+      - uses: Jerome1337/gofmt-action@v1.0.5
 
   govet:
     name: go vet
