@@ -21,7 +21,7 @@ func getApplicationTypeDaoWithTenant(c echo.Context) (dao.ApplicationTypeDao, er
 		return nil, err
 	}
 
-	if tenantId == 0 && err == nil {
+	if tenantId == 0 {
 		return dao.GetApplicationTypeDao(nil), nil
 	} else {
 		return dao.GetApplicationTypeDao(&tenantId), nil
