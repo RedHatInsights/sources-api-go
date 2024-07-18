@@ -2,7 +2,7 @@ version: '3'
 
 services:
   sources-api-db-setup:
-    image: golang:1.20
+    image: golang:1.21
     entrypoint: "bash"
     command:
       - -c
