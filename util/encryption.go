@@ -6,7 +6,6 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -59,7 +58,7 @@ func setDefaultEncryptionKey() (string, error) {
 		if os.IsNotExist(err) {
 			panic("encryption_key.dev file does not exist. Please import encryption_key.dev file and create symlink encryption_key.dev to encryption_key using [ln -s FILE LINK].")
 		} else {
-			body, bodyErr := ioutil.ReadFile(filepath)
+			body, bodyErr := os.ReadFile(filepath)
 			if bodyErr != nil {
 				return "", fmt.Errorf("Unable to read file: %v", err)
 			}
