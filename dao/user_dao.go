@@ -3,7 +3,9 @@ package dao
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"gorm.io/gorm/clause"
 )
 
 var GetUserDao func(*int64) UserDao
@@ -40,7 +42,18 @@ func (u *userDaoImpl) FindOrCreate(userID string) (*m.User, error) {
 	if err != nil {
 		user.TenantID = *u.TenantID
 		user.UserID = userID
-		err = DB.Debug().Create(&user).Error
+
+		stmt := DB.Debug()
+
+		if config.Get().HandleTenantRefresh {
+			// tenant refresh = we run into conflicts where one user_id is tied to another tenant (since the org_id changes), therefore we tack an `ON CONFLICT UPDATE` if we're in an environment where this can happen
+			stmt = stmt.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "user_id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"tenant_id"}),
+			})
+		}
+
+		err = stmt.Create(&user).Error
 		if err != nil {
 			return nil, err
 		}

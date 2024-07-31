@@ -120,7 +120,7 @@ func (a *endpointDaoImpl) Create(app *m.Endpoint) error {
 }
 
 func (a *endpointDaoImpl) Update(app *m.Endpoint) error {
-	result := DB.Updates(app)
+	result := DB.Omit(clause.Associations).Updates(app)
 	return result.Error
 }
 

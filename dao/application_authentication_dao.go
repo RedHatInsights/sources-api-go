@@ -76,15 +76,8 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentic
 
 	query := a.getDb().Preload("Tenant")
 
-	if config.IsVaultOn() {
-		authUuids := make([]string, len(authentications))
-
-		for _, value := range authentications {
-			authUuids = append(authUuids, value.ID)
-		}
-
-		query.Where("authentication_uid IN ?", authUuids)
-	} else {
+	switch config.Get().SecretStore {
+	case config.DatabaseStore, config.SecretsManagerStore:
 		authIds := make([]int64, len(authentications))
 
 		for _, value := range authentications {
@@ -92,6 +85,18 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentic
 		}
 
 		query.Where("authentication_id IN ?", authIds)
+
+	case config.VaultStore:
+		authUuids := make([]string, len(authentications))
+
+		for _, value := range authentications {
+			authUuids = append(authUuids, value.ID)
+		}
+
+		query.Where("authentication_uid IN ?", authUuids)
+
+	default:
+		return nil, m.ErrBadSecretStore
 	}
 
 	err := query.

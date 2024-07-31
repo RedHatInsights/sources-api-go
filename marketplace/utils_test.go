@@ -386,7 +386,7 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 		t.Errorf("want no error, got %s", err)
 	}
 
-	want, err := json.Marshal(setUpBearerToken())
+	want, err := json.Marshal(map[string]interface{}{"marketplace": setUpBearerToken()})
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}

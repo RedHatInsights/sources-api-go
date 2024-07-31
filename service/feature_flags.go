@@ -1,13 +1,12 @@
 package service
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/Unleash/unleash-client-go/v3"
+	"github.com/Unleash/unleash-client-go/v4"
 )
 
 const appName = "sources-api"
@@ -60,11 +59,7 @@ func init() {
 		}
 
 		authorizationHeader := ""
-		if conf.FeatureFlagsBearerToken != "" {
-			authorizationHeader = fmt.Sprintf("Bearer %s", conf.FeatureFlagsBearerToken)
-		} else {
-			authorizationHeader = conf.FeatureFlagsAPIToken
-		}
+		authorizationHeader = conf.FeatureFlagsAPIToken
 
 		unleashConfig := []unleash.ConfigOption{unleash.WithAppName(appName),
 			unleash.WithListener(&FeatureFlagListener{}),

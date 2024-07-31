@@ -43,6 +43,10 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.PSKUserID, c.Request().Header.Get(h.PSKUserID))
 		}
 
+		if c.Request().Header.Get(h.EdgeRequestID) != "" {
+			c.Set(h.EdgeRequestID, c.Request().Header.Get(h.EdgeRequestID))
+		}
+
 		if c.Request().Header.Get(h.InsightsRequestID) != "" {
 			c.Set(h.InsightsRequestID, c.Request().Header.Get(h.InsightsRequestID))
 		}

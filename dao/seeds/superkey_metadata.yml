@@ -71,12 +71,17 @@
               "AWS": "arn:aws:iam::ACCOUNT:root"
             },
             "Action": "sts:AssumeRole",
-            "Condition": {}
+            "Condition": {
+              "StringEquals": {
+                "sts:ExternalID": "EXTERNAL_ID"
+              }
+            }
           }
         ]
       }
     substitutions:
       ACCOUNT: get_account
+      EXTERNAL_ID: generate_external_id
   - step: 5
     name: bind_role
     payload: {}
@@ -136,3 +141,69 @@
     name: bind_role
     payload: {}
     substitutions: {}
+
+"/insights/platform/provisioning":
+  steps:
+    - step: 1
+      name: policy
+      payload:
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "RedHatProvisioning",
+              "Effect": "Allow",
+              "Action": [
+                  "iam:GetPolicyVersion",
+                  "iam:GetPolicy",
+                  "iam:ListAttachedRolePolicies",
+                  "iam:GetRolePolicy",
+                  "iam:ListRolePolicies",
+                  "ec2:CreateKeyPair",
+                  "ec2:CreateLaunchTemplate",
+                  "ec2:CreateLaunchTemplateVersion",
+                  "ec2:CreateTags",
+                  "ec2:DeleteKeyPair",
+                  "ec2:DeleteTags",
+                  "ec2:DescribeAvailabilityZones",
+                  "ec2:DescribeImages",
+                  "ec2:DescribeInstanceTypes",
+                  "ec2:DescribeInstances",
+                  "ec2:DescribeKeyPairs",
+                  "ec2:DescribeLaunchTemplates",
+                  "ec2:DescribeLaunchTemplateVersions",
+                  "ec2:DescribeRegions",
+                  "ec2:DescribeSecurityGroups",
+                  "ec2:DescribeSnapshotAttribute",
+                  "ec2:DescribeTags",
+                  "ec2:ImportKeyPair",
+                  "ec2:RunInstances",
+                  "ec2:StartInstances"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      substitutions: {}
+    - step: 2
+      name: role
+      payload:
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::ACCOUNT:root"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {}
+            }
+          ]
+        }
+      substitutions:
+        ACCOUNT: get_account
+    - step: 3
+      name: bind_role
+      payload: {}
+      substitutions: {}

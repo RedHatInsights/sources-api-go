@@ -68,12 +68,13 @@ func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.
 		ac.ApplicationAvailabilityCheck(source)
 	}
 
-	if len(source.Endpoints) != 0 {
-		ac.EndpointAvailabilityCheck(source)
-	}
-
+	// we only want to send endpoint requests if we _do not_ have any endpoints
+	// associated with this source. This way the satellite worker has no chance
+	// of overwriting the status set by the RHC check
 	if len(source.SourceRhcConnections) != 0 {
 		ac.RhcConnectionAvailabilityCheck(source, headers)
+	} else if len(source.Endpoints) != 0 {
+		ac.EndpointAvailabilityCheck(source)
 	}
 
 	ac.Logger().Infof("Finished Publishing Availability Messages for Source %v", source.ID)
@@ -83,14 +84,13 @@ func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.
 // applications
 func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source) {
 	for _, app := range source.Applications {
-		acr.Logger().Infof("[source_id :%d][application_id: %d] Requesting availability check for application", source.ID, app.ID)
-
 		uri := app.ApplicationType.AvailabilityCheckURL()
 		if uri == nil {
 			acr.Logger().Errorf("[source_id: %d][application_id: %d][application_type: %s] Failed to fetch availability check url - continuing", source.ID, app.ID, app.ApplicationType.Name)
 			continue
 		}
 
+		acr.Logger().Infof("[source_id :%d][application_id: %d][uri: %s] Requesting availability check for application", source.ID, app.ID, uri)
 		acr.httpAvailabilityRequest(source, &app, uri)
 	}
 }
@@ -113,9 +113,16 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 		return
 	}
 
+	// yoink the xrhid from the parent request
+	xrhid, ok := acr.c.Get(h.XRHID).(string)
+	if !ok {
+		acr.Logger().Warnf("couldn't pull xrhid from request")
+		return
+	}
+
+	req.Header.Add(h.XRHID, xrhid)
 	req.Header.Add(h.OrgID, source.Tenant.OrgID)
 	req.Header.Add(h.AccountNumber, source.Tenant.ExternalTenant)
-	req.Header.Add(h.XRHID, util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))
 	req.Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -152,7 +159,7 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 
 	// instantiate a producer for this source
 	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: &conf.KafkaBrokerConfig,
+		BrokerConfig: conf.KafkaBrokerConfig,
 		Topic:        satelliteTopic,
 		Logger:       acr.Logger(),
 	})
@@ -204,7 +211,7 @@ type rhcConnectionStatusResponse struct {
 // status for each RHC id is connected or disconnected
 func (acr availabilityCheckRequester) RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header) {
 	for i := range source.SourceRhcConnections {
-		go acr.pingRHC(source, &source.SourceRhcConnections[i].RhcConnection, headers)
+		acr.pingRHC(source, &source.SourceRhcConnections[i].RhcConnection, headers)
 	}
 }
 
@@ -293,8 +300,8 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 		return
 	}
 
-	// only go through and update if there was a change.
-	if rhcConnection.AvailabilityStatus != sanitizedStatus {
+	// only go through and update if there was a change. to either the source or rhc connection
+	if rhcConnection.AvailabilityStatus != sanitizedStatus || source.AvailabilityStatus != sanitizedStatus {
 		acr.updateRhcStatus(source, sanitizedStatus, errstr, rhcConnection, headers)
 	}
 }
@@ -314,20 +321,27 @@ func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status s
 		rhcConnection.AvailabilityStatusError = errstr
 	}
 
-	err := dao.GetSourceDao(&dao.RequestParams{TenantID: &source.TenantID}).Update(source)
+	requestParams, err := dao.NewRequestParamsFromContext(acr.c)
+	if err != nil {
+		acr.Logger().Warnf("failed to fetch request params from context: %v", err)
+		return
+	}
+
+	err = dao.GetSourceDao(requestParams).Update(source)
 	if err != nil {
 		acr.Logger().Warnf("failed to update source availability status: %v", err)
 		return
 	}
 
-	err = dao.GetRhcConnectionDao(&source.TenantID).Update(rhcConnection)
+	err = dao.GetRhcConnectionDao(requestParams).Update(rhcConnection)
 	if err != nil {
 		acr.Logger().Warnf("failed to update RHC Connection availability status: %v", err)
 		return
 	}
 
 	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d] RHC Connection's status updated to "%s"`, source.ID, rhcConnection.ID, status)
-
+	// we have to populate the Sources field in order to pass along the source_ids on the message.
+	rhcConnection.Sources = []m.Source{*source}
 	err = RaiseEvent("RhcConnection.update", rhcConnection, headers)
 	if err != nil {
 		acr.Logger().Warnf("error raising RhcConnection.update event: %v", err)

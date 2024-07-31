@@ -15,6 +15,10 @@ import (
 const (
 	KafkaGroupId  = "sources-api-go"
 	RdsCaLocation = "/app/rdsca.cert"
+
+	DatabaseStore       = "database"
+	VaultStore          = "vault"
+	SecretsManagerStore = "secrets-manager"
 )
 
 var parsedConfig *SourcesApiConfig
@@ -23,7 +27,7 @@ var parsedConfig *SourcesApiConfig
 type SourcesApiConfig struct {
 	AppName                 string
 	Hostname                string
-	KafkaBrokerConfig       clowder.BrokerConfig
+	KafkaBrokerConfig       []clowder.BrokerConfig
 	KafkaTopics             map[string]string
 	KafkaGroupID            string
 	MetricsPort             int
@@ -44,7 +48,6 @@ type SourcesApiConfig struct {
 	FeatureFlagsUrl         string
 	FeatureFlagsAPIToken    string
 	FeatureFlagsService     string
-	FeatureFlagsBearerToken string
 	CacheHost               string
 	CachePort               int
 	CachePassword           string
@@ -58,6 +61,12 @@ type SourcesApiConfig struct {
 	SecretStore             string
 	TenantTranslatorUrl     string
 	Env                     string
+	HandleTenantRefresh     bool
+
+	SecretsManagerAccessKey string
+	SecretsManagerSecretKey string
+	SecretsManagerPrefix    string
+	LocalStackURL           string
 }
 
 // String() returns a string that shows the settings in which the pod is running in
@@ -88,6 +97,9 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretStore", parsedConfig.SecretStore)
 	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", parsedConfig.TenantTranslatorUrl)
 	fmt.Fprintf(&b, "%s=%v ", "Env", parsedConfig.Env)
+	fmt.Fprintf(&b, "%s=%v ", "HandleTenantRefresh", parsedConfig.HandleTenantRefresh)
+	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
+	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", parsedConfig.LocalStackURL)
 	return b.String()
 }
 
@@ -118,7 +130,7 @@ func Get() *SourcesApiConfig {
 		}
 
 		// Grab the first broker
-		options.SetDefault("KafkaBrokerConfig", cfg.Kafka.Brokers[0])
+		options.SetDefault("KafkaBrokerConfig", cfg.Kafka.Brokers)
 		// [/Kafka]
 
 		options.SetDefault("LogGroup", cfg.Logging.Cloudwatch.LogGroup)
@@ -156,7 +168,7 @@ func Get() *SourcesApiConfig {
 			if cfg.FeatureFlags.ClientAccessToken != nil {
 				clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 			}
-			options.SetDefault("FeatureFlagsBearerToken", clientAccessToken)
+			options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 		}
 
 	} else {
@@ -171,10 +183,10 @@ func Get() *SourcesApiConfig {
 				log.Fatalf(`the provided "QUEUE_PORT", "%s",  is not a valid integer: %s`, kafkaPort, err)
 			}
 
-			brokerConfig := clowder.BrokerConfig{
+			brokerConfig := []clowder.BrokerConfig{{
 				Hostname: os.Getenv("QUEUE_HOST"),
 				Port:     &port,
-			}
+			}}
 
 			options.SetDefault("KafkaBrokerConfig", brokerConfig)
 		}
@@ -206,6 +218,9 @@ func Get() *SourcesApiConfig {
 
 	options.SetDefault("Env", os.Getenv("SOURCES_ENV"))
 
+	handleTenantRefresh, _ := strconv.ParseBool(os.Getenv("HANDLE_TENANT_REFRESH"))
+	options.SetDefault("HandleTenantRefresh", handleTenantRefresh)
+
 	options.SetDefault("FeatureFlagsService", os.Getenv("FEATURE_FLAGS_SERVICE"))
 
 	if os.Getenv("SOURCES_ENV") == "prod" {
@@ -221,12 +236,24 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
-	// The secret store defaults to the database in case an empty or an incorrect value are provided.
 	secretStore := os.Getenv("SECRET_STORE")
-	if secretStore != "database" && secretStore != "vault" {
+	// The secret store defaults to the database in case an empty string
+	if secretStore == "" {
 		secretStore = "database"
 	}
 	options.SetDefault("SecretStore", secretStore)
+	switch secretStore {
+	case SecretsManagerStore:
+		options.SetDefault("SecretsManagerAccessKey", os.Getenv("SECRETS_MANAGER_ACCESS_KEY"))
+		options.SetDefault("SecretsManagerSecretKey", os.Getenv("SECRETS_MANAGER_SECRET_KEY"))
+		prefix := os.Getenv("SECRETS_MANAGER_PREFIX")
+		if prefix == "" {
+			prefix = "sources-development"
+		}
+		options.SetDefault("SecretsManagerPrefix", prefix)
+		options.SetDefault("LocalStackURL", os.Getenv("LOCALSTACK_URL"))
+	}
+
 	options.SetDefault("TenantTranslatorUrl", os.Getenv("TENANT_TRANSLATOR_URL"))
 
 	// Parse any Flags (using our own flag set to not conflict with the global flag)
@@ -259,8 +286,8 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("psks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
 	// Grab the Kafka Sasl Settings.
-	var brokerConfig clowder.BrokerConfig
-	bcRaw, ok := options.Get("KafkaBrokerConfig").(clowder.BrokerConfig)
+	var brokerConfig []clowder.BrokerConfig
+	bcRaw, ok := options.Get("KafkaBrokerConfig").([]clowder.BrokerConfig)
 	if ok {
 		brokerConfig = bcRaw
 	}
@@ -290,7 +317,6 @@ func Get() *SourcesApiConfig {
 		FeatureFlagsEnvironment: options.GetString("FeatureFlagsEnvironment"),
 		FeatureFlagsUrl:         options.GetString("FeatureFlagsUrl"),
 		FeatureFlagsAPIToken:    options.GetString("FeatureFlagsAPIToken"),
-		FeatureFlagsBearerToken: options.GetString("FeatureFlagsBearerToken"),
 		FeatureFlagsService:     options.GetString("FeatureFlagsService"),
 		CacheHost:               options.GetString("CacheHost"),
 		CachePort:               options.GetInt("CachePort"),
@@ -304,6 +330,11 @@ func Get() *SourcesApiConfig {
 		SecretStore:             options.GetString("SecretStore"),
 		TenantTranslatorUrl:     options.GetString("TenantTranslatorUrl"),
 		Env:                     options.GetString("Env"),
+		HandleTenantRefresh:     options.GetBool("HandleTenantRefresh"),
+		SecretsManagerAccessKey: options.GetString("SecretsManagerAccessKey"),
+		SecretsManagerSecretKey: options.GetString("SecretsManagerSecretKey"),
+		SecretsManagerPrefix:    options.GetString("SecretsManagerPrefix"),
+		LocalStackURL:           options.GetString("LocalStackURL"),
 	}
 
 	return parsedConfig
@@ -319,6 +350,7 @@ func (sourceConfig *SourcesApiConfig) KafkaTopic(requestedTopic string) string {
 }
 
 // IsVaultOn returns true if the authentications are backed by Vault. False, if they are backed by the database.
+// DEPRECATED: should be using methods on the authentication object instead of checking the config directly.
 func IsVaultOn() bool {
 	return parsedConfig.SecretStore == "vault"
 }

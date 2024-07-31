@@ -37,6 +37,16 @@ amazon:
         - type: required
         - type: pattern
           pattern: "^[A-Za-z0-9]+[A-Za-z0-9_-]*$"
+      - component: select
+        name: application.extra.bucket_region
+        label: AWS region
+        isRequired: true
+        validate:
+        - type: required
+      - name: authentication.extra.external_id
+        component: text-field
+        hideField: true
+        initializeOnMount: true   
       - name: authentication.username
         stepKey: arn
         component: text-field
@@ -48,6 +58,17 @@ amazon:
           pattern: "^arnaws:.*"
         - type: min-length
           threshold: 10
+      - component: select
+        name: application.extra.metered
+        label: Metered Product
+        simpleValue: true
+        options: 
+          - label: None
+            value: ""
+          - label: Red Hat Enterprise Linux
+            value: rhel
+        isRequired: false
+        hideField: false
     - type: cloud-meter-arn
       name: Subscription Watch ARN
       fields:
@@ -111,9 +132,16 @@ google:
         name: application.extra.dataset
         stepKey: cost-management
         label: Dataset name
-        isRequired: true
+      - component: text-field
+        name: application.extra.bucket
+        stepKey: cost-management
+        label: Cloud storage bucket name
         validate:
         - type: required
+        - type: pattern
+          pattern: "^[a-z0-9_.-]+$"
+        - type: min-length
+          threshold: 3
     - type: provisioning_project_id
       name: Provisioning — project ID
       fields:
@@ -125,14 +153,6 @@ google:
         - component: text-field
           name: authentication.username
           label: Project ID
-    endpoint:
-      hidden: true
-      fields:
-      - component: text-field
-        name: endpoint.role
-        hideField: true
-        initializeOnMount: true
-        initialValue: google
 azure:
   product_name: Microsoft Azure
   category: Cloud
@@ -189,6 +209,14 @@ azure:
         label: Subscription ID
         stepKey: service-principle
       - component: text-field
+        name: application.extra.scope
+        label: Cost export scope
+        stepKey: azure-1
+      - component: text-field
+        name: application.extra.export_name
+        label: Export name
+        stepKey: azure-3
+      - component: text-field
         name: authentication.extra.azure.tenant_id
         label: Tenant ID
       - component: text-field
@@ -198,14 +226,17 @@ azure:
         name: authentication.password
         label: Client Secret
         type: password
-    endpoint:
-      hidden: true
-      fields:
-      - component: text-field
-        name: endpoint.role
-        hideField: true
-        initializeOnMount: true
-        initialValue: azure
+      - component: select
+        name: application.extra.metered
+        label: Metered Product
+        simpleValue: true
+        options: 
+          - label: None
+            value: ""
+          - label: Red Hat Enterprise Linux
+            value: rhel
+        isRequired: false
+        hideField: false
 bitbucket:
   product_name: Bitbucket
   category: Developer sources
@@ -302,13 +333,28 @@ oracle-cloud-infrastructure:
             initialValue: ocid
             name: authentication.authtype
           - component: text-field
-            isRequired: true
-            label: Oracle Cloud ID (OCID)
+            hideField: true
+            initializeOnMount: true
+            initialValue: ocid.uuid
             name: authentication.username
+          - component: text-field
+            name: application.extra.bucket
+            label: Bucket Name
+            isRequired: true
             validate:
               - type: required
-              - type: pattern
-                pattern: "^ocid1\\..*"
+          - component: text-field
+            name: application.extra.bucket_namespace
+            label: Bucket Namespace
+            isRequired: true
+            validate:
+              - type: required
+          - component: text-field
+            name: application.extra.bucket_region
+            label: Bucket Region
+            isRequired: true
+            validate:
+              - type: required
 openshift:
   product_name: Red Hat OpenShift Container Platform
   category: Red Hat

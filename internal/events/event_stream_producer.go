@@ -32,7 +32,7 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 	logging.Log.Debugf("publishing message %v to topic %q...", eventType, eventStreamTopic)
 
 	kf, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: &config.KafkaBrokerConfig,
+		BrokerConfig: config.KafkaBrokerConfig,
 		Topic:        eventStreamTopic,
 		Logger:       logging.Log,
 	})

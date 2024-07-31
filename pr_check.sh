@@ -42,7 +42,7 @@ docker run -d \
     -e POSTGRESQL_USER=root \
     -e POSTGRESQL_PASSWORD=toor \
     -e POSTGRESQL_DATABASE=sources_api_test_go \
-    quay.io/cloudservices/postgresql-rds:12-1
+    quay.io/cloudservices/postgresql-rds:12
 
 PORT=$(docker inspect $DB_CONTAINER | grep HostPort | sort | uniq | grep -o [0-9]*)
 echo "DB Listening on Port: ${PORT}"
@@ -55,7 +55,7 @@ export DATABASE_NAME=sources_api_test_go
 
 echo "Running tests...here we go"
 
-export GOROOT="/opt/go/1.17.8"
+export GOROOT="/opt/go/1.21.3"
 export PATH="${GOROOT}/bin:${PATH}"
 make alltest
 

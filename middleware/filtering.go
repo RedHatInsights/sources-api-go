@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -11,7 +12,11 @@ var BadQueryParams = []string{"limit", "offset", "sort_by"}
 
 func SortAndFilter(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		filters := parseFilter(c)
+		filters, err := parseFilter(c)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
 		if sort := parseSorting(c); sort != nil {
 			filters = append(filters, *sort)
 		}
@@ -21,12 +26,15 @@ func SortAndFilter(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func parseFilter(c echo.Context) []util.Filter {
+func parseFilter(c echo.Context) ([]util.Filter, error) {
 	f := make([]util.Filter, 0)
 	for key, values := range c.QueryParams() {
 		if strings.HasPrefix(key, "filter") {
 			matches := util.FilterRegex.FindAllStringSubmatch(key, -1)
 			filter := util.Filter{}
+			if len(matches) < 2 {
+				return nil, fmt.Errorf("filter")
+			}
 
 			// matching filter[subresource][field][operation]
 			// we only support filtering on source type/application type
@@ -66,7 +74,7 @@ func parseFilter(c echo.Context) []util.Filter {
 		}
 	}
 
-	return f
+	return f, nil
 }
 
 func parseSorting(c echo.Context) *util.Filter {
@@ -76,5 +84,5 @@ func parseSorting(c echo.Context) *util.Filter {
 		}
 	}
 
-	return nil
+	return &util.Filter{Operation: "sort_by", Value: []string{"id ASC"}}
 }

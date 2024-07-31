@@ -16,13 +16,13 @@ run: build
 	./sources-api-go
 
 inlinerun:
-	go run `ls *.go | grep -v test`
+	go run .
 
 listener:
-	go run `ls *.go | grep -v test` -listener
+	go run . -listener
 
 backgroundworker:
-	go run `ls *.go | grep -v test` -background-worker
+	go run . -background-worker
 
 container:
 	docker build . -t sources-api-go

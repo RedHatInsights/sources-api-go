@@ -36,12 +36,24 @@ objects:
   type: Opaque
   data:
     CLIENT_ACCESS_TOKEN: ''
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: sources-secrets-manager
+  type: Opaque
+  stringData:
+    aws_access_key_id: "asdfasdfasf"
+    aws_secret_access_key: "asdfsadf"
+    secrets_prefix: "sources-ephemeral"
+    localstack_url: "http://localstack-ephemeral-svc:10000"
 - apiVersion: cloud.redhat.com/v1alpha1
   kind: ClowdApp
   metadata:
     name: sources-api
   spec:
     envName: ${ENV_NAME}
+    testing:
+      iqePlugin: sources
     deployments:
     - name: background-worker
       minReplicas: ${{BACKGROUND_WORKER_MIN_REPLICAS}}
@@ -50,6 +62,8 @@ objects:
         - -background-worker
         image: ${IMAGE}:${IMAGE_TAG}
         env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
         - name: ENCRYPTION_KEY
@@ -57,6 +71,30 @@ objects:
             secretKeyRef:
               name: sources-api-secrets
               key: encryption-key
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
         resources:
           limits:
             cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
@@ -64,6 +102,17 @@ objects:
           requests:
             cpu: ${AVAILABILITY_LISTENER_CPU_REQUEST}
             memory: ${AVAILABILITY_LISTENER_MEMORY_REQUEST}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
     - name: availability-status-listener
       minReplicas: ${{AVAILABILITY_MIN_REPLICAS}}
       podSpec:
@@ -71,6 +120,8 @@ objects:
         - -listener
         image: ${IMAGE}:${IMAGE_TAG}
         env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
         - name: ENCRYPTION_KEY
@@ -78,6 +129,30 @@ objects:
             secretKeyRef:
               name: sources-api-secrets
               key: encryption-key
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
         resources:
           limits:
             cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
@@ -105,6 +180,8 @@ objects:
       podSpec:
         image: ${IMAGE}:${IMAGE_TAG}
         env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
         - name: CLOUD_METER_AVAILABILITY_CHECK_URL
@@ -113,6 +190,8 @@ objects:
           value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
         - name: CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL
           value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_CHECK_PATH}
+        - name: PROVISIONING_AVAILABILITY_CHECK_URL
+          value: ${PROVISIONING_SCHEME}://${PROVISIONING_HOST}:${PROVISIONING_PORT}${PROVISIONING_CHECK_PATH}
         - name: SOURCES_ENV
           value: ${SOURCES_ENV}
         - name: MARKETPLACE_HOST
@@ -158,6 +237,32 @@ objects:
           value: ${SOURCE_TYPE_SKIP_LIST}
         - name: APPLICATION_TYPE_SKIP_LIST
           value: ${APPLICATION_TYPE_SKIP_LIST}
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
+        - name: HANDLE_TENANT_REFRESH
+          value: ${HANDLE_TENANT_REFRESH}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -184,9 +289,6 @@ objects:
       partitions: 3
       replicas: 3
     - topicName: platform.sources.superkey-requests
-      partitions: 3
-      replicas: 3
-    - topicName: platform.topological-inventory.operations-satellite
       partitions: 3
       replicas: 3
     - topicName: platform.notifications.ingress
@@ -302,7 +404,7 @@ parameters:
 - description: Env name for seed
   name: SOURCES_ENV
   required: true
-  value: stage
+  value: eph
 - description: Scheme for the EAN to OrgId translator.
   name: TENANT_TRANSLATOR_SCHEME
   required: true
@@ -327,6 +429,18 @@ parameters:
 - name: CLOUD_CONNECTOR_CHECK_PATH
   required: true
   value: "/connection_status"
+- name: PROVISIONING_SCHEME
+  required: true
+  value: "http"
+- name: PROVISIONING_HOST
+  required: true
+  value: "provisioning-backend-api"
+- name: PROVISIONING_PORT
+  required: true
+  value: "8000"
+- name: PROVISIONING_CHECK_PATH
+  required: true
+  value: "/availability_status/sources"
 - description: Specify name of service for Feature Flags
   name: FEATURE_FLAGS_SERVICE
   value: 'unleash'
@@ -336,3 +450,9 @@ parameters:
 - description: Specify any application_types to not seed into the database
   name: APPLICATION_TYPE_SKIP_LIST
   value: ''
+- description: Which secret-store should sources use for authentications
+  name: SECRET_STORE
+  value: "database"
+- description: Whether to handle conflicts on user_ids during a tenant refresh
+  name: HANDLE_TENANT_REFRESH
+  value: "false"

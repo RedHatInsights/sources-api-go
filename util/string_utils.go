@@ -1,9 +1,13 @@
 package util
 
-import "strings"
+import (
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
 
 func Capitalize(str string) string {
-	return strings.ToUpper(string(str[0])) + str[1:]
+	caser := cases.Title(language.English)
+	return caser.String(str)
 }
 
 func StringRef(str string) *string {

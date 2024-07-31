@@ -1,15 +1,11 @@
 package marketplace
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/model"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
@@ -69,27 +65,17 @@ func SetMarketplaceTokenAuthExtraField(tenantId int64, auth *model.Authenticatio
 		}
 		// In this case we can assume the token is not present in redis, so we can request one token to the
 		// marketplace, cache it, and assign it to the "extra" field of the authentication.
+		apiKey, err := auth.GetPassword()
+		if err != nil {
+			return err
+		}
 
 		// The Api key must be present to be able to send the request to the marketplace
 		if auth.Password == nil {
 			return errors.New("API key not present for the marketplace authentication")
 		}
 
-		var apiKey string
-		if config.IsVaultOn() {
-			apiKey = *auth.Password
-		} else {
-			// When using the database backed authentications we need to decrypt the API Key to be able to fetch a proper
-			// token from the marketplace.
-			decryptedPassword, err := util.Decrypt(*auth.Password)
-			if err != nil {
-				return err
-			}
-
-			apiKey = decryptedPassword
-		}
-
-		marketplaceTokenProvider = GetMarketplaceTokenProvider(apiKey)
+		marketplaceTokenProvider = GetMarketplaceTokenProvider(*apiKey)
 
 		token, err = marketplaceTokenProvider.RequestToken()
 		if err != nil {
@@ -104,39 +90,9 @@ func SetMarketplaceTokenAuthExtraField(tenantId int64, auth *model.Authenticatio
 		}
 	}
 
-	if config.IsVaultOn() {
-		if auth.Extra == nil {
-			auth.Extra = make(map[string]interface{})
-		}
-
-		auth.Extra["marketplace"] = token
-	} else {
-		if auth.ExtraDb == nil {
-			// In case there is no content in the database we can safely marshal the token and return it directly.
-			auth.ExtraDb, err = json.Marshal(token)
-			if err != nil {
-				return err
-			}
-		} else {
-			var extra = make(map[string]interface{})
-			extra["marketplace"] = token
-
-			// The "extra" column in the database may contain JSON already, and in that case we need to unmarshal that
-			// content into the struct to make sure we don't overwrite it. However, if the existing content happens to be
-			// the valid JSON "null" value, we must skip unmarshalling that to the map, since "json.Unmarshal" just turns
-			// the map "nil".
-			if auth.ExtraDb != nil && !bytes.Equal(auth.ExtraDb, []byte("null")) {
-				err := json.Unmarshal(auth.ExtraDb, &extra)
-				if err != nil {
-					return err
-				}
-			}
-
-			auth.ExtraDb, err = json.Marshal(extra)
-			if err != nil {
-				return err
-			}
-		}
+	err = auth.SetExtraField("marketplace", token)
+	if err != nil {
+		return err
 	}
 
 	logger.Log.Log(logrus.InfoLevel, "marketplace token included in authentication")

@@ -55,6 +55,8 @@ func (r *RhcConnection) ToResponse() *RhcConnectionResponse {
 		Extra:                   r.Extra,
 		AvailabilityStatus:      r.AvailabilityStatus,
 		AvailabilityStatusError: r.AvailabilityStatusError,
+		LastCheckedAt:           r.LastCheckedAt,
+		LastAvailableAt:         r.LastAvailableAt,
 		SourceIds:               r.SourceIDs(),
 	}
 }

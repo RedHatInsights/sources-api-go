@@ -74,6 +74,9 @@ func setupRoutes(e *echo.Echo) {
 		// Authentications
 		r.GET("/authentications", AuthenticationList, tenancyWithListMiddleware...)
 		r.POST("/authentications", AuthenticationCreate, permissionMiddleware...)
+
+		// set up uuid validation on the vault store, otherwise the regular id
+		// validation will do.
 		if config.IsVaultOn() {
 			r.GET("/authentications/:uid", AuthenticationGet, append(tenancyMiddleware, middleware.UuidValidation)...)
 			r.PATCH("/authentications/:uid", AuthenticationEdit, append(permissionMiddleware, middleware.Notifier, middleware.UuidValidation)...)

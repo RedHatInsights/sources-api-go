@@ -292,11 +292,11 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 		return err
 	}
 
-	// defaulting to "ci" if no var is set.
+	// defaulting to "eph" if no var is set.
 	env, ok := os.LookupEnv("SOURCES_ENV")
 	if !ok {
-		l.Log.Infof("Defaulting SOURCES_ENV to ci")
-		env = "ci"
+		l.Log.Infof("Defaulting SOURCES_ENV to eph")
+		env = "eph"
 	}
 
 	for name, values := range seeds[env] {
