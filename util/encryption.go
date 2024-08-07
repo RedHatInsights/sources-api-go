@@ -7,7 +7,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path"
+	"runtime"
 	"strings"
+
+	"github.com/RedHatInsights/sources-api-go/config"
 )
 
 var (
@@ -26,7 +30,13 @@ func init() {
 // variable again. Useful for testing purposes outside the "util" package.
 func InitializeEncryption() {
 	key = os.Getenv("ENCRYPTION_KEY")
-
+	if key == "" {
+		var err error
+		key, err = setDefaultEncryptionKey()
+		if err != nil {
+			panic(err)
+		}
+	}
 	// the key is base64 encoded in the ENV
 	decoded, err := base64.RawStdEncoding.DecodeString(key)
 	if err != nil {
@@ -34,6 +44,33 @@ func InitializeEncryption() {
 	}
 	key = string(decoded)
 	keyPresent = true
+}
+
+func setDefaultEncryptionKey() (string, error) {
+	if config.Get().Env != "stage" && config.Get().Env != "prod" {
+		// fetch the file name so we know where to get the source encryption_key.dev file from
+		_, filename, _, ok := runtime.Caller(1)
+		if !ok {
+			return "", fmt.Errorf("Not possible to recover the information")
+		}
+		filepath := path.Join(path.Dir(filename), "encryption_key.dev")
+		_, err := os.Stat(filepath)
+		if os.IsNotExist(err) {
+			panic("encryption_key.dev file does not exist. Please import encryption_key.dev file and create symlink encryption_key.dev to encryption_key using [ln -s FILE LINK].")
+		} else {
+			body, bodyErr := os.ReadFile(filepath)
+			if bodyErr != nil {
+				return "", fmt.Errorf("Unable to read file: %v", err)
+			}
+			key = string(body)
+			keyErr := os.Setenv("ENCRYPTION_KEY", string(body))
+			if keyErr != nil {
+				return "", fmt.Errorf("Error in setting variable in environment: %v", keyErr)
+			}
+			return key, nil
+		}
+	}
+	panic("Unable to set up default encryption key")
 }
 
 // Encrypts str into a password_hash using the encryption key
