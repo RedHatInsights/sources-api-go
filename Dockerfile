@@ -17,4 +17,6 @@ COPY --from=build /build/sources-api-go /app/sources-api-go
 
 COPY licenses/LICENSE /licenses/LICENSE
 
+USER 1001
+
 ENTRYPOINT ["/app/sources-api-go"]
