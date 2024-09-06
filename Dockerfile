@@ -14,4 +14,7 @@ WORKDIR /app
 RUN chmod 777 /app
 
 COPY --from=build /build/sources-api-go /app/sources-api-go
+
+COPY licenses/LICENSE /licenses/LICENSE
+
 ENTRYPOINT ["/app/sources-api-go"]
