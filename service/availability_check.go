@@ -248,7 +248,6 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 	req.Header.Set("x-rh-cloud-connector-psk", cloudConnectorPsk)
 
 	// Log the request before sending it.
-	acr.Logger().Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status request: %#v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, req)
 	acr.Logger().Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status request's body: %v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, string(body))
 
 	resp, err := http.DefaultClient.Do(req)
