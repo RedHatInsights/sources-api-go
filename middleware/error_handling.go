@@ -19,10 +19,10 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 			switch err.(type) {
 			case util.ErrNotFound:
 				statusCode = http.StatusNotFound
-				message = util.ErrorDocWithoutLogging(err.Error(), "404")
+				message = util.NewErrorDoc(err.Error(), "404")
 			case util.ErrBadRequest:
 				statusCode = http.StatusBadRequest
-				message = util.ErrorDocWithoutLogging(err.Error(), "400")
+				message = util.NewErrorDoc(err.Error(), "400")
 			default:
 				c.Logger().Error(err)
 				uuid, ok := c.Get(h.InsightsRequestID).(string)

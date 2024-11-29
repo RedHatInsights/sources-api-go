@@ -161,7 +161,7 @@ func TestGetLimitNegativeLimit(t *testing.T) {
 		t.Errorf(`want 0, got "%d"`, got)
 	}
 
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Error("ghosts infected the return")
 	}
 }
@@ -189,7 +189,7 @@ func TestGetLimitBadLimit(t *testing.T) {
 		t.Errorf(`want 0, got "%d"`, got)
 	}
 
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Error("ghosts infected the return")
 	}
 }
@@ -214,7 +214,7 @@ func TestGetLimitMissingLimit(t *testing.T) {
 		t.Errorf(`want 0, got "%d"`, got)
 	}
 
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Error("ghosts infected the return")
 	}
 }
@@ -269,7 +269,7 @@ func TestGetOffsetNegativeOffset(t *testing.T) {
 		t.Errorf(`want 0, got "%d"`, got)
 	}
 
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Error("ghosts infected the return")
 	}
 }
@@ -297,7 +297,7 @@ func TestGetOffsetBadOffset(t *testing.T) {
 		t.Errorf(`want 0, got "%d"`, got)
 	}
 
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Error("ghosts infected the return")
 	}
 }
@@ -322,7 +322,7 @@ func TestGetOffsetMissingOffset(t *testing.T) {
 		t.Errorf(`want 0, got "%d"`, got)
 	}
 
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Error("ghosts infected the return")
 	}
 }
