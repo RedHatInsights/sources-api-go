@@ -131,12 +131,17 @@
               "AWS": "arn:aws:iam::ACCOUNT:root"
             },
             "Action": "sts:AssumeRole",
-            "Condition": {}
+            "Condition": {
+              "StringEquals": {
+                "sts:ExternalID": "EXTERNAL_ID"
+              }
+            }
           }
         ]
       }
     substitutions:
       ACCOUNT: get_account
+      EXTERNAL_ID: generate_external_id
   - step: 3
     name: bind_role
     payload: {}
