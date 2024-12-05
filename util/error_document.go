@@ -3,8 +3,6 @@ package util
 import (
 	"fmt"
 	"reflect"
-
-	l "github.com/RedHatInsights/sources-api-go/logger"
 )
 
 var ErrNotFoundEmpty = NewErrNotFound("")
@@ -20,23 +18,19 @@ type ErrorDocument struct {
 }
 
 func ErrorDocWithRequestId(message, status, uuid string) *ErrorDocument {
-	e := ErrorDocWithoutLogging(message, status)
+	e := NewErrorDoc(message, status)
 	e.Errors[0].RequestId = uuid
 	return e
 }
 
-func ErrorDoc(message, status string) *ErrorDocument {
-	l.Log.Error(message)
-
-	return ErrorDocWithoutLogging(message, status)
-}
-
-func ErrorDocWithoutLogging(message, status string) *ErrorDocument {
+func NewErrorDoc(message, status string) *ErrorDocument {
 	return &ErrorDocument{
-		[]Error{{
-			Detail: message,
-			Status: status,
-		}},
+		[]Error{
+			{
+				Detail: message,
+				Status: status,
+			},
+		},
 	}
 }
 
@@ -53,10 +47,6 @@ func (e ErrNotFound) Is(err error) bool {
 }
 
 func NewErrNotFound(t string) error {
-	if l.Log != nil {
-		l.Log.Error(t)
-	}
-
 	return ErrNotFound{Type: t}
 }
 
@@ -66,10 +56,6 @@ type ErrBadRequest struct {
 
 func (e ErrBadRequest) Error() string {
 	return fmt.Sprintf("bad request: %s", e.Message)
-}
-
-func (e ErrBadRequest) Is(err error) bool {
-	return reflect.TypeOf(err) == reflect.TypeOf(e)
 }
 
 func NewErrBadRequest(t interface{}) error {
@@ -82,10 +68,6 @@ func NewErrBadRequest(t interface{}) error {
 		errorMessage = t.Error()
 	default:
 		panic("bad interface type for bad request: " + reflect.ValueOf(t).String())
-	}
-
-	if l.Log != nil {
-		l.Log.Error(errorMessage)
 	}
 
 	return ErrBadRequest{Message: errorMessage}

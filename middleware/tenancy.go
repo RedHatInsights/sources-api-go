@@ -27,7 +27,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		// EbsAccount numbers, and might not work otherwise.
 		if id.Identity.AccountNumber == "" {
 			if id.Identity.OrgID == "" {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("the ebs account number and the org id are missing", "401"))
+				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("the ebs account number and the org id are missing", "401"))
 			} else {
 				c.Logger().Warnf(`[org_id: %s] potential anemic tenant found`, id.Identity.OrgID)
 			}

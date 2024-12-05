@@ -44,7 +44,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			if !pskMatches(psk) {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
+				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
 			}
 
 		case c.Get(h.XRHID) != nil:
@@ -64,12 +64,12 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 				method := c.Request().Method
 				if method != http.MethodGet && method != http.MethodPost && method != http.MethodDelete {
 					c.Response().Header().Set("Allow", "GET, POST, DELETE")
-					return c.JSON(http.StatusMethodNotAllowed, util.ErrorDoc("Method not allowed", "405"))
+					return c.JSON(http.StatusMethodNotAllowed, util.NewErrorDoc("Method not allowed", "405"))
 				}
 				// Secondary check for delete - we could move this to middleware
 				if method == http.MethodDelete && !certDeleteAllowed(c) {
 					c.Response().Header().Set("Allow", "GET, POST")
-					return c.JSON(http.StatusMethodNotAllowed, util.ErrorDoc("Method not allowed", "405"))
+					return c.JSON(http.StatusMethodNotAllowed, util.NewErrorDoc("Method not allowed", "405"))
 				}
 
 				// basically we're checking whether cn or cluster_id is set in
@@ -80,7 +80,7 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 				if id.Identity.System.ClusterId != "" || id.Identity.System.CommonName != "" {
 					return next(c)
 				} else {
-					return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
+					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
 				}
 			}
 
@@ -96,11 +96,11 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 
 			if !allowed {
-				return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
+				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
 			}
 
 		default:
-			return c.JSON(http.StatusUnauthorized, util.ErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
+			return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}
 
 		return next(c)
