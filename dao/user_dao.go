@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm/clause"
 )
 
@@ -55,9 +57,13 @@ func (u *userDaoImpl) FindOrCreate(userID string) (*m.User, error) {
 
 		err = stmt.Create(&user).Error
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *u.TenantID, "user_id": user.UserID}).Errorf("Unable to create user: %s", err)
+
 			return nil, err
 		}
 	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *u.TenantID, "user_id": user.UserID, "user_sources_id": user.Id}).Info("User created")
 
 	return &user, nil
 }

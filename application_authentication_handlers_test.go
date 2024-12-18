@@ -593,7 +593,7 @@ func TestApplicationAuthenticationDelete(t *testing.T) {
 
 	// Check that application authentication doesn't exist
 	_, err = appAuthDao.GetById(&appAuth.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected Not found error, got %s", err)
 	}
 

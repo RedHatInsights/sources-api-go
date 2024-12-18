@@ -940,7 +940,7 @@ func TestSecretDelete(t *testing.T) {
 
 		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
 		_, err = secretDao.GetById(&secret.DbID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Error("'secret not found' expected")
 		}
 	}

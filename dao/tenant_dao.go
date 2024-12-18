@@ -50,6 +50,8 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 
 	// If the error isn't a "Not Found" one, something went wrong.
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Log.WithFields(logrus.Fields{"org_id": identity.OrgID, "account_number": identity.AccountNumber}).Errorf("Unable to find tenant by its org ID: %s", err)
+
 		return nil, fmt.Errorf("unexpected error when fetching a tenant by its OrgId: %w", err)
 	}
 
@@ -68,6 +70,8 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 
 		// Again, if the error isn't a "Not Found" one, something went wrong.
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Log.WithFields(logrus.Fields{"org_id": identity.OrgID, "account_number": identity.AccountNumber}).Errorf("Unable to find tenant by its account number: %s", err)
+
 			return nil, fmt.Errorf("unexpected error when fetching a tenant by its EBS account number: %w", err)
 		}
 	}
@@ -83,6 +87,8 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 			Error
 
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"org_id": identity.OrgID, "account_number": identity.AccountNumber}).Errorf("Unable to create tenant: %s", err)
+
 			return nil, fmt.Errorf("unable to create the tenant: %w", err)
 		}
 

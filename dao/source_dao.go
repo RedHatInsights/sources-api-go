@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -188,12 +190,30 @@ func (s *sourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.So
 func (s *sourceDaoImpl) Create(src *m.Source) error {
 	src.TenantID = *s.TenantID // the TenantID gets injected in the middleware
 	result := DB.Debug().Create(src)
-	return result.Error
+
+	if result.Error != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID}).Errorf(`Unable to create source: %s`, result.Error)
+
+		return result.Error
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": src.ID}).Info("Source created")
+
+		return nil
+	}
 }
 
 func (s *sourceDaoImpl) Update(src *m.Source) error {
 	result := s.getDb().Omit(clause.Associations).Updates(src)
-	return result.Error
+
+	if result.Error != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": s.TenantID, "source_id": src.ID}).Errorf(`Unable to update source: %s`, result.Error)
+
+		return result.Error
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": s.TenantID, "source_id": src.ID}).Info("Source updated")
+
+		return nil
+	}
 }
 
 func (s *sourceDaoImpl) Delete(id *int64) (*m.Source, error) {
@@ -205,12 +225,16 @@ func (s *sourceDaoImpl) Delete(id *int64) (*m.Source, error) {
 		Delete(&source)
 
 	if result.Error != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to delete source: %s`, result.Error)
+
 		return nil, fmt.Errorf(`failed to source endpoint with id "%d": %s`, id, result.Error)
 	}
 
 	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("source")
 	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Info("Source deleted")
 
 	return &source, nil
 }
@@ -347,6 +371,8 @@ func (s *sourceDaoImpl) Pause(id int64) error {
 			Error
 
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to pause source: %s`, err)
+
 			return err
 		}
 
@@ -357,7 +383,15 @@ func (s *sourceDaoImpl) Pause(id int64) error {
 			Update("paused_at", time.Now()).
 			Error
 
-		return err
+		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to pause source's applications': %s`, err)
+
+			return err
+		}
+
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Info("Source and its applications paused")
+
+		return nil
 	})
 
 	return err
@@ -372,6 +406,8 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 			Error
 
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to resume source: %s`, err)
+
 			return err
 		}
 
@@ -382,7 +418,15 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 			Update("paused_at", nil).
 			Error
 
-		return err
+		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to resume source's applications': %s`, err)
+
+			return err
+		}
+
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Info("Source and its applications resumed")
+
+		return nil
 	})
 
 	return err
@@ -424,6 +468,8 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 					Error
 
 				if err != nil {
+					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete application authentications: %s", err)
+
 					return err
 				}
 			}
@@ -447,6 +493,8 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 					Error
 
 				if err != nil {
+					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete applications: %s", err)
+
 					return err
 				}
 			}
@@ -470,6 +518,8 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 					Error
 
 				if err != nil {
+					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete endpoints: %s", err)
+
 					return err
 				}
 			}
@@ -493,6 +543,8 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 					Error
 
 				if err != nil {
+					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete RHC connections: %s", err)
+
 					return err
 				}
 			}
@@ -515,12 +567,37 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 					Error
 			}
 
-			return err
+			if err != nil {
+				logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: %s", err)
+
+				return err
+			} else {
+				return nil
+			}
 		})
 
 	if err != nil {
 		return nil, nil, nil, nil, nil, err
 	}
+
+	// Log all the changes for observability, traceability and debugging purposes.
+	for _, appAuth := range applicationAuthentications {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId, "application_authentication_id": appAuth.ID}).Info("Application authentication deleted")
+	}
+
+	for _, app := range applications {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId, "application_id": app.ID}).Info("Application deleted")
+	}
+
+	for _, endpoint := range endpoints {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId, "endpoint_id": endpoint.ID}).Info("Endpoint deleted")
+	}
+
+	for _, rhcConnection := range rhcConnections {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId, "rhc_connection_id": rhcConnection.ID}).Info("RHC connection deleted")
+	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Info("Source deleted")
 
 	return applicationAuthentications, applications, endpoints, rhcConnections, source, nil
 }

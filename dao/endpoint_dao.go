@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm/clause"
 )
 
@@ -112,16 +114,33 @@ func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 	return &endpoint, nil
 }
 
-func (a *endpointDaoImpl) Create(app *m.Endpoint) error {
-	app.TenantID = *a.TenantID
+func (a *endpointDaoImpl) Create(endpoint *m.Endpoint) error {
+	endpoint.TenantID = *a.TenantID
 
-	result := DB.Debug().Create(app)
-	return result.Error
+	err := DB.Debug().Create(endpoint).Error
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": endpoint.SourceID}).Errorf("Unable to create endpoint: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": endpoint.SourceID, "endpoint_id": endpoint.ID}).Info("Endpoint created")
+
+		return nil
+	}
 }
 
-func (a *endpointDaoImpl) Update(app *m.Endpoint) error {
-	result := DB.Omit(clause.Associations).Updates(app)
-	return result.Error
+func (a *endpointDaoImpl) Update(endpoint *m.Endpoint) error {
+	err := DB.Omit(clause.Associations).Updates(endpoint).Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": endpoint.SourceID, "endpoint_id": endpoint.ID}).Errorf("Unable to update endpoint: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": endpoint.SourceID, "endpoint_id": endpoint.ID}).Info("Endpoint updated")
+
+		return nil
+	}
 }
 
 func (a *endpointDaoImpl) Delete(id *int64) (*m.Endpoint, error) {
@@ -135,12 +154,16 @@ func (a *endpointDaoImpl) Delete(id *int64) (*m.Endpoint, error) {
 		Delete(&endpoint)
 
 	if result.Error != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": endpoint.SourceID, "endpoint_id": *id}).Errorf("Unable to delete endpoint: %s", result.Error)
+
 		return nil, fmt.Errorf(`failed to delete endpoint with id "%d": %s`, id, result.Error)
 	}
 
 	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("endpoint")
 	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": endpoint.SourceID, "endpoint_id": *id}).Info("Endpoint deleted")
 
 	return &endpoint, nil
 }
@@ -199,9 +222,17 @@ func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribu
 		Where("id = ?", resource.ResourceID).
 		Updates(updateAttributes)
 
+	if result.Error != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "resource_type": resource.ResourceType, "resource_id": resource.ResourceID}).Errorf("Unable to update endpoint: %s", result.Error)
+
+		return nil, result.Error
+	}
+
 	if result.RowsAffected == 0 {
 		return nil, fmt.Errorf("endpoint not found %v", resource)
 	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "resource_type": resource.ResourceType, "resource_id": resource.ResourceID}).Info("Endpoint updated")
 
 	a.TenantID = &resource.TenantID
 	endpoint, err := a.GetByIdWithPreload(&resource.ResourceID, "Source")

@@ -125,8 +125,8 @@ func TestDeleteApplicationNotExists(t *testing.T) {
 	nonExistentId := int64(12345)
 	_, err := applicationDao.Delete(&nonExistentId)
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
 
 	DropSchema("delete")
@@ -953,7 +953,7 @@ func TestApplicationCreateBadRequest(t *testing.T) {
 
 	// Create the test application.
 	err := applicationDao.Create(&application)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("wanted Bad Request err, got '%s'", err)
 	}
 
