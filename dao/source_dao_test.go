@@ -377,8 +377,8 @@ func TestDeleteSourceNotExists(t *testing.T) {
 	nonExistentId := int64(12345)
 	_, err := sourceDao.Delete(&nonExistentId)
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
 
 	DropSchema("delete")
@@ -492,7 +492,7 @@ func TestDeleteCascade(t *testing.T) {
 		}
 		id := deletedApplicationAuthentications[0].ID
 		_, err = applicationAuthenticationDao.GetById(&id)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
 		}
 	}
@@ -504,7 +504,7 @@ func TestDeleteCascade(t *testing.T) {
 		}
 		id := deletedApplications[0].ID
 		_, err = applicationsDao.GetById(&id)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
 		}
 	}
@@ -516,7 +516,7 @@ func TestDeleteCascade(t *testing.T) {
 		}
 		id := deletedEndpoints[0].ID
 		_, err = endpointDao.GetById(&id)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
 		}
 	}
@@ -528,7 +528,7 @@ func TestDeleteCascade(t *testing.T) {
 		}
 		id := deletedRhcConnections[0].ID
 		_, err = rhcConnectionsDao.GetById(&id)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
 		}
 	}
@@ -537,7 +537,7 @@ func TestDeleteCascade(t *testing.T) {
 	{
 		id := deletedSource.ID
 		_, err = sourceDao.GetById(&id)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
 		}
 	}
@@ -569,7 +569,7 @@ func TestDeleteCascade(t *testing.T) {
 
 	// Check that the authentication is deleted
 	_, err = authenticationDao.GetById(id)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("Expected not found error, got %s", err)
 	}
 

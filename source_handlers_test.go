@@ -1577,31 +1577,31 @@ func TestSourceDelete(t *testing.T) {
 
 	// Check that source doesn't exist
 	_, err = sourceDao.GetById(&src.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'source not found', got %s", err)
 	}
 
 	// Check that application doesn't exist
 	_, err = applicationDao.GetById(&app.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'application not found', got %s", err)
 	}
 
 	// Check that application authentication doesn't exist
 	_, err = appAuthDao.GetById(&appAuth.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'application authentication not found', got %s", err)
 	}
 
 	// Check that endpoint doesn't exist
 	_, err = endpointDao.GetById(&endpoint.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'endpoint not found', got %s", err)
 	}
 
 	// Check that rhc connection doesn't exist
 	_, err = rhcConnectionDao.GetById(&rhc.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'rhc connection not found', got %s", err)
 	}
 
@@ -1617,7 +1617,7 @@ func TestSourceDelete(t *testing.T) {
 	// Check that all authentications don't exist
 	for _, a := range auths {
 		_, err = authenticationDao.GetById(a.ID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'authentication not found', got %s", err)
 		}
 	}
@@ -2773,7 +2773,7 @@ func TestSuperKeyDestroyWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) 
 
 	superKeyDestroySource := middleware.SuperKeyDestroySource(SourceDelete)
 	err = superKeyDestroySource(c)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("improper error occurred for super key destroy source operation %v", err)
 	}
 

@@ -199,8 +199,8 @@ func TestRhcConnectionCreateSourceNotExists(t *testing.T) {
 		t.Errorf("want non nil error, got nil error")
 	}
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema(RhcConnectionSchema)
@@ -273,8 +273,8 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 		t.Errorf(`want error, got nil`)
 	}
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`want "%s" type, got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema(RhcConnectionSchema)
@@ -424,8 +424,8 @@ func TestDeleteRhcConnectionNotExists(t *testing.T) {
 	nonExistentId := int64(12345)
 	_, err := RhcConnectionDao.Delete(&nonExistentId)
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
 
 	DropSchema("delete")

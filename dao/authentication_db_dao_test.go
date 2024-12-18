@@ -224,8 +224,8 @@ func TestAuthenticationDbDelete(t *testing.T) {
 	}
 
 	_, err = dao.GetById(id)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema("authentications_db")
@@ -240,8 +240,8 @@ func TestAuthenticationDbDeleteNotFound(t *testing.T) {
 
 	dao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 	_, err := dao.Delete("12345")
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema("authentications_db")
@@ -340,8 +340,8 @@ func TestListForSourceNotFound(t *testing.T) {
 		t.Errorf(`want error, got nil`)
 	}
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema("authentications_db")
@@ -439,8 +439,8 @@ func TestListForApplicationNotFound(t *testing.T) {
 		t.Errorf(`want error, got nil`)
 	}
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema("authentications_db")
@@ -546,8 +546,8 @@ func TestListForApplicationAuthenticationNotFound(t *testing.T) {
 		t.Errorf(`want error, got nil`)
 	}
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema("authentications_db")
@@ -643,8 +643,8 @@ func TestListForEndpointNotFound(t *testing.T) {
 		t.Errorf(`want error, got nil`)
 	}
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFoundEmpty), reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema("authentications_db")
