@@ -19,7 +19,7 @@ func GetFromResourceType(resourceType string, tenantID int64) (m.EventModelDao, 
 	case "source":
 		resource = GetSourceDao(&RequestParams{TenantID: &tenantID})
 	case "endpoint":
-		resource = GetEndpointDao(nil)
+		resource = GetEndpointDao(&tenantID)
 	case "application":
 		resource = GetApplicationDao(&RequestParams{TenantID: &tenantID})
 	case "authentication":

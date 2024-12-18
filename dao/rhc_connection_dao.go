@@ -6,8 +6,10 @@ import (
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/dao/mappers"
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -168,6 +170,8 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 			Error
 
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": rhcConnection.Sources[0].ID}).Errorf("Unable to create RHC connection: %s", err)
+
 			return err
 		}
 
@@ -202,8 +206,12 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 			Create(&sourceRhcConnection).
 			Error
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": rhcConnection.Sources[0].ID}).Errorf("Unable to create RHC connection association: %s", err)
+
 			return err
 		}
+
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": rhcConnection.Sources[0].ID, "rhc_connection_id": rhcConnection.ID}).Info("RHC Connection created")
 
 		return nil
 	})
@@ -219,7 +227,16 @@ func (s *rhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
 		Select("*").
 		Updates(rhcConnection).
 		Error
-	return err
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_ids": rhcConnection.Sources, "rhc_connection_id": rhcConnection.ID}).Errorf("Unable to update RHC connection: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_ids": rhcConnection.Sources, "rhc_connection_id": rhcConnection.ID}).Info("RHC connection updated")
+
+		return nil
+	}
 }
 
 func (s *rhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
@@ -239,10 +256,14 @@ func (s *rhcConnectionDaoImpl) Delete(id *int64) (*m.RhcConnection, error) {
 		Delete(&rhcConnection)
 
 	if result.Error != nil {
-		return nil, fmt.Errorf(`failed to delete rhcConnection with id "%d": %s`, id, result.Error)
-	}
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_ids": rhcConnection.Sources, "rhc_connection_id": *id}).Errorf("Unable to delete RHC connection: %s", err)
 
-	return &rhcConnection, nil
+		return nil, fmt.Errorf(`failed to delete rhcConnection with id "%d": %s`, id, result.Error)
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_ids": rhcConnection.Sources, "rhc_connection_id": rhcConnection.ID}).Info("RHC connection deleted")
+
+		return &rhcConnection, nil
+	}
 }
 
 func (s *rhcConnectionDaoImpl) ListForSource(sourceId *int64, limit, offset int, filters []util.Filter) ([]m.RhcConnection, int64, error) {
