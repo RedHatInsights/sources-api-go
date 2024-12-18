@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/jackc/pgconn"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -156,23 +158,41 @@ func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (
 
 func (a *applicationDaoImpl) Create(app *m.Application) error {
 	app.TenantID = *a.TenantID
-	result := DB.Debug().Create(app)
+	err := DB.Debug().Create(app).Error
 
 	// Check if specific error code is returned
 	var pgErr *pgconn.PgError
-	if errors.As(result.Error, &pgErr) {
+	if errors.As(err, &pgErr) {
 		// unique constraint violation for index (source id + app type id + tenant id)
 		if pgErr.Code == PgUniqueConstraintViolation && strings.Contains(pgErr.Detail, "Key (source_id, application_type_id, tenant_id)") {
 			message := fmt.Sprintf("Application of application type = %d already exists for the source id = %d", app.ApplicationTypeID, app.SourceID)
 			return util.NewErrBadRequest(message)
 		}
 	}
-	return result.Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": app.SourceID}).Errorf("Unable to create application: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": app.SourceID, "application_id": app.ID}).Info("Application created")
+
+		return nil
+	}
 }
 
 func (a *applicationDaoImpl) Update(app *m.Application) error {
-	result := a.getDb().Omit(clause.Associations).Updates(app)
-	return result.Error
+	err := a.getDb().Omit(clause.Associations).Updates(app).Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": app.SourceID, "application_id": app.ID}).Errorf("Unable to update application: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": app.SourceID, "application_id": app.ID}).Info("Application updated")
+
+		return nil
+	}
 }
 
 func (a *applicationDaoImpl) Delete(id *int64) (*m.Application, error) {
@@ -184,12 +204,16 @@ func (a *applicationDaoImpl) Delete(id *int64) (*m.Application, error) {
 		Delete(&application)
 
 	if result.Error != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": *id}).Errorf("Unable to delete application: %s", result.Error)
+
 		return nil, fmt.Errorf(`failed to delete application with id "%d": %s`, id, result.Error)
 	}
 
 	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("application")
 	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": *id}).Info("Application deleted")
 
 	return &application, nil
 }
@@ -282,7 +306,15 @@ func (a *applicationDaoImpl) Pause(id int64) error {
 		Update("paused_at", time.Now()).
 		Error
 
-	return err
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": id}).Errorf("Unable to pause application: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": id}).Info("Application paused")
+
+		return nil
+	}
 }
 
 func (a *applicationDaoImpl) Unpause(id int64) error {
@@ -291,7 +323,15 @@ func (a *applicationDaoImpl) Unpause(id int64) error {
 		Update("paused_at", nil).
 		Error
 
-	return err
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": id}).Errorf("Unable to resume application: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": id}).Info("Application resumed")
+
+		return nil
+	}
 }
 
 func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
@@ -327,6 +367,8 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 					Error
 
 				if err != nil {
+					logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": applicationId}).Errorf("Unable to cascade delete application: unable to delete application authentications: %s", err)
+
 					return err
 				}
 			}
@@ -346,8 +388,21 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 					Error
 			}
 
-			return err
+			if err != nil {
+				logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": application.SourceID, "application_id": applicationId}).Errorf("Unable to cascade delete application: %s", err)
+
+				return err
+			} else {
+				return nil
+			}
 		})
+
+	// Log all the changes for observability, traceability and debugging purposes.
+	for _, appAuth := range applicationAuthentications {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": application.SourceID, "application_id": applicationId, "application_authentication_id": appAuth.ID}).Info("Application authentication deleted")
+	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": application.SourceID, "application_id": applicationId}).Info("Application deleted")
 
 	if err != nil {
 		return nil, nil, err

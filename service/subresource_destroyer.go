@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/sirupsen/logrus"
 )
 
 // DeleteCascade removes the resource type and all its dependants, raising an event for every deleted resource. Returns
@@ -52,6 +53,8 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 		go func() {
 			// Raise an event for the deleted application authentications.
 			for _, appAuth := range applicationAuthentications {
+				logging.Log.WithFields(logrus.Fields{"tenant_id": *tenantId, "application_authentication_id": appAuth.ID}).Info("Application authentication deleted")
+
 				err = RaiseEvent("ApplicationAuthentication.destroy", &appAuth, headers)
 				if err != nil {
 					logging.Log.Errorf(`Event "ApplicationAuthentication.destroy" could not be raised for application authentication %v: %s`, appAuth.ToEvent(), err)

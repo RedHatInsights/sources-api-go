@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -157,14 +159,26 @@ func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthenti
 	appAuth.TenantID = *a.TenantID
 	err := DB.Debug().Create(appAuth).Error
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID}).Errorf(`Unable to create application authentication: %s`, err)
+
 		return util.NewErrBadRequest("failed to create application_authentication: " + err.Error())
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_authentication_id": appAuth.ID}).Info("Application authentication created")
+		return nil
 	}
-	return err
 }
 
 func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
-	result := a.getDb().Updates(appAuth)
-	return result.Error
+	err := a.getDb().Updates(appAuth).Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_authentication_id": appAuth.ID}).Errorf(`Unable to update application authentication: %s`, err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_authentication_id": appAuth.ID}).Info("Application authentication updated")
+		return nil
+	}
 }
 
 func (a *applicationAuthenticationDaoImpl) Delete(id *int64) (*m.ApplicationAuthentication, error) {
@@ -177,12 +191,16 @@ func (a *applicationAuthenticationDaoImpl) Delete(id *int64) (*m.ApplicationAuth
 		Delete(&applicationAuthentication)
 
 	if result.Error != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_authentication_id": id}).Errorf(`Unable to delete application authentication: %s`, result.Error)
+
 		return nil, fmt.Errorf(`failed to delete application authentication with id "%d": %s`, id, result.Error)
 	}
 
 	if result.RowsAffected == 0 {
 		return nil, util.NewErrNotFound("application authentication")
 	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_authentication_id": id}).Info("Application authentication deleted")
 
 	return &applicationAuthentication, nil
 }
