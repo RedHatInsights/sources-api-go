@@ -1100,19 +1100,19 @@ func TestApplicationDelete(t *testing.T) {
 
 	// Check that application doesn't exist
 	_, err = applicationDao.GetById(&app.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'application not found', got %s", err)
 	}
 
 	// Check that authentication doesn't exist
 	_, err = authenticationDao.GetById(auth.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'authentication not found', got %s", err)
 	}
 
 	// Check that application authentication doesn't exist
 	_, err = appAuthDao.GetById(&appAuth.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'application authentication not found', got %s", err)
 	}
 
@@ -2185,19 +2185,19 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 
 		applicationDao := dao.GetApplicationDao(suiteData.GetRequestParamsUserA())
 		_, err = applicationDao.GetById(&suiteData.ApplicationUserA().ID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application not found', got %s", err)
 		}
 
 		authenticationDao := dao.GetAuthenticationDao(suiteData.GetRequestParamsUserA())
 		_, err = authenticationDao.GetById(suiteData.AuthenticationUserA().ID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'authentication not found', got %s", err)
 		}
 
 		applicationAuthenticationDao := dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
 		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application authentication not found', got %s", err)
 		}
 
@@ -2232,19 +2232,19 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 
 		applicationDao = dao.GetApplicationDao(suiteData.GetRequestParamsUserA())
 		_, err = applicationDao.GetById(&suiteData.ApplicationNoUser().ID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application not found', got %s", err)
 		}
 
 		authenticationDao = dao.GetAuthenticationDao(suiteData.GetRequestParamsUserA())
 		_, err = authenticationDao.GetById(suiteData.AuthenticationNoUser().ID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'authentication not found', got %s", err)
 		}
 
 		applicationAuthenticationDao = dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
 		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
-		if !errors.Is(err, util.ErrNotFoundEmpty) {
+		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application authentication not found', got %s", err)
 		}
 

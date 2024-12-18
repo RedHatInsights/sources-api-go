@@ -736,7 +736,7 @@ func TestAuthenticationDelete(t *testing.T) {
 
 	// Check that the authentication is deleted
 	_, err = authenticationDao.GetById(uid)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'authentication not found', got %s", err)
 	}
 

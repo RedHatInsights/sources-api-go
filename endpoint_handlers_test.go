@@ -1020,13 +1020,13 @@ func TestEndpointDelete(t *testing.T) {
 
 	// Check that endpoint doesn't exist
 	_, err = endpointDao.GetById(&endpoint.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'endpoint not found', got %s", err)
 	}
 
 	// Check that authentication doesn't exist
 	_, err = authenticationDao.GetById(auth.ID)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected 'authentication not found', got %s", err)
 	}
 
