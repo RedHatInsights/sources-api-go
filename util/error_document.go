@@ -5,9 +5,6 @@ import (
 	"reflect"
 )
 
-var ErrNotFoundEmpty = NewErrNotFound("")
-var ErrBadRequestEmpty = NewErrBadRequest("")
-
 type Error struct {
 	Detail    string `json:"detail"`
 	Status    string `json:"status"`

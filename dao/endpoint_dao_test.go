@@ -68,8 +68,8 @@ func TestDeleteEndpointNotExists(t *testing.T) {
 	nonExistentId := int64(12345)
 	_, err := endpointDao.Delete(&nonExistentId)
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
-		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFoundEmpty, reflect.TypeOf(err))
+	if !errors.As(err, &util.ErrNotFound{}) {
+		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
 
 	DropSchema("delete")

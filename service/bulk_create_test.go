@@ -267,7 +267,7 @@ func TestParseSourcesBadRequestInvalidSourceTypeId(t *testing.T) {
 	// Parse the sources and check the results
 	var err error
 	sources, err := parseSources(reqSources, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
 	}
 
@@ -299,7 +299,7 @@ func TestParseSourcesNotFoundInvalidSourceTypeId(t *testing.T) {
 	// Parse the sources and check the results
 	var err error
 	sources, err := parseSources(reqSources, &tenant, &userResource)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected not found error, got <%s>", err)
 	}
 
@@ -331,7 +331,7 @@ func TestParseSourcesBadRequestInvalidSourceTypeName(t *testing.T) {
 	// Parse the sources and check the results
 	var err error
 	sources, err := parseSources(reqSources, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
 	}
 
@@ -361,7 +361,7 @@ func TestParseSourcesBadRequestMissingSourceType(t *testing.T) {
 	// Parse the sources and check the results
 	var err error
 	sources, err := parseSources(reqSources, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
 	}
 
@@ -392,7 +392,7 @@ func TestParseSourcesBadRequestValidationFails(t *testing.T) {
 	// Parse the sources and check the results
 	var err error
 	sources, err := parseSources(reqSources, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
 	}
 
@@ -550,7 +550,7 @@ func TestParseApplicationsBadRequestApplicationNotLinked(t *testing.T) {
 
 	// Parse the applications
 	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
 	}
 
@@ -583,7 +583,7 @@ func TestParseApplicationsBadRequestWithoutAppType(t *testing.T) {
 
 	// Parse the applications
 	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
 	}
 
@@ -620,7 +620,7 @@ func TestParseApplicationsBadRequestInvalidAppTypeId(t *testing.T) {
 
 	// Parse the applications
 	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
 	}
 
@@ -657,7 +657,7 @@ func TestParseApplicationsAppTypeIdNotFound(t *testing.T) {
 
 	// Parse the applications
 	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
 	}
 
@@ -692,7 +692,7 @@ func TestParseApplicationsBadRequestInvalidAppTypeName(t *testing.T) {
 
 	// Parse the applications
 	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
 	}
 
@@ -727,7 +727,7 @@ func TestParseApplicationsBadRequestNotCompatible(t *testing.T) {
 
 	// Parse the applications
 	apps, err := parseApplications(reqApplications, &bulkCreateOutput, &tenant, &userResource)
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf(`unexpected error when parsing the applications from bulk create: %s`, err)
 	}
 

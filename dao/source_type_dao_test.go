@@ -74,7 +74,7 @@ func TestSourceTypeGetByNameNotFound(t *testing.T) {
 		t.Error("got source type object, want nil")
 	}
 
-	if !errors.Is(err, util.ErrNotFoundEmpty) {
+	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("want not found err, got '%v'", err)
 	}
 
@@ -92,7 +92,7 @@ func TestSourceTypeGetByNameBadRequest(t *testing.T) {
 		t.Error("got source type object, want nil")
 	}
 
-	if !errors.Is(err, util.ErrBadRequestEmpty) {
+	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("want bad request err, got '%v'", err)
 	}
 
