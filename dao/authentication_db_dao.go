@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -302,10 +304,20 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 
 	authentication.TenantID = *add.TenantID // the TenantID gets injected in the middleware
 
-	return DB.
+	err := DB.
 		Debug().
 		Create(authentication).
 		Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": authentication.ResourceType, "resource_id": authentication.ResourceID}).Errorf("Unable to create authentication: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": authentication.ResourceType, "resource_id": authentication.ResourceID, "authentication_id": authentication.ID}).Info("Authentication created")
+
+		return nil
+	}
 }
 
 // BulkCreate method _without_ checking if the resource exists. Basically since this is the bulk-create method the
@@ -316,10 +328,20 @@ func (add *authenticationDaoDbImpl) BulkCreate(auth *m.Authentication) error {
 }
 
 func (add *authenticationDaoDbImpl) Update(authentication *m.Authentication) error {
-	return add.getDb().
+	err := add.getDb().
 		Omit(clause.Associations).
 		Updates(authentication).
 		Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": authentication.ResourceType, "resource_id": authentication.ResourceID}).Errorf("Unable to update authentication: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": authentication.ResourceType, "resource_id": authentication.ResourceID, "authentication_id": authentication.ID}).Info("Authentication updated")
+
+		return nil
+	}
 }
 
 func (add *authenticationDaoDbImpl) Delete(id string) (*m.Authentication, error) {
@@ -339,10 +361,14 @@ func (add *authenticationDaoDbImpl) Delete(id string) (*m.Authentication, error)
 		Error
 
 	if err != nil {
-		return nil, fmt.Errorf(`failed to delete authentication with id "%s"`, id)
-	}
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": authentication.ResourceType, "resource_id": authentication.ResourceID}).Errorf("Unable to delete authentication: %s", err)
 
-	return &authentication, nil
+		return nil, fmt.Errorf(`failed to delete authentication with id "%s"`, id)
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": authentication.ResourceType, "resource_id": authentication.ResourceID, "authentication_id": authentication.ID}).Info("Authentication deleted")
+
+		return &authentication, nil
+	}
 }
 
 func (add *authenticationDaoDbImpl) Tenant() *int64 {
@@ -477,8 +503,14 @@ func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authenticatio
 			Error
 
 		if err != nil {
+			logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "authentication_ids": authIds}).Errorf("Unable to bulk delete authentications: %s", err)
+
 			return nil, err
 		}
+	}
+
+	for _, auth := range dbAuths {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": auth.ResourceType, "resource_id": auth.ResourceID, "authentication_id": auth}).Info("Authentication deleted")
 	}
 
 	return dbAuths, nil

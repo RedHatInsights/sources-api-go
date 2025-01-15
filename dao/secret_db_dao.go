@@ -3,8 +3,10 @@ package dao
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -55,10 +57,20 @@ func (secret *secretDaoDbImpl) Create(authentication *m.Authentication) error {
 	authentication.ResourceType = secretResourceType
 	authentication.ResourceID = *secret.TenantID
 
-	return DB.
+	err := DB.
 		Debug().
 		Create(authentication).
 		Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID}).Errorf("Unable to create secret: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID, "secret_id": authentication.ID}).Info("Secret created")
+
+		return nil
+	}
 }
 
 func (secret *secretDaoDbImpl) Delete(id *int64) error {
@@ -78,8 +90,12 @@ func (secret *secretDaoDbImpl) Delete(id *int64) error {
 		Error
 
 	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID, "secret_id": *id}).Errorf("Unable to delete secret: %s", err)
+
 		return fmt.Errorf(`failed to delete secret with id "%d"`, &id)
 	}
+
+	logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID, "secret_id": *id}).Info("Secret deleted")
 
 	return nil
 }
@@ -119,8 +135,18 @@ func (secret *secretDaoDbImpl) List(limit, offset int, filters []util.Filter) ([
 }
 
 func (secret *secretDaoDbImpl) Update(authentication *m.Authentication) error {
-	return secret.getDb().
+	err := secret.getDb().
 		Omit(clause.Associations).
 		Updates(authentication).
 		Error
+
+	if err != nil {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID, "secret_id": authentication.ID}).Errorf("Unable to update secret: %s", err)
+
+		return err
+	} else {
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID, "secret_id": authentication.ID}).Info("Secret updated")
+
+		return nil
+	}
 }
