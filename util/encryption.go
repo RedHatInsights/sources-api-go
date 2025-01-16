@@ -20,12 +20,6 @@ var (
 	keyPresent = false
 )
 
-// init for this file basically just decodes the ENCRYPTION_KEY env var to the
-// plain text equivalent
-func init() {
-	InitializeEncryption()
-}
-
 // InitializeEncryption allows reinitializing the encryption key by reading from the "ENCRYPTION_KEY" environment
 // variable again. Useful for testing purposes outside the "util" package.
 func InitializeEncryption() {

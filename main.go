@@ -14,6 +14,7 @@ import (
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
+	"github.com/RedHatInsights/sources-api-go/util"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	echoMetrics "github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo/v4"
@@ -25,6 +26,15 @@ import (
 var conf = config.Get()
 
 func main() {
+	// Initialize the encryption manually.
+	//
+	// Previously, an "init" function was used for this in the "encryption.go" file. The problem with that is that the
+	// Superkey worker depends on Sources API Go, and the "InitializeEncryption" function makes a call to the
+	// "setDefaultEncryptionKey" function, which in turn makes a call load the Sources API Go configuration. When the
+	// Superkey runs in stage or production, the configuration that it has is obviously different to the one that the
+	// Sources API Go has, which causes panics when the "setDefaultEncryptionKey" attempts to load the configuration.
+	util.InitializeEncryption()
+
 	l.InitLogger(conf)
 
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
