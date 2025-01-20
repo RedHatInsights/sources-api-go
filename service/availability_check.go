@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
@@ -25,7 +24,6 @@ const (
 	disconnectedRhc = "cloud-connector returned 'disconnected'"
 	unavailableRhc  = "cloud-connector returned a non-ok exit code for this connection"
 
-	satelliteRequestedTopic = "platform.topological-inventory.operations-satellite"
 )
 
 type availabilityCheckRequester struct {
@@ -50,9 +48,6 @@ type availabilityChecker interface {
 }
 
 var (
-	// storing the satellite topic here since it doesn't change after initial
-	// startup.
-	satelliteTopic = config.Get().KafkaTopic(satelliteRequestedTopic)
 	// cloud connector related fields
 	cloudConnectorUrl      = os.Getenv("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL")
 	cloudConnectorPsk      = os.Getenv("CLOUD_CONNECTOR_PSK")
@@ -160,7 +155,6 @@ func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source
 	// instantiate a producer for this source
 	writer, err := kafka.GetWriter(&kafka.Options{
 		BrokerConfig: conf.KafkaBrokerConfig,
-		Topic:        satelliteTopic,
 		Logger:       acr.Logger(),
 	})
 	if err != nil {
