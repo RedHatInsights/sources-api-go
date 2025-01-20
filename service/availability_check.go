@@ -16,7 +16,6 @@ import (
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
-	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )
 
@@ -34,12 +33,10 @@ type availabilityCheckRequester struct {
 type availabilityChecker interface {
 	// public methods
 	ApplicationAvailabilityCheck(source *m.Source)
-	EndpointAvailabilityCheck(source *m.Source)
 	RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header)
 
 	// private methods
 	httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL)
-	publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint)
 	pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header)
 	updateRhcStatus(source *m.Source, status string, errstr string, rhcConnection *m.RhcConnection, headers []kafka.Header)
 
@@ -68,8 +65,6 @@ func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.
 	// of overwriting the status set by the RHC check
 	if len(source.SourceRhcConnections) != 0 {
 		ac.RhcConnectionAvailabilityCheck(source, headers)
-	} else if len(source.Endpoints) != 0 {
-		ac.EndpointAvailabilityCheck(source)
 	}
 
 	ac.Logger().Infof("Finished Publishing Availability Messages for Source %v", source.ID)
@@ -130,70 +125,6 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	// anything greater than 299 is bad, right??? right????
 	if resp.StatusCode/100 > 2 {
 		acr.Logger().Errorf("[source_id: %d][application_id: %d] Bad response from client: %d", source.ID, app.ID, resp.StatusCode)
-	}
-}
-
-// codified version of what we were sending over kafka. The satellite operations
-// worker picks this message up and makes the proper requests to the
-// platform-receptor-controller.
-type satelliteAvailabilityMessage struct {
-	SourceID       string  `json:"source_id"`
-	SourceUID      *string `json:"source_uid"`
-	SourceRef      *string `json:"source_ref"`
-	ExternalTenant string  `json:"external_tenant"`
-}
-
-// sends off an availability check kafka message for each of the source's
-// endpoints but only if the source is of type satellite - we do not support any
-// other operations currently (legacy behavior)
-func (acr availabilityCheckRequester) EndpointAvailabilityCheck(source *m.Source) {
-	if source.SourceType.Name != "satellite" {
-		acr.Logger().Infof("Skipping Endpoint availability check for non-satellite source type")
-		return
-	}
-
-	// instantiate a producer for this source
-	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: conf.KafkaBrokerConfig,
-		Logger:       acr.Logger(),
-	})
-	if err != nil {
-		acr.Logger().Errorf(`[source_id: %d] unable to create a Kafka writer for the endpoint availability check: %s`, source.ID, err)
-		return
-	}
-
-	l.Log.Infof("Publishing message for Source [%v] topic [%v] ", source.ID, writer.Topic)
-	for _, endpoint := range source.Endpoints {
-		acr.publishSatelliteMessage(writer, source, &endpoint)
-	}
-}
-
-func (acr availabilityCheckRequester) publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint) {
-	acr.Logger().Infof("[source_id: %d] Requesting Availability Check for Endpoint %v", source.ID, endpoint.ID)
-	defer kafka.CloseWriter(writer, "publish satellite message")
-
-	msg := &kafka.Message{}
-	err := msg.AddValueAsJSON(map[string]interface{}{
-		"params": satelliteAvailabilityMessage{
-			SourceID:       strconv.FormatInt(source.ID, 10),
-			SourceUID:      source.Uid,
-			SourceRef:      source.SourceRef,
-			ExternalTenant: source.Tenant.ExternalTenant,
-		}})
-	if err != nil {
-		acr.Logger().Warnf("Failed to add struct value as json to kafka message")
-		return
-	}
-
-	msg.AddHeaders([]kafka.Header{
-		{Key: "event_type", Value: []byte("Source.availability_check")},
-		{Key: "encoding", Value: []byte("json")},
-		{Key: h.XRHID, Value: []byte(util.GeneratedXRhIdentity(source.Tenant.ExternalTenant, source.Tenant.OrgID))},
-		{Key: h.AccountNumber, Value: []byte(endpoint.Tenant.ExternalTenant)},
-	})
-
-	if err = kafka.Produce(writer, msg); err != nil {
-		acr.Logger().Warnf("Failed to produce kafka message for Source %v, error: %v", source.ID, err)
 	}
 }
 
