@@ -22,7 +22,6 @@ import (
 const (
 	disconnectedRhc = "cloud-connector returned 'disconnected'"
 	unavailableRhc  = "cloud-connector returned a non-ok exit code for this connection"
-
 )
 
 type availabilityCheckRequester struct {
