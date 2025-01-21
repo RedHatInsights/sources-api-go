@@ -13,7 +13,6 @@ import (
 
 type dummyChecker struct {
 	ApplicationCounter   int
-	EndpointCounter      int
 	RhcConnectionCounter int
 }
 
@@ -87,10 +86,6 @@ func TestAllAvailability(t *testing.T) {
 
 	if acr.ApplicationCounter != 3 {
 		t.Errorf("availability check not called for both applications, got %v expected %v", acr.ApplicationCounter, 3)
-	}
-
-	if acr.EndpointCounter != 4 {
-		t.Errorf("availability check not called for all endpoints, got %v expected %v", acr.EndpointCounter, 4)
 	}
 
 	if acr.RhcConnectionCounter != 1 {
