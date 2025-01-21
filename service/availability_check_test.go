@@ -13,7 +13,6 @@ import (
 
 type dummyChecker struct {
 	ApplicationCounter   int
-	EndpointCounter      int
 	RhcConnectionCounter int
 }
 
@@ -31,13 +30,6 @@ func (c *dummyChecker) ApplicationAvailabilityCheck(source *m.Source) {
 	}
 }
 
-// send out a satellite kafka message per endpoint
-func (c *dummyChecker) EndpointAvailabilityCheck(source *m.Source) {
-	for i := 0; i < len(source.Endpoints); i++ {
-		c.publishSatelliteMessage(&kafka.Writer{}, source, &source.Endpoints[i])
-	}
-}
-
 // ping RHC for each RHC Connection
 func (c *dummyChecker) RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header) {
 	for i := 0; i < len(source.SourceRhcConnections); i++ {
@@ -48,9 +40,6 @@ func (c *dummyChecker) RhcConnectionAvailabilityCheck(source *m.Source, headers 
 // dummy methods making sure they're getting called.
 func (c *dummyChecker) httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL) {
 	c.ApplicationCounter++
-}
-func (c *dummyChecker) publishSatelliteMessage(writer *kafka.Writer, source *m.Source, endpoint *m.Endpoint) {
-	c.EndpointCounter++
 }
 func (c *dummyChecker) pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header) {
 	c.RhcConnectionCounter++
@@ -67,18 +56,6 @@ func TestApplicationAvailability(t *testing.T) {
 
 	if acr.ApplicationCounter != 2 {
 		t.Errorf("availability check not called for both applications, got %v expected %v", acr.ApplicationCounter, 2)
-	}
-}
-
-func TestEndpointAvailability(t *testing.T) {
-	var acr = &dummyChecker{}
-	acr.EndpointAvailabilityCheck(&m.Source{
-		// 3 endpoints on this source.
-		Endpoints: []m.Endpoint{{}, {}, {}},
-	})
-
-	if acr.EndpointCounter != 3 {
-		t.Errorf("availability check not called for all endpoints, got %v expected %v", acr.EndpointCounter, 3)
 	}
 }
 
@@ -105,15 +82,10 @@ func TestAllAvailability(t *testing.T) {
 		SourceRhcConnections: []m.SourceRhcConnection{{RhcConnection: m.RhcConnection{RhcId: "asdf"}}},
 	}
 	acr.ApplicationAvailabilityCheck(src)
-	acr.EndpointAvailabilityCheck(src)
 	acr.RhcConnectionAvailabilityCheck(src, []kafka.Header{})
 
 	if acr.ApplicationCounter != 3 {
 		t.Errorf("availability check not called for both applications, got %v expected %v", acr.ApplicationCounter, 3)
-	}
-
-	if acr.EndpointCounter != 4 {
-		t.Errorf("availability check not called for all endpoints, got %v expected %v", acr.EndpointCounter, 4)
 	}
 
 	if acr.RhcConnectionCounter != 1 {
