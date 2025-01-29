@@ -2,53 +2,6 @@ apiVersion: v1
 data:
   grafana-dashboard-sources.json: |-
     {
-      "__inputs": [
-      ],
-      "__elements": {},
-      "__requires": [
-        {
-          "type": "panel",
-          "id": "gauge",
-          "name": "Gauge",
-          "version": ""
-        },
-        {
-          "type": "grafana",
-          "id": "grafana",
-          "name": "Grafana",
-          "version": "10.4.1"
-        },
-        {
-          "type": "panel",
-          "id": "heatmap",
-          "name": "Heatmap",
-          "version": ""
-        },
-        {
-          "type": "datasource",
-          "id": "prometheus",
-          "name": "Prometheus",
-          "version": "1.0.0"
-        },
-        {
-          "type": "panel",
-          "id": "stat",
-          "name": "Stat",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "text",
-          "name": "Text",
-          "version": ""
-        },
-        {
-          "type": "panel",
-          "id": "timeseries",
-          "name": "Time series",
-          "version": ""
-        }
-      ],
       "annotations": {
         "list": [
           {
@@ -74,7 +27,6 @@ data:
       "editable": true,
       "fiscalYearStartMonth": 0,
       "graphTooltip": 0,
-      "id": null,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -616,7 +568,7 @@ data:
                 "h": 5,
                 "w": 3,
                 "x": 0,
-                "y": 2
+                "y": 6
               },
               "id": 97,
               "options": {
@@ -682,7 +634,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent"
+                        "color": "transparent",
+                        "value": null
                       },
                       {
                         "color": "red",
@@ -698,7 +651,7 @@ data:
                 "h": 5,
                 "w": 12,
                 "x": 3,
-                "y": 2
+                "y": 6
               },
               "id": 26,
               "options": {
@@ -752,7 +705,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "red"
+                        "color": "red",
+                        "value": null
                       },
                       {
                         "color": "green",
@@ -768,7 +722,7 @@ data:
                 "h": 5,
                 "w": 3,
                 "x": 15,
-                "y": 2
+                "y": 6
               },
               "id": 90,
               "options": {
@@ -853,7 +807,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green"
+                        "color": "green",
+                        "value": null
                       },
                       {
                         "color": "red",
@@ -869,7 +824,7 @@ data:
                 "h": 10,
                 "w": 18,
                 "x": 0,
-                "y": 7
+                "y": 11
               },
               "id": 103,
               "options": {
@@ -943,7 +898,7 @@ data:
                 "h": 5,
                 "w": 3,
                 "x": 0,
-                "y": 17
+                "y": 21
               },
               "id": 96,
               "options": {
@@ -1009,7 +964,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent"
+                        "color": "transparent",
+                        "value": null
                       },
                       {
                         "color": "red",
@@ -1025,7 +981,7 @@ data:
                 "h": 5,
                 "w": 12,
                 "x": 3,
-                "y": 17
+                "y": 21
               },
               "id": 91,
               "options": {
@@ -1079,7 +1035,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "red"
+                        "color": "red",
+                        "value": null
                       },
                       {
                         "color": "green",
@@ -1095,7 +1052,7 @@ data:
                 "h": 5,
                 "w": 3,
                 "x": 15,
-                "y": 17
+                "y": 21
               },
               "id": 92,
               "options": {
@@ -1182,7 +1139,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent"
+                        "color": "transparent",
+                        "value": null
                       },
                       {
                         "color": "red",
@@ -1198,7 +1156,7 @@ data:
                 "h": 8,
                 "w": 18,
                 "x": 0,
-                "y": 22
+                "y": 26
               },
               "id": 98,
               "options": {
@@ -1282,7 +1240,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green"
+                        "color": "green",
+                        "value": null
                       },
                       {
                         "color": "red",
@@ -1419,7 +1378,7 @@ data:
                 "h": 9,
                 "w": 18,
                 "x": 0,
-                "y": 30
+                "y": 34
               },
               "id": 100,
               "options": {
@@ -1507,7 +1466,7 @@ data:
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "$Datasource"
+                "uid": "${aws_resources_exporter}"
               },
               "description": "Alert: > 1000 [10m]",
               "fieldConfig": {
@@ -1553,7 +1512,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "transparent"
+                        "color": "transparent",
+                        "value": null
                       },
                       {
                         "color": "red",
@@ -1569,7 +1529,7 @@ data:
                 "h": 6,
                 "w": 24,
                 "x": 0,
-                "y": 3
+                "y": 7
               },
               "id": 18,
               "interval": "",
@@ -1589,115 +1549,22 @@ data:
               "targets": [
                 {
                   "datasource": {
-                    "uid": "$Datasource"
+                    "type": "prometheus",
+                    "uid": "${aws_resources_exporter}"
                   },
+                  "disableTextWrap": false,
                   "editorMode": "code",
-                  "expr": "sum(kafka_consumergroup_group_lag{topic=~'platform.sources..*'}) by (group, topic)",
+                  "expr": "sum by(consumer_group, topic) (aws_kafka_sum_offset_lag_sum{topic=~\"platform.sources..*\"})",
+                  "fullMetaSearch": false,
+                  "includeNullMetadata": true,
                   "interval": "",
-                  "legendFormat": "{{topic}}/{{group}}",
+                  "legendFormat": "{{topic}}/{{consumer_group}}",
                   "range": true,
-                  "refId": "A"
+                  "refId": "A",
+                  "useBackend": false
                 }
               ],
               "title": "Kafka lag",
-              "type": "timeseries"
-            },
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "$Datasource"
-              },
-              "description": "",
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "axisBorderShow": false,
-                    "axisCenteredZero": false,
-                    "axisColorMode": "text",
-                    "axisLabel": "",
-                    "axisPlacement": "auto",
-                    "barAlignment": 0,
-                    "drawStyle": "line",
-                    "fillOpacity": 10,
-                    "gradientMode": "none",
-                    "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
-                    },
-                    "insertNulls": false,
-                    "lineInterpolation": "linear",
-                    "lineWidth": 1,
-                    "pointSize": 5,
-                    "scaleDistribution": {
-                      "type": "linear"
-                    },
-                    "showPoints": "never",
-                    "spanNulls": false,
-                    "stacking": {
-                      "group": "A",
-                      "mode": "none"
-                    },
-                    "thresholdsStyle": {
-                      "mode": "off"
-                    }
-                  },
-                  "links": [],
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green"
-                      },
-                      {
-                        "color": "red",
-                        "value": 80
-                      }
-                    ]
-                  },
-                  "unit": "short"
-                },
-                "overrides": []
-              },
-              "gridPos": {
-                "h": 6,
-                "w": 24,
-                "x": 0,
-                "y": 9
-              },
-              "id": 85,
-              "interval": "",
-              "options": {
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
-              },
-              "pluginVersion": "10.4.1",
-              "targets": [
-                {
-                  "datasource": {
-                    "uid": "$Datasource"
-                  },
-                  "editorMode": "code",
-                  "expr": "sum(kafka_consumergroup_group_lag_seconds{topic=~'platform.sources..*'}) by (group, topic)",
-                  "interval": "",
-                  "legendFormat": "{{topic}}/{{group}}",
-                  "range": true,
-                  "refId": "A"
-                }
-              ],
-              "title": "Kafka lag (seconds)",
               "type": "timeseries"
             }
           ],
@@ -1773,7 +1640,8 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green"
+                        "color": "green",
+                        "value": null
                       },
                       {
                         "color": "red",
@@ -1789,7 +1657,7 @@ data:
                 "h": 9,
                 "w": 12,
                 "x": 0,
-                "y": 4
+                "y": 14
               },
               "id": 22,
               "options": {
@@ -1847,7 +1715,7 @@ data:
                 "h": 9,
                 "w": 12,
                 "x": 12,
-                "y": 4
+                "y": 14
               },
               "id": 86,
               "options": {
@@ -2688,8 +2556,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2785,8 +2652,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -2899,8 +2765,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -3002,8 +2867,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -3132,8 +2996,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -3275,8 +3138,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -3369,8 +3231,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -3472,8 +3333,7 @@ data:
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": null
+                        "color": "green"
                       },
                       {
                         "color": "red",
@@ -3568,7 +3428,11 @@ data:
           },
           {
             "allValue": ".*",
-            "current": {},
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "$Datasource"
@@ -3595,7 +3459,11 @@ data:
           },
           {
             "allValue": ".*",
-            "current": {},
+            "current": {
+              "selected": false,
+              "text": "All",
+              "value": "$__all"
+            },
             "datasource": {
               "type": "prometheus",
               "uid": "$Datasource"
@@ -3666,6 +3534,53 @@ data:
             "queryValue": "",
             "skipUrlSync": false,
             "type": "custom"
+          },
+          {
+            "current": {
+              "selected": true,
+              "text": "aws-resources-exporter-production",
+              "value": "PCEFB875D6FD018FC"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": "Resources Exporter",
+            "multi": false,
+            "name": "aws_resources_exporter",
+            "options": [],
+            "query": "prometheus",
+            "queryValue": "",
+            "refresh": 1,
+            "regex": "/aws-resources-exporter-(production|stage)/",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "current": {
+              "selected": false,
+              "text": "consoledot-prod",
+              "value": "consoledot-prod"
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "${aws_resources_exporter}"
+            },
+            "definition": "label_values(aws_kafka_sum_offset_lag_sum,cluster_name)",
+            "hide": 0,
+            "includeAll": false,
+            "label": "MSK cluster",
+            "multi": false,
+            "name": "msk_cluster",
+            "options": [],
+            "query": {
+              "qryType": 1,
+              "query": "label_values(aws_kafka_sum_offset_lag_sum,cluster_name)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "refresh": 1,
+            "regex": "/consoledot-(?:prod|stage)/",
+            "skipUrlSync": false,
+            "sort": 0,
+            "type": "query"
           }
         ]
       },
@@ -3677,7 +3592,7 @@ data:
       "timezone": "",
       "title": "Sources Dashboard",
       "uid": "zxZKNnAMz",
-      "version": 3,
+      "version": 1,
       "weekStart": ""
     }
 kind: ConfigMap
