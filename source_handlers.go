@@ -340,55 +340,49 @@ func ApplicationTypeListSource(c echo.Context) error {
 func SourceCheckAvailability(c echo.Context) error {
 	// override the context with a non-terminating context, setting the logger
 	// field so we still get the nice log messages
-	var ctx context.Context
-	var cancel context.CancelFunc
-	ctx = context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
-	ctx, cancel = context.WithTimeout(ctx, 20*time.Second)
+	ctx := context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+
 	c.Set("override_context", ctx)
 
 	sourceDao, err := getSourceDao(c)
 	if err != nil {
-		cancel()
 		return err
 	}
 
 	sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
 	if err != nil {
-		cancel()
 		return util.NewErrBadRequest(err)
 	}
 
 	exists, err := sourceDao.Exists(sourceID)
 	if !exists || err != nil {
-		cancel()
 		return util.NewErrNotFound("source")
 	}
 
-	// do it async!
-	go func() {
-		src, err := sourceDao.GetByIdWithPreload(&sourceID,
-			"SourceType",
-			"Applications",
-			"Applications.ApplicationType",
-			"Endpoints",
-			"Endpoints.Tenant",
-			"Tenant",
-			"SourceRhcConnections",
-			"SourceRhcConnections.RhcConnection",
-		)
-		if err != nil {
-			c.Logger().Warnf("error loading up source for availability check: %v", err)
-			return
-		}
+	src, err := sourceDao.GetByIdWithPreload(&sourceID,
+		"SourceType",
+		"Applications",
+		"Applications.ApplicationType",
+		"Endpoints",
+		"Endpoints.Tenant",
+		"Tenant",
+		"SourceRhcConnections",
+		"SourceRhcConnections.RhcConnection",
+	)
+	if err != nil {
+		c.Logger().Warnf("error loading up source for availability check: %s", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
+	}
 
-		h, err := service.ForwadableHeaders(c)
-		if err != nil {
-			c.Logger().Warn(err)
-			return
-		}
-		service.RequestAvailabilityCheck(c, src, h)
-		cancel()
-	}()
+	h, err := service.ForwadableHeaders(c)
+	if err != nil {
+		c.Logger().Warnf("unable to build the forwardable headers for the availability check: %s", err)
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
+	}
+
+	service.RequestAvailabilityCheck(c, src, h)
 
 	return c.JSON(http.StatusAccepted, map[string]interface{}{})
 }
