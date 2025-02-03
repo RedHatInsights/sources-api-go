@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.23.5
 
 require (
-	github.com/99designs/gqlgen v0.17.63
+	github.com/99designs/gqlgen v0.17.64
 	github.com/RedHatInsights/rbac-client-go v1.0.0
 	github.com/RedHatInsights/tenant-utils v1.0.0
 	github.com/Unleash/unleash-client-go/v4 v4.1.4
@@ -35,7 +35,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
-	github.com/vektah/gqlparser/v2 v2.5.21
+	github.com/vektah/gqlparser/v2 v2.5.22
 	gorm.io/datatypes v1.2.5
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
@@ -139,6 +139,6 @@ require (
 	golang.org/x/text v0.21.0
 	golang.org/x/time v0.9.0 // indirect
 	golang.org/x/tools v0.29.0 // indirect
-	google.golang.org/protobuf v1.36.3 // indirect
+	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
