@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
+	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -345,62 +346,70 @@ func ApplicationTypeListSource(c echo.Context) error {
 	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
 }
 
-func SourceCheckAvailability(c echo.Context) error {
-	// override the context with a non-terminating context, setting the logger
-	// field so we still get the nice log messages
-	ctx := context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
+func SourceCheckAvailability(metricsService metrics.MetricsService) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// override the context with a non-terminating context, setting the logger
+		// field so we still get the nice log messages
+		ctx := context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
 
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
-	defer cancel()
+		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		defer cancel()
 
-	c.Set("override_context", ctx)
+		c.Set("override_context", ctx)
 
-	sourceDao, err := getSourceDao(c)
-	if err != nil {
-		return err
+		sourceDao, err := getSourceDao(c)
+		if err != nil {
+			metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
+			return err
+		}
+
+		sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		exists, err := sourceDao.Exists(sourceID)
+		if !exists || err != nil {
+			return util.NewErrNotFound("source")
+		}
+
+		src, err := sourceDao.GetByIdWithPreload(&sourceID,
+			"SourceType",
+			"Applications",
+			"Applications.ApplicationType",
+			"Endpoints",
+			"Endpoints.Tenant",
+			"Tenant",
+			"SourceRhcConnections",
+			"SourceRhcConnections.RhcConnection",
+		)
+		if err != nil {
+			c.Logger().Warnf("error loading up source for availability check: %s", err)
+			metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
+		}
+
+		h, err := service.ForwadableHeaders(c)
+		if err != nil {
+			c.Logger().Warnf("unable to build the forwardable headers for the availability check: %s", err)
+			metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
+		}
+
+		// As per https://issues.redhat.com/browse/RHCLOUD-38735, we do not want to perform availability check requests
+		// for Cost Management applications or sources that do not have any applications associated with them.
+		var skipEmptySources = false
+		if skip := c.Request().Header.Get(headers.SkipEmptySources); skip != "" {
+			skipEmptySources = skip == "true"
+		}
+
+		service.RequestAvailabilityCheck(metricsService, c, src, h, skipEmptySources)
+
+		return c.JSON(http.StatusAccepted, map[string]interface{}{})
 	}
-
-	sourceID, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
-	if err != nil {
-		return util.NewErrBadRequest(err)
-	}
-
-	exists, err := sourceDao.Exists(sourceID)
-	if !exists || err != nil {
-		return util.NewErrNotFound("source")
-	}
-
-	src, err := sourceDao.GetByIdWithPreload(&sourceID,
-		"SourceType",
-		"Applications",
-		"Applications.ApplicationType",
-		"Endpoints",
-		"Endpoints.Tenant",
-		"Tenant",
-		"SourceRhcConnections",
-		"SourceRhcConnections.RhcConnection",
-	)
-	if err != nil {
-		c.Logger().Warnf("error loading up source for availability check: %s", err)
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
-	}
-
-	h, err := service.ForwadableHeaders(c)
-	if err != nil {
-		c.Logger().Warnf("unable to build the forwardable headers for the availability check: %s", err)
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
-	}
-
-	// As per https://issues.redhat.com/browse/RHCLOUD-38735, we do not want to perform availability check requests
-	// for Cost Management applications or sources that do not have any applications associated with them.
-	var skipEmptySources = false
-	if skip := c.Request().Header.Get(headers.SkipEmptySources); skip != "" {
-		skipEmptySources = skip == "true"
-	}
-
-	service.RequestAvailabilityCheck(c, src, h, skipEmptySources)
-
-	return c.JSON(http.StatusAccepted, map[string]interface{}{})
 }
 
 // SourcesRhcConnectionList returns all the connections related to a source.
