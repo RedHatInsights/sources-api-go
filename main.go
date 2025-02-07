@@ -12,14 +12,15 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
 	l "github.com/RedHatInsights/sources-api-go/logger"
+	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	"github.com/RedHatInsights/sources-api-go/util"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
-	echoMetrics "github.com/labstack/echo-contrib/prometheus"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/labstack/gommon/log"
 	"github.com/sirupsen/logrus"
 )
 
@@ -42,6 +43,12 @@ func main() {
 	redis.Init()
 	dao.Init()
 
+	// Initialize our custom metrics.
+	metricsService, err := metrics.NewPrometheusMetricsService()
+	if err != nil {
+		log.Fatalf("unable to initialize the metrics service: %f", err)
+	}
+
 	shutdown := make(chan struct{})
 	interrupts := make(chan os.Signal, 1)
 	signal.Notify(interrupts, os.Interrupt, syscall.SIGTERM)
@@ -56,7 +63,10 @@ func main() {
 	case conf.BackgroundWorker:
 		go jobs.Run(shutdown)
 	default:
-		go runServer(shutdown)
+		// launch 2 listeners - one for metrics and one for the actual application,
+		// one on 8000 and one on 9000 (per clowder)
+		go runServer(shutdown, metricsService)
+		go runMetricExporter()
 	}
 	l.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
@@ -70,7 +80,7 @@ func main() {
 	os.Exit(0)
 }
 
-func runServer(shutdown chan struct{}) {
+func runServer(shutdown chan struct{}, metricsService metrics.MetricsService) {
 	e := echo.New()
 
 	// set the logger to the wrapper of our main logrus logger, with no fields on it.
@@ -85,10 +95,9 @@ func runServer(shutdown chan struct{}) {
 	e.Use(middleware.Recover())
 
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
-	p := echoMetrics.NewPrometheus("sources", nil)
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return p.HandlerFunc(next) })
+	e.Use(echoprometheus.NewMiddleware("sources"))
 
-	setupRoutes(e)
+	setupRoutes(e, metricsService)
 
 	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant
@@ -136,7 +145,7 @@ func runServer(shutdown chan struct{}) {
 func runMetricExporter() {
 	// creating a separate echo router for the metrics handler - since it has to listen on a separate port.
 	e := echo.New()
-	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	e.GET("/metrics", echoprometheus.NewHandler())
 
 	// hiding the ascii art to make the logs more json-like
 	e.HideBanner = true

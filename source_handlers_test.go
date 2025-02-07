@@ -23,6 +23,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
+	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -33,6 +34,20 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 	"gorm.io/datatypes"
 )
+
+// metricsServiceMock is a type that has NO-OP methods implemented, so that it can be used in tests without actually
+// calling the metrics' methods.
+type metricsServiceMock struct{}
+
+func (m metricsServiceMock) IncrementSourcesAvailabilityCheckRequestsCounter() {}
+
+func (m metricsServiceMock) IncrementSourcesAvailabilityCheckFailedRequestsCounter(_ metrics.ErrorOrigin) {
+}
+
+// NewMetricsServiceMock returns a "MetricsService" instance whose its methods perform NO-OPs.
+func NewMetricsServiceMock() metrics.MetricsService {
+	return metricsServiceMock{}
+}
 
 func TestSourceListAuthentications(t *testing.T) {
 	originalSecretStore := conf.SecretStore
@@ -1710,7 +1725,9 @@ func TestAvailabilityStatusCheck(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues("1")
 
-	err := SourceCheckAvailability(c)
+	errorContext := ErrorHandlingContext(SourceCheckAvailability(NewMetricsServiceMock()))
+	err := errorContext(c)
+
 	if err != nil {
 		t.Error(err)
 	}
@@ -1794,7 +1811,8 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues("12345")
 
-	err := SourceCheckAvailability(c)
+	errorContext := ErrorHandlingContext(SourceCheckAvailability(NewMetricsServiceMock()))
+	err := errorContext(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -1823,7 +1841,7 @@ func TestAvailabilityStatusCheckInvalidTenant(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
-	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability(NewMetricsServiceMock()))
 	err := notFoundSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
@@ -1845,7 +1863,7 @@ func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues("183209745")
 
-	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability(NewMetricsServiceMock()))
 	err := notFoundSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
@@ -1867,7 +1885,7 @@ func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
 	c.SetParamNames("source_id")
 	c.SetParamValues("xxx")
 
-	badRequestSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+	badRequestSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability(NewMetricsServiceMock()))
 	err := badRequestSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
