@@ -431,7 +431,7 @@ parameters:
 - name: CLOUD_CONNECTOR_BASE_PATH
   description: Partial path for performing connection operations
   required: true
-  value: "/connections"
+  value: "/api/cloud-connector/v2/connections"
 - name: CLOUD_CONNECTOR_STATUS_PATH
   description: Partial path for checking connection status, used with CLOUD_CONNECTOR_BASE_PATH
   required: true
