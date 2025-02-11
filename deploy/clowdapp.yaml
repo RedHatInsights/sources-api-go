@@ -189,7 +189,9 @@ objects:
         - name: COST_MANAGEMENT_AVAILABILITY_CHECK_URL
           value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
         - name: CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL
-          value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_CHECK_PATH}
+          value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_BASE_PATH}
+        - name: CLOUD_CONNECTOR_STATUS_PATH
+          value: ${CLOUD_CONNECTOR_STATUS_PATH}
         - name: PROVISIONING_AVAILABILITY_CHECK_URL
           value: ${PROVISIONING_SCHEME}://${PROVISIONING_HOST}:${PROVISIONING_PORT}${PROVISIONING_CHECK_PATH}
         - name: SOURCES_ENV
@@ -426,9 +428,14 @@ parameters:
 - name: CLOUD_CONNECTOR_PORT
   required: true
   value: "9000"
-- name: CLOUD_CONNECTOR_CHECK_PATH
+- name: CLOUD_CONNECTOR_BASE_PATH
+  description: Partial path for performing connection operations
   required: true
-  value: "/connection_status"
+  value: "/connections"
+- name: CLOUD_CONNECTOR_STATUS_PATH
+  description: Partial path for checking connection status, used with CLOUD_CONNECTOR_BASE_PATH
+  required: true
+  value: "/status"
 - name: PROVISIONING_SCHEME
   required: true
   value: "http"

@@ -45,9 +45,10 @@ type availabilityChecker interface {
 
 var (
 	// cloud connector related fields
-	cloudConnectorUrl      = os.Getenv("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL")
-	cloudConnectorPsk      = os.Getenv("CLOUD_CONNECTOR_PSK")
-	cloudConnectorClientId = os.Getenv("CLOUD_CONNECTOR_CLIENT_ID")
+	cloudConnectorUrl        = os.Getenv("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL")
+	cloudConnectorStatusPath = os.Getenv("CLOUD_CONNECTOR_STATUS_PATH")
+	cloudConnectorPsk        = os.Getenv("CLOUD_CONNECTOR_PSK")
+	cloudConnectorClientId   = os.Getenv("CLOUD_CONNECTOR_CLIENT_ID")
 )
 
 // requests both types of availability checks for a source
@@ -144,24 +145,21 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 		acr.Logger().Warnf("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL not set - skipping check for RHC Connection Availability Status [%v]", rhcConnection.RhcId)
 		return
 	}
+	if cloudConnectorStatusPath == "" {
+		acr.Logger().Warnf("CLOUD_CONNECTOR_STATUS_PATH not set - skipping check for RHC Connection Availability Status [%v]", rhcConnection.RhcId)
+		return
+	}
 
 	acr.Logger().Infof("Requesting Availability Check for RHC %v", rhcConnection.ID)
 
 	// per: https://github.com/RedHatInsights/cloud-connector/blob/master/internal/controller/api/api.spec.json
-	body, err := json.Marshal(map[string]interface{}{
-		"account": source.Tenant.ExternalTenant,
-		"node_id": rhcConnection.RhcId,
-	})
-	if err != nil {
-		acr.Logger().Warnf("Failed to marshal request body: %v", err)
-		return
-	}
+	cloudConnectorStatusUrl := cloudConnectorUrl + "/" + rhcConnection.RhcId + cloudConnectorStatusPath
 
 	// timeout after 10s
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "POST", cloudConnectorUrl, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, "GET", cloudConnectorStatusUrl, nil)
 	if err != nil {
 		acr.Logger().Warnf("Failed to create request for RHC Connection for ID %v, e: %v", source.ID, err)
 		return
@@ -172,7 +170,7 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 	req.Header.Set("x-rh-cloud-connector-psk", cloudConnectorPsk)
 
 	// Log the request before sending it.
-	acr.Logger().Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status request's body: %v`, source.ID, rhcConnection.ID, rhcConnection.RhcId, string(body))
+	acr.Logger().Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] Created RHC connection status request`, source.ID, rhcConnection.ID, rhcConnection.RhcId)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
