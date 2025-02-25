@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi:latest as build
+FROM registry.access.redhat.com/ubi9/ubi:latest as build
 WORKDIR /build
 
 RUN dnf -y --disableplugin=subscription-manager install go
@@ -13,7 +13,7 @@ RUN GOTOOLCHAIN=go1.23.5 go mod download
 COPY . .
 RUN GOTOOLCHAIN=go1.23.5 go build -o sources-api-go . && strip sources-api-go
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 WORKDIR /app
 RUN chmod 777 /app
 
