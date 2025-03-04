@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/RedHatInsights/sources-api-go/kessel"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -24,7 +25,7 @@ import (
 //     operation on a subset of paths.
 //   - The request is a regularly authenticated one, so we will call RBAC to verify that the principal that comes in
 //     the header has the authorization to perform the operation in Sources.
-func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.Client) echo.MiddlewareFunc {
+func PermissionCheck(bypassRbac bool, isKesselEnabled bool, authorizedPsks []string, kesselService kessel.KesselAuthorizationService, rbacClient rbac.Client) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			switch {
@@ -82,14 +83,24 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				if !ok {
 					return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get(h.XRHID))
 				}
+				// if Kessel is enabled then
+				if isKesselEnabled {
+					workspaceId, err := rbacClient.GetDefaultWorkspace(id.Identity.OrgID)
+					if err != nil {
+						return fmt.Errorf("error fetching default workspace from rbac: %v", err)
+					}
+					kesselService.HasPermissionOnWorkspace(c.Request().Context(), workspaceId, id.Identity.User.UserID)
 
-				allowed, err := rbacClient.Allowed(rhid)
-				if err != nil {
-					return fmt.Errorf("error hitting rbac: %v", err)
-				}
+				} else {
+					allowed, err := rbacClient.Allowed(rhid)
 
-				if !allowed {
-					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
+					if err != nil {
+						return fmt.Errorf("error hitting rbac: %v", err)
+					}
+
+					if !allowed {
+						return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
+					}
 				}
 
 			default:

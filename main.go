@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
+	"github.com/RedHatInsights/sources-api-go/kessel"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
@@ -21,6 +22,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var conf = config.Get()
@@ -42,6 +45,15 @@ func main() {
 	redis.Init()
 	dao.Init()
 
+	//Initializing Kessel
+	var opts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	conn, err := grpc.NewClient("localhost:9000", opts...)
+	if err != nil {
+		l.Log.Fatalf("Unable to connect to Kessel: %s", err)
+	}
+	kesselAuthorization := kessel.NewKesselAuthorizationService(conn)
+	kesselAuthorization.HasPermissionOnWorkspace(context.Background(), "3c3ef849-d8ca-11ef-ad01-083a885cd988", "12345")
+
 	shutdown := make(chan struct{})
 	interrupts := make(chan os.Signal, 1)
 	signal.Notify(interrupts, os.Interrupt, syscall.SIGTERM)
@@ -56,7 +68,10 @@ func main() {
 	case conf.BackgroundWorker:
 		go jobs.Run(shutdown)
 	default:
-		go runServer(shutdown)
+		// launch 2 listeners - one for metrics and one for the actual application,
+		// one on 8000 and one on 9000 (per clowder)
+		go runServer(shutdown, kesselAuthorization)
+		go runMetricExporter()
 	}
 	l.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
@@ -70,7 +85,7 @@ func main() {
 	os.Exit(0)
 }
 
-func runServer(shutdown chan struct{}) {
+func runServer(shutdown chan struct{}, kesselService kessel.KesselAuthorizationService) {
 	e := echo.New()
 
 	// set the logger to the wrapper of our main logrus logger, with no fields on it.
@@ -88,7 +103,7 @@ func runServer(shutdown chan struct{}) {
 	p := echoMetrics.NewPrometheus("sources", nil)
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return p.HandlerFunc(next) })
 
-	setupRoutes(e)
+	setupRoutes(e, kesselService)
 
 	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant

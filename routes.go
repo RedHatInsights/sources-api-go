@@ -6,13 +6,14 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/kessel"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
-func setupRoutes(e *echo.Echo) {
+func setupRoutes(e *echo.Echo, kesselService kessel.KesselAuthorizationService) {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
@@ -24,10 +25,10 @@ func setupRoutes(e *echo.Echo) {
 	})
 
 	// Set up the dependencies for the middlewares and the handlers.
-	rbacClient := rbac.NewRbacClient(config.Get().RbacHost)
+	rbacClient := rbac.NewRbacClient(config.Get().RbacHost, "get from config somehow")
 
 	// Set up the middlewares.
-	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().AuthorizedPsks, rbacClient)
+	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().KesselEnabled, config.Get().AuthorizedPsks, kesselService, rbacClient)
 
 	var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
 	var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
