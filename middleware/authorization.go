@@ -20,6 +20,7 @@ var (
 	psks            = config.Get().Psks
 	bypassRbac      = config.Get().BypassRbac
 	rbacClient Rbac = &RbacClient{client: rbac.NewClient(os.Getenv("RBAC_URL"), "sources")}
+	isKesselEnabled = config.Get().KesselEnabled
 )
 
 /*
@@ -89,16 +90,21 @@ func PermissionCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			if !ok {
 				return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get(h.XRHID))
 			}
+			// if Kessel is enabled then 
+			if isKesselEnabled {
+ 
+			} else {
+				allowed, err := rbacClient.Allowed(rhid)
 
-			allowed, err := rbacClient.Allowed(rhid)
-			if err != nil {
-				return fmt.Errorf("error hitting rbac: %v", err)
+				if err != nil {
+					return fmt.Errorf("error hitting rbac: %v", err)
+				}
+
+				if !allowed {
+					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
+				}
 			}
-
-			if !allowed {
-				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
-			}
-
+			
 		default:
 			return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 		}
