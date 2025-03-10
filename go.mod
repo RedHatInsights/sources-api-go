@@ -8,7 +8,7 @@ require (
 	github.com/99designs/gqlgen v0.17.64
 	github.com/RedHatInsights/rbac-client-go v1.0.0
 	github.com/RedHatInsights/tenant-utils v1.0.0
-	github.com/Unleash/unleash-client-go/v4 v4.1.4
+	github.com/Unleash/unleash-client-go/v4 v4.3.0
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/aws/aws-sdk-go-v2 v1.36.1
