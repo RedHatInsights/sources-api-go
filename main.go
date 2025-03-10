@@ -46,16 +46,17 @@ func main() {
 	interrupts := make(chan os.Signal, 1)
 	signal.Notify(interrupts, os.Interrupt, syscall.SIGTERM)
 
+	// Run the metrics exporter regardless of the application we are launching. This ensures that Prometheus is able
+	// to scrape some data do produce the "up" metric. More information about it here: https://issues.redhat.com/browse/RHCLOUD-38530.
+	go runMetricExporter()
+
 	switch {
 	case conf.StatusListener:
 		go statuslistener.Run(shutdown)
 	case conf.BackgroundWorker:
 		go jobs.Run(shutdown)
 	default:
-		// launch 2 listeners - one for metrics and one for the actual application,
-		// one on 8000 and one on 9000 (per clowder)
 		go runServer(shutdown)
-		go runMetricExporter()
 	}
 	l.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
