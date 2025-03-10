@@ -67,6 +67,7 @@ type SourcesApiConfig struct {
 	SecretsManagerSecretKey string
 	SecretsManagerPrefix    string
 	LocalStackURL           string
+	KesselEnabled			bool
 }
 
 // String() returns a string that shows the settings in which the pod is running in
@@ -100,6 +101,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "HandleTenantRefresh", parsedConfig.HandleTenantRefresh)
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", parsedConfig.LocalStackURL)
+	fmt.Fprintf(&b, "%s=%v ", "KesselEnabled", parsedConfig.KesselEnabled)
 	return b.String()
 }
 
@@ -175,6 +177,7 @@ func Get() *SourcesApiConfig {
 		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
 		options.SetDefault("AwsSecretAccessKey", os.Getenv("CW_AWS_SECRET_ACCESS_KEY"))
+		options.SetDefault("KesselEnabledKey", os.Getenv("KESSEL_ENABLED"))
 
 		kafkaPort := os.Getenv("QUEUE_PORT")
 		if kafkaPort != "" {
@@ -335,6 +338,7 @@ func Get() *SourcesApiConfig {
 		SecretsManagerSecretKey: options.GetString("SecretsManagerSecretKey"),
 		SecretsManagerPrefix:    options.GetString("SecretsManagerPrefix"),
 		LocalStackURL:           options.GetString("LocalStackURL"),
+		KesselEnabled: 			 options.GetBool("KesselEnabledKey"),
 	}
 
 	return parsedConfig
