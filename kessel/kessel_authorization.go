@@ -5,10 +5,11 @@ import (
 	"log"
 
 	"github.com/RedHatInsights/sources-api-go/kessel/buf/gen/kessel/relations/v1beta1"
+	"google.golang.org/grpc"
 )
 
 func HasPermissionOnWorkspace(ctx context.Context, resourceId string){
-	client := v1beta1.NewKesselCheckServiceClient()
+	client := v1beta1.NewKesselCheckServiceClient(&grpc.ClientConn{})
 
 	request := v1beta1.CheckRequest{
 		Relation:    "sources_manage_all",
