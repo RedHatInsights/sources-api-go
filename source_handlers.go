@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"net/http"
 	"strconv"
 	"time"
@@ -382,7 +383,14 @@ func SourceCheckAvailability(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
 	}
 
-	service.RequestAvailabilityCheck(c, src, h)
+	// As per https://issues.redhat.com/browse/RHCLOUD-38735, we do not want to perform availability check requests
+	// for Cost Management applications or sources that do not have any applications associated with them.
+	var skipEmptySources = false
+	if skip := c.Request().Header.Get(headers.SkipEmptySources); skip != "" {
+		skipEmptySources = skip == "true"
+	}
+
+	service.RequestAvailabilityCheck(c, src, h, skipEmptySources)
 
 	return c.JSON(http.StatusAccepted, map[string]interface{}{})
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"net/http"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -42,9 +43,17 @@ func InternalSourceList(c echo.Context) error {
 		return err
 	}
 
+	// Skip Sources which do not have associated applications or RHC Connections. Useful for the Sources Monitor since
+	// it prevents returning Sources that do not need to have availability checks performed for them. More information
+	// here: https://issues.redhat.com/browse/RHCLOUD-38735.
+	var skipEmptySources = false
+	if skip := c.Request().Header.Get(headers.SkipEmptySources); skip != "" {
+		skipEmptySources = skip == "true"
+	}
+
 	// The DAO doesn't need a tenant set, since the queries won't be filtered by that tenant
 	sourcesDB := dao.GetSourceDao(nil)
-	sources, count, err := sourcesDB.ListInternal(limit, offset, filters)
+	sources, count, err := sourcesDB.ListInternal(limit, offset, filters, skipEmptySources)
 
 	if err != nil {
 		return err

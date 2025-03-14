@@ -67,7 +67,7 @@ func (mockSourceDao *MockSourceDao) List(_, _ int, _ []util.Filter) ([]m.Source,
 	return mockSourceDao.Sources, count, nil
 }
 
-func (mockSourceDao *MockSourceDao) ListInternal(_, _ int, _ []util.Filter) ([]m.Source, int64, error) {
+func (mockSourceDao *MockSourceDao) ListInternal(_, _ int, _ []util.Filter, _ bool) ([]m.Source, int64, error) {
 	count := int64(len(mockSourceDao.Sources))
 	return mockSourceDao.Sources, count, nil
 }
