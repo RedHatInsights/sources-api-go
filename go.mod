@@ -2,10 +2,10 @@ module github.com/RedHatInsights/sources-api-go
 
 go 1.23.0
 
-toolchain go1.23.5
+toolchain go1.24.1
 
 require (
-	github.com/99designs/gqlgen v0.17.66
+	github.com/99designs/gqlgen v0.17.68
 	github.com/RedHatInsights/rbac-client-go v1.0.0
 	github.com/RedHatInsights/tenant-utils v1.0.0
 	github.com/Unleash/unleash-client-go/v4 v4.3.0
