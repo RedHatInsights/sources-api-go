@@ -76,7 +76,7 @@ func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Sou
 	for _, app := range source.Applications {
 		// We do not want to send availability check requests for Cost Management applications, as detailed in
 		// https://issues.redhat.com/browse/RHCLOUD-38735.
-		if skipEmptySources && app.ApplicationType.Name == "/insights/platform/cost-management" {
+		if skipEmptySources && isCostManagementApplication(app) {
 			continue
 		}
 
@@ -277,4 +277,9 @@ func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status s
 
 func (acr availabilityCheckRequester) Logger() echo.Logger {
 	return acr.c.Logger()
+}
+
+// isCostManagementApplication returns true when the given application is a Cost Management application.
+func isCostManagementApplication(application m.Application) bool {
+	return application.ApplicationType.Name == "/insights/platform/cost-management"
 }

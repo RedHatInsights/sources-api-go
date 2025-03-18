@@ -92,3 +92,27 @@ func TestAllAvailability(t *testing.T) {
 		t.Errorf("availability check not called for all rhc connections, got %v expected %v", acr.RhcConnectionCounter, 1)
 	}
 }
+
+// TestIsCostManagementApp tests that the helper function which determines if an application is a "Cost Management"
+// application works as expected.
+func TestIsCostManagementApp(t *testing.T) {
+	if isCostManagementApplication(m.Application{}) {
+		t.Errorf("empty application identified as a Cost Management application")
+	}
+
+	nonCostManagementApplication := m.Application{
+		ApplicationType: m.ApplicationType{Name: "/insights/platform/some-other-app"},
+	}
+
+	if isCostManagementApplication(nonCostManagementApplication) {
+		t.Errorf("non-Cost Management application was identified as such")
+	}
+
+	costManagementApplication := m.Application{
+		ApplicationType: m.ApplicationType{Name: "/insights/platform/cost-management"},
+	}
+
+	if !isCostManagementApplication(costManagementApplication) {
+		t.Errorf("a Cost Management application was not identified as such")
+	}
+}
