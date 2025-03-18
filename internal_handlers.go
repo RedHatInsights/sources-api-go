@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"net/http"
+	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -48,7 +49,7 @@ func InternalSourceList(c echo.Context) error {
 	// here: https://issues.redhat.com/browse/RHCLOUD-38735.
 	var skipEmptySources = false
 	if skip := c.Request().Header.Get(headers.SkipEmptySources); skip != "" {
-		skipEmptySources = skip == "true"
+		skipEmptySources = strings.ToLower(skip) == "true"
 	}
 
 	// The DAO doesn't need a tenant set, since the queries won't be filtered by that tenant
