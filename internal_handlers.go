@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"net/http"
 	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
+	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 )

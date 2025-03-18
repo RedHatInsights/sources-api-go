@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gorm.io/datatypes"
 	"io"
 	"net/http"
 	"os"
@@ -32,6 +31,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"gorm.io/datatypes"
 )
 
 func TestSourceListAuthentications(t *testing.T) {
