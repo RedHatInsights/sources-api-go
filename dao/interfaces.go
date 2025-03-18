@@ -10,7 +10,12 @@ type SourceDao interface {
 	// List lists all the sources from a given tenant, which should be specified in the request.
 	List(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	// ListInternal lists all the existing sources.
-	ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
+	//
+	// The "skipEmptySources" parameter is a useful parameter for when the Sources monitor requests all the Sources in
+	// order to perform availability checks for them. By specifying that parameter, we can only return a list of
+	// Sources which contain associated applications or RHC Connections with them. Cost Management applications do not
+	// count as a Source having associated applications, due to https://issues.redhat.com/browse/RHCLOUD-38735.
+	ListInternal(limit, offset int, filters []util.Filter, skipEmptySources bool) ([]m.Source, int64, error)
 	SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.Source, int64, error)
 	GetById(id *int64) (*m.Source, error)
 	Create(src *m.Source) error

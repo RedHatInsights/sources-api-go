@@ -127,7 +127,7 @@ func (s *sourceDaoImpl) List(limit, offset int, filters []util.Filter) ([]m.Sour
 	return sources, count, nil
 }
 
-func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) ([]m.Source, int64, error) {
+func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter, skipEmptySources bool) ([]m.Source, int64, error) {
 	query := DB.Debug().
 		Model(&m.Source{}).
 		Select(`sources.id, sources.availability_status, "Tenant".external_tenant, "Tenant".org_id`)
@@ -137,12 +137,56 @@ func (s *sourceDaoImpl) ListInternal(limit, offset int, filters []util.Filter) (
 		return nil, 0, util.NewErrBadRequest(err)
 	}
 
+	// The "Tenant" table must be joined here as otherwise joining it after the "group" and "having" statements does
+	// not join the table for some reason.
+	query.Joins("Tenant")
+
+	// When told to do so, skip all the sources that don't have any associated applications or RHC Connections with
+	// them. Useful for when the Sources Monitor requests all the sources to then perform availability check requests
+	// with them. With the conditions below, we can ensure that only the Sources that require those availability checks
+	// are checked.
+	//
+	// Per https://issues.redhat.com/browse/RHCLOUD-38735 we consider a source with just "Cost Management" applications
+	// as not having any applications at all.
+	if skipEmptySources {
+		query.Group("sources.id")
+
+		// These "groups" are required since Gorm appends more things to the "SELECT" query.
+		query.Group(`"Tenant".id`)
+		query.Group(`"Tenant".external_tenant`)
+		query.Group(`"Tenant".org_id`)
+
+		query.Having(`
+			(
+				SELECT
+					COUNT(applications.*)
+				FROM
+					applications
+				INNER JOIN
+					application_types ON application_types.id = applications.application_type_id
+				WHERE
+					applications.source_id = sources.id
+				AND
+					application_types."name" != '/insights/platform/cost-management'
+			) > 0
+			OR
+			(
+				SELECT
+					COUNT(source_rhc_connections.*)
+				FROM
+					source_rhc_connections
+				WHERE
+					source_id = sources.id
+			) > 0
+		`)
+	}
+
 	// Getting the total count (filters included) for pagination
 	count := int64(0)
 	query.Count(&count)
 
 	sources := make([]m.Source, 0, limit)
-	result := query.Joins("Tenant").Limit(limit).Offset(offset).Order("sources.id ASC").Find(&sources)
+	result := query.Limit(limit).Offset(offset).Order("sources.id ASC").Find(&sources)
 
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)

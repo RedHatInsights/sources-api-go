@@ -24,7 +24,7 @@ func (c dummyChecker) Logger() echo.Logger {
 }
 
 // send out a http response per application
-func (c *dummyChecker) ApplicationAvailabilityCheck(source *m.Source) {
+func (c *dummyChecker) ApplicationAvailabilityCheck(source *m.Source, skipCostManagementApplications bool) {
 	for i := 0; i < len(source.Applications); i++ {
 		c.httpAvailabilityRequest(source, &source.Applications[i], &url.URL{})
 	}
@@ -52,7 +52,7 @@ func TestApplicationAvailability(t *testing.T) {
 	acr.ApplicationAvailabilityCheck(&m.Source{
 		// 2 applications on this source.
 		Applications: []m.Application{{}, {}},
-	})
+	}, false)
 
 	if acr.ApplicationCounter != 2 {
 		t.Errorf("availability check not called for both applications, got %v expected %v", acr.ApplicationCounter, 2)
@@ -81,7 +81,7 @@ func TestAllAvailability(t *testing.T) {
 		// ...and 1 rhc connection
 		SourceRhcConnections: []m.SourceRhcConnection{{RhcConnection: m.RhcConnection{RhcId: "asdf"}}},
 	}
-	acr.ApplicationAvailabilityCheck(src)
+	acr.ApplicationAvailabilityCheck(src, false)
 	acr.RhcConnectionAvailabilityCheck(src, []kafka.Header{})
 
 	if acr.ApplicationCounter != 3 {
@@ -90,5 +90,29 @@ func TestAllAvailability(t *testing.T) {
 
 	if acr.RhcConnectionCounter != 1 {
 		t.Errorf("availability check not called for all rhc connections, got %v expected %v", acr.RhcConnectionCounter, 1)
+	}
+}
+
+// TestIsCostManagementApp tests that the helper function which determines if an application is a "Cost Management"
+// application works as expected.
+func TestIsCostManagementApp(t *testing.T) {
+	if isCostManagementApplication(m.Application{}) {
+		t.Errorf("empty application identified as a Cost Management application")
+	}
+
+	nonCostManagementApplication := m.Application{
+		ApplicationType: m.ApplicationType{Name: "/insights/platform/some-other-app"},
+	}
+
+	if isCostManagementApplication(nonCostManagementApplication) {
+		t.Errorf("non-Cost Management application was identified as such")
+	}
+
+	costManagementApplication := m.Application{
+		ApplicationType: m.ApplicationType{Name: "/insights/platform/cost-management"},
+	}
+
+	if !isCostManagementApplication(costManagementApplication) {
+		t.Errorf("a Cost Management application was not identified as such")
 	}
 }
