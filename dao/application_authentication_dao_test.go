@@ -14,7 +14,7 @@ import (
 // TestDeleteApplicationAuthentication tests that an applicationAuthentication gets correctly deleted, and its data returned.
 func TestDeleteApplicationAuthentication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema("delete")
+	SwitchSchema("delete_application_authentications")
 
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
@@ -32,7 +32,7 @@ func TestDeleteApplicationAuthentication(t *testing.T) {
 		}
 	}
 
-	DropSchema("delete")
+	DropSchema("delete_application_authentications")
 }
 
 // TestDeleteApplicationAuthenticationNotExists tests that when an applicationAuthentication that doesn't exist is tried to be deleted, an error is

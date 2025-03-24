@@ -371,15 +371,13 @@ func TestRhcConnectionRowsClosed(t *testing.T) {
 // TestDeleteRhcConnection tests that an rhcConnection gets correctly deleted, and its data returned.
 func TestDeleteRhcConnection(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	SwitchSchema("delete")
+	SwitchSchema("delete_rhc_connection")
 
-	rhcConnection := fixtures.TestRhcConnectionData[0]
-	// Set the ID to 0 to let GORM know it should insert a new rhcConnection and not update an existing one.
-	rhcConnection.ID = 0
-	// Set the required source for the create operation to work.
-	rhcConnection.Sources = []model.Source{{ID: fixtures.TestSourceData[2].ID}}
-	// Set some data to compare the returned rhcConnection.
-	rhcConnection.Extra = []byte(`{"hello": "world"}`)
+	rhcConnection := model.RhcConnection{
+		Extra:   []byte(`{"hello": "world"}`),
+		RhcId:   "test",
+		Sources: []model.Source{fixtures.TestSourceData[2]},
+	}
 
 	// Create the test rhcConnection.
 	_, err := rhcConnectionDao.Create(&rhcConnection)
@@ -410,7 +408,7 @@ func TestDeleteRhcConnection(t *testing.T) {
 		}
 	}
 
-	DropSchema("delete")
+	DropSchema("delete_rhc_connection")
 }
 
 // TestDeleteRhcConnectionNotExists tests that when an rhcConnection that doesn't exist is tried to be deleted, an
