@@ -8,24 +8,30 @@ import (
 	"google.golang.org/grpc"
 )
 
-func HasPermissionOnWorkspace(ctx context.Context, resourceId string)(bool, error){
-	//Kessel Connection
-	conn, err := &grpc.ClientConn{} //Need to fix 
-	if err != nil{
-		return false, fmt.Errorf("failed to connect to Kessel service: %w", err)
+type KesselAuthorizationService interface{
+	HasPermissionOnWorkspace(ctx context.Context, workspaceId string, userId string)(bool, error)
+}
+
+type kesselAuthorizationServiceImpl struct{
+	kesselCheckClient v1beta1.KesselCheckServiceClient
+}
+
+func NewKesselAuthorizationService(clientConnection grpc.ClientConnInterface)(KesselAuthorizationService){
+	return kesselAuthorizationServiceImpl{
+		kesselCheckClient: v1beta1.NewKesselCheckServiceClient(clientConnection),
 	}
+}
 
-
-	client := v1beta1.NewKesselCheckServiceClient(conn)
+func(k kesselAuthorizationServiceImpl)HasPermissionOnWorkspace(ctx context.Context, workspaceId string, userId string)(bool, error){
 
 	request := v1beta1.CheckRequest{
 		Relation:    "sources_manage_all",
 		Resource:    &v1beta1.ObjectReference{
-			Type:  &v1beta1.ObjectType{
+			Type:  	 &v1beta1.ObjectType{
 				Name: "workspace",
 				Namespace: "rbac",
 			},
-			Id: "",
+			Id: workspaceId,
 		},
 		Subject:    &v1beta1.SubjectReference{
 			Subject: &v1beta1.ObjectReference{
@@ -33,15 +39,15 @@ func HasPermissionOnWorkspace(ctx context.Context, resourceId string)(bool, erro
 					Name: "principal",
 					Namespace: "rbac",
 				},
-				Id: "something",
+				Id: "redhat/"+userId,
 			},
 		},
 	}
 
-	response, err := client.Check(ctx, &request)
+	response, err := k.kesselCheckClient.Check(ctx, &request)
 	if err != nil {
 		return false, fmt.Errorf("error checking the workspace permisssion: %w", err)
 	}
 
-	return true, nil
+	return response.GetAllowed() == v1beta1.CheckResponse_ALLOWED_TRUE, nil
 }

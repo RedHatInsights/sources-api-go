@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
+	"github.com/RedHatInsights/sources-api-go/kessel"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
@@ -21,6 +22,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var conf = config.Get()
@@ -41,6 +44,15 @@ func main() {
 	// a time can run the migrations.
 	redis.Init()
 	dao.Init()
+
+	//Initializing Kessel
+	var opts = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	conn, err := grpc.NewClient("localhost:9000",opts...)
+	if err != nil{
+		l.Log.Fatalf("Unable to connect to Kessel: %s", err)
+	}
+	kesselAuthorization := kessel.NewKesselAuthorizationService(conn)
+	kesselAuthorization.HasPermissionOnWorkspace(context.Background(),"3c3ef849-d8ca-11ef-ad01-083a885cd988","12345")
 
 	shutdown := make(chan struct{})
 	interrupts := make(chan os.Signal, 1)
