@@ -2,7 +2,7 @@ module github.com/RedHatInsights/sources-api-go
 
 go 1.23.0
 
-toolchain go1.23.5
+toolchain go1.24.1
 
 require (
 	github.com/99designs/gqlgen v0.17.66
@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.62
 	github.com/gertd/go-pluralize v0.2.1
-	github.com/go-gormigrate/gormigrate/v2 v2.1.3
+	github.com/go-gormigrate/gormigrate/v2 v2.1.4
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/google/go-cmp v0.7.0
