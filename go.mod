@@ -2,7 +2,7 @@ module github.com/RedHatInsights/sources-api-go
 
 go 1.23.0
 
-toolchain go1.23.5
+toolchain go1.24.1
 
 require (
 	github.com/99designs/gqlgen v0.17.66
@@ -24,7 +24,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
-	github.com/labstack/echo-contrib v0.17.2
+	github.com/labstack/echo-contrib v0.17.3
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/labstack/gommon v0.4.2
 	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9
@@ -118,8 +118,8 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.62.0 // indirect
-	github.com/prometheus/procfs v0.15.1 // indirect
+	github.com/prometheus/common v0.63.0 // indirect
+	github.com/prometheus/procfs v0.16.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/spf13/afero v1.12.0 // indirect
