@@ -19,6 +19,18 @@ func CreateTestContext(method string, path string, body io.Reader, context map[s
 	recorder := httptest.NewRecorder()
 	echoContext := echoInstance.NewContext(request, recorder)
 
+	// Passing the headers in the context instead of in a new variable is very unorthodox, but this avoids having to
+	// refactor all the functions that depend on this, which would clutter any PR that needs to modify it.
+	if headersMap, ok := context["headers"]; ok {
+		if headers, typeOk := headersMap.(map[string]string); typeOk {
+			for key, value := range headers {
+				request.Header.Add(key, value)
+			}
+		}
+
+		delete(context, "headers")
+	}
+
 	for k, v := range context {
 		echoContext.Set(k, v)
 	}

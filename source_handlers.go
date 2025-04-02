@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/marketplace"
+	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -382,7 +383,14 @@ func SourceCheckAvailability(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{})
 	}
 
-	service.RequestAvailabilityCheck(c, src, h)
+	// As per https://issues.redhat.com/browse/RHCLOUD-38735, we do not want to perform availability check requests
+	// for Cost Management applications or sources that do not have any applications associated with them.
+	var skipEmptySources = false
+	if skip := c.Request().Header.Get(headers.SkipEmptySources); skip != "" {
+		skipEmptySources = skip == "true"
+	}
+
+	service.RequestAvailabilityCheck(c, src, h, skipEmptySources)
 
 	return c.JSON(http.StatusAccepted, map[string]interface{}{})
 }

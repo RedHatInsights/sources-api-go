@@ -770,7 +770,7 @@ func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 	wantCount := int64(len(fixtures.TestSourceData))
 
 	for _, d := range fixtures.TestDataOffsetLimit {
-		sources, gotCount, err := sourceDao.ListInternal(d.Limit, d.Offset, []util.Filter{})
+		sources, gotCount, err := sourceDao.ListInternal(d.Limit, d.Offset, []util.Filter{}, false)
 		if err != nil {
 			t.Errorf(`unexpected error when listing the sources: %s`, err)
 		}
@@ -793,6 +793,80 @@ func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 		}
 	}
 	DropSchema("offset_limit")
+}
+
+// TestSourceListInternalSkipCostManagementSources tests that when sources are requested using the internal DAO
+// function, those sources that do not have any applications or the ones that have just Cost Management applications
+// are not returned.
+func TestSourceListInternalSkipCostManagementSources(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("internal_skip_cost_management")
+
+	// Call the function under test.
+	_, countFirstCall, err := sourceDao.ListInternal(100, 0, nil, true)
+	if err != nil {
+		t.Errorf("unable to fetch sources using the internal function: %s", err)
+	}
+
+	// Even though we have 6 Sources in the fixtures, only three of them are linked to applications and RHC
+	// Connections.
+	wantFirstCall := int64(3)
+	if wantFirstCall != countFirstCall {
+		t.Errorf(`unexpected number of sources fetched when calling the function under test. Want "%d", got "%d"`, wantFirstCall, countFirstCall)
+	}
+
+	// Create a "Cost Management" application for the source without applications.
+	sourceWithoutApplications := fixtures.TestSourceData[4] // Source without applications.
+	application := &m.Application{
+		ApplicationTypeID:  fixtures.TestApplicationTypeData[5].Id, // "Cost Management" application type.
+		AvailabilityStatus: "available",
+		SourceID:           sourceWithoutApplications.ID,
+		TenantID:           1,
+	}
+
+	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+	if err := applicationDao.Create(application); err != nil {
+		t.Errorf("unable to create Cost Management application: %s", err)
+	}
+
+	// Call the function under test again.
+	_, countSecondCall, err := sourceDao.ListInternal(100, 0, nil, true)
+	if err != nil {
+		t.Errorf("unable to fetch sources using the internal function: %s", err)
+	}
+
+	// The function under test should still return just 3 elements.
+	wantSecondCall := int64(3)
+	if wantSecondCall != countSecondCall {
+		t.Errorf(`unexpected number of sources fetched when calling the function under test. Want "%d", got "%d"`, wantSecondCall, countSecondCall)
+	}
+
+	// Finally, associate an RHC Connection with the "applicationless source".
+	rhcConnection := &m.RhcConnection{
+		ID:                 12345,
+		RhcId:              "abcde",
+		Sources:            []m.Source{sourceWithoutApplications},
+		AvailabilityStatus: "available",
+	}
+
+	if _, err := rhcConnectionDao.Create(rhcConnection); err != nil {
+		t.Errorf("unable to create the RHC Connection: %s", err)
+	}
+
+	// Call the function under test one last time.
+	_, countThirdCall, err := sourceDao.ListInternal(100, 0, nil, true)
+	if err != nil {
+		t.Errorf("unable to fetch sources using the internal function: %s", err)
+	}
+
+	// The function under test should now return four elements, since the "source with no applications" now has an
+	// associated RHC Connection with it, and therefore it should be returned.
+	wantThirdCall := int64(4)
+	if wantThirdCall != countThirdCall {
+		t.Errorf(`unexpected number of sources fetched when calling the function under test. Want "%d", got "%d"`, wantThirdCall, countThirdCall)
+	}
+
+	DropSchema("internal_skip_cost_management")
 }
 
 // TestSourceListForRhcConnectionWithOffsetAndLimit tests that ListForRhcConnection() in source dao returns

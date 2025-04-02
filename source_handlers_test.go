@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -30,6 +31,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"gorm.io/datatypes"
 )
 
 func TestSourceListAuthentications(t *testing.T) {
@@ -1707,6 +1709,74 @@ func TestAvailabilityStatusCheck(t *testing.T) {
 
 	c.SetParamNames("source_id")
 	c.SetParamValues("1")
+
+	err := SourceCheckAvailability(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != 202 {
+		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 202)
+	}
+}
+
+// TestAvailabilityStatusCheckSkipEmptySources tests that when the "skip empty sources" header is passed, then the
+// empty sources are skipped when performing the availability status check. Since the availability checker does not
+// return an error, the test will always pass.
+func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodPost,
+		"/api/sources/v3.1/sources/12345/check_availability",
+		nil,
+		map[string]interface{}{
+			"tenantID": int64(12345),
+			"headers":  map[string]string{h.SkipEmptySources: "true"},
+		},
+	)
+
+	// Set the environment variables so that the URL to which we need to send the request gets properly built.
+	if err := os.Setenv("COST_MANAGEMENT_AVAILABILITY_CHECK_URL", "invalidurl"); err != nil {
+		t.Errorf("unable to set the URL for the Cost Management application: %err", err)
+	}
+	defer func() {
+		if err := os.Unsetenv("COST_MANAGEMENT_AVAILABILITY_CHECK_URL"); err != nil {
+			t.Errorf("unable to unset the URL for the Cost Management application: %err", err)
+		}
+	}()
+
+	// Create a fixture that we will use with a custom "mock source dao". That ensures that we will not mess up the
+	// rest of the tests.
+	fixtureSourceId := int64(12345)
+	fixtureSourceUuid := "cae13d9c-00bf-11f0-ac7d-083a885cd988"
+	customSourceFixtures := append(fixtures.TestSourceData, m.Source{
+		ID:                 fixtureSourceId,
+		Name:               "Source with a Cost Management application",
+		SourceTypeID:       fixtures.TestSourceTypeData[0].Id, // an AWS source type.
+		AvailabilityStatus: "available",
+		Uid:                &fixtureSourceUuid,
+		TenantID:           fixtures.TestTenantData[0].Id,
+		Applications: []m.Application{
+			{
+				ID:                6,
+				Extra:             datatypes.JSON("{\"extra\": false}"),
+				ApplicationTypeID: fixtures.TestApplicationTypeData[5].Id, // the Cost Management application type.
+				SourceID:          fixtureSourceId,                        // the parent source to this application.
+				TenantID:          fixtures.TestTenantData[0].Id,
+				ApplicationType:   fixtures.TestApplicationTypeData[5], // the Cost Management application type.
+			},
+		},
+	})
+
+	// Override the "mock source" so that we return the new mock with the source we just added above. Then, we need to
+	// make sure to revert it for the rest of the tests.
+	previousMockSourceDao := mockSourceDao
+	defer func() {
+		mockSourceDao = previousMockSourceDao
+	}()
+	mockSourceDao = &mocks.MockSourceDao{Sources: customSourceFixtures, RelatedSources: fixtures.TestSourceData}
+
+	c.SetParamNames("source_id")
+	c.SetParamValues("12345")
 
 	err := SourceCheckAvailability(c)
 	if err != nil {

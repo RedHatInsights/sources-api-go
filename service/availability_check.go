@@ -31,7 +31,7 @@ type availabilityCheckRequester struct {
 
 type availabilityChecker interface {
 	// public methods
-	ApplicationAvailabilityCheck(source *m.Source)
+	ApplicationAvailabilityCheck(source *m.Source, skipEmptySources bool)
 	RhcConnectionAvailabilityCheck(source *m.Source, headers []kafka.Header)
 
 	// private methods
@@ -52,12 +52,12 @@ var (
 )
 
 // requests both types of availability checks for a source
-func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.Header) {
+func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.Header, skipEmptySources bool) {
 	var ac availabilityChecker = &availabilityCheckRequester{c: c}
 	ac.Logger().Infof("[source_id: %d] Requesting availability check for source", source.ID)
 
 	if len(source.Applications) != 0 {
-		ac.ApplicationAvailabilityCheck(source)
+		ac.ApplicationAvailabilityCheck(source, skipEmptySources)
 	}
 
 	// we only want to send endpoint requests if we _do not_ have any endpoints
@@ -72,8 +72,14 @@ func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.
 
 // sends off an availability check http request for each of the source's
 // applications
-func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source) {
+func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Source, skipEmptySources bool) {
 	for _, app := range source.Applications {
+		// We do not want to send availability check requests for Cost Management applications, as detailed in
+		// https://issues.redhat.com/browse/RHCLOUD-38735.
+		if skipEmptySources && isCostManagementApplication(app) {
+			continue
+		}
+
 		uri := app.ApplicationType.AvailabilityCheckURL()
 		if uri == nil {
 			acr.Logger().Errorf("[source_id: %d][application_id: %d][application_type: %s] Failed to fetch availability check url - continuing", source.ID, app.ID, app.ApplicationType.Name)
@@ -271,4 +277,9 @@ func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status s
 
 func (acr availabilityCheckRequester) Logger() echo.Logger {
 	return acr.c.Logger()
+}
+
+// isCostManagementApplication returns true when the given application is a Cost Management application.
+func isCostManagementApplication(application m.Application) bool {
+	return application.ApplicationType.Name == "/insights/platform/cost-management"
 }
