@@ -12,7 +12,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/db/migrations"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/jackc/pgx/v4/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
