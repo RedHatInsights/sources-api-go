@@ -39,7 +39,7 @@ readonly project_key
 # the runner has SELinux activated, and that we need to relabel the directory
 # to have permission to read it. More information here: https://www.reddit.com/r/podman/comments/fww87v/permission_denied_within_mounted_volume_inside/
 #
-if [ -n "${GIT_BRANCH:-}" ] && [ "${GIT_BRANCH}" == "origin/main" ]; then
+if [ -n "${GIT_BRANCH:-}" ] && { [ "${GIT_BRANCH}" == "main" ] || [ "${GIT_BRANCH}" == "origin/main" ]; }; then
   podman run \
     --env COMMIT_SHORT="${commit_short}" \
     --env GIT_BRANCH="${GIT_BRANCH}" \
