@@ -1,5 +1,53 @@
 #!/bin/bash
 
+#
+# Before running the IQE tests, run the unit and integration tests first for a
+# faster development cycle.
+#
+# Spin up the database for integration tests.
+db_container_name="sources-api-db-$(uuidgen)"
+readonly db_container_name
+
+echo "Spinning up database container: ${db_container_name}"
+
+podman run \
+    --detach \
+    --env POSTGRESQL_DATABASE=sources_api_test_go \
+    --env POSTGRESQL_PASSWORD=toor \
+    --env POSTGRESQL_USER=root \
+    --name "${db_container_name}" \
+    --publish 5432 \
+    quay.io/cloudservices/postgresql-rds:12
+
+database_port=$(podman inspect "${db_container_name}" | grep HostPort | sort | uniq | grep --only-matching "[0-9]*")
+
+echo "Database listening on port: ${database_port}"
+
+export DATABASE_HOST=localhost
+export DATABASE_NAME=sources_api_test_go
+export DATABASE_PASSWORD=toor
+export DATABASE_PORT=$database_port
+export DATABASE_USER=root
+export GOROOT="/opt/go/1.21.3"
+export PATH="${GOROOT}/bin:${PATH}"
+
+echo "Running tests..."
+
+make alltest
+
+result_code=$?
+readonly result_code
+
+echo "Stopping database container..."
+podman stop "${db_container_name}"
+
+echo "Removing database container..."
+podman rm --force "{$db_container_name}"
+
+if [[ $result_code != 0 ]]; then
+    exit 1
+fi
+
 # --------------------------------------------
 # Options that must be configured by app owner
 # --------------------------------------------
@@ -7,67 +55,27 @@ APP_NAME="sources"  # name of app-sre "application" folder this component lives 
 COMPONENT_NAME="sources-api"  # name of app-sre "resourceTemplate" in deploy.yaml for this component
 IMAGE="quay.io/cloudservices/sources-api-go"
 
-IQE_PLUGINS="sources"  # name of the IQE plugin for this app.
-IQE_MARKER_EXPRESSION="sources_smoke"  # This is the value passed to pytest -m
-IQE_FILTER_EXPRESSION=""  # This is the value passed to pytest -k
 IQE_CJI_TIMEOUT="30m"  # This is the time to wait for smoke test to complete or fail
+IQE_FILTER_EXPRESSION=""  # This is the value passed to pytest -k
 IQE_IMAGE_TAG="sources"
+IQE_MARKER_EXPRESSION="sources_smoke"  # This is the value passed to pytest -m
 IQE_PARALLEL_ENABLED="false"
+IQE_PLUGINS="sources"  # name of the IQE plugin for this app.
 
-# Install bonfire repo/initialize
-# https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/bootstrap.sh
-# This script automates the install / config of bonfire
-CICD_URL=https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd
-curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
+# Install and configur Bonfire to be able to build, deploy and run the tests
+# in the ephemeral environment.
 
-source $CICD_ROOT/build.sh
-if [[ $? != 0 ]]; then
+curl -s "https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/bootstrap.sh" > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
+
+if ! source "${CICD_ROOT}/build.sh"; then
     exit 1
 fi
-source $CICD_ROOT/deploy_ephemeral_env.sh
-if [[ $? != 0 ]]; then
-    exit 1
-fi
-source $CICD_ROOT/cji_smoke_test.sh
-if [[ $? != 0 ]]; then
+source
+if ! source "${CICD_ROOT}/deploy_ephemeral_env.sh"; then
     exit 1
 fi
 
-# spin up the db for integration tests
-DB_CONTAINER="sources-api-db-$(uuidgen)"
-echo "Spinning up container: ${DB_CONTAINER}"
-
-docker run -d \
-    --name $DB_CONTAINER \
-    -p 5432 \
-    -e POSTGRESQL_USER=root \
-    -e POSTGRESQL_PASSWORD=toor \
-    -e POSTGRESQL_DATABASE=sources_api_test_go \
-    quay.io/cloudservices/postgresql-rds:12
-
-PORT=$(docker inspect $DB_CONTAINER | grep HostPort | sort | uniq | grep -o [0-9]*)
-echo "DB Listening on Port: ${PORT}"
-
-export DATABASE_HOST=localhost
-export DATABASE_PORT=$PORT
-export DATABASE_USER=root
-export DATABASE_PASSWORD=toor
-export DATABASE_NAME=sources_api_test_go
-
-echo "Running tests...here we go"
-
-export GOROOT="/opt/go/1.21.3"
-export PATH="${GOROOT}/bin:${PATH}"
-make alltest
-
-OUT_CODE=$?
-
-echo "Killing DB Container..."
-docker kill $DB_CONTAINER
-echo "Removing DB Container..."
-docker rm -f $DB_CONTAINER
-
-if [[ $OUT_CODE != 0 ]]; then
+if ! source "${CICD_ROOT}/cji_smoke_test.sh"; then
     exit 1
 fi
 
