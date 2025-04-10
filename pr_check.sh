@@ -70,7 +70,7 @@ curl -s "https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/bo
 if ! source "${CICD_ROOT}/build.sh"; then
     exit 1
 fi
-source
+
 if ! source "${CICD_ROOT}/deploy_ephemeral_env.sh"; then
     exit 1
 fi
