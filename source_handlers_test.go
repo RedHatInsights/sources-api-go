@@ -1729,7 +1729,7 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 		"/api/sources/v3.1/sources/12345/check_availability",
 		nil,
 		map[string]interface{}{
-			"tenantID": int64(12345),
+			"tenantID": int64(fixtures.TestTenantData[0].Id),
 			"headers":  map[string]string{h.SkipEmptySources: "true"},
 		},
 	)
@@ -1748,7 +1748,7 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 	// rest of the tests.
 	fixtureSourceId := int64(12345)
 	fixtureSourceUuid := "cae13d9c-00bf-11f0-ac7d-083a885cd988"
-	customSourceFixtures := append(fixtures.TestSourceData, m.Source{
+	fixtureSource := m.Source{
 		ID:                 fixtureSourceId,
 		Name:               "Source with a Cost Management application",
 		SourceTypeID:       fixtures.TestSourceTypeData[0].Id, // an AWS source type.
@@ -1765,15 +1765,31 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 				ApplicationType:   fixtures.TestApplicationTypeData[5], // the Cost Management application type.
 			},
 		},
-	})
+	}
 
-	// Override the "mock source" so that we return the new mock with the source we just added above. Then, we need to
-	// make sure to revert it for the rest of the tests.
-	previousMockSourceDao := mockSourceDao
-	defer func() {
-		mockSourceDao = previousMockSourceDao
-	}()
-	mockSourceDao = &mocks.MockSourceDao{Sources: customSourceFixtures, RelatedSources: fixtures.TestSourceData}
+	customSourceFixtures := append(fixtures.TestSourceData, fixtureSource)
+
+	// Make sure we create the source in the database when we are running integration tests. On the other hand, when
+	// we are running unit tests, override the "mock source" so that we return the new mock with the source we just
+	// added above. Then, we need to make sure to revert things for the rest of the tests.
+	if parser.RunningIntegrationTests {
+		sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+		if err := sourceDao.Create(&fixtureSource); err != nil {
+			t.Errorf(`unable to create the source fixture in the database: %s`, err)
+		}
+
+		defer func() {
+			if _, err := sourceDao.Delete(&fixtureSource.ID); err != nil {
+				t.Errorf(`unexpected behavior may occur in other tests due to being unable to delete the source fixture: %s`, err)
+			}
+		}()
+	} else {
+		previousMockSourceDao := mockSourceDao
+		defer func() {
+			mockSourceDao = previousMockSourceDao
+		}()
+		mockSourceDao = &mocks.MockSourceDao{Sources: customSourceFixtures, RelatedSources: fixtures.TestSourceData}
+	}
 
 	c.SetParamNames("source_id")
 	c.SetParamValues("12345")
@@ -1783,8 +1799,8 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rec.Code != 202 {
-		t.Errorf("Wrong code, got %v, expected %v", rec.Code, 202)
+	if rec.Code != http.StatusAccepted {
+		t.Errorf("Wrong code, got %v, expected %v", rec.Code, http.StatusAccepted)
 	}
 }
 
