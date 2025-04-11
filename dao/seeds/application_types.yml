@@ -28,7 +28,6 @@
   - amazon
   - azure
   - google
-  - oracle-cloud-infrastructure
   - openshift
   - ibm
   supported_authentication_types:
@@ -40,8 +39,6 @@
     - project_id_service_account_json
     openshift:
     - token
-    oracle-cloud-infrastructure:
-    - ocid
     ibm:
     - api_token_account_id
 "/insights/platform/cloud-meter":
