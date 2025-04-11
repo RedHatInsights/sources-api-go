@@ -37,6 +37,6 @@ var TestApplicationTypeData = []m.ApplicationType{
 		Id:                   4,
 		DisplayName:          "Cost Management",
 		Name:                 "/insights/platform/cost-management",
-		SupportedSourceTypes: []byte(`["amazon", "azure", "google", "oracle-cloud-infrastructure", "openshift", "ibm"]`),
+		SupportedSourceTypes: []byte(`["amazon", "azure", "google", "openshift", "ibm"]`),
 	},
 }
