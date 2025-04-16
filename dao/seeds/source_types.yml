@@ -321,44 +321,6 @@ gitlab:
           - component: text-field
             name: authentication.password
             label: Personal Acces Token for the GitLab account
-oracle-cloud-infrastructure:
-  category: Cloud
-  product_name: Oracle Cloud Infrastructure
-  vendor: Oracle
-  icon_url: "/apps/frontend-assets/partners-icons/oracle-short.svg"
-  schema:
-    authentication:
-      - type: ocid
-        name: Oracle Cloud ID (OCID)
-        fields:
-          - component: text-field
-            hideField: true
-            initializeOnMount: true
-            initialValue: ocid
-            name: authentication.authtype
-          - component: text-field
-            hideField: true
-            initializeOnMount: true
-            initialValue: ocid.uuid
-            name: authentication.username
-          - component: text-field
-            name: application.extra.bucket
-            label: Bucket Name
-            isRequired: true
-            validate:
-              - type: required
-          - component: text-field
-            name: application.extra.bucket_namespace
-            label: Bucket Namespace
-            isRequired: true
-            validate:
-              - type: required
-          - component: text-field
-            name: application.extra.bucket_region
-            label: Bucket Region
-            isRequired: true
-            validate:
-              - type: required
 openshift:
   product_name: Red Hat OpenShift Container Platform
   category: Red Hat
