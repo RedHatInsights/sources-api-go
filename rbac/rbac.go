@@ -17,7 +17,7 @@ type Client interface {
 
 // rbacClientImpl is the internal implementation of the RBAC client.
 type rbacClientImpl struct {
-	// baseURL is the base URL of the RBAC service without the
+	// baseURL is the base URL of the RBAC service without the version suffix.
 	baseURL string
 	// legacyClient is the client that comes from the "rbac-client-go" dependency. There are two problems with that
 	// legacy client:
