@@ -1,25 +1,22 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
-	"time"
 
-	"github.com/RedHatInsights/rbac-client-go"
 	"github.com/RedHatInsights/sources-api-go/config"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
+	"github.com/RedHatInsights/sources-api-go/rbac"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
 var (
-	psks            = config.Get().Psks
-	bypassRbac      = config.Get().BypassRbac
-	rbacClient Rbac = &RbacClient{client: rbac.NewClient(os.Getenv("RBAC_URL"), "sources")}
+	psks       = config.Get().Psks
+	bypassRbac = config.Get().BypassRbac
+	rbacClient = rbac.NewRbacClient(config.Get().RbacHost)
 )
 
 /*
@@ -117,26 +114,4 @@ func certDeleteAllowed(c echo.Context) bool {
 
 func pskMatches(psk string) bool {
 	return util.SliceContainsString(psks, psk)
-}
-
-type Rbac interface {
-	Allowed(string) (bool, error)
-}
-
-type RbacClient struct {
-	client rbac.Client
-}
-
-// fetches an access list from RBAC based on RBAC_URL and returns whether or not
-// the xrhid has the `sources:*:*` permission
-func (r *RbacClient) Allowed(xrhid string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	acl, err := r.client.GetAccess(ctx, xrhid, "")
-	if err != nil {
-		return false, err
-	}
-
-	return acl.IsAllowed("sources", "*", "*"), nil
 }

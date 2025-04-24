@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -62,6 +63,7 @@ type SourcesApiConfig struct {
 	TenantTranslatorUrl     string
 	Env                     string
 	HandleTenantRefresh     bool
+	RbacHost                string
 
 	SecretsManagerAccessKey string
 	SecretsManagerSecretKey string
@@ -100,6 +102,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "HandleTenantRefresh", parsedConfig.HandleTenantRefresh)
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", parsedConfig.LocalStackURL)
+	fmt.Fprintf(&b, "%s=%v ", "RbacHost", parsedConfig.RbacHost)
 	return b.String()
 }
 
@@ -171,6 +174,18 @@ func Get() *SourcesApiConfig {
 			options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 		}
 
+		// Grab RBAC's host from Clowder's configuration...
+		rbacEndpoint, err := findDependentApplication("rbac", cfg.Endpoints)
+		if err != nil {
+			log.Fatalf(`unable to read RBAC dependency's details from Clowder: %s`, err)
+		}
+
+		// ... and add the proper HTTP scheme depending on whether we have a non-zero TLS port or not.
+		if rbacEndpoint.TlsPort != nil && *rbacEndpoint.TlsPort != 0 {
+			options.SetDefault("RbacHost", fmt.Sprintf("https://%s:%d", rbacEndpoint.Hostname, rbacEndpoint.TlsPort))
+		} else {
+			options.SetDefault("RbacHost", fmt.Sprintf("http://%s:%d", rbacEndpoint.Hostname, rbacEndpoint.Port))
+		}
 	} else {
 		options.SetDefault("AwsRegion", "us-east-1")
 		options.SetDefault("AwsAccessKeyId", os.Getenv("CW_AWS_ACCESS_KEY_ID"))
@@ -214,6 +229,8 @@ func Get() *SourcesApiConfig {
 
 		options.SetDefault("FeatureFlagsUrl", os.Getenv("UNLEASH_URL"))
 		options.SetDefault("FeatureFlagsAPIToken", os.Getenv("UNLEASH_TOKEN"))
+
+		options.SetDefault("RbacHost", os.Getenv("RBAC_HOST"))
 	}
 
 	options.SetDefault("Env", os.Getenv("SOURCES_ENV"))
@@ -335,6 +352,7 @@ func Get() *SourcesApiConfig {
 		SecretsManagerSecretKey: options.GetString("SecretsManagerSecretKey"),
 		SecretsManagerPrefix:    options.GetString("SecretsManagerPrefix"),
 		LocalStackURL:           options.GetString("LocalStackURL"),
+		RbacHost:                options.GetString("RbacHost"),
 	}
 
 	return parsedConfig
@@ -353,4 +371,17 @@ func (sourceConfig *SourcesApiConfig) KafkaTopic(requestedTopic string) string {
 // DEPRECATED: should be using methods on the authentication object instead of checking the config directly.
 func IsVaultOn() bool {
 	return parsedConfig.SecretStore == "vault"
+}
+
+// findDependentApplication finds the specified application in the Clowder configuration's endpoints section.
+func findDependentApplication(name string, endpoints []clowder.DependencyEndpoint) (clowder.DependencyEndpoint, error) {
+	idx := slices.IndexFunc[[]clowder.DependencyEndpoint](endpoints, func(endpoint clowder.DependencyEndpoint) bool {
+		return strings.EqualFold(name, endpoint.App)
+	})
+
+	if idx == -1 {
+		return clowder.DependencyEndpoint{}, fmt.Errorf(`unable to find application "%s" in the endpoints section of the cdappconfig.json file`, name)
+	} else {
+		return endpoints[idx], nil
+	}
 }

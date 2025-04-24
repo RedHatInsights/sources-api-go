@@ -204,8 +204,8 @@ objects:
               name: sources-api-secrets
               key: psks
               optional: true
-        - name: RBAC_URL
-          value: ${RBAC_SCHEME}://${RBAC_HOST}:${RBAC_PORT}${RBAC_PATH}
+        - name: RBAC_HOST
+          value: ${RBAC_HOST}
         - name: SOURCES_PSKS
           valueFrom:
             secretKeyRef:
@@ -375,25 +375,11 @@ parameters:
   displayName: Postgres SSL mode
   name: PGSSLMODE
   value: prefer
-- description: Host to use for the RBAC service URL.
-  displayName: Rbac Service Host
+- description: The host and port for the RBAC service Sources depends on. Used only in development environments.
+  displayName: RBAC service's host.
   name: RBAC_HOST
-  value: rbac-service
-- description: Port to use for the RBAC service URL.
-  displayName: Rbac Service Port
-  name: RBAC_PORT
-  required: true
-  value: '8000'
-- description: Scheme to use for the RBAC service URL. Can be either http or https
-  displayName: Rbac Service Scheme
-  name: RBAC_SCHEME
-  required: true
-  value: http
-- description: Path to rbac
-  displayName: Rbac path
-  name: RBAC_PATH
-  required: true
-  value: /api/rbac/v1
+  value: 'http://localhost:8080'
+  required: false
 - description: Skip the RBAC service entirely. If "BYPASS_RBAC=true" all the identified requests will be assumed to be valid.
   displayName: Bypass RBAC option enabled
   name: BYPASS_RBAC
