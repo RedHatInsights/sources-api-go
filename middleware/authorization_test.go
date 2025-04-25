@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -11,13 +11,38 @@ import (
 	"github.com/redhatinsights/platform-go-middlewares/identity"
 )
 
-var permCheckOrElse204 = PermissionCheck(func(c echo.Context) error {
-	return c.NoContent(http.StatusNoContent)
-})
+// mockedRbacResponse defines the response that we will get from the RBAC client.
+type mockedRbacResponse struct {
+	AllowedResponse bool
+	ErrorResponse   error
+}
+
+// mockRbacClient helps us mock RBAC responses.
+type mockRbacClient struct {
+	mockedRbacResponse
+}
+
+func (m *mockRbacClient) Allowed(string) (bool, error) {
+	if m.mockedRbacResponse.ErrorResponse != nil {
+		return m.AllowedResponse, nil
+	}
+
+	return false, m.mockedRbacResponse.ErrorResponse
+}
+
+// setUpMiddleware sets up a "PermissionCheck" middleware with the given arguments. It also sets the middleware up so
+// that if no errors occur, a "204 — No content" response is returned.
+func setUpMiddleware(bypassRbac bool, allowedPsks []string, rbacResponse mockedRbacResponse) echo.HandlerFunc {
+	mockedRbacClient := mockRbacClient{mockedRbacResponse: rbacResponse}
+
+	middleware := PermissionCheck(bypassRbac, allowedPsks, &mockedRbacClient)
+
+	return middleware(func(c echo.Context) error {
+		return c.NoContent(http.StatusNoContent)
+	})
+}
 
 func TestRbacDisabled(t *testing.T) {
-	bypassRbac = true
-
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/",
@@ -25,31 +50,31 @@ func TestRbacDisabled(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 204 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusNoContent)
 	}
-
-	bypassRbac = false
 }
 
 func TestPSKMatches(t *testing.T) {
-	psks = []string{"1234"}
-	if pskMatches("1234") != true {
+	allowedPsks := []string{"1234"}
+
+	if pskMatches(allowedPsks, "1234") != true {
 		t.Errorf("psk didn't match when it should have")
 	}
 
-	if pskMatches("12345") == true {
+	if pskMatches(allowedPsks, "12345") == true {
 		t.Errorf("psk matched when it should not have")
 	}
 }
 
 func TestGoodPSK(t *testing.T) {
-	psks = []string{"1234"}
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/",
@@ -57,18 +82,19 @@ func TestGoodPSK(t *testing.T) {
 		map[string]interface{}{h.PSK: "1234"},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{"1234"}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 204 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusNoContent)
 	}
 }
 
 func TestBadPSK(t *testing.T) {
-	psks = []string{"abcdef"}
 	c, rec := request.CreateTestContext(
 		http.MethodPost,
 		"/",
@@ -76,18 +102,19 @@ func TestBadPSK(t *testing.T) {
 		map[string]interface{}{h.PSK: "1234"},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{"abcdef"}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 401 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 401)
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusUnauthorized)
 	}
 }
 
 func TestNoPSK(t *testing.T) {
-	psks = []string{"abcdef"}
 	c, rec := request.CreateTestContext(
 		"POST",
 		"/",
@@ -95,13 +122,15 @@ func TestNoPSK(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{"abcdef"}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 401 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 401)
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusUnauthorized)
 	}
 }
 
@@ -122,13 +151,15 @@ func TestSystemClusterID(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 204 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusNoContent)
 	}
 }
 
@@ -149,13 +180,15 @@ func TestSystemCN(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 204 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusNoContent)
 	}
 }
 
@@ -176,13 +209,15 @@ func TestSystemPatch(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 405 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 405)
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -203,13 +238,15 @@ func TestSystemDelete(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 405 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 405)
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -230,13 +267,15 @@ func TestSystemDeleteSource(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 204 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusNoContent)
 	}
 }
 
@@ -257,33 +296,19 @@ func TestSystemDeleteSourceVersioned(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 204 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusNoContent)
 	}
-}
-
-// yay dummy structs!
-type dummyRbac struct {
-	access bool
-	blowup bool
-}
-
-func (d dummyRbac) Allowed(_ string) (bool, error) {
-	if d.blowup {
-		return false, errors.New("kablooey!")
-	}
-
-	return d.access, nil
 }
 
 func TestRbacWithAccess(t *testing.T) {
-	rbacClient = dummyRbac{access: true}
-
 	c, rec := request.CreateTestContext(
 		"POST",
 		"/",
@@ -294,19 +319,19 @@ func TestRbacWithAccess(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{AllowedResponse: true})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 204 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 204)
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusNoContent)
 	}
 }
 
 func TestRbacWithoutAccess(t *testing.T) {
-	rbacClient = dummyRbac{access: false}
-
 	c, rec := request.CreateTestContext(
 		"POST",
 		"/",
@@ -317,19 +342,19 @@ func TestRbacWithoutAccess(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{AllowedResponse: false})
+
+	err := middleware(c)
 	if err != nil {
 		t.Errorf("caught an error when there should not have been one")
 	}
 
-	if rec.Code != 401 {
-		t.Errorf("%v was returned instead of %v", rec.Code, 401)
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("%v was returned instead of %v", rec.Code, http.StatusUnauthorized)
 	}
 }
 
 func TestRbacNoConnection(t *testing.T) {
-	rbacClient = dummyRbac{access: false, blowup: true}
-
 	c, _ := request.CreateTestContext(
 		"POST",
 		"/",
@@ -340,7 +365,9 @@ func TestRbacNoConnection(t *testing.T) {
 		},
 	)
 
-	err := permCheckOrElse204(c)
+	middleware := setUpMiddleware(true, []string{}, mockedRbacResponse{ErrorResponse: fmt.Errorf("unable to connect to rbac")})
+
+	err := middleware(c)
 
 	if err == nil {
 		t.Errorf("no error was returned when we were expecting one!")
