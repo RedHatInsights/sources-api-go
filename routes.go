@@ -27,7 +27,7 @@ func setupRoutes(e *echo.Echo) {
 	rbacClient := rbac.NewRbacClient(config.Get().RbacHost)
 
 	// Set up the middlewares.
-	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().Psks, rbacClient)
+	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().AuthorizedPsks, rbacClient)
 
 	var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
 	var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}

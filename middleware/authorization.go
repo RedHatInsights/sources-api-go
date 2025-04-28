@@ -24,7 +24,7 @@ import (
 //     operation on a subset of paths.
 //   - The request is a regularly authenticated one, so we will call RBAC to verify that the principal that comes in
 //     the header has the authorization to perform the operation in Sources.
-func PermissionCheck(bypassRbac bool, rbacPsks []string, rbacClient rbac.Client) echo.MiddlewareFunc {
+func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.Client) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			switch {
@@ -36,7 +36,7 @@ func PermissionCheck(bypassRbac bool, rbacPsks []string, rbacClient rbac.Client)
 					return fmt.Errorf("error casting psk to string: %v", c.Get(h.PSK))
 				}
 
-				if !pskMatches(rbacPsks, psk) {
+				if !pskMatches(authorizedPsks, psk) {
 					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
 				}
 
@@ -109,6 +109,6 @@ func certDeleteAllowed(c echo.Context) bool {
 }
 
 // pskMatches returns true if the given PSK is in the list of allowed PSKs.
-func pskMatches(allowedPsks []string, psk string) bool {
-	return util.SliceContainsString(allowedPsks, psk)
+func pskMatches(authorizedPsks []string, psk string) bool {
+	return util.SliceContainsString(authorizedPsks, psk)
 }

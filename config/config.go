@@ -53,7 +53,7 @@ type SourcesApiConfig struct {
 	CachePort               int
 	CachePassword           string
 	SlowSQLThreshold        int
-	Psks                    []string
+	AuthorizedPsks          []string
 	BypassRbac              bool
 	StatusListener          bool
 	BackgroundWorker        bool
@@ -300,7 +300,7 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("AppName", "source-api-go")
 
 	// psks for .... psk authentication
-	options.SetDefault("psks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
+	options.SetDefault("AuthorizedPsks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
 	// Grab the Kafka Sasl Settings.
 	var brokerConfig []clowder.BrokerConfig
@@ -338,7 +338,7 @@ func Get() *SourcesApiConfig {
 		CacheHost:               options.GetString("CacheHost"),
 		CachePort:               options.GetInt("CachePort"),
 		CachePassword:           options.GetString("CachePassword"),
-		Psks:                    options.GetStringSlice("psks"),
+		AuthorizedPsks:          options.GetStringSlice("AuthorizedPsks"),
 		BypassRbac:              options.GetBool("BypassRbac"),
 		StatusListener:          options.GetBool("StatusListener"),
 		BackgroundWorker:        options.GetBool("BackgroundWorker"),
