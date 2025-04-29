@@ -66,7 +66,7 @@ func (message *Message) SetKeyFromHeaders() {
 }
 
 func (message *Message) isEmpty() bool {
-	isEmptyHeaders := message.Headers == nil || len(message.Headers) == 0
+	isEmptyHeaders := len(message.Headers) == 0
 
 	return isEmptyHeaders && message.Value == nil
 }

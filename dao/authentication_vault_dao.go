@@ -406,7 +406,12 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	}
 
 	// time comes back as a Go time.RFC3339Nano which is nice!
-	createdAt, err := time.Parse(time.RFC3339Nano, metadata["created_time"].(string))
+	createdTime, ok := metadata["created_time"].(string)
+	if !ok {
+		return nil
+	}
+
+	createdAt, err := time.Parse(time.RFC3339Nano, createdTime)
 	if err != nil {
 		return nil
 	}
@@ -466,14 +471,24 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		}
 	}
 	if data["resource_id"] != nil {
-		id, err := strconv.ParseInt(data["resource_id"].(string), 10, 64)
+		resourceId, ok := data["resource_id"].(string)
+		if !ok {
+			return nil
+		}
+
+		id, err := strconv.ParseInt(resourceId, 10, 64)
 		if err != nil {
 			return nil
 		}
 		auth.ResourceID = id
 	}
 	if data["source_id"] != nil {
-		id, err := strconv.ParseInt(data["source_id"].(string), 10, 64)
+		sourceId, ok := data["source_id"].(string)
+		if !ok {
+			return nil
+		}
+
+		id, err := strconv.ParseInt(sourceId, 10, 64)
 		if err != nil {
 			return nil
 		}

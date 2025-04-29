@@ -8,10 +8,10 @@ RUN dnf -y --disableplugin=subscription-manager install go
 # which is required for the latest dependency updates.
 
 COPY go.mod .
-RUN GOTOOLCHAIN=go1.23.5 go mod download
+RUN GOTOOLCHAIN=go1.24.2 go mod download
 
 COPY . .
-RUN GOTOOLCHAIN=go1.23.5 go build -o sources-api-go . && strip sources-api-go
+RUN GOTOOLCHAIN=go1.24.2 go build -o sources-api-go . && strip sources-api-go
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 WORKDIR /app

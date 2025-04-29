@@ -47,7 +47,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
 
-	if 0 == got.ID {
+	if got.ID == 0 {
 		t.Errorf(`want non zero ID, got "%d"`, got.ID)
 	}
 
@@ -131,7 +131,7 @@ func TestRhcConnectionCreateExisting(t *testing.T) {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
 
-	if 0 == got.ID {
+	if got.ID == 0 {
 		t.Errorf(`want non zero ID, got "%d"`, got.ID)
 	}
 

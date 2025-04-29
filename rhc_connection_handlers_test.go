@@ -881,7 +881,7 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 	}
 
 	if parser.RunningIntegrationTests {
-		if 1 != len(out.Data) {
+		if len(out.Data) != 1 {
 			t.Error("not enough objects passed back from DB")
 		}
 	} else {

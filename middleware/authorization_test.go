@@ -23,8 +23,8 @@ type mockRbacClient struct {
 }
 
 func (m *mockRbacClient) Allowed(string) (bool, error) {
-	if m.mockedRbacResponse.ErrorResponse != nil {
-		return false, m.mockedRbacResponse.ErrorResponse
+	if m.ErrorResponse != nil {
+		return false, m.ErrorResponse
 	}
 
 	return m.AllowedResponse, nil
