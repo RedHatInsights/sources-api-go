@@ -7,17 +7,10 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/middleware"
+	"github.com/RedHatInsights/sources-api-go/rbac"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
-
-var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
-var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
-
-var tenancyWithListMiddleware = append(tenancyMiddleware, listMiddleware...)
-var permissionMiddleware = append(permissionMiddlewareWithoutEvents, middleware.RaiseEvent)
-var permissionWithListMiddleware = append(listMiddleware, middleware.PermissionCheck)
-var permissionMiddlewareWithoutEvents = append(tenancyMiddleware, middleware.PermissionCheck)
 
 func setupRoutes(e *echo.Echo) {
 	e.GET("/health", func(c echo.Context) error {
@@ -29,6 +22,20 @@ func setupRoutes(e *echo.Echo) {
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error { return next(&echoUtils.SourcesContext{Context: c}) }
 	})
+
+	// Set up the dependencies for the middlewares and the handlers.
+	rbacClient := rbac.NewRbacClient(config.Get().RbacHost)
+
+	// Set up the middlewares.
+	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().AuthorizedPsks, rbacClient)
+
+	var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
+	var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
+
+	var tenancyWithListMiddleware = append(tenancyMiddleware, listMiddleware...)
+	var permissionMiddlewareWithoutEvents = append(tenancyMiddleware, permissionCheckMiddleware)
+	var permissionMiddleware = append(permissionMiddlewareWithoutEvents, middleware.RaiseEvent)
+	var permissionWithListMiddleware = append(listMiddleware, permissionCheckMiddleware)
 
 	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1", "v1", "v2", "v3"}
 	for _, version := range apiVersions {
