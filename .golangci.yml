@@ -1,111 +1,129 @@
+# Configuration for the golang-gci utility.
+#
+# There are some disabled linters that enabling them would help us improve our
+# code's quality. However, enabling them requires some refactoring work in the
+# codebase.
+#
+# The disabled linters are tagged as follows —order matters—:
+#
+# - Must have: they include very important and insightful checks that will
+#              significantly improve the codebase's quality, resiliency,
+#              security and maintainability.
+# - Nice to have: they might improve some aspects of the code, but they are
+#                 not as important.
+# - Untagged: they might just be cosmetic changes or linters that would end up
+#             making the development experience way too painful.
+
 version: "2"
 linters:
   default: all
-  enable:
-    - bodyclose
-    - forcetypeassert
-    - misspell
   disable:
-    - asasalint
-    - asciicheck
-    - bidichk
-    - canonicalheader
-    - containedctx
-    - contextcheck
-    - copyloopvar
+    - canonicalheader # nice to have.
+    - containedctx # must have.
     - cyclop
-    - decorder
+    - decorder # nice to have.
     - depguard
-    - dogsled
     - dupl
-    - dupword
-    - durationcheck
-    - err113
-    - errcheck
-    - errchkjson
-    - errname
-    - errorlint
-    - exhaustive
+    - err113 # must have.
+    - errcheck # must have.
+    - errchkjson # must have.
+    - errname # must have.
+    - errorlint # must have.
     - exhaustruct
-    - exptostd
-    - fatcontext
     - forbidigo
     - funcorder
     - funlen
+    - gochecknoglobals # must have.
+    - gochecknoinits # must have.
+    - gocognit
+    - goconst # nice to have.
+    - gocritic # must have.
+    - gocyclo
+    - godot # nice to have.
+    - godox # must have.
+    - gosec # must have.
+    - inamedparam # nice to have.
+    - interfacebloat
+    - intrange # nice to have.
+    - ireturn # must have.
+    - lll
+    - maintidx
+    - makezero # nice to have.
+    - mirror # must have.
+    - mnd
+    - musttag # nice to have.
+    - nakedret
+    - nestif
+    - nilerr # must have.
+    - nilnesserr # nice to have.
+    - nilnil # must have.
+    - nlreturn # nice to have.
+    - nonamedreturns # nice to have.
+    - nosprintfhostport # must to have.
+    - paralleltest # nice to have.
+    - perfsprint # nice to have.
+    - prealloc # nice to have.
+    - recvcheck # nice ot have.
+    - revive # nice to have.
+    - staticcheck # must have.
+    - tagalign # nice to have.
+    - tagliatelle
+    - testpackage
+    - thelper # nice to have.
+    - unconvert # nice to have.
+    - unparam # nice to have.
+    - usestdlibvars # nice to have.
+    - usetesting # nice to have.
+    - varnamelen
+    - wastedassign # nice to have.
+    - whitespace # nice to have.
+    - wrapcheck
+    - wsl # nice to have.
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - copyloopvar
+    - decorder
+    - dogsled
+    - dupword
+    - durationcheck
+    - exhaustive
+    - exptostd
+    - fatcontext
+    - forcetypeassert
     - ginkgolinter
     - gocheckcompilerdirectives
-    - gochecknoglobals
-    - gochecknoinits
     - gochecksumtype
-    - gocognit
-    - goconst
-    - gocritic
-    - gocyclo
-    - godot
-    - godox
     - goheader
     - gomoddirectives
     - gomodguard
     - goprintffuncname
-    - gosec
     - gosmopolitan
     - govet
     - grouper
     - iface
     - importas
-    - inamedparam
     - ineffassign
-    - interfacebloat
-    - intrange
-    - ireturn
-    - lll
     - loggercheck
-    - maintidx
-    - makezero
-    - mirror
-    - mnd
-    - musttag
+    - misspell
     - nakedret
-    - nestif
-    - nilerr
-    - nilnesserr
-    - nilnil
-    - nlreturn
     - noctx
     - nolintlint
-    - nonamedreturns
-    - nosprintfhostport
-    - paralleltest
-    - perfsprint
-    - prealloc
     - predeclared
     - promlinter
     - protogetter
     - reassign
-    - recvcheck
-    - revive
     - rowserrcheck
     - sloglint
     - spancheck
     - sqlclosecheck
-    - staticcheck
-    - tagalign
-    - tagliatelle
     - testableexamples
     - testifylint
-    - testpackage
-    - thelper
     - tparallel
-    - unconvert
-    - unparam
     - unused
-    - usestdlibvars
-    - usetesting
-    - varnamelen
-    - wastedassign
-    - whitespace
-    - wrapcheck
-    - wsl
     - zerologlint
   exclusions:
     generated: lax
