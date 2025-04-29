@@ -107,7 +107,7 @@ func Init() {
 	case config.VaultStore:
 		Vault = vault.NewClient()
 	case config.SecretsManagerStore:
-		SecretsManager, err = amazon.NewSecretsManagerClient()
+		SecretsManager, err = amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			logging.Log.Fatal(err)
 		}
