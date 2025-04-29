@@ -105,7 +105,7 @@ func GetReader(conf *Options) (*Reader, error) {
 
 // GetWriter returns a Kafka writer configured with the specified settings.
 func GetWriter(conf *Options) (*Writer, error) {
-	if conf.BrokerConfig == nil || len(conf.BrokerConfig) == 0 {
+	if len(conf.BrokerConfig) == 0 {
 		return nil, errors.New("could not create Kafka writer: the provided configuration is empty")
 	}
 

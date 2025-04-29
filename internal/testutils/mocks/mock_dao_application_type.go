@@ -84,7 +84,7 @@ func (mockAppTypeDao *MockApplicationTypeDao) ApplicationTypeCompatibleWithSourc
 		return nil
 	}
 
-	return errors.New("Not compatible!")
+	return errors.New("not compatible")
 }
 
 func (mockAppTypeDao *MockApplicationTypeDao) GetSuperKeyResultType(_ int64, _ string) (string, error) {
@@ -96,7 +96,7 @@ func (mockAppTypeDao *MockApplicationTypeDao) ApplicationTypeCompatibleWithSourc
 		return nil
 	}
 
-	return errors.New("Not compatible!")
+	return errors.New("not compatible")
 }
 
 func (mockAppTypeDao *MockApplicationTypeDao) GetByName(_ string) (*m.ApplicationType, error) {

@@ -60,7 +60,7 @@ func TestSetKeyFromHeadersOrgId(t *testing.T) {
 	}}
 	m.SetKeyFromHeaders()
 
-	if m.Key == nil || len(m.Key) == 0 {
+	if len(m.Key) == 0 {
 		t.Error("key was not set")
 	}
 
@@ -76,7 +76,7 @@ func TestSetKeyFromHeadersAcctNumber(t *testing.T) {
 	}}
 	m.SetKeyFromHeaders()
 
-	if m.Key == nil || len(m.Key) == 0 {
+	if len(m.Key) == 0 {
 		t.Error("key was not set")
 	}
 
@@ -91,7 +91,7 @@ func TestSetKeyFromHeadersXrhid(t *testing.T) {
 	}}
 	m.SetKeyFromHeaders()
 
-	if m.Key == nil || len(m.Key) == 0 {
+	if len(m.Key) == 0 {
 		t.Error("key was not set")
 	}
 

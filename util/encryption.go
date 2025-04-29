@@ -45,7 +45,7 @@ func setDefaultEncryptionKey() (string, error) {
 		// fetch the file name so we know where to get the source encryption_key.dev file from
 		_, filename, _, ok := runtime.Caller(1)
 		if !ok {
-			return "", fmt.Errorf("Not possible to recover the information")
+			return "", fmt.Errorf("not possible to recover the information")
 		}
 		filepath := path.Join(path.Dir(filename), "encryption_key.dev")
 		_, err := os.Stat(filepath)
@@ -54,12 +54,12 @@ func setDefaultEncryptionKey() (string, error) {
 		} else {
 			body, bodyErr := os.ReadFile(filepath)
 			if bodyErr != nil {
-				return "", fmt.Errorf("Unable to read file: %v", err)
+				return "", fmt.Errorf("unable to read file: %v", err)
 			}
 			key = string(body)
 			keyErr := os.Setenv("ENCRYPTION_KEY", string(body))
 			if keyErr != nil {
-				return "", fmt.Errorf("Error in setting variable in environment: %v", keyErr)
+				return "", fmt.Errorf("error in setting variable in environment: %v", keyErr)
 			}
 			return key, nil
 		}

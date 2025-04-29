@@ -41,7 +41,7 @@ alltest: test
 
 lint:
 	go vet ./...
-	golangci-lint run -E gofmt,gci,bodyclose,forcetypeassert,misspell
+	golangci-lint run
 
 gci:
 	golangci-lint run -E gci --fix

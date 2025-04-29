@@ -176,22 +176,48 @@ func (auth *Authentication) ToEvent() interface{} {
 
 func (auth *Authentication) UpdateBy(attributes map[string]interface{}) error {
 	if attributes["last_checked_at"] != nil {
-		lastCheckedAt, _ := time.Parse(time.RFC3339Nano, attributes["last_checked_at"].(string))
+		lastCheckedAtRaw, ok := attributes["last_checked_at"].(string)
+		if !ok {
+			return fmt.Errorf(`unexpected non-string type for the "last_checked_at" field: %v`, attributes["last_checked_at"])
+		}
+
+		lastCheckedAt, err := time.Parse(time.RFC3339Nano, lastCheckedAtRaw)
+		if err != nil {
+			return fmt.Errorf(`unable to parse "last_checked_at": %s`, err)
+		}
+
 		auth.LastCheckedAt = &lastCheckedAt
 	}
 
 	if attributes["last_available_at"] != nil {
-		lastAvailableAt, _ := time.Parse(time.RFC3339Nano, attributes["last_available_at"].(string))
+		lastAvailableAtRaw, ok := attributes["last_available_at"].(string)
+		if !ok {
+			return fmt.Errorf(`unexpected non-string type for the "last_available_at" field: %v`, attributes["last_available_at"])
+		}
+
+		lastAvailableAt, err := time.Parse(time.RFC3339Nano, lastAvailableAtRaw)
+		if err != nil {
+			return fmt.Errorf(`unable to parse "last_available_at": %s`, err)
+		}
+
 		auth.LastAvailableAt = &lastAvailableAt
 	}
 
 	if attributes["availability_status_error"] != nil {
-		availabilityStatusError, _ := attributes["availability_status_error"].(string)
+		availabilityStatusError, ok := attributes["availability_status_error"].(string)
+		if !ok {
+			return fmt.Errorf(`unexpected non-string type for the "availability_status_error" field: %v`, attributes["availability_status_error"])
+		}
+
 		auth.AvailabilityStatusError = &availabilityStatusError
 	}
 
 	if attributes["availability_status"] != nil {
-		availabilityStatus, _ := attributes["availability_status"].(string)
+		availabilityStatus, ok := attributes["availability_status"].(string)
+		if !ok {
+			return fmt.Errorf(`unexpected non-string type for the "availability_status" field: %v`, attributes["availability_status"])
+		}
+
 		auth.AvailabilityStatus = &availabilityStatus
 	}
 

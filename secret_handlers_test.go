@@ -179,18 +179,13 @@ func fetchSecretFromDB(t *testing.T, secretIDValue string, requestParams *dao.Re
 }
 
 func secretFromParams(secretName, secretAuthType, secretUserName, secretPassword string, secretExtra map[string]interface{}, userScoped bool) *m.SecretCreateRequest {
-	secretUserScoped := false
-	if userScoped {
-		secretUserScoped = true
-	}
-
 	return &m.SecretCreateRequest{
 		Name:       util.StringRef(secretName),
 		AuthType:   secretAuthType,
 		Username:   util.StringRef(secretUserName),
 		Password:   util.StringRef(secretPassword),
 		Extra:      secretExtra,
-		UserScoped: secretUserScoped,
+		UserScoped: userScoped,
 	}
 }
 

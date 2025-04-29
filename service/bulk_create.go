@@ -257,7 +257,7 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 			}
 
 			// "IDRaw" is the one validated by the validator.
-			endpt.EndpointCreateRequest.SourceIDRaw = src.ID
+			endpt.SourceIDRaw = src.ID
 			// We will pick this one, however, to assign it to the endpoint struct.
 			endpt.SourceID = src.ID
 		}

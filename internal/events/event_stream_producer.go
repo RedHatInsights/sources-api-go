@@ -66,7 +66,7 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 
 func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, payload []byte, headers []kafka.Header) error {
 	if allowed {
-		return esp.Sender.RaiseEvent(eventType, payload, headers)
+		return esp.RaiseEvent(eventType, payload, headers)
 	}
 
 	return nil
