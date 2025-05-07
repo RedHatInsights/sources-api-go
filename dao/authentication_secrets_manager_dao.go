@@ -29,7 +29,7 @@ func (a *authenticationSecretsManagerDaoImpl) Create(auth *m.Authentication) err
 	// only reach out to amazon if there is a password present, otherwise pass
 	// straight through to the db dao.
 	if auth.Password != nil {
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func (a *authenticationSecretsManagerDaoImpl) Create(auth *m.Authentication) err
 	err := a.authenticationDaoDbImpl.Create(auth)
 	if err != nil {
 		if hitAmazon {
-			sm, err := amazon.NewSecretsManagerClient()
+			sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 			if err != nil {
 				return err
 			}
@@ -75,7 +75,7 @@ func (a *authenticationSecretsManagerDaoImpl) BulkCreate(auth *m.Authentication)
 	// only reach out to amazon if there is a password present, otherwise pass
 	// straight through to the db dao.
 	if auth.Password != nil {
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return err
 		}
@@ -96,7 +96,7 @@ func (a *authenticationSecretsManagerDaoImpl) BulkCreate(auth *m.Authentication)
 	err := a.authenticationDaoDbImpl.BulkCreate(auth)
 	if err != nil {
 		if hitAmazon {
-			sm, err := amazon.NewSecretsManagerClient()
+			sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 			if err != nil {
 				return err
 			}
@@ -130,7 +130,7 @@ func (a *authenticationSecretsManagerDaoImpl) Update(auth *m.Authentication) err
 			return fmt.Errorf("failed to fetch ARN for authentication %v", auth.GetID())
 		}
 
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func (a *authenticationSecretsManagerDaoImpl) Delete(id string) (*m.Authenticati
 
 	// only reach out to amazon to nuke the secret if the password exists
 	if auth.Password != nil {
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return nil, err
 		}
@@ -176,7 +176,7 @@ func (a *authenticationSecretsManagerDaoImpl) BulkDelete(authentications []m.Aut
 		return nil, err
 	}
 
-	sm, err := amazon.NewSecretsManagerClient()
+	sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (a *authenticationSecretsManagerDaoImpl) GetById(id string) (*m.Authenticat
 	}
 
 	if auth.Password != nil {
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return nil, err
 		}

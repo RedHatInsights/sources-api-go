@@ -21,7 +21,7 @@ func (s *secretDaoSecretsManagerImpl) Create(auth *m.Authentication) error {
 	// only reach out to amazon if there is a password present, otherwise pass
 	// straight through to the db dao.
 	if auth.Password != nil {
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func (s *secretDaoSecretsManagerImpl) Create(auth *m.Authentication) error {
 	err := s.secretDaoDbImpl.Create(auth)
 	if err != nil {
 		if hitAmazon {
-			sm, err := amazon.NewSecretsManagerClient()
+			sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 			if err != nil {
 				return err
 			}
@@ -66,7 +66,7 @@ func (s *secretDaoSecretsManagerImpl) Delete(id *int64) error {
 	}
 
 	if auth.Password != nil {
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return err
 		}
@@ -87,7 +87,7 @@ func (s *secretDaoSecretsManagerImpl) GetById(id *int64) (*m.Authentication, err
 	}
 
 	if auth.Password != nil {
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +119,7 @@ func (s *secretDaoSecretsManagerImpl) Update(auth *m.Authentication) error {
 			return fmt.Errorf("failed to fetch ARN for authentication %v", auth.GetID())
 		}
 
-		sm, err := amazon.NewSecretsManagerClient()
+		sm, err := amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			return err
 		}

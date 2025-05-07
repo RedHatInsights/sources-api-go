@@ -253,22 +253,30 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
-	secretStore := os.Getenv("SECRET_STORE")
-	// The secret store defaults to the database in case an empty string
-	if secretStore == "" {
-		secretStore = "database"
-	}
-	options.SetDefault("SecretStore", secretStore)
-	switch secretStore {
+
+	switch os.Getenv("SECRET_STORE") {
 	case SecretsManagerStore:
-		options.SetDefault("SecretsManagerAccessKey", os.Getenv("SECRETS_MANAGER_ACCESS_KEY"))
-		options.SetDefault("SecretsManagerSecretKey", os.Getenv("SECRETS_MANAGER_SECRET_KEY"))
+		secretManagerAccessKey := os.Getenv("SECRETS_MANAGER_ACCESS_KEY")
+		secretManagerSecretKey := os.Getenv("SECRETS_MANAGER_SECRET_KEY")
+
+		if secretManagerAccessKey == "" || secretManagerSecretKey == "" {
+			log.Fatalf(`The AWS' secret manager store requires an access key and a secret key, but one of them is missing`)
+		}
+
+		options.SetDefault("LocalStackURL", os.Getenv("LOCALSTACK_URL"))
+		options.SetDefault("SecretsManagerAccessKey", secretManagerAccessKey)
+		options.SetDefault("SecretsManagerSecretKey", secretManagerSecretKey)
+
 		prefix := os.Getenv("SECRETS_MANAGER_PREFIX")
 		if prefix == "" {
 			prefix = "sources-development"
 		}
+
 		options.SetDefault("SecretsManagerPrefix", prefix)
-		options.SetDefault("LocalStackURL", os.Getenv("LOCALSTACK_URL"))
+		options.SetDefault("SecretStore", os.Getenv("SECRET_STORE"))
+
+	default:
+		options.SetDefault("SecretStore", "database")
 	}
 
 	options.SetDefault("TenantTranslatorUrl", os.Getenv("TENANT_TRANSLATOR_URL"))

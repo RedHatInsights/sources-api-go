@@ -165,7 +165,12 @@ A7sKPPcw7+uvTPyLNhBzPvOk
 		}
 	}
 
-	subjects := tlsConfig.RootCAs.Subjects()
+	// The "Subjects" method is deprecated but there is no better alternative yet. We are not the only ones with this
+	// problem:
+	//
+	// - https://github.com/oauth2-proxy/oauth2-proxy/issues/1576
+	// - https://github.com/open-telemetry/opentelemetry-go/issues/2667
+	subjects := tlsConfig.RootCAs.Subjects() //nolint
 	{
 		want := 1
 		got := len(subjects)

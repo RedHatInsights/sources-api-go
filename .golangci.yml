@@ -65,7 +65,6 @@ linters:
     - prealloc # nice to have.
     - recvcheck # nice ot have.
     - revive # nice to have.
-    - staticcheck # must have.
     - tagalign # nice to have.
     - tagliatelle
     - testpackage
@@ -120,6 +119,7 @@ linters:
     - sloglint
     - spancheck
     - sqlclosecheck
+    - staticcheck
     - testableexamples
     - testifylint
     - tparallel

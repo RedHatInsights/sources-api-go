@@ -2,39 +2,55 @@ package amazon
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/google/uuid"
 )
 
 var (
-	// base config, populated from initial setup connecting to the sources account
-	sourcesConfig *aws.Config
-
-	// error we can return if there were no configured credentials
-	ErrNoCredentials = errors.New("no credentials set to connect to AWS Secrets Manager")
-
-	conf = config.Get()
+	conf           = config.Get()
+	secretsManager SecretsManagerClient
 )
 
-func NewSecretsManagerClient() (SecretsManagerClient, error) {
-	if sourcesConfig == nil {
-		err := initConfig()
-		if err != nil {
-			return nil, err
-		}
+func NewSecretsManagerClient(localStackURL, accessKey, secretKey string) (SecretsManagerClient, error) {
+	if secretsManager != nil {
+		return secretsManager, nil
 	}
 
-	return &SecretsManagerClientImpl{
-		sm:     secretsmanager.NewFromConfig(*sourcesConfig),
+	cfg, err := awsConfig.LoadDefaultConfig(
+		context.Background(),
+		awsConfig.WithRegion("us-east-1"),
+		awsConfig.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				accessKey,
+				secretKey,
+				"sources-api-go-secret-manager-store",
+			),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf(`unable to load default configuration with "%s" as the default region: %w"`, "us-east-1", err)
+	}
+
+	var sm *secretsmanager.Client
+	if localStackURL == "" {
+		sm = secretsmanager.NewFromConfig(cfg)
+	} else {
+		sm = secretsmanager.NewFromConfig(cfg, func(o *secretsmanager.Options) {
+			o.EndpointResolverV2 = newEndpointResolver(localStackURL)
+		})
+	}
+
+	return &secretsManagerClientImpl{
+		sm:     sm,
 		prefix: conf.SecretsManagerPrefix,
 	}, nil
 }
@@ -46,13 +62,13 @@ type SecretsManagerClient interface {
 	DeleteSecret(arn string) error
 }
 
-type SecretsManagerClientImpl struct {
+type secretsManagerClientImpl struct {
 	sm *secretsmanager.Client
 	// prefix, set by app-interface
 	prefix string
 }
 
-func (s *SecretsManagerClientImpl) GetSecret(arn string) (*string, error) {
+func (s *secretsManagerClientImpl) GetSecret(arn string) (*string, error) {
 	secret, err := s.sm.GetSecretValue(context.Background(), &secretsmanager.GetSecretValueInput{SecretId: &arn})
 	if err != nil {
 		return nil, err
@@ -61,7 +77,7 @@ func (s *SecretsManagerClientImpl) GetSecret(arn string) (*string, error) {
 	return secret.SecretString, nil
 }
 
-func (s *SecretsManagerClientImpl) CreateSecret(auth *model.Authentication, value string) (*string, error) {
+func (s *secretsManagerClientImpl) CreateSecret(auth *model.Authentication, value string) (*string, error) {
 	// for unique names, just spin up a guid.
 	guid := uuid.NewString()[0:8]
 
@@ -79,7 +95,7 @@ func (s *SecretsManagerClientImpl) CreateSecret(auth *model.Authentication, valu
 	return secret.ARN, nil
 }
 
-func (s *SecretsManagerClientImpl) UpdateSecret(arn string, value string) error {
+func (s *secretsManagerClientImpl) UpdateSecret(arn string, value string) error {
 	_, err := s.sm.UpdateSecret(context.Background(), &secretsmanager.UpdateSecretInput{
 		SecretId:     &arn,
 		SecretString: &value,
@@ -88,7 +104,7 @@ func (s *SecretsManagerClientImpl) UpdateSecret(arn string, value string) error 
 	return err
 }
 
-func (s *SecretsManagerClientImpl) DeleteSecret(arn string) error {
+func (s *secretsManagerClientImpl) DeleteSecret(arn string) error {
 	trueVal := true
 
 	_, err := s.sm.DeleteSecret(context.Background(), &secretsmanager.DeleteSecretInput{
