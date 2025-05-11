@@ -24,7 +24,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/jackc/pgx/v5 v5.7.4
-	github.com/labstack/echo-contrib v0.17.3
+	github.com/labstack/echo-contrib v0.17.4
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/labstack/gommon v0.4.2
 	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9
