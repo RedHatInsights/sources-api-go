@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -291,6 +292,12 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput, tenant *m.Tenant, userResource *m.UserResource) ([]m.Authentication, error) {
 	authentications := make([]m.Authentication, 0)
 
+	for _, auth := range authentications {
+		if err := service.ValidateAzureSubcriptionId(auth); err != nil {
+			return nil, fmt.Errorf("validation failed for authentication: %w", err)
+		}
+	}
+	
 	for _, auth := range req.Authentications {
 		a := m.Authentication{}
 

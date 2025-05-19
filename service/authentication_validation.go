@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/google/uuid"
 )
 
 var validAuthenticationResources = []string{"source", "endpoint", "application", "authentication"}
@@ -32,6 +33,10 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 	// capitalize it so it's always the same format.
 	auth.ResourceType = util.Capitalize(auth.ResourceType)
 
+	if err := ValidateAzureSubcriptionId(auth); err != nil{
+		return fmt.Errorf("Subscription ID is invalid")
+	} 
+
 	return nil
 }
 
@@ -43,4 +48,27 @@ func ValidateAuthenticationEditRequest(auth *model.AuthenticationEditRequest) er
 	}
 
 	return nil
+}
+
+func ValidateAzureSubcriptionId(auth * model.AuthenticationCreateRequest) error {
+	if auth == nil {
+		return errors.New("auth is nil")
+	}
+
+	if auth.AuthType == "provisioning_lighthouse_subscription_id" || auth.AuthType == "lighthouse_subscription_id" {
+		if auth.Username == nil{
+			return errors.New("username is required for Azure Source Types")
+		}
+
+		trimmed := strings.TrimSpace(*auth.Username)
+		if trimmed == "" {
+			return errors.New("username must not be blank or empty for Azure Source Types")
+		}
+		if _, err := uuid.Parse(trimmed); err != nil {
+			return fmt.Errorf("The username must be a valid UUID for Azure Source Types")
+		}
+	}
+
+	return nil
+
 }
