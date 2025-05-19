@@ -33,8 +33,8 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 	// capitalize it so it's always the same format.
 	auth.ResourceType = util.Capitalize(auth.ResourceType)
 
-	if err := ValidateAzureSubcriptionId(auth); err != nil{
-		return fmt.Errorf("Subscription ID is invalid")
+	if err = ValidateAzureSubscriptionId(auth); err != nil{
+		return fmt.Errorf("subscription ID is invalid")
 	} 
 
 	return nil
@@ -50,7 +50,7 @@ func ValidateAuthenticationEditRequest(auth *model.AuthenticationEditRequest) er
 	return nil
 }
 
-func ValidateAzureSubcriptionId(auth * model.AuthenticationCreateRequest) error {
+func ValidateAzureSubscriptionId(auth *model.AuthenticationCreateRequest) error {
 	if auth == nil {
 		return errors.New("auth is nil")
 	}
