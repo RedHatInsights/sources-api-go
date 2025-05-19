@@ -33,9 +33,9 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 	// capitalize it so it's always the same format.
 	auth.ResourceType = util.Capitalize(auth.ResourceType)
 
-	if err = ValidateAzureSubscriptionId(auth); err != nil{
+	if err = ValidateAzureSubscriptionId(auth); err != nil {
 		return fmt.Errorf("subscription ID is invalid")
-	} 
+	}
 
 	return nil
 }
@@ -56,7 +56,7 @@ func ValidateAzureSubscriptionId(auth *model.AuthenticationCreateRequest) error 
 	}
 
 	if auth.AuthType == "provisioning_lighthouse_subscription_id" || auth.AuthType == "lighthouse_subscription_id" {
-		if auth.Username == nil{
+		if auth.Username == nil {
 			return errors.New("username is required for Azure Source Types")
 		}
 

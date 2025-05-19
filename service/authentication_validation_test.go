@@ -141,7 +141,7 @@ func TestAuthEditValidAvailabilityStatuses(t *testing.T) {
 	}
 }
 
-//TestValidateAuthenticationCreateRequest_invalidUUID tests that an invalid UUID should return an error.
+// TestValidateAuthenticationCreateRequest_invalidUUID tests that an invalid UUID should return an error.
 func TestValidateAuthenticationCreateRequest_invalidUUID(t *testing.T) {
 	invalidUsername := "invalid-uuid"
 	auth := &model.AuthenticationCreateRequest{
@@ -155,7 +155,7 @@ func TestValidateAuthenticationCreateRequest_invalidUUID(t *testing.T) {
 
 }
 
-//TestValidateAuthenticationCreateRequest_ValidUUID tests that an valid UUID should pass
+// TestValidateAuthenticationCreateRequest_ValidUUID tests that an valid UUID should pass
 func TestValidateAuthenticationCreateRequest_ValidUUID(t *testing.T) {
 	validUsername := "44146aed-5890-4a05-9047-eb54070703fc"
 	auth := &model.AuthenticationCreateRequest{
