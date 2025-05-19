@@ -291,8 +291,8 @@ func parseEndpoints(reqEndpoints []m.BulkCreateEndpoint, current *m.BulkCreateOu
 func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput, tenant *m.Tenant, userResource *m.UserResource) ([]m.Authentication, error) {
 	authentications := make([]m.Authentication, 0)
 
-	for _, auth := range authentications {
-		if err := ValidateAuthenticationCreationRequest(auth); err != nil {
+	for _, auth := range req.Authentications {
+		if err := ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest); err != nil {
 			return nil, fmt.Errorf("validation failed for authentication: %w", err)
 		}
 	}
