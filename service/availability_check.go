@@ -230,7 +230,6 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 	acr.updateRhcStatus(source, sanitizedStatus, errstr, rhcConnection, headers)
 }
 
-
 func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status string, errstr string, rhcConnection *m.RhcConnection, headers []kafka.Header) {
 	now := time.Now()
 
