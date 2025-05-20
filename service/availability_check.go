@@ -227,10 +227,7 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 		return
 	}
 
-	// only go through and update if there was a change. to either the source or rhc connection
-	if rhcConnection.AvailabilityStatus != sanitizedStatus || source.AvailabilityStatus != sanitizedStatus {
-		acr.updateRhcStatus(source, sanitizedStatus, errstr, rhcConnection, headers)
-	}
+	acr.updateRhcStatus(source, sanitizedStatus, errstr, rhcConnection, headers)
 }
 
 func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status string, errstr string, rhcConnection *m.RhcConnection, headers []kafka.Header) {
