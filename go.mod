@@ -31,7 +31,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/redhatinsights/platform-go-middlewares v1.0.0
-	github.com/redhatinsights/sources-superkey-worker v0.0.0-20250417140245-5f3a6505065b
+	github.com/redhatinsights/sources-superkey-worker 74309275bf85
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.20.1
