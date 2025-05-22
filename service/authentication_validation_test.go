@@ -140,3 +140,31 @@ func TestAuthEditValidAvailabilityStatuses(t *testing.T) {
 		}
 	}
 }
+
+// TestValidateAuthenticationCreateRequest_invalidUUID tests that an invalid UUID should return an error.
+func TestValidateAuthenticationCreateRequest_invalidUUID(t *testing.T) {
+	invalidUsername := "invalid-uuid"
+	auth := &model.AuthenticationCreateRequest{
+		AuthType: "lighthouse_subscription_id",
+		Username: &invalidUsername,
+	}
+	err := ValidateAzureSubscriptionId(auth)
+	if err == nil {
+		t.Errorf("expected error for invalid UUID, but got nil")
+	}
+
+}
+
+// TestValidateAuthenticationCreateRequest_ValidUUID tests that an valid UUID should pass
+func TestValidateAuthenticationCreateRequest_ValidUUID(t *testing.T) {
+	validUsername := "44146aed-5890-4a05-9047-eb54070703fc"
+	auth := &model.AuthenticationCreateRequest{
+		AuthType: "lighthouse_subscription_id",
+		Username: &validUsername,
+	}
+	err := ValidateAzureSubscriptionId(auth)
+	if err != nil {
+		t.Errorf("Expected no error for valid UUID, but got %s", err)
+	}
+
+}

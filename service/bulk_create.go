@@ -292,6 +292,12 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 	authentications := make([]m.Authentication, 0)
 
 	for _, auth := range req.Authentications {
+		if err := ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest); err != nil {
+			return nil, fmt.Errorf("validation failed for authentication: %w", err)
+		}
+	}
+
+	for _, auth := range req.Authentications {
 		a := m.Authentication{}
 
 		a.ResourceType = util.Capitalize(auth.ResourceType)
