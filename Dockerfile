@@ -16,19 +16,19 @@ RUN go mod download \
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
 # The Sources API leaves the RDS CA in a file when the Clowder configuration
-# is loaded. In order to avoid permission errors and having to run the
-# container with elevated privileges, we create a "sources" user and give it
-# an "/app" directory from where it will have permissions to create that file.
-RUN /sbin/useradd --shell /bin/sh sources \
-    && mkdir /app \
-    && chown sources /app
+# is loaded. In order to avoid permission errors when writing the file to
+# the directory, we create one and give it all the permissions.
+#
+# We have attempted creating a particular user, creating a directory for that
+# user and giving it permissions with "chown", but for some reason even
+# though things worked locally they did not in stage.
+WORKDIR /app
+RUN chmod 777 /app
 
 # Copy the binary and the license.
 COPY --from=build /build/sources-api-go /app/sources-api-go
 COPY licenses/LICENSE /app/licenses/LICENSE
 
-# Set the working directory to the "sources"-owned directory.
-WORKDIR /app
-USER sources
+USER 1001
 
-ENTRYPOINT ["./sources-api-go"]
+ENTRYPOINT ["/app/sources-api-go"]
