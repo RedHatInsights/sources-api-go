@@ -15,7 +15,7 @@ import (
 
 const (
 	KafkaGroupId  = "sources-api-go"
-	RdsCaLocation = "/app/rdsca.cert"
+	RdsCaLocation = "rdsca.cert"
 
 	DatabaseStore       = "database"
 	VaultStore          = "vault"
