@@ -292,12 +292,6 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 	authentications := make([]m.Authentication, 0)
 
 	for _, auth := range req.Authentications {
-		if err := ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest); err != nil {
-			return nil, fmt.Errorf("validation failed for authentication: %w", err)
-		}
-	}
-
-	for _, auth := range req.Authentications {
 		a := m.Authentication{}
 
 		a.ResourceType = util.Capitalize(auth.ResourceType)
@@ -387,6 +381,13 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 
 		default:
 			return nil, util.NewErrBadRequest("failed to link authentication: no resource type present")
+		}
+
+		auth.ResourceIDRaw = a.ResourceID
+		auth.ResourceType = a.ResourceType
+
+		if err := ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest); err != nil {
+			return nil, fmt.Errorf("validation failed for authentication: %w", err)
 		}
 
 		// checking to make sure the polymorphic relationship is set.

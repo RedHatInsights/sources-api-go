@@ -34,7 +34,7 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 	auth.ResourceType = util.Capitalize(auth.ResourceType)
 
 	if err = ValidateAzureSubscriptionId(auth); err != nil {
-		return fmt.Errorf("subscription ID is invalid")
+		return fmt.Errorf("subscription ID is invalid: %w", err)
 	}
 
 	return nil
@@ -65,7 +65,7 @@ func ValidateAzureSubscriptionId(auth *model.AuthenticationCreateRequest) error 
 			return errors.New("username must not be blank or empty for Azure Source Types")
 		}
 		if _, err := uuid.Parse(trimmed); err != nil {
-			return fmt.Errorf("The username must be a valid UUID for Azure Source Types")
+			return fmt.Errorf("the username must be a valid UUID for Azure Source Types")
 		}
 	}
 
