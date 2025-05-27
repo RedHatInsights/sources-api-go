@@ -383,6 +383,13 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 			return nil, util.NewErrBadRequest("failed to link authentication: no resource type present")
 		}
 
+		auth.ResourceIDRaw = a.ResourceID
+		auth.ResourceType = a.ResourceType
+
+		if err := ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest); err != nil {
+			return nil, fmt.Errorf("validation failed for authentication: %w", err)
+		}
+
 		// checking to make sure the polymorphic relationship is set.
 		if a.ResourceID != 0 && a.ResourceType != "" {
 			authentications = append(authentications, a)
