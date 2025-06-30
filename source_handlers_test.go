@@ -64,6 +64,7 @@ func TestSourceListAuthentications(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -78,6 +79,7 @@ func TestSourceListAuthentications(t *testing.T) {
 	}
 
 	var wantCount int
+
 	for _, a := range fixtures.TestAuthenticationData {
 		if a.SourceID == sourceId && a.TenantID == tenantId {
 			wantCount++
@@ -122,10 +124,10 @@ func TestSourceListAuthentications(t *testing.T) {
 				}
 			}
 		}
-
 	}
 
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
+
 	conf.SecretStore = originalSecretStore
 }
 
@@ -162,6 +164,7 @@ func TestSourceListAuthenticationsEmptyList(t *testing.T) {
 // for not existing tenant
 func TestSourceListAuthenticationsTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
@@ -181,6 +184,7 @@ func TestSourceListAuthenticationsTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+
 	err := notFoundSourceListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -193,6 +197,7 @@ func TestSourceListAuthenticationsTenantNotExists(t *testing.T) {
 // valid tenant and source that not belongs to this tenant
 func TestSourceListAuthenticationsInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	sourceId := int64(2)
 	tenantId := int64(2)
 
@@ -212,6 +217,7 @@ func TestSourceListAuthenticationsInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+
 	err := notFoundSourceListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -237,6 +243,7 @@ func TestSourceListAuthenticationsNotFound(t *testing.T) {
 	c.SetParamValues("30983098439")
 
 	notFoundSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+
 	err := notFoundSourceListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -262,6 +269,7 @@ func TestSourceListAuthenticationsBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestSourceListAuthentications := ErrorHandlingContext(SourceListAuthentications)
+
 	err := badRequestSourceListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -299,6 +307,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -315,6 +324,7 @@ func TestSourceTypeSourceSubcollectionList(t *testing.T) {
 	// How many sources with given source type is in fixtures
 	// (adding new fixtures will not affect the test)
 	var wantSourcesCount int
+
 	for _, i := range fixtures.TestSourceData {
 		if i.SourceTypeID == sourceTypeId && i.TenantID == tenantId {
 			wantSourcesCount++
@@ -418,6 +428,7 @@ func TestSourceTypeSourceSubcollectionListNotFound(t *testing.T) {
 	c.SetParamValues("80398409384")
 
 	notFoundSourceTypeListSource := ErrorHandlingContext(SourceTypeListSource)
+
 	err := notFoundSourceTypeListSource(c)
 	if err != nil {
 		t.Error(err)
@@ -443,6 +454,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidSyntax(t *testing.T) 
 	c.SetParamValues("xxx")
 
 	badRequestSourceTypeListSource := ErrorHandlingContext(SourceTypeListSource)
+
 	err := badRequestSourceTypeListSource(c)
 	if err != nil {
 		t.Error(err)
@@ -472,6 +484,7 @@ func TestSourceTypeSourceSubcollectionListBadRequestInvalidFilter(t *testing.T) 
 	c.SetParamValues("1")
 
 	badRequestSourceTypeListSource := ErrorHandlingContext(SourceTypeListSource)
+
 	err := badRequestSourceTypeListSource(c)
 	if err != nil {
 		t.Error(err)
@@ -510,6 +523,7 @@ func TestApplicationTypeListSourceSubcollectionList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -623,6 +637,7 @@ func TestApplicationTypeListSourceSubcollectionListNotFound(t *testing.T) {
 	c.SetParamValues("398748974")
 
 	notFoundApplicationTypeListSource := ErrorHandlingContext(ApplicationTypeListSource)
+
 	err := notFoundApplicationTypeListSource(c)
 	if err != nil {
 		t.Error(err)
@@ -648,6 +663,7 @@ func TestApplicationTypeListSourceSubcollectionListBadRequestInvalidSyntax(t *te
 	c.SetParamValues("xxx")
 
 	badRequestApplicationTypeListSource := ErrorHandlingContext(ApplicationTypeListSource)
+
 	err := badRequestApplicationTypeListSource(c)
 	if err != nil {
 		t.Error(err)
@@ -677,6 +693,7 @@ func TestApplicationTypeListSourceSubcollectionListBadRequestInvalidFilter(t *te
 	c.SetParamValues("1")
 
 	badRequestApplicationTypeListSource := ErrorHandlingContext(ApplicationTypeListSource)
+
 	err := badRequestApplicationTypeListSource(c)
 	if err != nil {
 		t.Error(err)
@@ -708,6 +725,7 @@ func TestSourceList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -722,6 +740,7 @@ func TestSourceList(t *testing.T) {
 	}
 
 	var wantSourcesCount int
+
 	for _, s := range fixtures.TestSourceData {
 		if s.TenantID == tenantId {
 			wantSourcesCount++
@@ -839,6 +858,7 @@ func TestSourceListSatellite(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -884,6 +904,7 @@ func TestSourceListBadRequestInvalidFilter(t *testing.T) {
 			"tenantID": int64(1),
 		})
 	badRequestSourceList := ErrorHandlingContext(SourceList)
+
 	err := badRequestSourceList(c)
 	if err != nil {
 		t.Error(err)
@@ -918,6 +939,7 @@ func TestSourceGet(t *testing.T) {
 	}
 
 	var outSrc m.SourceResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outSrc)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -943,6 +965,7 @@ func TestSourceGet(t *testing.T) {
 			if src.TenantID != tenantId {
 				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, src.TenantID)
 			}
+
 			break
 		}
 	}
@@ -952,6 +975,7 @@ func TestSourceGet(t *testing.T) {
 // existing source id but with tenant that is now owner of this source
 func TestSourceGetInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 	sourceId := int64(1)
 
@@ -968,6 +992,7 @@ func TestSourceGetInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+
 	err := notFoundSourceGet(c)
 	if err != nil {
 		t.Error(err)
@@ -980,6 +1005,7 @@ func TestSourceGetInvalidTenant(t *testing.T) {
 // not existing tenant
 func TestSourceGetTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
@@ -996,6 +1022,7 @@ func TestSourceGetTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+
 	err := notFoundSourceGet(c)
 	if err != nil {
 		t.Error(err)
@@ -1018,6 +1045,7 @@ func TestSourceGetNotFound(t *testing.T) {
 	c.SetParamValues("9872034520975")
 
 	notFoundSourceGet := ErrorHandlingContext(SourceGet)
+
 	err := notFoundSourceGet(c)
 	if err != nil {
 		t.Error(err)
@@ -1040,6 +1068,7 @@ func TestSourceGetBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestSourceGet := ErrorHandlingContext(SourceGet)
+
 	err := badRequestSourceGet(c)
 	if err != nil {
 		t.Error(err)
@@ -1071,6 +1100,7 @@ func TestSourceCreateBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestSourceCreate := ErrorHandlingContext(SourceCreate)
+
 	err = badRequestSourceCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -1087,6 +1117,7 @@ func TestSourceCreate(t *testing.T) {
 	version := "10.5"
 	imported := "true"
 	sourceRef := "Source reference #5"
+
 	var sourceTypeId int64 = 1
 
 	requestBody := m.SourceCreateRequest{
@@ -1126,6 +1157,7 @@ func TestSourceCreate(t *testing.T) {
 
 	src := m.SourceResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err = json.Unmarshal(raw, &src)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -1137,6 +1169,7 @@ func TestSourceCreate(t *testing.T) {
 
 	id, _ := strconv.ParseInt(src.ID, 10, 64)
 	SourceDao, _ := getSourceDao(c)
+
 	_, err = SourceDao.Delete(&id)
 	if err != nil {
 		t.Errorf("Failed to delete source id %v", id)
@@ -1173,6 +1206,7 @@ func TestSourceEdit(t *testing.T) {
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(SourceEdit)
+
 	err := sourceEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
@@ -1184,6 +1218,7 @@ func TestSourceEdit(t *testing.T) {
 
 	src := m.SourceResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err = json.Unmarshal(raw, &src)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -1222,6 +1257,7 @@ func TestSourceEdit(t *testing.T) {
 // edit existing not owned source
 func TestSourceEditInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -1247,6 +1283,7 @@ func TestSourceEditInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundSourceEdit := ErrorHandlingContext(SourceEdit)
+
 	err := notFoundSourceEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -1278,6 +1315,7 @@ func TestSourceEditNotFound(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundSourceEdit := ErrorHandlingContext(SourceEdit)
+
 	err := notFoundSourceEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -1309,6 +1347,7 @@ func TestSourceEditBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
+
 	err := badRequestSourceEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -1340,6 +1379,7 @@ func TestSourceEditNameEmptyString(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
+
 	err := badRequestSourceEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -1376,6 +1416,7 @@ func TestSourceEditNoNameRequest(t *testing.T) {
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: tenant.ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(SourceEdit)
+
 	err := sourceEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
@@ -1387,6 +1428,7 @@ func TestSourceEditNoNameRequest(t *testing.T) {
 
 	src := m.SourceResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err = json.Unmarshal(raw, &src)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -1395,6 +1437,7 @@ func TestSourceEditNoNameRequest(t *testing.T) {
 	if *src.Name != source.Name {
 		t.Errorf("Unexpected source name: expected #'{source.Name}', got '#{*src.Name}'")
 	}
+
 	if *src.AvailabilityStatus != "in_progress" {
 		t.Errorf("Wrong availability status, wanted %v got %v", "in_progress", *src.AvailabilityStatus)
 	}
@@ -1609,6 +1652,7 @@ func TestSourceDelete(t *testing.T) {
 
 	// Check that relation "source - rhc connection" doesn't exist
 	var out []m.RhcConnection
+
 	out, _, _ = rhcConnectionDao.ListForSource(&src.ID, 100, 0, []util.Filter{})
 	for _, r := range out {
 		if r.ID == rhc.ID {
@@ -1629,6 +1673,7 @@ func TestSourceDelete(t *testing.T) {
 // delete existing but not owned source
 func TestSourceDeleteInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -1645,6 +1690,7 @@ func TestSourceDeleteInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceDelete := ErrorHandlingContext(SourceDelete)
+
 	err := notFoundSourceDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -1667,6 +1713,7 @@ func TestSourceDeleteNotFound(t *testing.T) {
 	c.SetParamValues("9038049384")
 
 	notFoundSourceDelete := ErrorHandlingContext(SourceDelete)
+
 	err := notFoundSourceDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -1689,6 +1736,7 @@ func TestSourceDeleteBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestSourceDelete := ErrorHandlingContext(SourceDelete)
+
 	err := badRequestSourceDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -1735,11 +1783,14 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 	)
 
 	// Set the environment variables so that the URL to which we need to send the request gets properly built.
-	if err := os.Setenv("COST_MANAGEMENT_AVAILABILITY_CHECK_URL", "invalidurl"); err != nil {
+	err := os.Setenv("COST_MANAGEMENT_AVAILABILITY_CHECK_URL", "invalidurl")
+	if err != nil {
 		t.Errorf("unable to set the URL for the Cost Management application: %err", err)
 	}
+
 	defer func() {
-		if err := os.Unsetenv("COST_MANAGEMENT_AVAILABILITY_CHECK_URL"); err != nil {
+		err := os.Unsetenv("COST_MANAGEMENT_AVAILABILITY_CHECK_URL")
+		if err != nil {
 			t.Errorf("unable to unset the URL for the Cost Management application: %err", err)
 		}
 	}()
@@ -1774,27 +1825,32 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 	// added above. Then, we need to make sure to revert things for the rest of the tests.
 	if parser.RunningIntegrationTests {
 		sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-		if err := sourceDao.Create(&fixtureSource); err != nil {
+
+		err := sourceDao.Create(&fixtureSource)
+		if err != nil {
 			t.Errorf(`unable to create the source fixture in the database: %s`, err)
 		}
 
 		defer func() {
-			if _, err := sourceDao.Delete(&fixtureSource.ID); err != nil {
+			_, err := sourceDao.Delete(&fixtureSource.ID)
+			if err != nil {
 				t.Errorf(`unexpected behavior may occur in other tests due to being unable to delete the source fixture: %s`, err)
 			}
 		}()
 	} else {
 		previousMockSourceDao := mockSourceDao
+
 		defer func() {
 			mockSourceDao = previousMockSourceDao
 		}()
+
 		mockSourceDao = &mocks.MockSourceDao{Sources: customSourceFixtures, RelatedSources: fixtures.TestSourceData}
 	}
 
 	c.SetParamNames("source_id")
 	c.SetParamValues("12345")
 
-	err := SourceCheckAvailability(c)
+	err = SourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -1808,6 +1864,7 @@ func TestAvailabilityStatusCheckSkipEmptySources(t *testing.T) {
 // with a tenant who doesn't own the source
 func TestAvailabilityStatusCheckInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -1824,6 +1881,7 @@ func TestAvailabilityStatusCheckInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+
 	err := notFoundSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
@@ -1846,6 +1904,7 @@ func TestAvailabilityStatusCheckNotFound(t *testing.T) {
 	c.SetParamValues("183209745")
 
 	notFoundSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+
 	err := notFoundSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
@@ -1868,6 +1927,7 @@ func TestAvailabilityStatusCheckBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestSourceCheckAvailability := ErrorHandlingContext(SourceCheckAvailability)
+
 	err := badRequestSourceCheckAvailability(c)
 	if err != nil {
 		t.Error(err)
@@ -1904,6 +1964,7 @@ func TestSourcesGetRelatedRhcConnections(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshalling output")
@@ -1940,6 +2001,7 @@ func TestSourcesGetRelatedRhcConnections(t *testing.T) {
 // for source without rhc-connections
 func TestSourcesGetRelatedRhcConnectionsEmptyList(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 	sourceId := int64(4)
 
@@ -1970,6 +2032,7 @@ func TestSourcesGetRelatedRhcConnectionsEmptyList(t *testing.T) {
 // (with existing rhc-connections) but tenant is not owner of this source
 func TestSourcesGetRelatedRhcConnectionsInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -1989,6 +2052,7 @@ func TestSourcesGetRelatedRhcConnectionsInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+
 	err := notFoundSourcesRhcConnectionList(c)
 	if err != nil {
 		t.Error(err)
@@ -2014,6 +2078,7 @@ func TestSourcesGetRelatedRhcConnectionsNotFound(t *testing.T) {
 	c.SetParamValues("0394830498")
 
 	notFoundSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+
 	err := notFoundSourcesRhcConnectionList(c)
 	if err != nil {
 		t.Error(err)
@@ -2039,6 +2104,7 @@ func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidSyntax(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+
 	err := badRequestSourcesRhcConnectionList(c)
 	if err != nil {
 		t.Error(err)
@@ -2068,6 +2134,7 @@ func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidFilter(t *testing.T) {
 	c.SetParamValues("1")
 
 	badRequestSourcesRhcConnectionList := ErrorHandlingContext(SourcesRhcConnectionList)
+
 	err := badRequestSourcesRhcConnectionList(c)
 	if err != nil {
 		t.Error(err)
@@ -2080,6 +2147,7 @@ func TestSourcesGetRelatedRhcConnectionsBadRequestInvalidFilter(t *testing.T) {
 // itself as paused, by modifying their "paused_at" column.
 func TestPauseSourceAndItsApplications(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 	sourceId := int64(1)
 
@@ -2107,6 +2175,7 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 	// Check that the source is paused
 	daoParams := dao.RequestParams{TenantID: &tenantId}
 	sourceDao := dao.GetSourceDao(&daoParams)
+
 	src, err := sourceDao.GetById(&sourceId)
 	if err != nil {
 		t.Error(err)
@@ -2123,14 +2192,17 @@ func TestPauseSourceAndItsApplications(t *testing.T) {
 
 	// Check that relation applications are paused and belongs to desired tenant
 	appDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
+
 	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
 	if err != nil {
 		t.Error(err)
 	}
+
 	for _, a := range apps {
 		if a.PausedAt == nil {
 			t.Errorf("application with id = %d is not paused and the opposite is expected", a.ID)
 		}
+
 		if a.TenantID != tenantId {
 			t.Errorf("expected tenant %d, got %d", tenantId, a.TenantID)
 		}
@@ -2164,6 +2236,7 @@ func TestPauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+
 	err := notFoundSourcePause(c)
 	if err != nil {
 		t.Error(err)
@@ -2176,6 +2249,7 @@ func TestPauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
 // for not existing tenant
 func TestPauseSourceAndItsApplicationsTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
@@ -2192,6 +2266,7 @@ func TestPauseSourceAndItsApplicationsTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+
 	err := notFoundSourcePause(c)
 	if err != nil {
 		t.Error(err)
@@ -2214,6 +2289,7 @@ func TestPauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	c.SetParamValues("809897868745")
 
 	notFoundSourcePause := ErrorHandlingContext(SourcePause)
+
 	err := notFoundSourcePause(c)
 	if err != nil {
 		t.Error(err)
@@ -2236,6 +2312,7 @@ func TestPauseSourceAndItsApplicationsBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestSourcePause := ErrorHandlingContext(SourcePause)
+
 	err := badRequestSourcePause(c)
 	if err != nil {
 		t.Error(err)
@@ -2248,12 +2325,14 @@ func TestPauseSourceAndItsApplicationsBadRequest(t *testing.T) {
 // itself as not paused, by setting their "paused_at" column as "NULL".
 func TestUnpauseSourceAndItsApplications(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 	sourceId := int64(1)
 
 	// Test data preparation = pause the source and its apps
 	daoParams := dao.RequestParams{TenantID: &tenantId}
 	sourceDao := dao.GetSourceDao(&daoParams)
+
 	err := sourceDao.Pause(sourceId)
 	if err != nil {
 		t.Error(err)
@@ -2298,14 +2377,17 @@ func TestUnpauseSourceAndItsApplications(t *testing.T) {
 
 	// Check that related applications are not paused and belongs to the desired tenant
 	appDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
+
 	apps, _, err := appDao.SubCollectionList(m.Source{ID: sourceId}, 100, 0, nil)
 	if err != nil {
 		t.Error(err)
 	}
+
 	for _, a := range apps {
 		if a.PausedAt != nil {
 			t.Errorf("application with id = %d is paused and the opposite is expected", a.ID)
 		}
+
 		if a.TenantID != tenantId {
 			t.Errorf("expected tenant %d, got %d", tenantId, a.TenantID)
 		}
@@ -2333,6 +2415,7 @@ func TestUnpauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+
 	err := notFoundSourceUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -2345,6 +2428,7 @@ func TestUnpauseSourceAndItsApplicationsInvalidTenant(t *testing.T) {
 // for not existing tenant
 func TestUnpauseSourceAndItsApplicationsTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
@@ -2361,6 +2445,7 @@ func TestUnpauseSourceAndItsApplicationsTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+
 	err := notFoundSourceUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -2386,6 +2471,7 @@ func TestUnpauseSourceAndItsApplicationsNotFound(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+
 	err := notFoundSourceUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -2411,6 +2497,7 @@ func TestUnpauseSourceAndItsApplicationsBadRequest(t *testing.T) {
 	c.SetParamValues(sourceId)
 
 	notFoundSourceUnpause := ErrorHandlingContext(SourceUnpause)
+
 	err := notFoundSourceUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -2454,8 +2541,11 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 	backupProducer := service.Producer
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: MockSender{}} }
 
-	var sourceRaiseEventCallCount int
-	var applicationRaiseEventCallCount int
+	var (
+		sourceRaiseEventCallCount      int
+		applicationRaiseEventCallCount int
+	)
+
 	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {
 		// Set up an error which will get returned. Probably will get overwritten if there are multiple errors, but
 		// we don't mind since we are logging every failure. Essentially, it just to satisfy the function signature.
@@ -2472,6 +2562,7 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 			applicationRaiseEventCallCount++
 		default:
 			t.Errorf(`incorrect event type when raising the event. Want "Source.pause" or "Application.pause", got "%s"`, eventType)
+
 			err = errors.New(`incorrect event type raised`)
 		}
 
@@ -2486,6 +2577,7 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 	{
 		// We are pausing a single source, therefore there should only have been 1 call to the "RaiseEvent" function.
 		want := 1
+
 		got := sourceRaiseEventCallCount
 		if want != got {
 			t.Errorf(`raise event was called an incorrect number of times for the source event. Want "%d", got "%d"`, want, got)
@@ -2496,6 +2588,7 @@ func TestSourcePauseRaiseEventCheck(t *testing.T) {
 		// The source has 2 related application in the fixtures, so the "RaiseEvent" function should have been called
 		// twice.
 		want := 2
+
 		got := applicationRaiseEventCallCount
 		if want != got {
 			t.Errorf(`raise event was called an incorrect number of times for the application event. Want "%d", got "%d"`, want, got)
@@ -2532,8 +2625,11 @@ func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
 	backupProducer := service.Producer
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: MockSender{}} }
 
-	var sourceRaiseEventCallCount int
-	var applicationRaiseEventCallCount int
+	var (
+		sourceRaiseEventCallCount      int
+		applicationRaiseEventCallCount int
+	)
+
 	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {
 		// Set up an error which will get returned. Probably will get overwritten if there are multiple errors, but
 		// we don't mind since we are logging every failure. Essentially, it just to satisfy the function signature.
@@ -2550,6 +2646,7 @@ func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
 			applicationRaiseEventCallCount++
 		default:
 			t.Errorf(`incorrect event type when raising the event. Want "Source.pause" or "Application.pause", got "%s"`, eventType)
+
 			err = errors.New(`incorrect event type raised`)
 		}
 
@@ -2564,6 +2661,7 @@ func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
 	{
 		// We are resuming a single source, therefore there should only have been 1 call to the "RaiseEvent" function.
 		want := 1
+
 		got := sourceRaiseEventCallCount
 		if want != got {
 			t.Errorf(`raise event was called an incorrect number of times for the source event. Want "%d", got "%d"`, want, got)
@@ -2574,6 +2672,7 @@ func TestSourceUnpauseRaiseEventCheck(t *testing.T) {
 		// The source has 2 related application in the fixtures, so the "RaiseEvent" function should have been called
 		// twice.
 		want := 2
+
 		got := applicationRaiseEventCallCount
 		if want != got {
 			t.Errorf(`raise event was called an incorrect number of times for the application event. Want "%d", got "%d"`, want, got)
@@ -2621,6 +2720,7 @@ func sourceEventTestHelper(t *testing.T, c echo.Context, expectedEventType strin
 
 	{
 		var h kafka.Header
+
 		for _, header := range headers {
 			if header.Key == "event_type" {
 				h = header
@@ -2629,6 +2729,7 @@ func sourceEventTestHelper(t *testing.T, c echo.Context, expectedEventType strin
 		}
 		// The header should contain the expected event type as well.
 		want := expectedEventType
+
 		got := string(h.Value)
 		if want != got {
 			t.Errorf(`incorrect header on raise event. Want "%s", got "%s"`, want, got)
@@ -2673,6 +2774,7 @@ func TestSourceEditPausedIntegration(t *testing.T) {
 	}
 
 	badRequestSourceEdit := ErrorHandlingContext(SourceEdit)
+
 	err = badRequestSourceEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -2689,6 +2791,7 @@ func TestSourceEditPausedIntegration(t *testing.T) {
 	}
 
 	want := "name"
+
 	got := rec.Body.String()
 	if !strings.Contains(got, want) {
 		t.Errorf(`unexpected body returned. Want "%s" contained in what we got "%s"`, want, got)
@@ -2766,6 +2869,7 @@ func TestSourceDeleteWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) {
 	otherUserIDWithoutOwnRecords := "other_user"
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	recordsWithUserID, _, err := dao.CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
 	if err != nil {
 		t.Errorf("unable to create source: %v", err)
@@ -2795,6 +2899,7 @@ func TestSourceDeleteWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundSourceDelete := ErrorHandlingContext(SourceDelete)
+
 	err = notFoundSourceDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -2818,6 +2923,7 @@ func TestSuperKeyDestroyWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) 
 
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	recordsWithUserID, user, err := dao.CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
 	if err != nil {
 		t.Errorf("unable to create source: %v", err)
@@ -2828,6 +2934,7 @@ func TestSuperKeyDestroyWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) 
 	tenantID := src.TenantID
 
 	sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &tenantID, UserID: &user.Id})
+
 	err = sourceDao.Update(&m.Source{ID: src.ID, AppCreationWorkflow: m.AccountAuth})
 	if err != nil {
 		t.Error(err)
@@ -2858,6 +2965,7 @@ func TestSuperKeyDestroyWithOwnershipWhenUserIsNotAllowedToDelete(t *testing.T) 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	superKeyDestroySource := middleware.SuperKeyDestroySource(SourceDelete)
+
 	err = superKeyDestroySource(c)
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("improper error occurred for super key destroy source operation %v", err)
@@ -2878,6 +2986,7 @@ func TestSourceDeleteWithOwnership(t *testing.T) {
 
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	recordsWithUserID, user, err := dao.CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
 	if err != nil {
 		t.Errorf("unable to create source: %v", err)
@@ -2931,5 +3040,6 @@ func checkAllSourcesBelongToTenant(tenantId int64, sources []interface{}) error 
 			}
 		}
 	}
+
 	return nil
 }

@@ -16,5 +16,6 @@ func PopulateMockStaticTypeCache() error {
 	}
 
 	Static = tc
+
 	return nil
 }

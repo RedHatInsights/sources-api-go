@@ -41,7 +41,6 @@ func TestInvalidJsonPassed(t *testing.T) {
 	fakeMarketplaceResponse := http.Response{Body: readCloser}
 
 	_, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
-
 	if err == nil {
 		t.Errorf("want error, got none")
 	}
@@ -57,7 +56,6 @@ func TestInvalidStructurePassed(t *testing.T) {
 	fakeMarketplaceResponse := http.Response{Body: readCloser}
 
 	_, err := DecodeMarketplaceTokenFromResponse(&fakeMarketplaceResponse)
-
 	if err == nil {
 		t.Errorf("want error, got none")
 	}

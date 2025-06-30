@@ -72,5 +72,6 @@ func (at *ApplicationType) UserResourceOwnership() bool {
 	if at.ResourceOwnership == nil {
 		return false
 	}
+
 	return *at.ResourceOwnership == UserOwnership
 }

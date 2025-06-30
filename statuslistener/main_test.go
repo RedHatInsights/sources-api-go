@@ -14,12 +14,14 @@ var runningIntegration = false
 
 func TestMain(t *testing.M) {
 	l.InitLogger(config)
+
 	flags := parser.ParseFlags()
 
 	if flags.CreateDb {
 		database.CreateTestDB()
 	} else if flags.Integration {
 		runningIntegration = true
+
 		database.ConnectAndMigrateDB("status_listener")
 		database.CreateFixtures("status_listener")
 	}

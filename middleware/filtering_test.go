@@ -207,7 +207,6 @@ func TestParseFilteringBadFilter(t *testing.T) {
 	c := e.NewContext(req, nil)
 
 	filters, err := parseFilter(c)
-
 	if err == nil {
 		t.Error("got no error when there should have been one")
 	}

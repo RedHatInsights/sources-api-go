@@ -38,16 +38,16 @@ func (m MockFormatter) Format(_ *logrus.Entry) ([]byte, error) {
 
 type MockEventStreamSender struct {
 	events.EventStreamSender
-	TestSuite *testing.T
 	types.StatusMessage
 
 	RaiseEventCalled bool
+	TestSuite        *testing.T
 }
 
 func LoadJSONContentFrom(resourceType string, resourceID string, prefix string) []byte {
 	fileName := "./test_data/" + prefix + resourceType + "_" + resourceID + ".json"
-	fileContent, err := os.ReadFile(fileName)
 
+	fileContent, err := os.ReadFile(fileName)
 	if err != nil {
 		panic(fmt.Errorf("unable to read file %s because of %v", fileName, err))
 	}
@@ -101,18 +101,22 @@ func PopulateDateFieldsFrom(resource interface{}) DateFields {
 		if typedResource.LastAvailableAt != nil {
 			dateFields.LastAvailableAt = *typedResource.LastAvailableAt
 		}
+
 		if typedResource.LastCheckedAt != nil {
 			dateFields.LastCheckedAt = *typedResource.LastCheckedAt
 		}
+
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.Endpoint:
 		dateFields.CreatedAt = typedResource.CreatedAt
 		if typedResource.LastAvailableAt != nil {
 			dateFields.LastAvailableAt = *typedResource.LastAvailableAt
 		}
+
 		if typedResource.LastCheckedAt != nil {
 			dateFields.LastCheckedAt = *typedResource.LastCheckedAt
 		}
+
 		dateFields.UpdatedAt = typedResource.UpdatedAt
 	case *m.ApplicationAuthentication:
 		dateFields.CreatedAt = typedResource.CreatedAt
@@ -131,6 +135,7 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 	}
 
 	var src interface{}
+
 	res := dao.DB
 
 	bulkMessage := map[string]interface{}{}
@@ -138,9 +143,11 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 	switch resourceType {
 	case "Source":
 		source := &m.Source{ID: id}
+
 		if forBulkMessage {
 			res = dao.DB.Preload("Applications").Preload("Endpoints")
 		}
+
 		res = res.Find(source)
 		bulkMessage["applications"] = source.Applications
 		bulkMessage["endpoints"] = source.Endpoints
@@ -159,6 +166,7 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		src = source
 	case "Application":
 		application := &m.Application{ID: id}
+
 		if forBulkMessage {
 			res = dao.DB.Preload("Source").Preload("Source.Applications").Preload("Source.Endpoints")
 		}
@@ -173,6 +181,7 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		}
 
 		authDao := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &application.TenantID})
+
 		authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 		if err != nil {
 			panic("error to fetch authentications: " + err.Error())
@@ -198,9 +207,11 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 		src = application
 	case "Endpoint":
 		endpoint := &m.Endpoint{ID: id}
+
 		if forBulkMessage {
 			res = dao.DB.Preload("Source").Preload("Source.Applications").Preload("Source.Endpoints")
 		}
+
 		res = res.Find(endpoint)
 		bulkMessage["applications"] = endpoint.Source.Applications
 		bulkMessage["endpoints"] = endpoint.Source.Endpoints
@@ -210,6 +221,7 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 			ApplicationAuthentications: []m.ApplicationAuthentication{},
 		}
 		authDao := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &endpoint.TenantID})
+
 		authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 		if err != nil {
 			return err, nil
@@ -227,7 +239,6 @@ func FetchDataFor(resourceType string, resourceID string, forBulkMessage bool) (
 	}
 
 	err = res.Error
-
 	if err != nil {
 		panic("Error fetch record " + resourceID)
 	}
@@ -239,6 +250,7 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 	resource, bulkMessage := FetchDataFor(resourceType, resourceID, true)
 
 	contentMap := make(map[string]interface{})
+
 	err := json.Unmarshal(content, &contentMap)
 	if err != nil {
 		panic("unmarshalling error + " + err.Error())
@@ -256,6 +268,7 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 
 	for index, application := range apps {
 		dateFields = PopulateDateFieldsFrom(&application)
+
 		ap, success := contentMap["applications"].([]interface{})
 		if !success {
 			panic("type assertion error: + " + err.Error())
@@ -264,6 +277,7 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 		upd := UpdateDateFieldsTo(ap[index].(map[string]interface{}), dateFields)
 		applications = append(applications, upd)
 	}
+
 	contentMap["applications"] = applications
 
 	var endpoints []interface{}
@@ -275,6 +289,7 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 
 	for index, endpoint := range ends {
 		dateFields = PopulateDateFieldsFrom(&endpoint)
+
 		ap, success := contentMap["endpoints"].([]interface{})
 		if !success {
 			panic("type assertion error: + " + err.Error())
@@ -297,7 +312,6 @@ func TransformDateFieldsInJSONForBulkMessage(resourceType string, resourceID str
 			} else {
 				panic("type assertion error: + " + err.Error())
 			}
-
 		}
 	}
 
@@ -319,6 +333,7 @@ func TransformDateFieldsInJSONForResource(resourceType string, resourceID string
 	resource, _ := FetchDataFor(resourceType, resourceID, false)
 
 	contentMap := make(map[string]interface{})
+
 	err := json.Unmarshal(content, &contentMap)
 	if err != nil {
 		panic("unmarshalling error + " + err.Error())
@@ -342,23 +357,32 @@ func ResourceJSONFor(resourceType string, resourceID string) []byte {
 
 func JSONBytesEqual(a, b []byte) (bool, error) {
 	var j, j2 interface{}
-	if err := json.Unmarshal(a, &j); err != nil {
+
+	err := json.Unmarshal(a, &j)
+	if err != nil {
 		return false, err
 	}
-	if err := json.Unmarshal(b, &j2); err != nil {
+
+	err = json.Unmarshal(b, &j2)
+	if err != nil {
 		return false, err
 	}
+
 	return reflect.DeepEqual(j2, j), nil
 }
 
 func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, payload []byte, headers []kafka.Header) error {
 	streamProducerSender.RaiseEventCalled = true
+
 	var err error
 
 	for _, data := range testData {
 		if streamProducerSender.ResourceType == data.ResourceType && streamProducerSender.ResourceID == data.ResourceID {
-			var isResult bool
-			var expectedData []byte
+			var (
+				isResult     bool
+				expectedData []byte
+			)
+
 			if eventType == "Records.update" {
 				expectedData = BulkMessageFor(streamProducerSender.ResourceType, streamProducerSender.ResourceID)
 			} else {
@@ -373,6 +397,7 @@ func (streamProducerSender *MockEventStreamSender) RaiseEvent(eventType string, 
 					"Obtained: %s \n"
 
 				streamProducerSender.TestSuite.Errorf(errMsg, eventType, streamProducerSender.ResourceType, expectedData, payload)
+
 				return fmt.Errorf(errMsg, eventType, streamProducerSender.ResourceType, expectedData, payload)
 			}
 		}
@@ -401,6 +426,7 @@ type TestData struct {
 
 func TestConsumeStatusMessage(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	originalSecretStore := config.SecretStore
 	config.SecretStore = "vault"
 
@@ -484,5 +510,6 @@ func TestConsumeStatusMessage(t *testing.T) {
 			}
 		}
 	}
+
 	config.SecretStore = originalSecretStore
 }

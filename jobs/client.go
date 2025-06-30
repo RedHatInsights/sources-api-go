@@ -27,6 +27,7 @@ func (jr *JobRequest) Parse() error {
 	switch jr.JobName {
 	case "SuperkeyDestroyJob":
 		sdj := SuperkeyDestroyJob{}
+
 		err := json.Unmarshal([]byte(jr.JobRaw), &sdj)
 		if err != nil {
 			return err
@@ -35,6 +36,7 @@ func (jr *JobRequest) Parse() error {
 		jr.Job = &sdj
 	case "AsyncDestroyJob":
 		adj := AsyncDestroyJob{}
+
 		err := json.Unmarshal(jr.JobRaw, &adj)
 		if err != nil {
 			return err

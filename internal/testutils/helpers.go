@@ -44,6 +44,7 @@ func GetSourcesWithAppType(appTypeId int64) []model.Source {
 
 	// Find sources for source IDs
 	var sources []model.Source
+
 	for id := range sourceIds {
 		for _, src := range fixtures.TestSourceData {
 			if id == src.ID {
@@ -58,6 +59,7 @@ func GetSourcesWithAppType(appTypeId int64) []model.Source {
 
 func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset int) {
 	expectedFirstLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, offset)
+
 	expectedLastLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, limit+offset)
 	if links.First != expectedFirstLink {
 		t.Error("first link is not correct for " + path)
@@ -71,6 +73,7 @@ func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset 
 func IdentityHeaderForUser(testUserId string) *identity.XRHID {
 	accountNumber := fixtures.TestTenantData[0].ExternalTenant
 	orgID := fixtures.TestTenantData[0].OrgID
+
 	return &identity.XRHID{Identity: identity.Identity{OrgID: orgID, AccountNumber: accountNumber, User: identity.User{UserID: testUserId}}}
 }
 

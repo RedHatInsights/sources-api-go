@@ -16,8 +16,11 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 		}
 	}
 
-	var filterName string
-	var alreadyJoined = make(map[string]bool)
+	var (
+		filterName    string
+		alreadyJoined = make(map[string]bool)
+	)
+
 	for _, filter := range filters {
 		// subresource filtering!
 		if filter.Subresource != "" {
@@ -31,6 +34,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					query = query.Joins("SourceType")
 					alreadyJoined[filter.Subresource] = true
 				}
+
 				filterName = fmt.Sprintf("%v.%v", `"SourceType"`, filter.Name)
 			case "application_type":
 				if query.Statement.Table != "applications" {
@@ -41,6 +45,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					query = query.Joins("ApplicationType")
 					alreadyJoined[filter.Subresource] = true
 				}
+
 				filterName = fmt.Sprintf("%v.%v", `"ApplicationType"`, filter.Name)
 			case "application":
 				if query.Statement.Table != "sources" {
@@ -51,6 +56,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					query = query.Joins(`Applications`)
 					alreadyJoined[filter.Subresource] = true
 				}
+
 				filterName = fmt.Sprintf("%v.%v", `"Applications"`, filter.Name)
 			default:
 				return nil, fmt.Errorf("invalid subresource type [%v]", filter.Subresource)

@@ -11,6 +11,7 @@ import (
 func TestSecretListUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 	// Set the encryption key

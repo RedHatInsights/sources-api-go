@@ -18,6 +18,7 @@ func InterfaceToInt64(i interface{}) (int64, error) {
 		if value == nil {
 			return 0, fmt.Errorf("cannot parse a nil pointer to a float64")
 		}
+
 		return int64(*value), nil
 	case int64:
 		return value, nil
@@ -89,6 +90,7 @@ func DateTimePointerToRecordFormat(inputTime *time.Time) *string {
 	if inputTime == nil {
 		return nil
 	}
+
 	return StringValueOrNil(FormatTimeToString(*inputTime, RecordDateTimeFormat))
 }
 
@@ -100,6 +102,7 @@ func DateTimePointerToRFC3339(inputTime *time.Time) string {
 	if inputTime == nil {
 		return ""
 	}
+
 	return FormatTimeToString(*inputTime, time.RFC3339)
 }
 

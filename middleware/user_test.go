@@ -19,6 +19,7 @@ var catchUserOrElse204 = UserCatcher(func(c echo.Context) error {
 
 func TestUserCreationFromXRHID(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantID := int64(1)
 	testUserID := "55555"
 	identity := testutils.IdentityHeaderForUser(testUserID)
@@ -46,6 +47,7 @@ func TestUserCreationFromXRHID(t *testing.T) {
 	}
 
 	var user m.User
+
 	result := dao.DB.Find(&user, "user_id = ? AND tenant_id = ?", testUserID, tenantID)
 	if result.Error != nil {
 		t.Error(err)
@@ -64,6 +66,7 @@ func TestUserCreationFromXRHID(t *testing.T) {
 
 func TestUserCreationFromPSK(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantID := int64(1)
 	testUserID := "55555"
 
@@ -90,6 +93,7 @@ func TestUserCreationFromPSK(t *testing.T) {
 	}
 
 	var user m.User
+
 	result := dao.DB.Find(&user, "user_id = ? AND tenant_id = ?", testUserID, tenantID)
 	if result.Error != nil {
 		t.Error(err)

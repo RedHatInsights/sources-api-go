@@ -35,7 +35,6 @@ func (mtp *MarketplaceTokenProvider) RequestToken() (*BearerToken, error) {
 		config.Get().MarketplaceHost+"/api-security/om-auth/cloud/token",
 		strings.NewReader(data.Encode()),
 	)
-
 	if err != nil {
 		logging.Log.Errorf(`error setting up the marketplace token request: %s`, err)
 

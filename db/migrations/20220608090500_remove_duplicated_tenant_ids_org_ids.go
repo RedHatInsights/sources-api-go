@@ -212,7 +212,6 @@ func updateTenantFromTable(tx *gorm.DB, table string, oldTenantId int64, newTena
 		Debug().
 		Exec(updateQuery, newTenantId, oldTenantId).
 		Error
-
 	if err != nil {
 		return err
 	}
@@ -232,7 +231,6 @@ func markExternalTenantAsDuplicate(tx *gorm.DB, mark string, tenantId int64) err
 		Where("id = ?", tenantId).
 		Update("external_tenant", mark).
 		Error
-
 	if err != nil {
 		return err
 	}
@@ -252,7 +250,6 @@ func markOrgIdAsDuplicate(tx *gorm.DB, mark string, tenantId int64) error {
 		Where("id = ?", tenantId).
 		Update("org_id", mark).
 		Error
-
 	if err != nil {
 		return err
 	}

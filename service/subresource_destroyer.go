@@ -45,6 +45,7 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 	switch resourceType {
 	case "Source":
 		sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: tenantId, UserID: userId})
+
 		applicationAuthentications, applications, endpoints, rhcConnections, source, err := sourceDao.DeleteCascade(resourceId)
 		if err != nil {
 			return fmt.Errorf(`could not completely delete the source: %s`, err)
@@ -65,6 +66,7 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 			var appIds []int64
 			for _, app := range applications {
 				appIds = append(appIds, app.ID)
+
 				err := RaiseEvent("Application.destroy", &app, headers)
 				if err != nil {
 					logging.Log.Errorf(`Event "Application.destroy" could not be raised for application %v: %s`, app.ToEvent(), err)
@@ -75,6 +77,7 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 			var endpointIds []int64
 			for _, endpoint := range endpoints {
 				endpointIds = append(endpointIds, endpoint.ID)
+
 				err := RaiseEvent("Endpoint.destroy", &endpoint, headers)
 				if err != nil {
 					logging.Log.Errorf(`Event "Endpoint.destroy" could not be raised for endpoint %v: %s`, endpoint.ToEvent(), err)
@@ -119,6 +122,7 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 
 	case "Application":
 		applicationsDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: tenantId, UserID: userId})
+
 		applicationAuthentications, application, err := applicationsDao.DeleteCascade(resourceId)
 		if err != nil {
 			return fmt.Errorf(`could not completely delete the application: %s`, err)
@@ -146,11 +150,13 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 			}
 
 			authentications = append(authentications, auths...)
+
 			lock.Unlock()
 		}()
 	case "Endpoint":
 		// Delete the endpoint.
 		endpointDao := dao.GetEndpointDao(tenantId)
+
 		endpoint, err := endpointDao.Delete(&resourceId)
 		if err != nil {
 			return fmt.Errorf(`could not delete the endpoint: %s`, err)
@@ -170,6 +176,7 @@ func DeleteCascade(tenantId *int64, userId *int64, resourceType string, resource
 			}
 
 			authentications = append(authentications, auths...)
+
 			lock.Unlock()
 		}()
 	}

@@ -19,18 +19,21 @@ var seedsFS embed.FS
 
 func seedDatabase() error {
 	l.Log.Infof("Seeding SourceType Table")
+
 	err := seedSourceTypes()
 	if err != nil {
 		return err
 	}
 
 	l.Log.Infof("Seeding ApplicationType Table")
+
 	err = seedApplicationTypes()
 	if err != nil {
 		return err
 	}
 
 	l.Log.Infof("Seeding MetaData Table")
+
 	err = seedMetaData()
 	if err != nil {
 		return err
@@ -79,6 +82,7 @@ func seedSourceTypes() error {
 		// if the source type was not found - we are creating it
 		if st == nil {
 			l.Log.Debugf("New SourceType found %v", name)
+
 			st = &m.SourceType{}
 		}
 
@@ -112,6 +116,7 @@ func seedSourceTypes() error {
 	// and need deleted
 	for name := range sourceTypes {
 		l.Log.Infof("Deleting SourceType %v", name)
+
 		result := DB.Delete(sourceTypes[name])
 		if result.Error != nil {
 			return result.Error
@@ -156,6 +161,7 @@ func seedApplicationTypes() error {
 		// if the app type was not found - we are creating it
 		if at == nil {
 			l.Log.Debugf("New ApplicationType found %v", name)
+
 			at = &m.ApplicationType{}
 		}
 
@@ -198,6 +204,7 @@ func seedApplicationTypes() error {
 	// and need deleted
 	for name := range appTypes {
 		l.Log.Infof("Deleting ApplicationType %v", name)
+
 		result := DB.Delete(appTypes[name])
 		if result.Error != nil {
 			return result.Error
@@ -221,6 +228,7 @@ func seedMetaData() error {
 	if err != nil {
 		return err
 	}
+
 	err = seedAppMetadata(appTypes)
 	if err != nil {
 		return err
@@ -255,6 +263,7 @@ func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 			if err != nil {
 				return err
 			}
+
 			substitutions, err := json.Marshal(values.Substitutions)
 			if err != nil {
 				return err
@@ -296,6 +305,7 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 	env, ok := os.LookupEnv("SOURCES_ENV")
 	if !ok {
 		l.Log.Infof("Defaulting SOURCES_ENV to eph")
+
 		env = "eph"
 	}
 
@@ -332,6 +342,7 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 // pointer to the record
 func loadSourceTypeSeeds() map[string]*m.SourceType {
 	sourceTypes := make([]m.SourceType, 0)
+
 	result := DB.Model(&m.SourceType{}).Scan(&sourceTypes)
 	if result.Error != nil {
 		return nil
@@ -351,6 +362,7 @@ func loadSourceTypeSeeds() map[string]*m.SourceType {
 func loadApplicationTypeSeeds() map[string]*m.ApplicationType {
 	// load all the seeds from the db
 	appTypes := make([]m.ApplicationType, 0)
+
 	result := DB.Model(&m.ApplicationType{}).Scan(&appTypes)
 	if result.Error != nil {
 		return nil

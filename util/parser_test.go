@@ -28,8 +28,8 @@ func TestValidConversionValues(t *testing.T) {
 	var i interface{}
 	for _, tt := range validTestValues {
 		i = tt.testedValue
-		value, err := InterfaceToInt64(i)
 
+		value, err := InterfaceToInt64(i)
 		if err != nil {
 			t.Errorf("Not expecting an error, got \"%s\"", err)
 		}
@@ -42,9 +42,11 @@ func TestValidConversionValues(t *testing.T) {
 
 // TestNilPointers tests that when passed nil pointers to the InterfaceToInt64 function, this returns an error.
 func TestNilPointers(t *testing.T) {
-	var nilFloatPointer *float64 = nil
-	var nilInt64Pointer *int64 = nil
-	var nilStringPointer *string = nil
+	var (
+		nilFloatPointer  *float64 = nil
+		nilInt64Pointer  *int64   = nil
+		nilStringPointer *string  = nil
+	)
 
 	nilPointers := []struct {
 		pointer interface{}
@@ -57,8 +59,8 @@ func TestNilPointers(t *testing.T) {
 	var i interface{}
 	for _, tt := range nilPointers {
 		i = tt.pointer
-		value, err := InterfaceToInt64(i)
 
+		value, err := InterfaceToInt64(i)
 		if err == nil {
 			t.Errorf("Expecting an error, got none")
 		}
@@ -88,6 +90,7 @@ func TestUnparseableString(t *testing.T) {
 	var i interface{}
 	for _, tt := range notValues {
 		i = tt.value
+
 		value, err := InterfaceToInt64(i)
 		if err == nil {
 			t.Errorf("Error expected, got none")
@@ -153,9 +156,12 @@ func TestGoodStringValues(t *testing.T) {
 }
 
 func TestNilStringValue(t *testing.T) {
-	var x *float64
-	var y *int64
-	var z *string
+	var (
+		x *float64
+		y *int64
+		z *string
+	)
+
 	types := []interface{}{x, y, z, nil}
 
 	for i := range types {

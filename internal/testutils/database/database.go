@@ -26,7 +26,6 @@ func ConnectToTestDB(dbSchema string) {
 			TablePrefix: dbSchema + ".",
 		},
 	})
-
 	if err != nil {
 		log.Fatalf("db does not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
 	}
@@ -39,6 +38,7 @@ func ConnectToTestDB(dbSchema string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	rawDB.SetMaxOpenConns(20)
 
 	// Set the dao.DB in case any tests want to use it
@@ -74,6 +74,7 @@ func CreateFixtures(schema string) {
 // successful.
 func CreateTestDB() {
 	fmt.Printf("Creating database '%s'...", testDbName)
+
 	db, err := gorm.Open(postgres.Open(testDbString("postgres")), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error opening the database connection: %s", err)
@@ -99,15 +100,14 @@ func DropSchema(dbSchema string) {
 	if result.Error != nil {
 		log.Fatalf("Error in drop schema %s %s: ", dbSchema, result.Error.Error())
 	}
-
 }
 
 // MigrateSchema migrates all the models.
 func MigrateSchema() {
 	// Perform the migrations and store the error for a proper return.
 	migrateTool := gormigrate.New(dao.DB, gormigrate.DefaultOptions, migrations.MigrationsCollection)
-	err := migrateTool.Migrate()
 
+	err := migrateTool.Migrate()
 	if err != nil {
 		log.Fatalf(`error migrating the schema: %s`, err)
 	}

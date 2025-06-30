@@ -17,6 +17,7 @@ func GeneratedXRhIdentity(account, orgId string) string {
 			Type: "System",
 		},
 	}
+
 	bytes, err := json.Marshal(id)
 	if err != nil {
 		return ""

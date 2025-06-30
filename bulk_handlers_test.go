@@ -23,6 +23,7 @@ import (
 
 func TestBulkCreateMissingSourceType(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	nameSource := "test"
 	bulkCreateSource := m.BulkCreateSource{SourceCreateRequest: m.SourceCreateRequest{Name: &nameSource}}
 	requestBody := m.BulkCreateRequest{Sources: []m.BulkCreateSource{bulkCreateSource}}
@@ -93,12 +94,14 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 	c.Set(h.ParsedIdentity, identityHeader)
 
 	var user m.User
+
 	err = dao.DB.Model(&m.User{}).Where("user_id = ?", testUserId).First(&user).Error
 	if err.Error() != "record not found" {
 		t.Error(err)
 	}
 
 	bulkCreate := middleware.UserCatcher(BulkCreate)
+
 	err = bulkCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -114,6 +117,7 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 	}
 
 	var source m.Source
+
 	err = dao.DB.Model(&m.Source{}).Where("name = ?", nameSource).First(&source).Error
 	if err != nil {
 		t.Error(err)
@@ -124,12 +128,14 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 	}
 
 	var response m.BulkCreateResponse
+
 	err = json.Unmarshal(res.Body.Bytes(), &response)
 	if err != nil {
 		t.Error(err)
 	}
 
 	var application m.Application
+
 	err = dao.DB.Model(&m.Application{}).Where("id = ?", response.Applications[0].ID).First(&application).Error
 	if err != nil {
 		t.Error(err)
@@ -140,6 +146,7 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 	}
 
 	var authentication m.Authentication
+
 	err = dao.DB.Model(&m.Authentication{}).Where("id = ?", response.Authentications[0].ID).First(&authentication).Error
 	if err != nil {
 		t.Error(err)
@@ -150,6 +157,7 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 	}
 
 	var applicationAuthentication m.ApplicationAuthentication
+
 	err = dao.DB.Model(&m.ApplicationAuthentication{}).
 		Where("application_id = ? AND authentication_id = ?", response.Applications[0].ID, response.Authentications[0].ID).
 		Find(&applicationAuthentication).Error
@@ -208,6 +216,7 @@ func TestBulkCreate(t *testing.T) {
 	}
 
 	var response m.BulkCreateResponse
+
 	err = json.Unmarshal(res.Body.Bytes(), &response)
 	if err != nil {
 		t.Error(err)
@@ -245,6 +254,7 @@ func TestBulkCreate(t *testing.T) {
 
 func TestBulkCreateSourceValidationBadRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 
 	// Create a source
@@ -289,6 +299,7 @@ func TestBulkCreateSourceValidationBadRequest(t *testing.T) {
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	badRequestBulkCreate := ErrorHandlingContext(BulkCreate)
+
 	err = badRequestBulkCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -301,6 +312,7 @@ func TestBulkCreateSourceValidationBadRequest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	if deletedSource.ID != src.ID {
 		t.Error("wrong source deleted")
 	}
@@ -308,6 +320,7 @@ func TestBulkCreateSourceValidationBadRequest(t *testing.T) {
 
 func cleanSourceForTenant(sourceName string, tenantID *int64) error {
 	source := &m.Source{Name: sourceName}
+
 	err := dao.DB.Model(&m.Source{}).Where("name = ?", source.Name).Find(&source).Error
 	if err != nil {
 		return err

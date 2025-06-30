@@ -17,6 +17,7 @@ type ErrorDocument struct {
 func ErrorDocWithRequestId(message, status, uuid string) *ErrorDocument {
 	e := NewErrorDoc(message, status)
 	e.Errors[0].RequestId = uuid
+
 	return e
 }
 

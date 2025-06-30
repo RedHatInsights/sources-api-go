@@ -39,7 +39,6 @@ func MetaDataList(c echo.Context) error {
 	)
 
 	metaDatas, count, err = metaDataDB.List(limit, offset, filters)
-
 	if err != nil {
 		return err
 	}
@@ -79,7 +78,6 @@ func ApplicationTypeListMetaData(c echo.Context) error {
 	)
 
 	metaDatas, count, err = metaDataDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
-
 	if err != nil {
 		return err
 	}
@@ -106,7 +104,6 @@ func MetaDataGet(c echo.Context) error {
 	c.Logger().Infof("Getting MetaData ID %v", id)
 
 	app, err := metaDataDB.GetById(&id)
-
 	if err != nil {
 		return err
 	}

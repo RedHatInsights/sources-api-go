@@ -32,6 +32,7 @@ func loadApplication(application *m.Application) (*m.Application, error) {
 func getApplicationSuperkeyMetaData(application *m.Application) ([]superkey.Step, error) {
 	// fetch the metadata from the db (no tenancy required)
 	mDB := dao.GetMetaDataDao()
+
 	metadata, err := mDB.GetSuperKeySteps(application.ApplicationTypeID)
 	if err != nil {
 		return nil, err
@@ -42,6 +43,7 @@ func getApplicationSuperkeyMetaData(application *m.Application) ([]superkey.Step
 	// parse the data brought back from the db into the superkey "step" struct
 	for i, step := range metadata {
 		substitutions := make(map[string]string)
+
 		err := json.Unmarshal(step.Substitutions, &substitutions)
 		if err != nil {
 			return nil, err
@@ -66,18 +68,22 @@ func getExtraValues(application *m.Application, provider string) (map[string]str
 	case "amazon":
 		// fetch the account number for replacing in the iam payloads
 		mDB := dao.GetMetaDataDao()
+
 		acct, err := mDB.GetSuperKeyAccountNumber(application.ApplicationTypeID)
 		if err != nil {
 			return nil, err
 		}
+
 		extra["account"] = acct
 
 		// fetch the result_type for the application_type
 		atDB := dao.GetApplicationTypeDao(nil)
+
 		authType, err := atDB.GetSuperKeyResultType(application.ApplicationTypeID, provider)
 		if err != nil {
 			return nil, err
 		}
+
 		extra["result_type"] = authType
 		externalID := uuid.New().String()
 		extra["external_id"] = externalID
@@ -124,6 +130,7 @@ func parseSuperKeyData(data datatypes.JSON) (*superKeyData, error) {
 	}
 
 	superkeyData := make(map[string]interface{})
+
 	err := json.Unmarshal(data, &superkeyData)
 	if err != nil {
 		return nil, err
@@ -140,15 +147,18 @@ func parseSuperKeyData(data datatypes.JSON) (*superKeyData, error) {
 	}
 
 	var stepsCompleted map[string]map[string]string
+
 	rawSteps := superkeyData["steps"]
 	l.Log.Debugf("rawSteps: %v", rawSteps)
 
 	if rawSteps != nil {
 		b, _ := json.Marshal(&rawSteps)
+
 		err := json.Unmarshal(b, &stepsCompleted)
 		if err != nil {
 			l.Log.Warnf("Failed to unmarshal completed steps into map: %v", err)
 		}
+
 		l.Log.Debugf("Found stepsCompleted: %v", stepsCompleted)
 	}
 

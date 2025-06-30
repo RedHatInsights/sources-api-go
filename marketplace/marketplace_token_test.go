@@ -35,8 +35,8 @@ func TestGetTokenBadTenant(t *testing.T) {
 	)
 
 	tokenCacher.TenantID = 12345
-	_, err := tokenCacher.FetchToken()
 
+	_, err := tokenCacher.FetchToken()
 	if err != redis.Nil {
 		t.Errorf(`want error of type "redis.Nil", got "%s"`, reflect.TypeOf(err))
 	}
@@ -55,6 +55,7 @@ func TestGetToken(t *testing.T) {
 
 	// Set a token on the redis cache, to then try fo fetch it
 	token := setUpFakeToken()
+
 	marshalledToken, err := json.Marshal(token)
 	if err != nil {
 		t.Errorf("no error expected, got %s", err)

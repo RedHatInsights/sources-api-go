@@ -29,13 +29,17 @@ func setupRoutes(e *echo.Echo) {
 	// Set up the middlewares.
 	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().AuthorizedPsks, rbacClient)
 
-	var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
-	var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
+	var (
+		listMiddleware    = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
+		tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
+	)
 
-	var tenancyWithListMiddleware = append(tenancyMiddleware, listMiddleware...)
-	var permissionMiddlewareWithoutEvents = append(tenancyMiddleware, permissionCheckMiddleware)
-	var permissionMiddleware = append(permissionMiddlewareWithoutEvents, middleware.RaiseEvent)
-	var permissionWithListMiddleware = append(listMiddleware, permissionCheckMiddleware)
+	var (
+		tenancyWithListMiddleware         = append(tenancyMiddleware, listMiddleware...)
+		permissionMiddlewareWithoutEvents = append(tenancyMiddleware, permissionCheckMiddleware)
+		permissionMiddleware              = append(permissionMiddlewareWithoutEvents, middleware.RaiseEvent)
+		permissionWithListMiddleware      = append(listMiddleware, permissionCheckMiddleware)
+	)
 
 	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1", "v1", "v2", "v3"}
 	for _, version := range apiVersions {

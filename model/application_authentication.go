@@ -49,6 +49,7 @@ func (aa *ApplicationAuthentication) ToResponse() *ApplicationAuthenticationResp
 	id := strconv.FormatInt(aa.ID, 10)
 	appId := strconv.FormatInt(aa.ApplicationID, 10)
 	authId := ""
+
 	if aa.VaultPath != "" && config.IsVaultOn() {
 		parts := strings.Split(aa.VaultPath, "/")
 		authId = parts[len(parts)-1]

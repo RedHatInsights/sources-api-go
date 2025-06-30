@@ -62,6 +62,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -82,6 +83,7 @@ func TestSourceApplicationSubcollectionList(t *testing.T) {
 	SortByStringValueOnKey("id", out.Data)
 
 	var wantData []m.Application
+
 	for _, app := range fixtures.TestApplicationData {
 		if app.SourceID == sourceId {
 			wantData = append(wantData, app)
@@ -161,6 +163,7 @@ func TestSourceApplicationSubcollectionListNotFound(t *testing.T) {
 	c.SetParamValues("134793847")
 
 	notFoundSourceListApplications := ErrorHandlingContext(SourceListApplications)
+
 	err := notFoundSourceListApplications(c)
 	if err != nil {
 		t.Error(err)
@@ -189,6 +192,7 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidSyntax(t *testing.T)
 		c.SetParamValues(p)
 
 		badRequestSourceListApplications := ErrorHandlingContext(SourceListApplications)
+
 		err := badRequestSourceListApplications(c)
 		if err != nil {
 			t.Error(err)
@@ -219,6 +223,7 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 	c.SetParamValues("1")
 
 	badRequestSourceListApplications := ErrorHandlingContext(SourceListApplications)
+
 	err := badRequestSourceListApplications(c)
 	if err != nil {
 		t.Error(err)
@@ -231,6 +236,7 @@ func TestSourceApplicationSubcollectionListBadRequestInvalidFilter(t *testing.T)
 // returned for not existing tenant
 func TestSourceApplicationSubcollectionListTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
@@ -250,6 +256,7 @@ func TestSourceApplicationSubcollectionListTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListApplications := ErrorHandlingContext(SourceListApplications)
+
 	err := notFoundSourceListApplications(c)
 	if err != nil {
 		t.Error(err)
@@ -262,6 +269,7 @@ func TestSourceApplicationSubcollectionListTenantNotExists(t *testing.T) {
 // returned existing tenant who doesn't own the source
 func TestSourceApplicationSubcollectionListInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -281,6 +289,7 @@ func TestSourceApplicationSubcollectionListInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListApplications := ErrorHandlingContext(SourceListApplications)
+
 	err := notFoundSourceListApplications(c)
 	if err != nil {
 		t.Error(err)
@@ -313,6 +322,7 @@ func TestApplicationList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -382,7 +392,9 @@ func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
 			"tenantID": int64(1),
 		},
 	)
+
 	badRequestApplicationList := ErrorHandlingContext(ApplicationList)
+
 	err := badRequestApplicationList(c)
 	if err != nil {
 		t.Error(err)
@@ -394,6 +406,7 @@ func TestApplicationListBadRequestInvalidFilter(t *testing.T) {
 // TestApplicationListTenantNotExists tests that empty list is returned for not existing tenant
 func TestApplicationListTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 
 	c, rec := request.CreateTestContext(
@@ -420,6 +433,7 @@ func TestApplicationListTenantNotExists(t *testing.T) {
 // without applications
 func TestApplicationListTenantWithoutApplications(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 
 	c, rec := request.CreateTestContext(
@@ -466,6 +480,7 @@ func TestApplicationGet(t *testing.T) {
 	}
 
 	var outApplication m.ApplicationResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outApplication)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -487,6 +502,7 @@ func TestApplicationGet(t *testing.T) {
 			if app.TenantID != tenantId {
 				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, app.TenantID)
 			}
+
 			break
 		}
 	}
@@ -496,6 +512,7 @@ func TestApplicationGet(t *testing.T) {
 // existing app id but the tenant doesn't own the app
 func TestApplicationGetInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 	appId := int64(1)
 
@@ -512,6 +529,7 @@ func TestApplicationGetInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+
 	err := notFoundApplicationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -524,6 +542,7 @@ func TestApplicationGetInvalidTenant(t *testing.T) {
 // not existing tenant
 func TestApplicationGetTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	appId := int64(1)
 
@@ -540,6 +559,7 @@ func TestApplicationGetTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+
 	err := notFoundApplicationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -562,6 +582,7 @@ func TestApplicationGetNotFound(t *testing.T) {
 	c.SetParamValues("9843762095")
 
 	notFoundApplicationGet := ErrorHandlingContext(ApplicationGet)
+
 	err := notFoundApplicationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -584,6 +605,7 @@ func TestApplicationGetBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestApplicationGet := ErrorHandlingContext(ApplicationGet)
+
 	err := badRequestApplicationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -594,6 +616,7 @@ func TestApplicationGetBadRequest(t *testing.T) {
 
 func TestApplicationCreateGood(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	service.AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
@@ -626,6 +649,7 @@ func TestApplicationCreateGood(t *testing.T) {
 
 	app := m.ApplicationResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err = json.Unmarshal(raw, &app)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -662,6 +686,7 @@ func TestApplicationCreateMissingSourceId(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+
 	err := badRequestApplicationCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -692,6 +717,7 @@ func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+
 	err := badRequestApplicationCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -702,6 +728,7 @@ func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
 
 func TestApplicationCreateIncompatible(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	service.AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: false}
 
 	req := m.ApplicationCreateRequest{
@@ -724,6 +751,7 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+
 	err := badRequestApplicationCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -736,6 +764,7 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 // when source in request not belongs to the tenant
 func TestApplicationCreateInvalidSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 
 	req := m.ApplicationCreateRequest{
@@ -758,6 +787,7 @@ func TestApplicationCreateInvalidSource(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+
 	err := badRequestApplicationCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -837,6 +867,7 @@ func TestApplicationEdit(t *testing.T) {
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	appEditHandlerWithNotifier := middleware.Notifier(ApplicationEdit)
+
 	err = appEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
@@ -848,6 +879,7 @@ func TestApplicationEdit(t *testing.T) {
 
 	app := m.ApplicationResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err = json.Unmarshal(raw, &app)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -906,6 +938,7 @@ func TestApplicationEdit(t *testing.T) {
 // edit existing not owned application
 func TestApplicationEditInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	appId := int64(1)
 
@@ -931,6 +964,7 @@ func TestApplicationEditInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+
 	err := notFoundApplicationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -962,6 +996,7 @@ func TestApplicationEditNotFound(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+
 	err := notFoundApplicationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -993,6 +1028,7 @@ func TestApplicationEditBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestApplicationEdit := ErrorHandlingContext(ApplicationEdit)
+
 	err := badRequestApplicationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -1127,6 +1163,7 @@ func TestApplicationDelete(t *testing.T) {
 // delete existing but not owned application
 func TestApplicationDeleteInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	appId := int64(1)
 
@@ -1143,6 +1180,7 @@ func TestApplicationDeleteInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationGet := ErrorHandlingContext(ApplicationDelete)
+
 	err := notFoundApplicationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -1165,6 +1203,7 @@ func TestApplicationDeleteNotFound(t *testing.T) {
 	c.SetParamValues("9843762095")
 
 	notFoundApplicationGet := ErrorHandlingContext(ApplicationDelete)
+
 	err := notFoundApplicationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -1187,6 +1226,7 @@ func TestApplicationDeleteBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestApplicationGet := ErrorHandlingContext(ApplicationDelete)
+
 	err := badRequestApplicationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -1224,6 +1264,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -1238,6 +1279,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 	}
 
 	var wantData []m.Authentication
+
 	for _, auth := range fixtures.TestAuthenticationData {
 		if auth.ResourceType == "Application" && auth.ResourceID == appId && auth.TenantID == tenantId {
 			wantData = append(wantData, auth)
@@ -1252,6 +1294,7 @@ func TestApplicationListAuthentications(t *testing.T) {
 	if !ok {
 		t.Error("model did not deserialize as a source")
 	}
+
 	if conf.SecretStore == "database" {
 		if auth["id"] != fmt.Sprintf("%d", wantData[0].DbID) {
 			t.Error("ghosts infected the return")
@@ -1312,6 +1355,7 @@ func TestApplicationListAuthenticationsEmptyList(t *testing.T) {
 // for not existing tenant
 func TestApplicationListAuthenticationsTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	appId := int64(1)
 
@@ -1331,6 +1375,7 @@ func TestApplicationListAuthenticationsTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+
 	err := notFoundApplicationListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1343,6 +1388,7 @@ func TestApplicationListAuthenticationsTenantNotExists(t *testing.T) {
 // for a tenant who doesn't own the application
 func TestApplicationListAuthenticationsInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	appId := int64(1)
 
@@ -1362,6 +1408,7 @@ func TestApplicationListAuthenticationsInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+
 	err := notFoundApplicationListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1389,6 +1436,7 @@ func TestApplicationListAuthenticationsNotFound(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+
 	err := notFoundApplicationListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1416,6 +1464,7 @@ func TestApplicationListAuthenticationsBadRequest(t *testing.T) {
 	c.SetParamValues(appId)
 
 	badRequestApplicationListAuthentications := ErrorHandlingContext(ApplicationListAuthentications)
+
 	err := badRequestApplicationListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1427,6 +1476,7 @@ func TestApplicationListAuthenticationsBadRequest(t *testing.T) {
 // TestPauseApplication tests that an application gets successfully paused.
 func TestPauseApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 	appId := int64(1)
 
@@ -1453,6 +1503,7 @@ func TestPauseApplication(t *testing.T) {
 
 	// Check that the application is paused
 	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
+
 	app, err := applicationDao.GetById(&appId)
 	if err != nil {
 		t.Error(err)
@@ -1486,6 +1537,7 @@ func TestPauseApplicationNotFound(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationPause := ErrorHandlingContext(ApplicationPause)
+
 	err := notFoundApplicationPause(c)
 	if err != nil {
 		t.Error(err)
@@ -1511,6 +1563,7 @@ func TestPauseApplicationBadRequest(t *testing.T) {
 	c.SetParamValues(appId)
 
 	badRequestApplicationPause := ErrorHandlingContext(ApplicationPause)
+
 	err := badRequestApplicationPause(c)
 	if err != nil {
 		t.Error(err)
@@ -1540,6 +1593,7 @@ func TestPauseApplicationInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationPause := ErrorHandlingContext(ApplicationPause)
+
 	err := notFoundApplicationPause(c)
 	if err != nil {
 		t.Error(err)
@@ -1552,6 +1606,7 @@ func TestPauseApplicationInvalidTenant(t *testing.T) {
 // for not existing tenant
 func TestPauseApplicationTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	appId := int64(1)
 
@@ -1568,6 +1623,7 @@ func TestPauseApplicationTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationPause := ErrorHandlingContext(ApplicationPause)
+
 	err := notFoundApplicationPause(c)
 	if err != nil {
 		t.Error(err)
@@ -1579,11 +1635,13 @@ func TestPauseApplicationTenantNotExists(t *testing.T) {
 // TestUnpauseApplication tests that an application gets successfully unpaused.
 func TestUnpauseApplication(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 	appId := int64(1)
 
 	// Test data preparation = pause the application
 	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenantId})
+
 	err := applicationDao.Pause(appId)
 	if err != nil {
 		t.Error(err)
@@ -1639,6 +1697,7 @@ func TestUnpauseApplicationNotFound(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+
 	err := notFoundApplicationUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -1664,6 +1723,7 @@ func TestUnpauseApplicationBadRequest(t *testing.T) {
 	c.SetParamValues(appId)
 
 	badRequestApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+
 	err := badRequestApplicationUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -1693,6 +1753,7 @@ func TestUnpauseApplicationInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+
 	err := notFoundApplicationUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -1705,6 +1766,7 @@ func TestUnpauseApplicationInvalidTenant(t *testing.T) {
 // for not existing tenant
 func TestUnpauseApplicationTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	appId := int64(1)
 
@@ -1721,6 +1783,7 @@ func TestUnpauseApplicationTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appId))
 
 	notFoundApplicationUnpause := ErrorHandlingContext(ApplicationUnpause)
+
 	err := notFoundApplicationUnpause(c)
 	if err != nil {
 		t.Error(err)
@@ -1751,12 +1814,14 @@ func TestPauseApplicationPauseRaiseEventCheck(t *testing.T) {
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: MockSender{}} }
 
 	var applicationRaiseEventCallCount int
+
 	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {
 		// Set up an error which will get returned. Probably will get overwritten if there are multiple errors, but
 		// we don't mind since we are logging every failure. Essentially, it just to satisfy the function signature.
 		err := applicationEventTestHelper(t, c, "Application.pause", eventType, payload, headers)
 
 		applicationRaiseEventCallCount++
+
 		return err
 	}
 
@@ -1805,12 +1870,14 @@ func TestPauseApplicationUnpauseRaiseEventCheck(t *testing.T) {
 	service.Producer = func() events.Sender { return events.EventStreamProducer{Sender: MockSender{}} }
 
 	var applicationRaiseEventCallCount int
+
 	raiseEventFunc = func(eventType string, payload []byte, headers []kafka.Header) error {
 		// Set up an error which will get returned. Probably will get overwritten if there are multiple errors, but
 		// we don't mind since we are logging every failure. Essentially, it just to satisfy the function signature.
 		err := applicationEventTestHelper(t, c, "Application.unpause", eventType, payload, headers)
 
 		applicationRaiseEventCallCount++
+
 		return err
 	}
 
@@ -1847,6 +1914,7 @@ func applicationEventTestHelper(t *testing.T, c echo.Context, expectedEventType 
 
 	// We have to unmarshal the payload to grab the ID and fetch the fixture from the database.
 	var content map[string]interface{}
+
 	err := json.Unmarshal(payload, &content)
 	if err != nil {
 		t.Errorf(`could not unmarshal the payload: %s`, err)
@@ -1891,15 +1959,16 @@ func applicationEventTestHelper(t *testing.T, c echo.Context, expectedEventType 
 
 	{
 		var h kafka.Header
+
 		for _, header := range headers {
 			if header.Key == "event_type" {
 				h = header
 				break
 			}
-
 		}
 		// The header should contain the expected event type as well.
 		want := expectedEventType
+
 		got := string(h.Value)
 		if want != got {
 			t.Errorf(`incorrect header on raise event. Want "%s", got "%s"`, want, got)
@@ -1944,8 +2013,8 @@ func TestApplicationEditPaused(t *testing.T) {
 	}
 
 	badRequestApplicationEdit := ErrorHandlingContext(ApplicationEdit)
-	err = badRequestApplicationEdit(c)
 
+	err = badRequestApplicationEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -1961,6 +2030,7 @@ func TestApplicationEditPaused(t *testing.T) {
 	}
 
 	want := "extra"
+
 	got := rec.Body.String()
 	if !strings.Contains(got, want) {
 		t.Errorf(`unexpected body returned. Want "%s" contained in what we got "%s"`, want, got)
@@ -2007,8 +2077,8 @@ func TestApplicationEditPausedIntegration(t *testing.T) {
 	}
 
 	badRequestApplicationEdit := ErrorHandlingContext(ApplicationEdit)
-	err = badRequestApplicationEdit(c)
 
+	err = badRequestApplicationEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -2024,6 +2094,7 @@ func TestApplicationEditPausedIntegration(t *testing.T) {
 	}
 
 	want := "extra"
+
 	got := rec.Body.String()
 	if !strings.Contains(got, want) {
 		t.Errorf(`unexpected body returned. Want "%s" contained in what we got "%s"`, want, got)
@@ -2072,8 +2143,8 @@ func TestApplicationEditPausedUnit(t *testing.T) {
 	}
 
 	appEdit := ErrorHandlingContext(ApplicationEdit)
-	err := appEdit(c)
 
+	err := appEdit(c)
 	if err != nil {
 		t.Errorf(`unexpected error when editing a paused application: %s`, err)
 	}
@@ -2084,7 +2155,6 @@ func TestApplicationEditPausedUnit(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Errorf("Wrong return code, expected %v got %v", http.StatusOK, rec.Code)
 	}
-
 }
 
 // TestApplicationEditPausedUnitInvalidFields tests that a "bad request" response is returned when a paused application
@@ -2157,7 +2227,6 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 		/*
 		 Test 1 - UserA tries to delete application for userA - expected result: success
 		*/
-
 		id := fmt.Sprintf("%d", suiteData.ApplicationUserA().ID)
 
 		c, rec := request.CreateTestContext(
@@ -2184,18 +2253,21 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 		}
 
 		applicationDao := dao.GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		_, err = applicationDao.GetById(&suiteData.ApplicationUserA().ID)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application not found', got %s", err)
 		}
 
 		authenticationDao := dao.GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		_, err = authenticationDao.GetById(suiteData.AuthenticationUserA().ID)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'authentication not found', got %s", err)
 		}
 
 		applicationAuthenticationDao := dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application authentication not found', got %s", err)
@@ -2231,18 +2303,21 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 		}
 
 		applicationDao = dao.GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		_, err = applicationDao.GetById(&suiteData.ApplicationNoUser().ID)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application not found', got %s", err)
 		}
 
 		authenticationDao = dao.GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		_, err = authenticationDao.GetById(suiteData.AuthenticationNoUser().ID)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'authentication not found', got %s", err)
 		}
 
 		applicationAuthenticationDao = dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationNoUser().ID)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("expected 'application authentication not found', got %s", err)
@@ -2274,6 +2349,7 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 		}
 
 		applicationDao = dao.GetApplicationDao(suiteData.GetRequestParamsUserB())
+
 		_, err = applicationDao.GetById(&suiteData.ApplicationUserB().ID)
 		if err != nil {
 			t.Errorf("unable to get application, there is err %s", err)
@@ -2281,12 +2357,14 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 
 		authenticationDao = dao.GetAuthenticationDao(suiteData.GetRequestParamsUserB())
 		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+
 		_, err = authenticationDao.GetById(authId)
 		if err != nil {
 			t.Errorf("unable to get authentication, there is err %s", err)
 		}
 
 		applicationAuthenticationDao = dao.GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserB())
+
 		_, err = applicationAuthenticationDao.GetById(&suiteData.ApplicationAuthenticationUserB().ID)
 		if err != nil {
 			t.Errorf("unable to get application authentication, there is err %s", err)
@@ -2310,7 +2388,6 @@ func TestApplicationDeleteWithOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -2335,5 +2412,6 @@ func checkAllApplicationsBelongToTenant(tenantId int64, apps []interface{}) erro
 			}
 		}
 	}
+
 	return nil
 }

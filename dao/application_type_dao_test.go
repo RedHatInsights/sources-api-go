@@ -20,11 +20,13 @@ func TestApplicationTypeSubCollectionListOffsetAndLimit(t *testing.T) {
 	sourceId := int64(1)
 
 	var appTypeList []int64
+
 	for _, app := range fixtures.TestApplicationData {
 		if app.SourceID == sourceId {
 			appTypeList = append(appTypeList, app.ApplicationTypeID)
 		}
 	}
+
 	wantCount := int64(len(appTypeList))
 
 	for _, d := range fixtures.TestDataOffsetLimit {
@@ -38,6 +40,7 @@ func TestApplicationTypeSubCollectionListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(appTypes)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -46,10 +49,12 @@ func TestApplicationTypeSubCollectionListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -73,6 +78,7 @@ func TestApplicationTypeListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(appTypes)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -81,20 +87,24 @@ func TestApplicationTypeListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
 func TestApplicationTypeGetByName(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("app_type_by_name")
+
 	wantAppType := fixtures.TestApplicationTypeData[1]
 
 	tenantId := int64(1)
 	appTypeDao := GetApplicationTypeDao(&tenantId)
+
 	gotAppType, err := appTypeDao.GetByName(wantAppType.Name)
 	if err != nil {
 		t.Error(err)
@@ -110,6 +120,7 @@ func TestApplicationTypeGetByName(t *testing.T) {
 func TestApplicationTypeGetByNameNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("app_type_by_name")
+
 	wantAppType := m.ApplicationType{Name: "not existing name"}
 
 	tenantId := int64(1)
@@ -129,6 +140,7 @@ func TestApplicationTypeGetByNameNotFound(t *testing.T) {
 func TestApplicationTypeGetByNameBadRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("app_type_by_name")
+
 	wantAppType := m.ApplicationType{Name: "app type"}
 	tenantId := int64(1)
 	appTypeDao := GetApplicationTypeDao(&tenantId)

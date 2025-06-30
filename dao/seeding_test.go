@@ -30,6 +30,7 @@ func TestSeedingSourceTypes(t *testing.T) {
 	}
 
 	seedsDir := getSeedFilesystemDir()
+
 	err := seedSourceTypes()
 	if err != nil {
 		t.Fatal(err)
@@ -37,12 +38,14 @@ func TestSeedingSourceTypes(t *testing.T) {
 
 	bytes, _ := os.ReadFile(seedsDir + "source_types.yml")
 	seeds := make(sourceTypeSeedMap)
+
 	err = yaml.Unmarshal(bytes, &seeds)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	stypes := make([]m.SourceType, 0)
+
 	result := DB.Model(&m.SourceType{}).Scan(&stypes)
 	if result.Error != nil {
 		t.Fatalf("failed to list sourcetypes: %v", result.Error)
@@ -61,6 +64,7 @@ func TestSeedingApplicationTypes(t *testing.T) {
 	}
 
 	seedsDir := getSeedFilesystemDir()
+
 	err := seedApplicationTypes()
 	if err != nil {
 		t.Fatal(err)
@@ -68,12 +72,14 @@ func TestSeedingApplicationTypes(t *testing.T) {
 
 	bytes, _ := os.ReadFile(seedsDir + "application_types.yml")
 	seeds := make(applicationTypeSeedMap)
+
 	err = yaml.Unmarshal(bytes, &seeds)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	appTypes := make([]m.ApplicationType, 0)
+
 	result := DB.Model(&m.ApplicationType{}).Scan(&appTypes)
 	if result.Error != nil {
 		t.Fatalf("failed to list app types: %v", result.Error)
@@ -101,12 +107,14 @@ func TestSeedingSuperkeyMetadata(t *testing.T) {
 
 	bytes, _ := os.ReadFile(seedsDir + "superkey_metadata.yml")
 	seeds := make(superkeyMetadataSeedMap)
+
 	err = yaml.Unmarshal(bytes, &seeds)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	skeymdata := make([]m.MetaData, 0)
+
 	result := DB.Model(&m.MetaData{}).
 		Where("type = ?", m.SuperKeyMetaData).
 		Scan(&skeymdata)
@@ -141,12 +149,14 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 
 	bytes, _ := os.ReadFile(seedsDir + "app_metadata.yml")
 	seeds := make(appMetadataSeedMap)
+
 	err = yaml.Unmarshal(bytes, &seeds)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	appmdata := make([]m.MetaData, 0)
+
 	result := DB.Model(&m.MetaData{}).
 		Where("type = ?", m.AppMetaData).
 		Scan(&appmdata)

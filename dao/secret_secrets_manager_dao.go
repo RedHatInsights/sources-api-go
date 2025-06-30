@@ -27,6 +27,7 @@ func (s *secretDaoSecretsManagerImpl) Create(auth *m.Authentication) error {
 		}
 
 		auth.TenantID = *s.TenantID
+
 		arn, err := sm.CreateSecret(auth, *auth.Password)
 		if err != nil {
 			return err
@@ -47,6 +48,7 @@ func (s *secretDaoSecretsManagerImpl) Create(auth *m.Authentication) error {
 			if err != nil {
 				return err
 			}
+
 			err = sm.DeleteSecret(*auth.Password)
 			if err != nil {
 				return err
@@ -108,6 +110,7 @@ func (s *secretDaoSecretsManagerImpl) Update(auth *m.Authentication) error {
 	if auth.Password != nil && !strings.HasPrefix(*auth.Password, config.Get().SecretsManagerPrefix) {
 		// fetch the ARN of the current password (since we overwrote it in memory)
 		arns := make([]*string, 1)
+
 		err := s.getDbWithModel().
 			Where("id = ?", auth.GetID()).
 			Limit(1).
@@ -115,6 +118,7 @@ func (s *secretDaoSecretsManagerImpl) Update(auth *m.Authentication) error {
 		if err != nil {
 			return err
 		}
+
 		if *arns[0] == "" {
 			return fmt.Errorf("failed to fetch ARN for authentication %v", auth.GetID())
 		}

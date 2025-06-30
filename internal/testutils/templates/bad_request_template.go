@@ -15,6 +15,7 @@ func BadRequestTest(t *testing.T, rec *httptest.ResponseRecorder) {
 	}
 
 	var out util.ErrorDocument
+
 	err := json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -28,6 +29,7 @@ func BadRequestTest(t *testing.T, rec *httptest.ResponseRecorder) {
 		if !strings.HasPrefix(src.Detail, "bad request") {
 			t.Errorf("Wrong error message: expected prefix 'bad request' in '%s'", src.Detail)
 		}
+
 		if src.Status != "400" {
 			t.Errorf("Wrong error status: expected 400, got %s", src.Status)
 		}

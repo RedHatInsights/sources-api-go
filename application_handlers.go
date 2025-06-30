@@ -75,7 +75,6 @@ func ApplicationGet(c echo.Context) error {
 	c.Logger().Infof("Getting Application ID %v", id)
 
 	app, err := applicationDB.GetById(&id)
-
 	if err != nil {
 		return err
 	}
@@ -95,7 +94,9 @@ func ApplicationCreate(c echo.Context) error {
 	}
 
 	input := &m.ApplicationCreateRequest{}
-	if err = c.Bind(input); err != nil {
+
+	err = c.Bind(input)
+	if err != nil {
 		return err
 	}
 
@@ -163,25 +164,33 @@ func ApplicationEdit(c echo.Context) error {
 
 	// Store the previous status before updating the application.
 	previousStatus := app.AvailabilityStatus
+
 	var statusFromRequest *string
 
 	if app.PausedAt != nil {
 		input := &m.ResourceEditPausedRequest{}
-		if err := c.Bind(input); err != nil {
+
+		err := c.Bind(input)
+		if err != nil {
 			return util.NewErrBadRequest(err)
 		}
+
 		statusFromRequest = input.AvailabilityStatus
-		err := app.UpdateFromRequestPaused(input)
+
+		err = app.UpdateFromRequestPaused(input)
 		if err != nil {
 			return util.NewErrBadRequest(err)
 		}
 	} else {
 		input := &m.ApplicationEditRequest{}
-		if err := c.Bind(input); err != nil {
+
+		err := c.Bind(input)
+		if err != nil {
 			return util.NewErrBadRequest(err)
 		}
 
-		if err := service.ValidateApplicationEditRequest(input); err != nil {
+		err = service.ValidateApplicationEditRequest(input)
+		if err != nil {
 			return util.NewErrBadRequest(fmt.Errorf(`invalid payload: %w`, err))
 		}
 
@@ -269,6 +278,7 @@ func ApplicationListAuthentications(c echo.Context) error {
 	}
 
 	tenantId := authDao.Tenant()
+
 	out := make([]interface{}, count)
 	for i := 0; i < int(count); i++ {
 		// Set the marketplace token —if the auth is of the marketplace type— for the authentication.

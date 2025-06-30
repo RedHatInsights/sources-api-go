@@ -35,6 +35,7 @@ func (a *authenticationSecretsManagerDaoImpl) Create(auth *m.Authentication) err
 		}
 
 		auth.TenantID = *a.TenantID
+
 		arn, err := sm.CreateSecret(auth, *auth.Password)
 		if err != nil {
 			return err
@@ -81,6 +82,7 @@ func (a *authenticationSecretsManagerDaoImpl) BulkCreate(auth *m.Authentication)
 		}
 
 		auth.TenantID = *a.TenantID
+
 		arn, err := sm.CreateSecret(auth, *auth.Password)
 		if err != nil {
 			return err
@@ -90,6 +92,7 @@ func (a *authenticationSecretsManagerDaoImpl) BulkCreate(auth *m.Authentication)
 		if err != nil {
 			return err
 		}
+
 		hitAmazon = true
 	}
 
@@ -119,6 +122,7 @@ func (a *authenticationSecretsManagerDaoImpl) Update(auth *m.Authentication) err
 	if auth.Password != nil && !strings.HasPrefix(*auth.Password, config.Get().SecretsManagerPrefix) {
 		// fetch the ARN of the current password (since we overwrote it in memory)
 		arns := make([]*string, 1)
+
 		err := a.getDbWithModel().
 			Where("id = ?", auth.GetID()).
 			Limit(1).
@@ -126,6 +130,7 @@ func (a *authenticationSecretsManagerDaoImpl) Update(auth *m.Authentication) err
 		if err != nil {
 			return err
 		}
+
 		if *arns[0] == "" {
 			return fmt.Errorf("failed to fetch ARN for authentication %v", auth.GetID())
 		}

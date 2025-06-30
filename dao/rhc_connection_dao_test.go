@@ -41,8 +41,8 @@ func TestRhcConnectionCreate(t *testing.T) {
 	SwitchSchema(RhcConnectionSchema)
 
 	want := setUpValidRhcConnection()
-	got, err := rhcConnectionDao.Create(want)
 
+	got, err := rhcConnectionDao.Create(want)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -68,12 +68,12 @@ func TestRhcConnectionCreate(t *testing.T) {
 	}
 
 	var gotJoinTable model.SourceRhcConnection
+
 	err = DB.Debug().
 		Model(&model.SourceRhcConnection{}).
 		Where(`rhc_connection_id = ?`, got.ID).
 		Find(&gotJoinTable).
 		Error
-
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -111,6 +111,7 @@ func TestRhcConnectionCreateExistingSourceDifferentTenant(t *testing.T) {
 
 	// Set the tenant back to its original value
 	rhcConnectionDao.TenantID = &tenantId
+
 	DropSchema(RhcConnectionSchema)
 }
 
@@ -126,7 +127,6 @@ func TestRhcConnectionCreateExisting(t *testing.T) {
 	want.Sources[0].ID = fixtures.TestSourceData[0].ID
 
 	got, err := rhcConnectionDao.Create(want)
-
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -152,12 +152,12 @@ func TestRhcConnectionCreateExisting(t *testing.T) {
 	}
 
 	var gotJoinTable = make([]model.SourceRhcConnection, 0, 2)
+
 	err = DB.Debug().
 		Model(&model.SourceRhcConnection{}).
 		Where(`rhc_connection_id = ?`, got.ID).
 		Find(&gotJoinTable).
 		Error
-
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -170,6 +170,7 @@ func TestRhcConnectionCreateExisting(t *testing.T) {
 
 	// We have to loop through the fetched sources' ids, since it's a many-to-many relationship.
 	var found = false
+
 	for _, joinTableRow := range gotJoinTable {
 		if want.Sources[0].ID == joinTableRow.SourceId {
 			found = true
@@ -194,7 +195,6 @@ func TestRhcConnectionCreateSourceNotExists(t *testing.T) {
 	rhcConnection.Sources[0].ID = 12345
 
 	_, err := rhcConnectionDao.Create(rhcConnection)
-
 	if err == nil {
 		t.Errorf("want non nil error, got nil error")
 	}
@@ -241,13 +241,13 @@ func TestRhcConnectionDelete(t *testing.T) {
 	}
 
 	var rhcConnectionExists bool
+
 	err = DB.Debug().
 		Model(&model.RhcConnection{}).
 		Select(`1`).
 		Where(`id = ?`, fixtures.TestRhcConnectionData[0].ID).
 		Find(&rhcConnectionExists).
 		Error
-
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -268,7 +268,6 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 	nonExistentId := int64(12345)
 
 	_, err := rhcConnectionDao.Delete(&nonExistentId)
-
 	if err == nil {
 		t.Errorf(`want error, got nil`)
 	}
@@ -297,6 +296,7 @@ func TestRhcConnectionListForSources(t *testing.T) {
 	// with different types.
 	{
 		want := 2
+
 		got := len(rhcConnections)
 		if want != got {
 			t.Errorf(`incorrect amount of related rhc connections fetched. Want "%d", got "%d"`, want, got)
@@ -305,6 +305,7 @@ func TestRhcConnectionListForSources(t *testing.T) {
 
 	{
 		want := fixtures.TestSourceRhcConnectionData[0].RhcConnectionId
+
 		got := rhcConnections[0].ID
 		if want != got {
 			t.Errorf(`incorrect related rhc connection fetched. Want "%d", got "%d"`, want, got)
@@ -313,11 +314,11 @@ func TestRhcConnectionListForSources(t *testing.T) {
 
 	{
 		want := fixtures.TestSourceRhcConnectionData[1].RhcConnectionId
+
 		got := rhcConnections[1].ID
 		if want != got {
 			t.Errorf(`incorrect related rhc connection fetched. Want "%d", got "%d"`, want, got)
 		}
-
 	}
 
 	DropSchema(RhcConnectionSchema)
@@ -332,11 +333,11 @@ func TestRhcConnectionRowsClosed(t *testing.T) {
 
 	// Find all the connections that we will remove from the DB.
 	dbRhcConnections := make([]model.RhcConnection, 0)
+
 	err := DB.Debug().
 		Model(&model.RhcConnection{}).
 		Find(&dbRhcConnections).
 		Error
-
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -347,7 +348,6 @@ func TestRhcConnectionRowsClosed(t *testing.T) {
 		err = DB.Debug().
 			Delete(conn).
 			Error
-
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
 		}
@@ -360,6 +360,7 @@ func TestRhcConnectionRowsClosed(t *testing.T) {
 	}
 
 	want := 0
+
 	got := len(rhcConnections)
 	if want != got {
 		t.Errorf(`want "%d" connections from the database, got "%d"`, want, got)
@@ -420,8 +421,8 @@ func TestDeleteRhcConnectionNotExists(t *testing.T) {
 	RhcConnectionDao := GetRhcConnectionDao(&RequestParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	nonExistentId := int64(12345)
-	_, err := RhcConnectionDao.Delete(&nonExistentId)
 
+	_, err := RhcConnectionDao.Delete(&nonExistentId)
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
@@ -448,6 +449,7 @@ func TestRhcConnectionListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(rhcConnections)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -456,10 +458,12 @@ func TestRhcConnectionListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -472,6 +476,7 @@ func TestRhcConnectionListForSourceOffsetAndLimit(t *testing.T) {
 	sourceId := int64(1)
 
 	var wantCount int64
+
 	for _, i := range fixtures.TestSourceRhcConnectionData {
 		if i.SourceId == sourceId {
 			wantCount++
@@ -489,6 +494,7 @@ func TestRhcConnectionListForSourceOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(rhcConnections)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -497,9 +503,11 @@ func TestRhcConnectionListForSourceOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }

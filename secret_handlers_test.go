@@ -40,6 +40,7 @@ func TestSecretCreateNameExistInCurrentTenant(t *testing.T) {
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
 
 	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra, false)
+
 	_, rec, err := createSecretRequest(t, secretCreateRequest, &tenantId)
 	if err != nil {
 		t.Error(err)
@@ -48,7 +49,6 @@ func TestSecretCreateNameExistInCurrentTenant(t *testing.T) {
 	secret := parseSecretResponse(t, rec)
 
 	_, _, err = createSecretRequest(t, secretCreateRequest, &tenantId)
-
 	if err != nil && err.Error() != "bad request: secret name "+name+" exists in current tenant" {
 		t.Error(err)
 	}
@@ -72,7 +72,6 @@ func TestSecretCreateEmptyName(t *testing.T) {
 	secretCreateRequest := secretFromParams(name, authType, userName, password, secretExtra, false)
 
 	_, _, err := createSecretRequest(t, secretCreateRequest, &tenantId)
-
 	if err.Error() != "bad request: secret name have to be populated" {
 		t.Error(err)
 	}
@@ -90,6 +89,7 @@ func TestSecretCreate(t *testing.T) {
 	userName := "test-name"
 	password := "123456"
 	secretExtra := map[string]interface{}{"extra": map[string]interface{}{"extra": "params"}}
+
 	var userID *int64
 
 	for _, userScoped := range []bool{false, true} {
@@ -155,6 +155,7 @@ func int64Matcher(t *testing.T, nameResource string, firstValue int64, secondVal
 func parseSecretResponse(t *testing.T, rec *httptest.ResponseRecorder) *m.AuthenticationResponse {
 	secret := &m.AuthenticationResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err := json.Unmarshal(raw, &secret)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -165,6 +166,7 @@ func parseSecretResponse(t *testing.T, rec *httptest.ResponseRecorder) *m.Authen
 
 func fetchSecretFromDB(t *testing.T, secretIDValue string, requestParams *dao.RequestParams) *m.Authentication {
 	secretDao := dao.GetSecretDao(requestParams)
+
 	secretID, err := util.InterfaceToInt64(secretIDValue)
 	if err != nil {
 		t.Error(err)
@@ -222,7 +224,9 @@ func cleanSecretByID(t *testing.T, secretIDValue string, requestParams *dao.Requ
 	if err != nil {
 		t.Error(err)
 	}
+
 	secretDao := dao.GetSecretDao(requestParams)
+
 	err = secretDao.Delete(&secretID)
 	if err != nil {
 		t.Error(err)
@@ -233,6 +237,7 @@ func TestSecretList(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	tenantId := int64(1)
+
 	secret1, err := dao.CreateSecretByName("Secret 1", &tenantId, nil)
 	if err != nil {
 		t.Error(err)
@@ -265,6 +270,7 @@ func TestSecretList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -292,9 +298,11 @@ func TestSecretList(t *testing.T) {
 	}
 
 	var foundIDs []int64
+
 	for _, secret := range out.Data {
 		secretMap := secret.(map[string]interface{})
 		secretID := secretMap["id"].(string)
+
 		outID, err := strconv.ParseInt(secretID, 10, 64)
 		if err != nil {
 			t.Errorf(`The ID of the payload could not be converted to int64: %s`, err)
@@ -315,12 +323,14 @@ func TestSecretList(t *testing.T) {
 	if err != nil {
 		t.Error(nil)
 	}
+
 	cleanSecretByID(t, secret1ID, &dao.RequestParams{TenantID: &tenantId})
 
 	secret2ID, err := util.InterfaceToString(secret2.DbID)
 	if err != nil {
 		t.Error(nil)
 	}
+
 	cleanSecretByID(t, secret2ID, &dao.RequestParams{TenantID: &tenantId})
 }
 
@@ -328,6 +338,7 @@ func TestSecretListWithFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	tenantId := int64(1)
+
 	secret1, err := dao.CreateSecretByName("Secret 1", &tenantId, nil)
 	if err != nil {
 		t.Error(err)
@@ -362,6 +373,7 @@ func TestSecretListWithFilter(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -389,9 +401,11 @@ func TestSecretListWithFilter(t *testing.T) {
 	}
 
 	var foundIDs []int64
+
 	for _, secret := range out.Data {
 		secretMap := secret.(map[string]interface{})
 		secretID := secretMap["id"].(string)
+
 		outID, err := strconv.ParseInt(secretID, 10, 64)
 		if err != nil {
 			t.Errorf(`The ID of the payload could not be converted to int64: %s`, err)
@@ -412,12 +426,14 @@ func TestSecretListWithFilter(t *testing.T) {
 	if err != nil {
 		t.Error(nil)
 	}
+
 	cleanSecretByID(t, secret1ID, &dao.RequestParams{TenantID: &tenantId})
 
 	secret2ID, err := util.InterfaceToString(secret2.DbID)
 	if err != nil {
 		t.Error(nil)
 	}
+
 	cleanSecretByID(t, secret2ID, &dao.RequestParams{TenantID: &tenantId})
 }
 
@@ -462,6 +478,7 @@ func TestSecretTenantNotExist(t *testing.T) {
 
 func TestSecretListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -479,6 +496,7 @@ func TestSecretListBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestSecretList := ErrorHandlingContext(SecretList)
+
 	err := badRequestSecretList(c)
 	if err != nil {
 		t.Error(err)
@@ -489,16 +507,19 @@ func TestSecretListBadRequestInvalidFilter(t *testing.T) {
 
 func TestSecretGet(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantIDForSecret := int64(1)
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
+
 	user, err := userDao.FindOrCreate(testUserId)
 	if err != nil {
 		t.Error(err)
 	}
 
 	var userID *int64
+
 	for _, userScoped := range []bool{false, true} {
 		if userScoped {
 			userID = &user.Id
@@ -540,6 +561,7 @@ func TestSecretGet(t *testing.T) {
 		}
 
 		var outSecret m.SecretResponse
+
 		err = json.Unmarshal(rec.Body.Bytes(), &outSecret)
 		if err != nil {
 			t.Error("Failed unmarshaling output")
@@ -550,6 +572,7 @@ func TestSecretGet(t *testing.T) {
 		}
 
 		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+
 		secret, err = secretDao.GetById(&secret.DbID)
 		if err != nil {
 			t.Error("secret not found")
@@ -592,6 +615,7 @@ func TestSecretGetTenantNotExist(t *testing.T) {
 	c.SetParamValues(secretID)
 
 	notFoundSecretGet := ErrorHandlingContext(SecretGet)
+
 	err = notFoundSecretGet(c)
 	if err != nil {
 		t.Error(err)
@@ -601,6 +625,7 @@ func TestSecretGetTenantNotExist(t *testing.T) {
 	if err != nil {
 		t.Error(nil)
 	}
+
 	cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantIDForSecret})
 
 	templates.NotFoundTest(t, rec)
@@ -624,6 +649,7 @@ func TestSecretGetNotFound(t *testing.T) {
 	c.SetParamValues(id)
 
 	notFoundSecretGet := ErrorHandlingContext(SecretGet)
+
 	err := notFoundSecretGet(c)
 	if err != nil {
 		t.Error(err)
@@ -641,6 +667,7 @@ func TestSecretEdit(t *testing.T) {
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
+
 	user, err := userDao.FindOrCreate(testUserId)
 	if err != nil {
 		t.Error(err)
@@ -662,6 +689,7 @@ func TestSecretEdit(t *testing.T) {
 	}
 
 	var userID *int64
+
 	for _, userScoped := range []bool{false, true} {
 		if userScoped {
 			userID = &user.Id
@@ -705,6 +733,7 @@ func TestSecretEdit(t *testing.T) {
 		}
 
 		var outSecret m.SecretResponse
+
 		err = json.Unmarshal(rec.Body.Bytes(), &outSecret)
 		if err != nil {
 			t.Error("Failed unmarshaling output")
@@ -715,6 +744,7 @@ func TestSecretEdit(t *testing.T) {
 		}
 
 		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+
 		secret, err = secretDao.GetById(&secret.DbID)
 		if err != nil {
 			t.Error("secret not found")
@@ -749,8 +779,10 @@ func TestSecretEdit(t *testing.T) {
 
 func TestSecretEditInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	tenantOther := int64(1)
+
 	secret, err := dao.CreateSecretByName("Secret 1", &tenantOther, nil)
 	if err != nil {
 		t.Error(err)
@@ -784,6 +816,7 @@ func TestSecretEditInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundSecretEdit := ErrorHandlingContext(SecretEdit)
+
 	err = notFoundSecretEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -822,6 +855,7 @@ func TestSecretEditNotFound(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundSecretEdit := ErrorHandlingContext(SecretEdit)
+
 	err = notFoundSecretEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -834,6 +868,7 @@ func TestSecretEditBadRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 
 	tenantId := int64(1)
+
 	secret, err := dao.CreateSecretByName("Secret 1", &tenantId, nil)
 	if err != nil {
 		t.Error(err)
@@ -868,6 +903,7 @@ func TestSecretEditBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestSecretEdit := ErrorHandlingContext(SecretEdit)
+
 	err = badRequestSecretEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -885,12 +921,14 @@ func TestSecretDelete(t *testing.T) {
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
+
 	user, err := userDao.FindOrCreate(testUserId)
 	if err != nil {
 		t.Error(err)
 	}
 
 	var userID *int64
+
 	for _, userScoped := range []bool{false, true} {
 		if userScoped {
 			userID = &user.Id
@@ -934,6 +972,7 @@ func TestSecretDelete(t *testing.T) {
 		}
 
 		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+
 		_, err = secretDao.GetById(&secret.DbID)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Error("'secret not found' expected")
@@ -943,8 +982,10 @@ func TestSecretDelete(t *testing.T) {
 
 func TestSecretDeleteInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	tenantOther := int64(1)
+
 	secret, err := dao.CreateSecretByName("Secret 1", &tenantOther, nil)
 	if err != nil {
 		t.Error(err)
@@ -969,6 +1010,7 @@ func TestSecretDeleteInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundSecretEdit := ErrorHandlingContext(SecretDelete)
+
 	err = notFoundSecretEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -999,6 +1041,7 @@ func TestSecretDeleteNotFound(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundSecretEdit := ErrorHandlingContext(SecretDelete)
+
 	err := notFoundSecretEdit(c)
 	if err != nil {
 		t.Error(err)

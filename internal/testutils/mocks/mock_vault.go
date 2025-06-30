@@ -22,6 +22,7 @@ func (m *MockVault) Read(path string) (*api.Secret, error) {
 			return createSecretOutput(auth), nil
 		}
 	}
+
 	return nil, nil
 }
 
@@ -51,6 +52,7 @@ func (m *MockVault) Delete(path string) (*api.Secret, error) {
 
 		return secret, nil
 	}
+
 	return nil, util.NewErrNotFound("authentication")
 }
 
@@ -62,6 +64,7 @@ func getVaultPathsFromFixtures() []interface{} {
 		path := fmt.Sprintf("%s_%d_%s", auth.ResourceType, auth.TenantID, auth.ID)
 		vaultPaths = append(vaultPaths, path)
 	}
+
 	return vaultPaths
 }
 
@@ -92,5 +95,6 @@ func createSecretOutput(auth m.Authentication) *api.Secret {
 	}
 
 	secret.Data["metadata"] = fixtures.TestAuthenticationVaultMetaData
+
 	return secret
 }

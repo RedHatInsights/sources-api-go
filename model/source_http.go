@@ -79,15 +79,19 @@ func (src *Source) UpdateFromRequest(update *SourceEditRequest) {
 	if update.Name != nil {
 		src.Name = *update.Name
 	}
+
 	if update.Version != nil {
 		src.Version = update.Version
 	}
+
 	if update.Imported != nil {
 		src.Imported = update.Imported
 	}
+
 	if update.SourceRef != nil {
 		src.SourceRef = update.SourceRef
 	}
+
 	if update.AvailabilityStatus != nil {
 		src.AvailabilityStatus = *update.AvailabilityStatus
 	}

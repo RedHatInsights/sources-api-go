@@ -132,6 +132,7 @@ func TestNotMarketplaceAuthNotProcessed(t *testing.T) {
 	}
 
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no errors, got %s", err)
@@ -164,6 +165,7 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
@@ -178,6 +180,7 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 
 	{
 		want := *expectedToken.Token
+
 		got := *token.Token
 		if want != got {
 			t.Errorf(`invalid token string. Want "%s", got "%s"`, want, got)
@@ -186,6 +189,7 @@ func TestAuthFromVaultMarketplaceCacheHit(t *testing.T) {
 
 	{
 		want := *expectedToken.Expiration
+
 		got := *token.Expiration
 		if want != got {
 			t.Errorf(`invalid token expiration. Want "%d", got "%d"`, want, got)
@@ -225,6 +229,7 @@ func TestAuthFromVaultMarketplaceProviderEmptyPassword(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err == nil {
 		t.Errorf("want err, got nil")
@@ -264,6 +269,7 @@ func TestAuthFromVaultMarketplaceProviderSuccess(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
@@ -306,6 +312,7 @@ func TestAuthFromVaultMarketplaceProviderSuccessCacheFailure(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
@@ -342,6 +349,7 @@ func TestAuthFromVaultMarketplaceProviderFailure(t *testing.T) {
 	}
 
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err == nil {
 		t.Error("want error, got nil")
@@ -381,6 +389,7 @@ func TestAuthFromDbExtraNoContent(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
@@ -432,6 +441,7 @@ func TestAuthFromDbExtraNullContent(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)
@@ -486,6 +496,7 @@ func TestAuthFromDbExtraPreviousContent(t *testing.T) {
 
 	// Call the function under test
 	tenantId := int64(5)
+
 	err = SetMarketplaceTokenAuthExtraField(tenantId, auth)
 	if err != nil {
 		t.Errorf("want no error, got %s", err)

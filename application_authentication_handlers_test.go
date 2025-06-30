@@ -44,6 +44,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -58,6 +59,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 	}
 
 	var wantAppAuthCount int
+
 	for _, a := range fixtures.TestApplicationAuthenticationData {
 		if a.TenantID == tenantId {
 			wantAppAuthCount++
@@ -105,6 +107,7 @@ func TestApplicationAuthenticationList(t *testing.T) {
 // for not existing tenant
 func TestApplicationAuthenticationListTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -130,6 +133,7 @@ func TestApplicationAuthenticationListTenantNotExist(t *testing.T) {
 // for tenant without application authentication
 func TestApplicationAuthenticationListTenantWithoutAppAuths(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 	c, rec := request.CreateTestContext(
 		http.MethodGet,
@@ -169,6 +173,7 @@ func TestApplicationAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestApplicationAuthenticationList := ErrorHandlingContext(ApplicationAuthenticationList)
+
 	err := badRequestApplicationAuthenticationList(c)
 	if err != nil {
 		t.Error(err)
@@ -203,6 +208,7 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 	}
 
 	var out m.ApplicationAuthenticationResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -238,6 +244,7 @@ func TestApplicationAuthenticationGet(t *testing.T) {
 // for existing app auth id but with invalid tenant
 func TestApplicationAuthenticationGetInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	appAuthId := int64(1)
 
@@ -254,6 +261,7 @@ func TestApplicationAuthenticationGetInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+
 	err := notFoundApplicationAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -266,6 +274,7 @@ func TestApplicationAuthenticationGetInvalidTenant(t *testing.T) {
 // for not existing tenant
 func TestApplicationAuthenticationGetTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	appAuthId := int64(1)
 
@@ -282,6 +291,7 @@ func TestApplicationAuthenticationGetTenantNotExist(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+
 	err := notFoundApplicationAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -304,6 +314,7 @@ func TestApplicationAuthenticationGetNotFound(t *testing.T) {
 	c.SetParamValues("13094830948")
 
 	notFoundApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+
 	err := notFoundApplicationAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -326,6 +337,7 @@ func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationGet)
+
 	err := badRequestApplicationAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -336,6 +348,7 @@ func TestApplicationAuthenticationGetBadRequest(t *testing.T) {
 
 func TestApplicationAuthenticationCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 
 	// Create own test data - source with application and authentication
@@ -414,6 +427,7 @@ func TestApplicationAuthenticationCreate(t *testing.T) {
 	}
 
 	var out m.ApplicationAuthenticationResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -423,7 +437,9 @@ func TestApplicationAuthenticationCreate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	appAuthDao := dao.GetApplicationAuthenticationDao(&daoParams)
+
 	appAuthOut, err := appAuthDao.GetById(&appAuthID)
 	if err != nil {
 		t.Error(err)
@@ -433,9 +449,11 @@ func TestApplicationAuthenticationCreate(t *testing.T) {
 	if appAuthOut.TenantID != tenantId {
 		t.Errorf("application authentication with id %d should belong to tenant with id %d, but got %d", appAuthOut.ID, tenantId, appAuthOut.TenantID)
 	}
+
 	if app.TenantID != tenantId {
 		t.Errorf("application with id %d should belong to tenant with id %d, but got %d", app.ID, tenantId, app.TenantID)
 	}
+
 	if auth.TenantID != tenantId {
 		t.Errorf("authentication with id %d should belong to tenant with id %d, but got %d", auth.DbID, tenantId, auth.TenantID)
 	}
@@ -466,6 +484,7 @@ func TestApplicationAuthenticationCreateBadAppId(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json")
 
 	badRequestApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationCreate)
+
 	err := badRequestApplicationAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -493,6 +512,7 @@ func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json")
 
 	badRequestApplicationAuthenticationGet := ErrorHandlingContext(ApplicationAuthenticationCreate)
+
 	err := badRequestApplicationAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -503,6 +523,7 @@ func TestApplicationAuthenticationCreateBadAuthId(t *testing.T) {
 
 func TestApplicationAuthenticationDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 
 	// Create own test data - to be independent on fixtures
@@ -560,6 +581,7 @@ func TestApplicationAuthenticationDelete(t *testing.T) {
 		ApplicationID:    app.ID,
 		AuthenticationID: auth.DbID,
 	}
+
 	err = appAuthDao.Create(&appAuth)
 	if err != nil {
 		t.Errorf("application authentication not created correctly: %s", err)
@@ -608,6 +630,7 @@ func TestApplicationAuthenticationDelete(t *testing.T) {
 // for tenant who doesn't own the app auth
 func TestApplicationAuthenticationDeleteInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	appAuthId := int64(1)
 
@@ -624,6 +647,7 @@ func TestApplicationAuthenticationDeleteInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
+
 	err := notFoundApplicationAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -645,6 +669,7 @@ func TestApplicationAuthenticationDeleteNotFound(t *testing.T) {
 	c.SetParamValues("1234523452542")
 
 	notFoundApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
+
 	err := notFoundApplicationAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -666,6 +691,7 @@ func TestApplicationAuthenticationDeleteBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestApplicationAuthenticationDelete := ErrorHandlingContext(ApplicationAuthenticationDelete)
+
 	err := badRequestApplicationAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -676,6 +702,7 @@ func TestApplicationAuthenticationDeleteBadRequest(t *testing.T) {
 
 func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	tenantId := int64(1)
 	appAuthId := int64(2)
 
@@ -704,6 +731,7 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -755,6 +783,7 @@ func TestApplicationAuthenticationListAuthentications(t *testing.T) {
 // is returned for not existing tenant
 func TestApplicationAuthenticationListAuthenticationsTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	appAuthId := int64(2)
 
@@ -774,6 +803,7 @@ func TestApplicationAuthenticationListAuthenticationsTenantNotExist(t *testing.T
 	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	notFoundAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+
 	err := notFoundAppAuthListAuths(c)
 	if err != nil {
 		t.Error(err)
@@ -786,6 +816,7 @@ func TestApplicationAuthenticationListAuthenticationsTenantNotExist(t *testing.T
 // is returned for valid tenant who doesn't own the app auth
 func TestApplicationAuthenticationListAuthenticationsInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	appAuthId := int64(2)
 
@@ -805,6 +836,7 @@ func TestApplicationAuthenticationListAuthenticationsInvalidTenant(t *testing.T)
 	c.SetParamValues(fmt.Sprintf("%d", appAuthId))
 
 	notFoundAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+
 	err := notFoundAppAuthListAuths(c)
 	if err != nil {
 		t.Error(err)
@@ -832,6 +864,7 @@ func TestApplicationAuthenticationListAuthenticationsNotFound(t *testing.T) {
 	c.SetParamValues("78967899")
 
 	notFoundAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+
 	err := notFoundAppAuthListAuths(c)
 	if err != nil {
 		t.Error(err)
@@ -859,6 +892,7 @@ func TestApplicationAuthenticationListAuthenticationsBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestAppAuthListAuths := ErrorHandlingContext(ApplicationAuthenticationListAuthentications)
+
 	err := badRequestAppAuthListAuths(c)
 	if err != nil {
 		t.Error(err)
@@ -887,5 +921,6 @@ func checkAllApplicationAuthenticationsBelongToTenant(tenantId int64, appAuths [
 			}
 		}
 	}
+
 	return nil
 }

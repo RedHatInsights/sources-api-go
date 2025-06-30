@@ -58,6 +58,7 @@ func main() {
 	default:
 		go runServer(shutdown)
 	}
+
 	l.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
 	// if/when that comes in
@@ -65,6 +66,7 @@ func main() {
 	l.Log.Infof("Received %v, exiting", s)
 
 	shutdown <- struct{}{}
+
 	<-shutdown
 
 	os.Exit(0)
@@ -86,6 +88,7 @@ func runServer(shutdown chan struct{}) {
 
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
 	p := echoMetrics.NewPrometheus("sources", nil)
+
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return p.HandlerFunc(next) })
 
 	setupRoutes(e)
@@ -114,18 +117,21 @@ func runServer(shutdown chan struct{}) {
 
 		l.Log.Infof("API Server started on :%v", port)
 
-		if err := e.Start(":" + port); err != nil && err != http.ErrServerClosed {
+		err := e.Start(":" + port)
+		if err != nil && err != http.ErrServerClosed {
 			l.Log.Warn(err)
 		}
 	}()
 
 	// wait for the shutdown signal to come
 	<-shutdown
+
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	// shut down the server gracefully, with a timeout of 20 seconds
-	if err := e.Shutdown(ctx); err != nil && err != http.ErrServerClosed {
+	err := e.Shutdown(ctx)
+	if err != nil && err != http.ErrServerClosed {
 		l.Log.Fatal(err)
 	}
 

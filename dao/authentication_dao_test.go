@@ -49,6 +49,7 @@ func TestAuthFromVault(t *testing.T) {
 	if !ok {
 		t.Errorf(`wrong type for the secret's data object. Want "map[string]interface{}", got "%s"'`, reflect.TypeOf(vaultData["data"]))
 	}
+
 	data["last_available_at"] = authentication.LastAvailableAt.Format(time.RFC3339Nano)
 	data["last_checked_at"] = authentication.LastCheckedAt.Format(time.RFC3339Nano)
 	// setting the password manually due to the fact that it can be null therefore not in the db. and if it _were_ in
@@ -80,6 +81,7 @@ func TestAuthFromVault(t *testing.T) {
 	} else {
 		{
 			want := data["name"]
+
 			got := *resultingAuth.Name
 			if want != got {
 				t.Errorf(`authentication names are different. Want "%v", got "%v"`, want, got)
@@ -88,6 +90,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := authentication.AuthType
+
 			got := resultingAuth.AuthType
 			if want != got {
 				t.Errorf(`authentication types are different. Want "%s", got "%s"`, want, got)
@@ -96,6 +99,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := data["username"]
+
 			got := *resultingAuth.Username
 			if want != got {
 				t.Errorf(`authentication usernames are different. Want "%v", got "%v"`, want, got)
@@ -104,6 +108,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := data["password"]
+
 			got := *resultingAuth.Password
 			if want != got {
 				t.Errorf(`authentication passwords are different. Want "%v", got "%v"`, want, got)
@@ -112,6 +117,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := authentication.ResourceType
+
 			got := resultingAuth.ResourceType
 			if want != got {
 				t.Errorf(`authentication resoource types are different. Want "%s", got "%s"`, want, got)
@@ -120,6 +126,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := authentication.ResourceID
+
 			got := resultingAuth.ResourceID
 			if want != got {
 				t.Errorf(`authentication resource IDs are different. Want "%d", got "%d"`, want, got)
@@ -128,6 +135,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := authentication.SourceID
+
 			got := resultingAuth.SourceID
 			if want != got {
 				t.Errorf(`authentication passwords are different. Want "%d", got "%d"`, want, got)
@@ -136,6 +144,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := data["availability_status"]
+
 			got := *resultingAuth.AvailabilityStatus
 			if want != got {
 				t.Errorf(`authentication availability statuses are different. Want "%v", got "%v"`, want, got)
@@ -144,6 +153,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := authentication.LastAvailableAt.Format(time.RFC3339Nano)
+
 			got := resultingAuth.LastAvailableAt.Format(time.RFC3339Nano)
 			if want != got {
 				t.Errorf(`authentication last available at statuses are different. Want "%s", got "%s"`, want, got)
@@ -152,6 +162,7 @@ func TestAuthFromVault(t *testing.T) {
 
 		{
 			want := authentication.LastCheckedAt.Format(time.RFC3339Nano)
+
 			got := resultingAuth.LastCheckedAt.Format(time.RFC3339Nano)
 			if want != got {
 				t.Errorf(`authentication last checked at statuses are different. Want "%s", got "%s"`, want, got)
@@ -256,6 +267,7 @@ func TestFindKeysByResourceTypeAndId(t *testing.T) {
 func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("offset_limit")
+
 	originalSecretStore := conf.SecretStore
 
 	wantCount := int64(len(fixtures.TestAuthenticationData))
@@ -285,6 +297,7 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 			}
 
 			got := len(authentications)
+
 			want := int(wantCount) - d.Offset
 			if want < 0 {
 				want = 0
@@ -293,18 +306,22 @@ func TestAuthenticationListOffsetAndLimit(t *testing.T) {
 			if want > d.Limit {
 				want = d.Limit
 			}
+
 			if got != want {
 				t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 			}
 		}
 	}
+
 	DropSchema("offset_limit")
+
 	conf.SecretStore = originalSecretStore
 }
 
 func TestAuthenticationListUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -315,6 +332,7 @@ func TestAuthenticationListUserOwnership(t *testing.T) {
 
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	recordsWithUserID, user, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
 	if err != nil {
 		t.Errorf("unable to create source: %v", err)
@@ -389,6 +407,7 @@ func TestAuthenticationListUserOwnership(t *testing.T) {
 func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -398,6 +417,7 @@ func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 		*/
 		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
 		aa := suiteData.resourcesUserA.ApplicationAuthentications[0]
+
 		authentications, _, err := authenticationDaoUserA.ListForApplicationAuthentication(aa.ID, 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -417,6 +437,7 @@ func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 		*/
 		authenticationDaoUserA = GetAuthenticationDao(suiteData.GetRequestParamsUserA())
 		aa = suiteData.resourcesNoUser.ApplicationAuthentications[0]
+
 		authentications, _, err = authenticationDaoUserA.ListForApplicationAuthentication(aa.ID, 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -438,6 +459,7 @@ func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
 		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
 		aa = suiteData.resourcesUserA.ApplicationAuthentications[0]
+
 		_, _, err = authenticationDaoWithUser.ListForApplicationAuthentication(aa.ID, 1000, 0, []util.Filter{})
 		if err.Error() != "application authentication not found" {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -445,7 +467,6 @@ func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -456,6 +477,7 @@ func TestListForApplicationAuthenticationWithUserOwnership(t *testing.T) {
 func TestListForSourceWithUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -464,6 +486,7 @@ func TestListForSourceWithUserOwnership(t *testing.T) {
 		  Test 1 - UserA tries to GET userA's authentications of certain application authentication - expected result: success
 		*/
 		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		authentications, _, err := authenticationDaoUserA.ListForSource(suiteData.SourceUserA().ID, 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -482,6 +505,7 @@ func TestListForSourceWithUserOwnership(t *testing.T) {
 		  Test 2 - UserA tries to authentications without ownership of certain application authentication - expected result: success
 		*/
 		authenticationDaoUserA = GetAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		authentications, _, err = authenticationDaoUserA.ListForSource(suiteData.SourceNoUser().ID, 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -502,6 +526,7 @@ func TestListForSourceWithUserOwnership(t *testing.T) {
 		*/
 		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
 		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
+
 		authentications, _, err = authenticationDaoWithUser.ListForSource(suiteData.SourceUserA().ID, 1000, 0, []util.Filter{})
 		if len(authentications) != 0 {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -509,7 +534,6 @@ func TestListForSourceWithUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}

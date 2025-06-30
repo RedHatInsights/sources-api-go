@@ -86,7 +86,6 @@ func SourceGet(c echo.Context) error {
 	c.Logger().Infof("Getting Source Id %v", id)
 
 	s, err := sourcesDB.GetById(&id)
-
 	if err != nil {
 		return err
 	}
@@ -101,7 +100,9 @@ func SourceCreate(c echo.Context) error {
 	}
 
 	input := &m.SourceCreateRequest{}
-	if err := c.Bind(input); err != nil {
+
+	err = c.Bind(input)
+	if err != nil {
 		return err
 	}
 
@@ -127,6 +128,7 @@ func SourceCreate(c echo.Context) error {
 	}
 
 	setEventStreamResource(c, source)
+
 	return c.JSON(http.StatusCreated, source.ToResponse())
 }
 
@@ -152,21 +154,26 @@ func SourceEdit(c echo.Context) error {
 	// If "PausedAt" contains a date it means that the source was paused back then.
 	if s.PausedAt != nil {
 		input := &m.SourcePausedEditRequest{}
-		if err := c.Bind(input); err != nil {
+
+		err := c.Bind(input)
+		if err != nil {
 			return err
 		}
 
-		err := s.UpdateFromRequestPaused(input)
+		err = s.UpdateFromRequestPaused(input)
 		if err != nil {
 			return util.NewErrBadRequest(err)
 		}
 	} else {
 		input := &m.SourceEditRequest{}
-		if err := c.Bind(input); err != nil {
+
+		err := c.Bind(input)
+		if err != nil {
 			return err
 		}
 
-		if err := service.ValidateSourceEditRequest(sourcesDB, input); err != nil {
+		err = service.ValidateSourceEditRequest(sourcesDB, input)
+		if err != nil {
 			return util.NewErrBadRequest(err)
 		}
 
@@ -180,6 +187,7 @@ func SourceEdit(c echo.Context) error {
 
 	setNotificationForAvailabilityStatus(c, previousStatus, s)
 	setEventStreamResource(c, s)
+
 	return c.JSON(http.StatusOK, s.ToResponse())
 }
 
@@ -195,10 +203,10 @@ func SourceDelete(c echo.Context) (err error) {
 	}
 
 	s, err := sourcesDB.GetById(&id)
-
 	if err != nil {
 		return err
 	}
+
 	if c.Get("cert-auth") != nil {
 		satelliteId := dao.Static.GetSourceTypeId("satellite")
 		if s.SourceTypeID != satelliteId {
@@ -240,6 +248,7 @@ func SourceListAuthentications(c echo.Context) error {
 	}
 
 	tenantId := authDao.Tenant()
+
 	out := make([]interface{}, count)
 	for i := 0; i < int(count); i++ {
 		// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
@@ -281,7 +290,6 @@ func SourceTypeListSource(c echo.Context) error {
 	}
 
 	sources, count, err = sourcesDB.SubCollectionList(m.SourceType{Id: id}, limit, offset, filters)
-
 	if err != nil {
 		return err
 	}
@@ -323,7 +331,6 @@ func ApplicationTypeListSource(c echo.Context) error {
 	}
 
 	sources, count, err = sourcesDB.SubCollectionList(m.ApplicationType{Id: id}, limit, offset, filters)
-
 	if err != nil {
 		return err
 	}
@@ -342,6 +349,7 @@ func SourceCheckAvailability(c echo.Context) error {
 	// override the context with a non-terminating context, setting the logger
 	// field so we still get the nice log messages
 	ctx := context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
+
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 

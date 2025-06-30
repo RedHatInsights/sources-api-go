@@ -103,6 +103,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", parsedConfig.LocalStackURL)
 	fmt.Fprintf(&b, "%s=%v ", "RbacHost", parsedConfig.RbacHost)
+
 	return b.String()
 }
 
@@ -123,6 +124,7 @@ func Get() *SourcesApiConfig {
 		for requestedName, topicConfig := range clowder.KafkaTopics {
 			kafkaTopics[requestedName] = topicConfig.Name
 		}
+
 		options.SetDefault("AwsRegion", cfg.Logging.Cloudwatch.Region)
 		options.SetDefault("AwsAccessKeyId", cfg.Logging.Cloudwatch.AccessKeyId)
 		options.SetDefault("AwsSecretAccessKey", cfg.Logging.Cloudwatch.SecretAccessKey)
@@ -171,6 +173,7 @@ func Get() *SourcesApiConfig {
 			if cfg.FeatureFlags.ClientAccessToken != nil {
 				clientAccessToken = *cfg.FeatureFlags.ClientAccessToken
 			}
+
 			options.SetDefault("FeatureFlagsAPIToken", clientAccessToken)
 		}
 
@@ -221,6 +224,7 @@ func Get() *SourcesApiConfig {
 		} else {
 			options.SetDefault("DatabaseName", "sources_api_development")
 		}
+
 		options.SetDefault("DatabaseSSLMode", "disable")
 
 		options.SetDefault("CacheHost", os.Getenv("REDIS_CACHE_HOST"))
@@ -312,6 +316,7 @@ func Get() *SourcesApiConfig {
 
 	// Grab the Kafka Sasl Settings.
 	var brokerConfig []clowder.BrokerConfig
+
 	bcRaw, ok := options.Get("KafkaBrokerConfig").([]clowder.BrokerConfig)
 	if ok {
 		brokerConfig = bcRaw

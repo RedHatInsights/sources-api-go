@@ -56,6 +56,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 
 	{
 		want := validId
+
 		got := result.ID
 		if want != got {
 			t.Errorf(`Unexpected different ids found. Want "%d", got "%d"`, want, got)
@@ -64,6 +65,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 
 	{
 		want := validRhcId
+
 		got := result.RhcId
 		if want != got {
 			t.Errorf(`Unexpected different rhcIds found. Want "%s", got "%s"`, want, got)
@@ -72,6 +74,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 
 	{
 		want := datatypes.JSON(validExtra)
+
 		got := result.Extra
 		if !bytes.Equal(want, got) {
 			t.Errorf(`Unexpected different extra fields found. Want "%d", got "%d"`, want, got)
@@ -80,6 +83,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 
 	{
 		want := validAvailabilityStatus
+
 		got := result.AvailabilityStatus
 		if want != got {
 			t.Errorf(`Unexpected different availability statuses found. Want "%s", got "%s"`, want, got)
@@ -88,6 +92,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 
 	{
 		want := validAvailabilityStatusError
+
 		got := result.AvailabilityStatusError
 		if want != got {
 			t.Errorf(`Unexpected different availability status error found. Want "%s", got "%s"`, want, got)
@@ -128,13 +133,13 @@ func TestIdListToRhcConnection(t *testing.T) {
 	var rhcConnection model.RhcConnection
 
 	err := MapIdListToRhcConnection(validSourceIdList, &rhcConnection)
-
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
 
 	{
 		want := validNumberOfSourceIds
+
 		got := len(rhcConnection.Sources)
 		if want != got {
 			t.Errorf(`want "%d" soruces, got "%d"`, want, got)
@@ -158,7 +163,6 @@ func TestIdListEmpty(t *testing.T) {
 	var rhcConnection model.RhcConnection
 
 	err := MapIdListToRhcConnection("", &rhcConnection)
-
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}

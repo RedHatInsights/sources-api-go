@@ -38,7 +38,9 @@ func (mtc *MarketplaceTokenCacher) FetchToken() (*BearerToken, error) {
 	}
 
 	token := &BearerToken{}
-	if err = json.Unmarshal([]byte(cachedToken), &token); err != nil {
+
+	err = json.Unmarshal([]byte(cachedToken), &token)
+	if err != nil {
 		logger.Log.Errorf(`[tenant_id: %d] unexpected error when unmarshalling the marketplace token: %s`, mtc.TenantID, err)
 
 		return nil, errors.New("could not process the marketplace token")
@@ -68,7 +70,6 @@ func (mtc *MarketplaceTokenCacher) CacheToken(token *BearerToken) error {
 		token,
 		redisExpiration,
 	).Err()
-
 	if err != nil {
 		logger.Log.Errorf(`[tenant_id: %d] unexpected error when trying to set the marketplace token on Redis: %s`, mtc.TenantID, err)
 

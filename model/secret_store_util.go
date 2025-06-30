@@ -59,6 +59,7 @@ func (auth *Authentication) GetPassword() (*string, error) {
 		}
 
 		decrypted, err := util.Decrypt(*auth.Password)
+
 		return &decrypted, err
 
 	case config.VaultStore:
@@ -81,6 +82,7 @@ func (auth *Authentication) SetExtra(extra map[string]interface{}) error {
 	switch config.Get().SecretStore {
 	case config.DatabaseStore, config.SecretsManagerStore:
 		var err error
+
 		auth.ExtraDb, err = json.Marshal(extra)
 		if err != nil {
 			return err
@@ -101,8 +103,10 @@ func (auth *Authentication) SetExtra(extra map[string]interface{}) error {
 func (auth *Authentication) SetExtraField(key string, value interface{}) error {
 	switch config.Get().SecretStore {
 	case config.DatabaseStore, config.SecretsManagerStore:
-		var err error
-		var extra = make(map[string]interface{})
+		var (
+			err   error
+			extra = make(map[string]interface{})
+		)
 
 		if auth.ExtraDb != nil && string(auth.ExtraDb) != `null` {
 			err := json.Unmarshal(auth.ExtraDb, &extra)
@@ -113,6 +117,7 @@ func (auth *Authentication) SetExtraField(key string, value interface{}) error {
 
 		extra[key] = value
 		auth.ExtraDb, err = json.Marshal(extra)
+
 		return err
 
 	case config.VaultStore:
@@ -143,6 +148,7 @@ func (auth *Authentication) SetPassword(pass *string) error {
 		}
 
 		auth.Password = &encrypted
+
 		return nil
 
 	case config.VaultStore:

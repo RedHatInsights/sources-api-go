@@ -30,6 +30,7 @@ func NewRequestParamsFromContext(c echo.Context) (*RequestParams, error) {
 	// context (which usually has a deadline we're trying to get around)
 	case c.Get("override_context") != nil:
 		var ok bool
+
 		ctx, ok = c.Get("override_context").(context.Context)
 		if !ok {
 			c.Logger().Warn("Failed to pull overridden context")

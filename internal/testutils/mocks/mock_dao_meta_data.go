@@ -29,6 +29,7 @@ func (mockMetaDataDao *MockMetaDataDao) SubCollectionList(primaryCollection inte
 			return nil, 0, fmt.Errorf("unexpected primary collection type")
 		}
 	}
+
 	count := int64(len(appMetaDataList))
 	if count == 0 {
 		return nil, count, util.NewErrNotFound("metadata")

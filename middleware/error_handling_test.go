@@ -20,8 +20,8 @@ func TestError(t *testing.T) {
 	)
 
 	explosion := HandleErrors(func(echo.Context) error { return fmt.Errorf("boom!") })
-	err := explosion(c)
 
+	err := explosion(c)
 	if err != nil {
 		t.Error("caught an error when there should not have been one")
 	}
@@ -46,8 +46,8 @@ func TestNoError(t *testing.T) {
 	)
 
 	goodRequest := HandleErrors(func(echo.Context) error { return nil })
-	err := goodRequest(c)
 
+	err := goodRequest(c)
 	if err != nil {
 		t.Error("caught an error when there should not have been one")
 	}
@@ -55,5 +55,4 @@ func TestNoError(t *testing.T) {
 	if rec.Code != 200 {
 		t.Errorf("%v was returned instead of %v", rec.Code, 200)
 	}
-
 }

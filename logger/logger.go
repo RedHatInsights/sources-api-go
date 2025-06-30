@@ -70,6 +70,7 @@ func cloudWatchLogrusHook(config *appconf.SourcesApiConfig) *lc.Hook {
 	if key != "" && secret != "" {
 		cred := credentials.NewStaticCredentials(key, secret, "")
 		awsconf := aws.NewConfig().WithRegion(region).WithCredentials(cred)
+
 		hook, err := lc.NewBatchingHook(group, stream, awsconf, 10*time.Second)
 		if err != nil {
 			Log.Fatal(err)
@@ -109,6 +110,7 @@ func stringContainAnySubString(stringToSearch string, subStrings []string) bool 
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -119,6 +121,7 @@ func stringContainAnySubString(stringToSearch string, subStrings []string) bool 
 */
 func functionNameFromPath(functionWithPath string) string {
 	functionPathParts := strings.Split(functionWithPath, "/")
+
 	partsLength := len(functionPathParts)
 	if partsLength == 0 {
 		return ""

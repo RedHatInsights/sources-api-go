@@ -184,7 +184,6 @@ func TestSchemeGetsDefaulted(t *testing.T) {
 	ecr.Scheme = nil
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
-
 	if err != nil {
 		t.Errorf("want no errors, got %s", err)
 	}
@@ -197,7 +196,6 @@ func TestSchemeGetsDefaulted(t *testing.T) {
 	ecr.Scheme = &invalidScheme
 
 	err = ValidateEndpointCreateRequest(endpointDao, &ecr)
-
 	if err != nil {
 		t.Errorf("want no errors, got %s", err)
 	}
@@ -281,6 +279,7 @@ func TestInvalidHosts(t *testing.T) {
 	ecr := setUpEndpointCreateRequest()
 
 	want := "the provided host is not valid"
+
 	for _, tt := range testValues {
 		ecr.Host = tt
 
@@ -331,6 +330,7 @@ func TestDefaultingPortWhenMissingOrLessThanZero(t *testing.T) {
 
 	for _, tt := range testValues {
 		ecr.Port = tt.value
+
 		err := ValidateEndpointCreateRequest(endpointDao, &ecr)
 		if err != nil {
 			t.Errorf("want no error, got %s", err)
@@ -351,7 +351,6 @@ func TestPortLargeValue(t *testing.T) {
 	ecr.Port = &largePort
 
 	err := ValidateEndpointCreateRequest(endpointDao, &ecr)
-
 	if err == nil {
 		t.Error("want error, got none")
 	}
@@ -395,11 +394,11 @@ func TestEmptyCertificateAuthority(t *testing.T) {
 	}
 
 	want := "the certificate authority cannot be empty"
+
 	for _, tt := range testValues {
 		ecr.CertificateAuthority = tt.value
 
 		err := ValidateEndpointCreateRequest(endpointDao, &ecr)
-
 		if err.Error() != want {
 			t.Errorf("want '%s', got '%s'", want, err)
 		}
@@ -441,7 +440,6 @@ func TestDefaultAvailabilityStatus(t *testing.T) {
 	if want != got {
 		t.Errorf(`unexpected default value for an endpoint when the availability status comes empty. Want "%s", got "%s"`, want, got)
 	}
-
 }
 
 // TestInvalidAvailabilityStatuses tests if an error is returned when passing invalid availability statuses.
@@ -452,6 +450,7 @@ func TestInvalidAvailabilityStatuses(t *testing.T) {
 
 	invalidValues := []string{"hello", "world", "almost", "passes", "validation"}
 	want := "invalid availability status"
+
 	for _, tt := range invalidValues {
 		ecr.AvailabilityStatus = tt
 
@@ -532,7 +531,6 @@ func TestEditSchemeGetsDefaulted(t *testing.T) {
 	editRequest.Scheme = nil
 
 	err := ValidateEndpointEditRequest(endpointDao, sourceId, &editRequest)
-
 	if err != nil {
 		t.Errorf("unexpected error when validating a nil scheme for an endpoint edit: %s", err)
 	}
@@ -545,7 +543,6 @@ func TestEditSchemeGetsDefaulted(t *testing.T) {
 	editRequest.Scheme = &invalidScheme
 
 	err = ValidateEndpointEditRequest(endpointDao, sourceId, &editRequest)
-
 	if err != nil {
 		t.Errorf("unexpected error when editing an endpoint and giving it an invalid scheme: %s", err)
 	}
@@ -631,6 +628,7 @@ func TestEditInvalidHosts(t *testing.T) {
 	editRequest, sourceId := setUpEndpointEditRequest()
 
 	want := "the provided host is not valid"
+
 	for _, tt := range testValues {
 		editRequest.Host = &tt
 
@@ -681,6 +679,7 @@ func TestEditDefaultingPortWhenMissingOrLessThanZero(t *testing.T) {
 
 	for _, tt := range testValues {
 		editRequest.Port = tt.value
+
 		err := ValidateEndpointEditRequest(endpointDao, sourceId, &editRequest)
 		if err != nil {
 			t.Errorf("unexpected error when editing an endpoint and giving it invalid port values: %s", err)
@@ -745,6 +744,7 @@ func TestEditEmptyCertificateAuthority(t *testing.T) {
 	}
 
 	want := "the certificate authority cannot be empty"
+
 	for _, tt := range testValues {
 		editRequest.CertificateAuthority = tt.value
 
@@ -784,6 +784,7 @@ func TestEditEndpointInvalidAvailabilityStatuses(t *testing.T) {
 
 	invalidValues := []string{"hello", "world", "almost", "passes", "validation"}
 	want := "invalid availability status"
+
 	for _, tt := range invalidValues {
 		editRequest.AvailabilityStatus = &tt
 
@@ -810,8 +811,8 @@ func TestEditEndpointInvalidAvailabilityStatusPaused(t *testing.T) {
 	}
 
 	want := `invalid availability status. Must be either "available" or "unavailable"`
-	for _, tv := range testValues {
 
+	for _, tv := range testValues {
 		editRequest := model.ResourceEditPausedRequest{
 			AvailabilityStatus: tv,
 		}
@@ -840,8 +841,8 @@ func TestEditEndpointValidAvailabilityStatusPaused(t *testing.T) {
 		}
 
 		endpoint := model.Endpoint{}
-		err := endpoint.UpdateFromRequestPaused(&editRequest)
 
+		err := endpoint.UpdateFromRequestPaused(&editRequest)
 		if err != nil {
 			t.Errorf(`unexpected error when validating a valid availability status "%s" for a paused endpoint edit: %s`, *tv, err)
 		}

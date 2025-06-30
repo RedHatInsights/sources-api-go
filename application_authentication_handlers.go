@@ -44,6 +44,7 @@ func ApplicationAuthenticationList(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
 	c.Logger().Infof("tenant: %v", *appAuthDB.Tenant())
 
 	out := make([]interface{}, len(appAuths))
@@ -82,7 +83,9 @@ func ApplicationAuthenticationCreate(c echo.Context) error {
 	}
 
 	input := m.ApplicationAuthenticationCreateRequest{}
-	if err := c.Bind(&input); err != nil {
+
+	err = c.Bind(&input)
+	if err != nil {
 		return err
 	}
 
@@ -150,6 +153,7 @@ func ApplicationAuthenticationListAuthentications(c echo.Context) error {
 	}
 
 	tenantId := authDao.Tenant()
+
 	out := make([]interface{}, count)
 	for i := 0; i < int(count); i++ {
 		// Set the marketplace token —if the auth is of the marketplace type— for the authentication.

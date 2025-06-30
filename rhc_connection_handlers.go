@@ -75,11 +75,13 @@ func RhcConnectionGetById(c echo.Context) error {
 
 func RhcConnectionCreate(c echo.Context) error {
 	input := &model.RhcConnectionCreateRequest{}
-	if err := c.Bind(input); err != nil {
+
+	err := c.Bind(input)
+	if err != nil {
 		return err
 	}
 
-	err := service.ValidateRhcConnectionRequest(input)
+	err = service.ValidateRhcConnectionRequest(input)
 	if err != nil {
 		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
 	}
@@ -114,7 +116,9 @@ func RhcConnectionEdit(c echo.Context) error {
 	}
 
 	input := &model.RhcConnectionEditRequest{}
-	if err := c.Bind(input); err != nil {
+
+	err = c.Bind(input)
+	if err != nil {
 		return err
 	}
 
@@ -129,6 +133,7 @@ func RhcConnectionEdit(c echo.Context) error {
 	}
 
 	dbRhcConnection.UpdateFromRequest(input)
+
 	err = rhcConnectionDao.Update(dbRhcConnection)
 	if err != nil {
 		return err

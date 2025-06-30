@@ -48,8 +48,8 @@ func TestCreateDialerEmptySasl(t *testing.T) {
 	_, err := CreateDialer(&emptySaslConfig)
 
 	want := "could not create a dialer for Kafka: the passed configuration is missing the Sasl settings"
-	got := err
 
+	got := err
 	if want != got.Error() {
 		t.Errorf(`unexpected error received when creating a dialer. Want "%s", got "%s"`, want, got)
 	}
@@ -101,6 +101,7 @@ func TestCreateTlsConfigEmptyCaContents(t *testing.T) {
 
 		{
 			var want uint16 = tls.VersionTLS12
+
 			got := tlsConfig.MinVersion
 
 			if want != got {
@@ -110,6 +111,7 @@ func TestCreateTlsConfigEmptyCaContents(t *testing.T) {
 
 		{
 			var want *x509.CertPool
+
 			got := tlsConfig.RootCAs
 
 			if want != got {
@@ -158,6 +160,7 @@ A7sKPPcw7+uvTPyLNhBzPvOk
 
 	{
 		var want uint16 = tls.VersionTLS12
+
 		got := tlsConfig.MinVersion
 
 		if want != got {
@@ -214,6 +217,7 @@ func TestCreatSaslMechanismEmptySaslMechanism(t *testing.T) {
 	saslConfig := createKafkaSaslConfigurationFixture()
 
 	want := "could not create a Sasl mechanism for Kafka: the Sasl mechanism is empty"
+
 	for _, tv := range testValues {
 		saslConfig.SaslMechanism = tv
 
@@ -277,6 +281,7 @@ func TestCreateSaslPlainMechanism(t *testing.T) {
 	}
 
 	want := plainMech.Name()
+
 	got := mechanism.Name()
 	if want != got {
 		t.Errorf(`unexpected Sasl mechanism created. Want "%s", got "%s"`, want, got)
@@ -298,6 +303,7 @@ func TestCreateSaslSha512Mechanism(t *testing.T) {
 	}
 
 	want := scram.SHA256.Name()
+
 	got := mechanism.Name()
 	if want != got {
 		t.Errorf(`unexpected Sasl mechanism created. Want "%s", got "%s"`, want, got)
@@ -319,6 +325,7 @@ func TestCreateSaslScramSha512Mechanism(t *testing.T) {
 	}
 
 	want := scram.SHA512.Name()
+
 	got := mechanism.Name()
 	if want != got {
 		t.Errorf(`unexpected Sasl mechanism created. Want "%s", got "%s"`, want, got)
@@ -336,6 +343,7 @@ func TestCreateSaslInvalidMechanism(t *testing.T) {
 	_, err := CreateSaslMechanism(saslConfig)
 
 	want := `unable to configure Sasl mechanism "whatever" for Kafka`
+
 	got := err.Error()
 	if want != got {
 		t.Errorf(`unexpected error when providing an invalid Sasl mechanism. Want "%s", got "%s"`, want, got)
