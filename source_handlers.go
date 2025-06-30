@@ -353,6 +353,7 @@ func SourceCheckAvailability(metricsService metrics.MetricsService) echo.Handler
 		ctx := context.WithValue(context.Background(), logger.EchoLogger{}, c.Get("logger"))
 
 		ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+
 		defer cancel()
 
 		c.Set("override_context", ctx)
