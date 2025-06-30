@@ -37,6 +37,7 @@ func (mockRhcConnectionDao *MockRhcConnectionDao) GetById(id *int64) (*m.RhcConn
 func (mockRhcConnectionDao *MockRhcConnectionDao) Create(rhcConnection *m.RhcConnection) (*m.RhcConnection, error) {
 	// Check if in fixtures is a source with given source id
 	var sourceExists bool
+
 	for _, src := range fixtures.TestSourceData {
 		if src.ID == rhcConnection.Sources[0].ID {
 			sourceExists = true
@@ -49,6 +50,7 @@ func (mockRhcConnectionDao *MockRhcConnectionDao) Create(rhcConnection *m.RhcCon
 
 	// Check if in fixtures exists same relation
 	var relationExists bool
+
 	for _, s := range fixtures.TestSourceRhcConnectionData {
 		if s.SourceId == rhcConnection.Sources[0].ID {
 			for _, r := range fixtures.TestRhcConnectionData {

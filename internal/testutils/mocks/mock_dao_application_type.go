@@ -47,16 +47,19 @@ func (mockAppTypeDao *MockApplicationTypeDao) SubCollectionList(primaryCollectio
 	switch object := primaryCollection.(type) {
 	case m.Source:
 		var sourceExists bool
+
 		for _, src := range fixtures.TestSourceData {
 			if src.ID == object.ID {
 				sourceExists = true
 			}
 		}
+
 		if !sourceExists {
 			return nil, 0, util.NewErrNotFound("source")
 		}
 
 		appTypes := make(map[int64]int)
+
 		for _, app := range fixtures.TestApplicationData {
 			if app.SourceID == object.ID {
 				appTypes[app.ApplicationTypeID]++
@@ -76,6 +79,7 @@ func (mockAppTypeDao *MockApplicationTypeDao) SubCollectionList(primaryCollectio
 	}
 
 	count := int64(len(appTypesOut))
+
 	return appTypesOut, count, nil
 }
 

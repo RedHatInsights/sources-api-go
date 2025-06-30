@@ -23,6 +23,7 @@ func TestPausingApplication(t *testing.T) {
 	SwitchSchema("pause_unpause")
 
 	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	err := applicationDao.Pause(testApplication.ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -47,8 +48,8 @@ func TestResumeApplication(t *testing.T) {
 	SwitchSchema("pause_unpause")
 
 	applicationDao := GetApplicationDao(&RequestParams{TenantID: &testApplication.TenantID})
-	err := applicationDao.Unpause(testApplication.ID)
 
+	err := applicationDao.Unpause(testApplication.ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
 	}
@@ -123,8 +124,8 @@ func TestDeleteApplicationNotExists(t *testing.T) {
 	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	nonExistentId := int64(12345)
-	_, err := applicationDao.Delete(&nonExistentId)
 
+	_, err := applicationDao.Delete(&nonExistentId)
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
@@ -161,6 +162,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 
 	// Store the application authentications to perform checks later.
 	var createdAppAuths []m.ApplicationAuthentication
+
 	for i := 0; i < maxAuthenticationsCreated; i++ {
 		// Create the authentication.
 		authentication := setUpValidAuthentication()
@@ -195,6 +197,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 
 	// Count the application authentications from the given application, to check that they were deleted.
 	var appAuthCount int64
+
 	err = DB.
 		Debug().
 		Model(m.ApplicationAuthentication{}).
@@ -202,7 +205,6 @@ func TestApplicationDeleteCascade(t *testing.T) {
 		Where("tenant_id = ?", tenantId).
 		Count(&appAuthCount).
 		Error
-
 	if err != nil {
 		t.Errorf(`error counting the application authentications related to the application: %s`, err)
 	}
@@ -210,6 +212,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 	// Check if the application authentications were deleted or not.
 	{
 		want := int64(0)
+
 		got := appAuthCount
 		if want != got {
 			t.Errorf(`the application authentications were not deleted. Want a count of "%d", got "%d"`, want, got)
@@ -240,6 +243,7 @@ func TestApplicationDeleteCascade(t *testing.T) {
 
 	// Try to fetch the deleted application.
 	var deletedApplicationCheck *m.Application
+
 	err = DB.
 		Debug().
 		Model(m.Application{}).
@@ -247,7 +251,6 @@ func TestApplicationDeleteCascade(t *testing.T) {
 		Where(`tenant_id = ?`, tenantId).
 		Find(&deletedApplicationCheck).
 		Error
-
 	if err != nil {
 		t.Errorf(`unexpected error: %s`, err)
 	}
@@ -335,6 +338,7 @@ func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	sourceId := fixtures.TestSourceData[0].ID
 
 	var wantCount int64
+
 	for _, i := range fixtures.TestApplicationData {
 		if i.SourceID == sourceId {
 			wantCount++
@@ -352,6 +356,7 @@ func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(applications)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -360,10 +365,12 @@ func TestApplicationSubcollectionListWithOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -387,6 +394,7 @@ func TestApplicationListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(applications)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -395,16 +403,19 @@ func TestApplicationListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
 func TestApplicationListUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -415,6 +426,7 @@ func TestApplicationListUserOwnership(t *testing.T) {
 
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	recordsWithUserID, user, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
 	if err != nil {
 		t.Errorf("unable to create source: %v", err)
@@ -489,6 +501,7 @@ func TestApplicationListUserOwnership(t *testing.T) {
 func TestApplicationIsSuperkeyTrue(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("application_superkey_true")
+
 	defer DropSchema("application_superkey_true")
 
 	src := m.Source{
@@ -499,6 +512,7 @@ func TestApplicationIsSuperkeyTrue(t *testing.T) {
 		TenantID:            fixtures.TestTenantData[0].Id,
 	}
 	srcDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	err := srcDao.Create(&src)
 	if err != nil {
 		t.Error(err)
@@ -510,6 +524,7 @@ func TestApplicationIsSuperkeyTrue(t *testing.T) {
 		TenantID:          fixtures.TestTenantData[0].Id,
 	}
 	appDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	err = appDao.Create(&app)
 	if err != nil {
 		t.Error(err)
@@ -524,6 +539,7 @@ func TestApplicationIsSuperkeyTrue(t *testing.T) {
 func TestApplicationIsSuperkeyFalse(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("application_superkey_false")
+
 	defer DropSchema("application_superkey_false")
 
 	src := m.Source{
@@ -534,6 +550,7 @@ func TestApplicationIsSuperkeyFalse(t *testing.T) {
 		TenantID:            fixtures.TestTenantData[0].Id,
 	}
 	srcDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	err := srcDao.Create(&src)
 	if err != nil {
 		t.Error(err)
@@ -545,6 +562,7 @@ func TestApplicationIsSuperkeyFalse(t *testing.T) {
 		TenantID:          fixtures.TestTenantData[0].Id,
 	}
 	appDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	err = appDao.Create(&app)
 	if err != nil {
 		t.Error(err)
@@ -559,6 +577,7 @@ func TestApplicationIsSuperkeyFalse(t *testing.T) {
 func TestApplicationGetUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -567,6 +586,7 @@ func TestApplicationGetUserOwnership(t *testing.T) {
 		   Test 1 - UserA tries to GET userA's application - expected result: success
 		*/
 		applicationDaoUserA := GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		applicationUserA, err := applicationDaoUserA.GetById(&suiteData.ApplicationUserA().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the application: %s`, err)
@@ -605,7 +625,6 @@ func TestApplicationGetUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -616,6 +635,7 @@ func TestApplicationGetUserOwnership(t *testing.T) {
 func TestApplicationEditUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -627,6 +647,7 @@ func TestApplicationEditUserOwnership(t *testing.T) {
 
 		newAvailabilityStatusError := "new error"
 		newApplicationUserA := &m.Application{ID: suiteData.ApplicationUserA().ID, AvailabilityStatusError: newAvailabilityStatusError}
+
 		err := applicationDaoUserA.Update(newApplicationUserA)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
@@ -645,6 +666,7 @@ func TestApplicationEditUserOwnership(t *testing.T) {
 		   Test 2 - UserA tries to update application without user - expected result: success
 		*/
 		newApplicationNoUser := &m.Application{ID: suiteData.ApplicationNoUser().ID, AvailabilityStatusError: newAvailabilityStatusError}
+
 		err = applicationDaoUserA.Update(newApplicationNoUser)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
@@ -667,12 +689,14 @@ func TestApplicationEditUserOwnership(t *testing.T) {
 
 		newAvailabilityStatusError = "new error"
 		newApplicationUserB := &m.Application{ID: suiteData.ApplicationUserB().ID, AvailabilityStatusError: newAvailabilityStatusError}
+
 		err = applicationDaoWithUser.Update(newApplicationUserB)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
 		}
 
 		applicationDaoUserB := GetApplicationDao(suiteData.GetRequestParamsUserB())
+
 		updatedApplication, err = applicationDaoUserB.GetById(&suiteData.ApplicationUserB().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById: %v`, err)
@@ -684,7 +708,6 @@ func TestApplicationEditUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -701,6 +724,7 @@ func TestPausingApplicationWithOwnership(t *testing.T) {
 		  Test 1 - UserA tries to pause application for userA - expected result: success
 		*/
 		applicationDao := GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		err := applicationDao.Pause(suiteData.ApplicationUserA().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -720,6 +744,7 @@ func TestPausingApplicationWithOwnership(t *testing.T) {
 		  Test 2 - UserA tries to pause application without user - expected result: success
 		*/
 		applicationDao = GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		err = applicationDao.Pause(suiteData.ApplicationNoUser().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -757,7 +782,6 @@ func TestPausingApplicationWithOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -774,6 +798,7 @@ func TestUnpauseApplicationWithOwnership(t *testing.T) {
 		 Test 1 - UserA tries to unpause application for userA - expected result: success
 		*/
 		applicationDao := GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		err := applicationDao.Pause(suiteData.ApplicationUserA().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -797,6 +822,7 @@ func TestUnpauseApplicationWithOwnership(t *testing.T) {
 		  Test 2 - UserA tries to unpause application without user - expected result: success
 		*/
 		applicationDao = GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		err = applicationDao.Pause(suiteData.ApplicationNoUser().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -823,6 +849,7 @@ func TestUnpauseApplicationWithOwnership(t *testing.T) {
 		applicationDaoWithUser := GetApplicationDao(requestParams)
 
 		applicationDaoUserB := GetApplicationDao(suiteData.GetRequestParamsUserB())
+
 		err = applicationDaoUserB.Pause(suiteData.ApplicationUserB().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -844,7 +871,6 @@ func TestUnpauseApplicationWithOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -855,6 +881,7 @@ func TestUnpauseApplicationWithOwnership(t *testing.T) {
 func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -863,6 +890,7 @@ func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 		 Test 1- UserA tries to GET userA's application of certain source - expected result: success
 		*/
 		applicationDaoUserA := GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		applications, _, err := applicationDaoUserA.SubCollectionList(*suiteData.SourceUserA(), 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling SubCollectionList for the source: %s`, err)
@@ -886,6 +914,7 @@ func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 		  Test 2 - UserA tries to GET applications of certain source without ownership - expected result: success
 		*/
 		applicationDaoUserA = GetApplicationDao(suiteData.GetRequestParamsUserA())
+
 		applications, _, err = applicationDaoUserA.SubCollectionList(*suiteData.SourceNoUser(), 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling SubCollectionList for the source: %s`, err)
@@ -910,6 +939,7 @@ func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 		*/
 		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
 		applicationsDaoWithUser := GetApplicationDao(requestParams)
+
 		applications, _, err = applicationsDaoWithUser.SubCollectionList(*suiteData.SourceUserA(), 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling SubCollectionList: %s`, err)
@@ -921,7 +951,6 @@ func TestApplicationSubcollectionWithUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}

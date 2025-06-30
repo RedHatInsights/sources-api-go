@@ -102,6 +102,7 @@ func SortByStringValueOnKey(field string, data []interface{}) {
 	sort.SliceStable(data, func(i, j int) bool {
 		dataI := data[i].(map[string]interface{})
 		dataJ := data[j].(map[string]interface{})
+
 		return dataI[field].(string) < dataJ[field].(string)
 	})
 }

@@ -36,6 +36,7 @@ func TestRaiseEvent(t *testing.T) {
 	f := raiseMiddleware(func(c echo.Context) error {
 		c.Set("event_type", "Thing.create")
 		c.Set("resource", &fakeEvent{raised: true})
+
 		return c.NoContent(http.StatusNoContent)
 	})
 
@@ -67,6 +68,7 @@ func TestRaiseEventWithHeaders(t *testing.T) {
 	f := raiseMiddleware(func(c echo.Context) error {
 		c.Set("event_type", "Thing.create")
 		c.Set("resource", &fakeEvent{raised: true})
+
 		return c.NoContent(http.StatusNoContent)
 	})
 
@@ -106,6 +108,7 @@ func TestRaiseEventBody(t *testing.T) {
 	f := raiseMiddleware(func(c echo.Context) error {
 		c.Set("event_type", "Thing.create")
 		c.Set("resource", &fakeEvent{raised: true})
+
 		return c.NoContent(http.StatusNoContent)
 	})
 

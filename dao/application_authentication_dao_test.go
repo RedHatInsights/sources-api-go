@@ -44,8 +44,8 @@ func TestDeleteApplicationAuthenticationNotExists(t *testing.T) {
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
 
 	nonExistentId := int64(12345)
-	_, err := applicationAuthenticationDao.Delete(&nonExistentId)
 
+	_, err := applicationAuthenticationDao.Delete(&nonExistentId)
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
@@ -62,8 +62,10 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 
 	tenantId := int64(1)
 
-	var apps []model.Application
-	var appAuthsWant []model.ApplicationAuthentication
+	var (
+		apps         []model.Application
+		appAuthsWant []model.ApplicationAuthentication
+	)
 
 	for _, appAuth := range fixtures.TestApplicationAuthenticationData {
 		if appAuth.TenantID == tenantId {
@@ -74,6 +76,7 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 
 	daoParams := RequestParams{TenantID: &tenantId}
 	appAuthDao := GetApplicationAuthenticationDao(&daoParams)
+
 	appAuthsOut, err := appAuthDao.ApplicationAuthenticationsByResource("Source", apps, nil)
 	if err != nil {
 		t.Error(err)
@@ -86,12 +89,14 @@ func TestApplicationAuthenticationsByApplicationsDatabase(t *testing.T) {
 	// Check the IDs of returned app auths
 	for _, aaOut := range appAuthsOut {
 		var aaFound bool
+
 		for _, aaWant := range appAuthsWant {
 			if aaWant.ID == aaOut.ID {
 				aaFound = true
 				break
 			}
 		}
+
 		if !aaFound {
 			t.Errorf("application authentication with id = %d returned as output but was not expected", aaOut.ID)
 		}
@@ -115,8 +120,11 @@ func TestApplicationAuthenticationsByAuthenticationsDatabase(t *testing.T) {
 	maxCreatedAuths := 5
 
 	// Store both the authentications and the application authentications for later.
-	var createdAuths = make([]model.Authentication, 0, maxCreatedAuths)
-	var createdAppAuths = make([]model.ApplicationAuthentication, 0, maxCreatedAuths)
+	var (
+		createdAuths    = make([]model.Authentication, 0, maxCreatedAuths)
+		createdAppAuths = make([]model.ApplicationAuthentication, 0, maxCreatedAuths)
+	)
+
 	for i := 0; i < maxCreatedAuths; i++ {
 		// Create the authentication.
 		auth := setUpValidAuthentication()
@@ -205,6 +213,7 @@ func TestApplicationAuthenticationListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(appAuths)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -213,16 +222,19 @@ func TestApplicationAuthenticationListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
 func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -233,6 +245,7 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	recordsWithUserID, user, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
 	if err != nil {
 		t.Errorf("unable to create source: %v", err)
@@ -307,6 +320,7 @@ func TestApplicationAuthenticationListUserOwnership(t *testing.T) {
 func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -315,6 +329,7 @@ func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
 		   Test 1 - UserA tries to GET userA's application authentication - expected result: success
 		*/
 		applicationAuthenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		applicationAuthenticationUserA, err := applicationAuthenticationDaoUserA.GetById(&suiteData.ApplicationAuthenticationUserA().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the application authentication: %s`, err)
@@ -353,7 +368,6 @@ func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -364,6 +378,7 @@ func TestApplicationAuthenticationGetUserOwnership(t *testing.T) {
 func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -372,6 +387,7 @@ func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
 		  Test 1 - UserA tries to delete application authentication for userA - expected result: success
 		*/
 		applicationAuthenticationDaoUserA := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserA())
+
 		_, err := applicationAuthenticationDaoUserA.Delete(&suiteData.ApplicationAuthenticationUserA().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Delete: %v`, err)
@@ -407,6 +423,7 @@ func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
 		}
 
 		applicationAuthenticationDaoUserB := GetApplicationAuthenticationDao(suiteData.GetRequestParamsUserB())
+
 		_, err = applicationAuthenticationDaoUserB.GetById(&suiteData.ApplicationAuthenticationUserB().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById: %v`, err)
@@ -414,7 +431,6 @@ func TestApplicationAuthenticationDeleteUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}

@@ -13,6 +13,7 @@ import (
 
 func BulkCreate(c echo.Context) error {
 	req := m.BulkCreateRequest{}
+
 	err := c.Bind(&req)
 	if err != nil {
 		return err
@@ -27,6 +28,7 @@ func BulkCreate(c echo.Context) error {
 	if !ok {
 		c.Logger().Warnf("bad xrhid %v", c.Get(h.XRHID))
 	}
+
 	id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 	if !ok {
 		c.Logger().Warnf("failed to pull identity from request")

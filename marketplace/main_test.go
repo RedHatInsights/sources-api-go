@@ -20,6 +20,7 @@ func TestMain(t *testing.M) {
 
 	// Start Miniredis
 	miniredis = miniredisV2.NewMiniRedis()
+
 	err := miniredis.StartAddr("localhost:45884")
 	if err != nil {
 		log.Fatalf("Could not initialize Minidredis: %s", err)
@@ -33,6 +34,7 @@ func TestMain(t *testing.M) {
 	if err != nil {
 		log.Fatalf(`error setting the "ENCRYPTION_KEY" environment variable: %s`, err)
 	}
+
 	util.InitializeEncryption()
 
 	result := t.Run()

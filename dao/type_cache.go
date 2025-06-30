@@ -86,17 +86,20 @@ func PopulateStaticTypeCache() error {
 	if err != nil {
 		return err
 	}
+
 	err = populateApplicationTypes(tc)
 	if err != nil {
 		return err
 	}
 
 	Static = tc
+
 	return nil
 }
 
 func populateSourceTypes(cache typeCache) error {
 	sourceTypes := make([]m.SourceType, 0)
+
 	result := DB.Model(&m.SourceType{}).Scan(&sourceTypes)
 	if result.Error != nil {
 		return result.Error
@@ -111,6 +114,7 @@ func populateSourceTypes(cache typeCache) error {
 
 func populateApplicationTypes(cache typeCache) error {
 	appTypes := make([]m.ApplicationType, 0)
+
 	result := DB.Model(&m.ApplicationType{}).Scan(&appTypes)
 	if result.Error != nil {
 		return result.Error

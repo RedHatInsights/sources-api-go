@@ -84,6 +84,7 @@ func TestGetTenantFromEchoContextInvalidFormat(t *testing.T) {
 	)
 
 	want := "the tenant was provided in an invalid format"
+
 	_, err := GetTenantFromEchoContext(c)
 	if !strings.Contains(want, err.Error()) {
 		t.Errorf(`incorrect tenant pulled. Want "%s", got "%s"`, want, err)

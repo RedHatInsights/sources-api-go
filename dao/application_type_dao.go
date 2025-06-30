@@ -89,7 +89,6 @@ func (at *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error)
 		Where("id = ?", *id).
 		First(&appType).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("application type")
 	}
@@ -106,11 +105,13 @@ func (at *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, er
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	if result.RowsAffected > int64(1) {
 		return nil, util.NewErrBadRequest("Found more than one of the same application type name")
 	} else if result.RowsAffected == int64(0) {
 		return nil, util.NewErrNotFound("application type")
 	}
+
 	return &appTypes[0], nil
 }
 
@@ -137,7 +138,6 @@ func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, so
 		Preload("SourceType").
 		Find(&source).
 		Error
-
 	if err != nil {
 		return fmt.Errorf("source not found")
 	}

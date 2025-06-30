@@ -19,14 +19,19 @@ func TestParseEndpointsTestRegression(t *testing.T) {
 
 	// Prepare all the fixtures to simulate a valid Bulk Create request.
 	var endpointFixture = fixtures.TestEndpointData[0]
+
 	endpointFixture.Role = util.StringRef("endpoint-role")
 	endpointFixture.ReceptorNode = util.StringRef("endpoint-receptor-node")
+
 	var verifySsl = true
+
 	endpointFixture.VerifySsl = &verifySsl
 	endpointFixture.CertificateAuthority = util.StringRef("endpoint-ca")
 
-	var sourceFixture = fixtures.TestSourceData[0]
-	var tenantFixture = fixtures.TestTenantData[0]
+	var (
+		sourceFixture = fixtures.TestSourceData[0]
+		tenantFixture = fixtures.TestTenantData[0]
+	)
 
 	var reqEndpoints = []model.BulkCreateEndpoint{
 		{
@@ -45,6 +50,7 @@ func TestParseEndpointsTestRegression(t *testing.T) {
 			},
 		},
 	}
+
 	bulkCreateOutput := model.BulkCreateOutput{
 		Sources: []model.Source{sourceFixture},
 	}
@@ -142,6 +148,7 @@ func TestParseSourcesWithSourceTypeId(t *testing.T) {
 	// Prepare test data
 	sourceTypeFixture := fixtures.TestSourceTypeData[0]
 	sourceName := "Source for TestParseSources()"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{
@@ -156,6 +163,7 @@ func TestParseSourcesWithSourceTypeId(t *testing.T) {
 
 	// Parse the sources
 	var err error
+
 	sources, err := parseSources(reqSources, &tenant, &userResource)
 	if err != nil {
 		t.Errorf(`unexpected error when parsing the sources from bulk create: %s`, err)
@@ -197,6 +205,7 @@ func TestParseSourcesWithSourceTypeName(t *testing.T) {
 	// Prepare test data
 	sourceTypeFixture := fixtures.TestSourceTypeData[1]
 	sourceName := "Source for TestParseSources()"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{
@@ -211,6 +220,7 @@ func TestParseSourcesWithSourceTypeName(t *testing.T) {
 
 	// Parse the sources
 	var err error
+
 	sources, err := parseSources(reqSources, &tenant, &userResource)
 	if err != nil {
 		t.Errorf(`unexpected error when parsing the sources from bulk create: %s`, err)
@@ -252,6 +262,7 @@ func TestParseSourcesBadRequestInvalidSourceTypeId(t *testing.T) {
 	// Prepare test data
 	sourceTypeId := "wrong id"
 	sourceName := "Source for TestParseSources()"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{
@@ -266,6 +277,7 @@ func TestParseSourcesBadRequestInvalidSourceTypeId(t *testing.T) {
 
 	// Parse the sources and check the results
 	var err error
+
 	sources, err := parseSources(reqSources, &tenant, &userResource)
 	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
@@ -284,6 +296,7 @@ func TestParseSourcesNotFoundInvalidSourceTypeId(t *testing.T) {
 	// Prepare test data
 	sourceTypeId := "1000"
 	sourceName := "Source for TestParseSources()"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{
@@ -298,6 +311,7 @@ func TestParseSourcesNotFoundInvalidSourceTypeId(t *testing.T) {
 
 	// Parse the sources and check the results
 	var err error
+
 	sources, err := parseSources(reqSources, &tenant, &userResource)
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf("expected not found error, got <%s>", err)
@@ -316,6 +330,7 @@ func TestParseSourcesBadRequestInvalidSourceTypeName(t *testing.T) {
 	// Prepare test data
 	sourceTypeName := "invalid name"
 	sourceName := "Source for TestParseSources()"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{
@@ -330,6 +345,7 @@ func TestParseSourcesBadRequestInvalidSourceTypeName(t *testing.T) {
 
 	// Parse the sources and check the results
 	var err error
+
 	sources, err := parseSources(reqSources, &tenant, &userResource)
 	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
@@ -347,6 +363,7 @@ func TestParseSourcesBadRequestMissingSourceType(t *testing.T) {
 
 	// Prepare test data
 	sourceName := "Source for TestParseSources()"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{
@@ -360,6 +377,7 @@ func TestParseSourcesBadRequestMissingSourceType(t *testing.T) {
 
 	// Parse the sources and check the results
 	var err error
+
 	sources, err := parseSources(reqSources, &tenant, &userResource)
 	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
@@ -377,6 +395,7 @@ func TestParseSourcesBadRequestValidationFails(t *testing.T) {
 
 	// Prepare test data
 	sourceTypeName := "google"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{
@@ -391,6 +410,7 @@ func TestParseSourcesBadRequestValidationFails(t *testing.T) {
 
 	// Parse the sources and check the results
 	var err error
+
 	sources, err := parseSources(reqSources, &tenant, &userResource)
 	if !errors.As(err, &util.ErrBadRequest{}) {
 		t.Errorf("expected bad request error, got <%s>", err)
@@ -410,6 +430,7 @@ func TestParseSourcesWithSourceOwnership(t *testing.T) {
 	sourceTypeName := "bitbucket"
 	applicationTypeName := "app-studio"
 	sourceName := "Source for TestParseSources()"
+
 	var reqSources = []model.BulkCreateSource{
 		{
 			SourceCreateRequest: model.SourceCreateRequest{

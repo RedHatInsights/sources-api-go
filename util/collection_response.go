@@ -26,6 +26,7 @@ type Links struct {
 
 func CollectionResponse(collection []interface{}, req *http.Request, count, limit, offset int) *Collection {
 	var first, last string
+
 	q := req.URL.Query()
 
 	// set the "first" link with same limit+offset (what they requested)

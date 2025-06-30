@@ -87,6 +87,7 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 	defer kafka.CloseWriter(writer, "emit availability status notification")
 
 	notificationMessageGuid := uuid.New().String()
+
 	loggerWithGuid := l.Log.WithField("notification-guid", notificationMessageGuid)
 	if sourceIdentification != "" {
 		loggerWithGuid = loggerWithGuid.WithField("notification-source-id", sourceIdentification)
@@ -117,6 +118,7 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 	event := notificationEvent{Metadata: notificationMetadata{}, Payload: string(payload)}
 
 	msg := &kafka.Message{}
+
 	err = msg.AddValueAsJSON(&notificationMessage{
 		ID:          notificationMessageGuid,
 		Version:     notificationMessageVersion,
@@ -130,16 +132,17 @@ func (producer *AvailabilityStatusNotifier) EmitAvailabilityStatusNotification(i
 		Context:     string(context),
 		Recipients:  []notificationRecipients{},
 	})
-
 	if err != nil {
 		loggerWithGuid.Warnf("Failed to add struct value as json to kafka message: %v", err)
 		return err
 	}
 
-	if err := kafka.Produce(writer, msg); err != nil {
+	err = kafka.Produce(writer, msg)
+	if err != nil {
 		err := fmt.Errorf("failed to produce Kafka message to emit notification: %v, error: %s", statusEventType, err)
 
 		loggerWithGuid.Warn(err)
+
 		return err
 	}
 

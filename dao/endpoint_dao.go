@@ -33,6 +33,7 @@ type endpointDaoImpl struct {
 
 func (a *endpointDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Endpoint, int64, error) {
 	endpoints := make([]m.Endpoint, 0, limit)
+
 	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, 0, err
@@ -90,6 +91,7 @@ func (a *endpointDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.
 	}
 
 	var endpoint m.Endpoint
+
 	err := q.
 		First(&endpoint).
 		Error
@@ -106,7 +108,6 @@ func (a *endpointDaoImpl) GetById(id *int64) (*m.Endpoint, error) {
 		Where("tenant_id = ?", a.TenantID).
 		First(&endpoint).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("endpoint")
 	}
@@ -131,7 +132,6 @@ func (a *endpointDaoImpl) Create(endpoint *m.Endpoint) error {
 
 func (a *endpointDaoImpl) Update(endpoint *m.Endpoint) error {
 	err := DB.Omit(clause.Associations).Updates(endpoint).Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": endpoint.SourceID, "endpoint_id": endpoint.ID}).Errorf("Unable to update endpoint: %s", err)
 
@@ -177,6 +177,7 @@ func (a *endpointDaoImpl) CanEndpointBeSetAsDefaultForSource(sourceId int64) boo
 
 	// add double quotes to the "default" column to avoid any clashes with postgres' "default" keyword
 	result := DB.Debug().Where(`"default" = true AND source_id = ?`, sourceId).First(&endpoint)
+
 	return result.Error != nil
 }
 
@@ -205,7 +206,6 @@ func (a *endpointDaoImpl) BulkMessage(resource util.Resource) (map[string]interf
 		Preload("Source").
 		Find(&endpoint).
 		Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -235,6 +235,7 @@ func (a *endpointDaoImpl) FetchAndUpdateBy(resource util.Resource, updateAttribu
 	logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "resource_type": resource.ResourceType, "resource_id": resource.ResourceID}).Info("Endpoint updated")
 
 	a.TenantID = &resource.TenantID
+
 	endpoint, err := a.GetByIdWithPreload(&resource.ResourceID, "Source")
 	if err != nil {
 		return nil, err
@@ -272,7 +273,6 @@ func (a *endpointDaoImpl) Exists(endpointId int64) (bool, error) {
 		Where("tenant_id = ?", a.TenantID).
 		Scan(&endpointExists).
 		Error
-
 	if err != nil {
 		return false, err
 	}

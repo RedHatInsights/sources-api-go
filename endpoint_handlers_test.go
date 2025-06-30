@@ -56,6 +56,7 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -70,6 +71,7 @@ func TestSourceEndpointSubcollectionList(t *testing.T) {
 	}
 
 	var wantCount int
+
 	for _, e := range fixtures.TestEndpointData {
 		if e.TenantID == tenantId && e.SourceID == sourceId {
 			wantCount++
@@ -141,6 +143,7 @@ func TestSourceEndpointSubcollectionListEmptyList(t *testing.T) {
 // for not existing tenant
 func TestSourceEndpointSubcollectionListTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
@@ -160,6 +163,7 @@ func TestSourceEndpointSubcollectionListTenantNotExist(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+
 	err := notFoundSourceListEndpoint(c)
 	if err != nil {
 		t.Error(err)
@@ -172,6 +176,7 @@ func TestSourceEndpointSubcollectionListTenantNotExist(t *testing.T) {
 // for existing tenant who doesn't own the source
 func TestSourceEndpointSubcollectionListInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -191,6 +196,7 @@ func TestSourceEndpointSubcollectionListInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+
 	err := notFoundSourceListEndpoint(c)
 	if err != nil {
 		t.Error(err)
@@ -216,6 +222,7 @@ func TestSourceEndpointSubcollectionListNotFound(t *testing.T) {
 	c.SetParamValues("983749387")
 
 	notFoundSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+
 	err := notFoundSourceListEndpoint(c)
 	if err != nil {
 		t.Error(err)
@@ -241,6 +248,7 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidSyntax(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+
 	err := badRequestSourceListEndpoint(c)
 	if err != nil {
 		t.Error(err)
@@ -270,6 +278,7 @@ func TestSourceEndpointSubcollectionListBadRequestInvalidFilter(t *testing.T) {
 	c.SetParamValues("1")
 
 	badRequestSourceListEndpoint := ErrorHandlingContext(SourceListEndpoint)
+
 	err := badRequestSourceListEndpoint(c)
 	if err != nil {
 		t.Error(err)
@@ -303,6 +312,7 @@ func TestEndpointList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -317,11 +327,13 @@ func TestEndpointList(t *testing.T) {
 	}
 
 	var wantCount int
+
 	for _, e := range fixtures.TestEndpointData {
 		if e.TenantID == tenantId {
 			wantCount++
 		}
 	}
+
 	if len(out.Data) != wantCount {
 		t.Error("not enough objects passed back from DB")
 	}
@@ -358,6 +370,7 @@ func TestEndpointList(t *testing.T) {
 // not existing tenant
 func TestEndpointListTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 
 	c, rec := request.CreateTestContext(
@@ -384,6 +397,7 @@ func TestEndpointListTenantNotExist(t *testing.T) {
 // existing tenant without endpoints
 func TestEndpointListInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 
 	c, rec := request.CreateTestContext(
@@ -424,6 +438,7 @@ func TestEndpointListBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestEndpointList := ErrorHandlingContext(EndpointList)
+
 	err := badRequestEndpointList(c)
 	if err != nil {
 		t.Error(err)
@@ -458,6 +473,7 @@ func TestEndpointGet(t *testing.T) {
 	}
 
 	var outEndpoint m.EndpointResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outEndpoint)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -482,6 +498,7 @@ func TestEndpointGet(t *testing.T) {
 // a tenant who doesn't own the endpoint
 func TestEndpointGetInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	endpointId := int64(1)
 
@@ -498,6 +515,7 @@ func TestEndpointGetInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", endpointId))
 
 	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+
 	err := notFoundEndpointGet(c)
 	if err != nil {
 		t.Error(err)
@@ -510,6 +528,7 @@ func TestEndpointGetInvalidTenant(t *testing.T) {
 // not existing tenant
 func TestEndpointGetTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	endpointId := int64(1)
 
@@ -526,6 +545,7 @@ func TestEndpointGetTenantNotExist(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", endpointId))
 
 	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+
 	err := notFoundEndpointGet(c)
 	if err != nil {
 		t.Error(err)
@@ -548,6 +568,7 @@ func TestEndpointGetNotFound(t *testing.T) {
 	c.SetParamValues("970283452983")
 
 	notFoundEndpointGet := ErrorHandlingContext(EndpointGet)
+
 	err := notFoundEndpointGet(c)
 	if err != nil {
 		t.Error(err)
@@ -570,6 +591,7 @@ func TestEndpointGetBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestEndpointGet := ErrorHandlingContext(EndpointGet)
+
 	err := badRequestEndpointGet(c)
 	if err != nil {
 		t.Error(err)
@@ -581,6 +603,7 @@ func TestEndpointGetBadRequest(t *testing.T) {
 // Tests that the endpoint is properly creating "endpoints" and returning a 201 code.
 func TestEndpointCreate(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 	sourceId := int64(1)
 
@@ -629,6 +652,7 @@ func TestEndpointCreate(t *testing.T) {
 	}
 
 	var endpointOut m.EndpointResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &endpointOut)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -649,6 +673,7 @@ func TestEndpointCreate(t *testing.T) {
 
 	// Delete the created endpoint
 	endpointDao := dao.GetEndpointDao(&tenantId)
+
 	deletedEndpoint, err := endpointDao.Delete(&endpointOutId)
 	if err != nil {
 		t.Error(err)
@@ -682,6 +707,7 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestEndpointCreate := ErrorHandlingContext(EndpointCreate)
+
 	err = badRequestEndpointCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -694,6 +720,7 @@ func TestEndpointCreateBadRequest(t *testing.T) {
 // when create request contains source id that is not owned by tenant
 func TestEndpointCreateInvalidSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -718,6 +745,7 @@ func TestEndpointCreateInvalidSource(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestEndpointCreate := ErrorHandlingContext(EndpointCreate)
+
 	err = badRequestEndpointCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -759,6 +787,7 @@ func TestEndpointEdit(t *testing.T) {
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	sourceEditHandlerWithNotifier := middleware.Notifier(EndpointEdit)
+
 	err := sourceEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
@@ -770,6 +799,7 @@ func TestEndpointEdit(t *testing.T) {
 
 	endpointOut := m.EndpointResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err = json.Unmarshal(raw, &endpointOut)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -778,6 +808,7 @@ func TestEndpointEdit(t *testing.T) {
 	if *endpointOut.AvailabilityStatus != "available" {
 		t.Errorf("Wrong availability status, wanted %v got %v", "available", *endpointOut.AvailabilityStatus)
 	}
+
 	notificationProducer, ok := service.NotificationProducer.(*mocks.MockAvailabilityStatusNotificationProducer)
 	if !ok {
 		t.Errorf("unable to cast notification producer")
@@ -841,6 +872,7 @@ func TestEndpointEdit(t *testing.T) {
 // tries to edit not owned endpoint
 func TestEndpointEditInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	endpointId := int64(1)
 
@@ -864,6 +896,7 @@ func TestEndpointEditInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundApplicationEdit := ErrorHandlingContext(EndpointEdit)
+
 	err := notFoundApplicationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -894,6 +927,7 @@ func TestEndpointEditNotFound(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundApplicationEdit := ErrorHandlingContext(EndpointEdit)
+
 	err := notFoundApplicationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -924,6 +958,7 @@ func TestEndpointEditBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestEndpointEdit := ErrorHandlingContext(EndpointEdit)
+
 	err := badRequestEndpointEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -1041,6 +1076,7 @@ func TestEndpointDelete(t *testing.T) {
 // to delete not owned endpoint
 func TestEndpointDeleteInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	endpointId := int64(1)
 
@@ -1057,6 +1093,7 @@ func TestEndpointDeleteInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", endpointId))
 
 	notFoundEndpointDelete := ErrorHandlingContext(EndpointDelete)
+
 	err := notFoundEndpointDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -1079,6 +1116,7 @@ func TestEndpointDeleteBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestEndpointDelete := ErrorHandlingContext(EndpointDelete)
+
 	err := badRequestEndpointDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -1103,6 +1141,7 @@ func TestEndpointDeleteNotFound(t *testing.T) {
 	c.SetParamValues("5789395389375")
 
 	notFoundEndpointDelete := ErrorHandlingContext(EndpointDelete)
+
 	err := notFoundEndpointDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -1262,6 +1301,7 @@ func TestEndpointListAuthentications(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -1276,6 +1316,7 @@ func TestEndpointListAuthentications(t *testing.T) {
 	}
 
 	var wantCount int
+
 	for _, a := range fixtures.TestAuthenticationData {
 		if a.ResourceType == "Endpoint" && a.TenantID == tenantId {
 			wantCount++
@@ -1340,6 +1381,7 @@ func TestEndpointListAuthenticationsEmptyList(t *testing.T) {
 // for not existing tenant
 func TestEndpointListAuthenticationsTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	endpointId := int64(1)
 
@@ -1359,6 +1401,7 @@ func TestEndpointListAuthenticationsTenantNotExist(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", endpointId))
 
 	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+
 	err := notFoundEndpointListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1371,6 +1414,7 @@ func TestEndpointListAuthenticationsTenantNotExist(t *testing.T) {
 // for tenant who doesn't own the endpoint
 func TestEndpointListAuthenticationsInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	endpointId := int64(1)
 
@@ -1390,6 +1434,7 @@ func TestEndpointListAuthenticationsInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", endpointId))
 
 	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+
 	err := notFoundEndpointListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1415,6 +1460,7 @@ func TestEndpointListAuthenticationsBadRequestInvalidEndpointId(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+
 	err := badRequestEndpointListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1444,6 +1490,7 @@ func TestEndpointListAuthenticationsBadRequestInvalidFilter(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+
 	err := badRequestEndpointListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1469,6 +1516,7 @@ func TestEndpointListAuthenticationsNotFound(t *testing.T) {
 	c.SetParamValues("09834098349")
 
 	notFoundEndpointListAuthentications := ErrorHandlingContext(EndpointListAuthentications)
+
 	err := notFoundEndpointListAuthentications(c)
 	if err != nil {
 		t.Error(err)
@@ -1487,6 +1535,7 @@ func checkAllEndpointsBelongToTenant(tenantId int64, endpoints []interface{}) er
 		if err != nil {
 			return err
 		}
+
 		for _, e := range fixtures.TestEndpointData {
 			if e.ID == endpointOutId {
 				if e.TenantID != tenantId {
@@ -1495,5 +1544,6 @@ func checkAllEndpointsBelongToTenant(tenantId int64, endpoints []interface{}) er
 			}
 		}
 	}
+
 	return nil
 }

@@ -17,5 +17,6 @@ func (producer *MockAvailabilityStatusNotificationProducer) EmitAvailabilityStat
 	producer.EmailNotificationInfo = emailNotificationInfo
 	producer.AccountNumber = id.AccountNumber
 	producer.OrgId = id.OrgID
+
 	return nil
 }

@@ -75,6 +75,7 @@ func (a *applicationDaoImpl) getDbWithModel() *gorm.DB {
 
 func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.Application, int64, error) {
 	applications := make([]m.Application, 0, limit)
+
 	relationObject, err := m.NewRelationObject(primaryCollection, *a.TenantID, DB.Debug())
 	if err != nil {
 		return nil, 0, err
@@ -95,6 +96,7 @@ func (a *applicationDaoImpl) SubCollectionList(primaryCollection interface{}, li
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
+
 	return applications, count, nil
 }
 
@@ -117,6 +119,7 @@ func (a *applicationDaoImpl) List(limit int, offset int, filters []util.Filter) 
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
+
 	return applications, count, nil
 }
 
@@ -127,7 +130,6 @@ func (a *applicationDaoImpl) GetById(id *int64) (*m.Application, error) {
 		Where("id = ?", *id).
 		First(&app).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("application")
 	}
@@ -145,10 +147,10 @@ func (a *applicationDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (
 	}
 
 	var app m.Application
+
 	err := q.
 		First(&app).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("application")
 	}
@@ -183,7 +185,6 @@ func (a *applicationDaoImpl) Create(app *m.Application) error {
 
 func (a *applicationDaoImpl) Update(app *m.Application) error {
 	err := a.getDb().Omit(clause.Associations).Updates(app).Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "source_id": app.SourceID, "application_id": app.ID}).Errorf("Unable to update application: %s", err)
 
@@ -252,7 +253,6 @@ func (a *applicationDaoImpl) BulkMessage(resource util.Resource) (map[string]int
 		Preload("Source").
 		Find(&application).
 		Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +305,6 @@ func (a *applicationDaoImpl) Pause(id int64) error {
 		Where("id = ?", id).
 		Update("paused_at", time.Now()).
 		Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": id}).Errorf("Unable to pause application: %s", err)
 
@@ -322,7 +321,6 @@ func (a *applicationDaoImpl) Unpause(id int64) error {
 		Where("id = ?", id).
 		Update("paused_at", nil).
 		Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": id}).Errorf("Unable to resume application: %s", err)
 
@@ -335,8 +333,10 @@ func (a *applicationDaoImpl) Unpause(id int64) error {
 }
 
 func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
-	var applicationAuthentications []m.ApplicationAuthentication
-	var application *m.Application
+	var (
+		applicationAuthentications []m.ApplicationAuthentication
+		application                *m.Application
+	)
 
 	// The application authentications are fetched with the "Tenant" table preloaded, so that all the objects are
 	// returned with the "external_tenant" column populated. This is required to be able to raise events with the
@@ -356,7 +356,6 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 				Where("tenant_id = ?", a.TenantID).
 				Find(&applicationAuthentications).
 				Error
-
 			if err != nil {
 				return err
 			}
@@ -365,7 +364,6 @@ func (a *applicationDaoImpl) DeleteCascade(applicationId int64) ([]m.Application
 				err = tx.
 					Delete(&applicationAuthentications).
 					Error
-
 				if err != nil {
 					logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_id": applicationId}).Errorf("Unable to cascade delete application: unable to delete application authentications: %s", err)
 
@@ -419,7 +417,6 @@ func (a *applicationDaoImpl) Exists(applicationId int64) (bool, error) {
 		Where("id = ?", applicationId).
 		Scan(&applicationExists).
 		Error
-
 	if err != nil {
 		return false, err
 	}

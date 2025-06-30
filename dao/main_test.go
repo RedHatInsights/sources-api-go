@@ -32,10 +32,12 @@ func TestMain(t *testing.M) {
 
 	if flags.Integration {
 		Vault = &mocks.MockVault{}
+
 		ConnectAndMigrateDB("dao")
 	}
 
 	logging.InitLogger(config.Get())
+
 	code := t.Run()
 
 	if flags.Integration {
@@ -83,7 +85,6 @@ func ConnectToTestDB(dbSchema string) {
 			TablePrefix: dbSchema + ".",
 		},
 	})
-
 	if err != nil {
 		log.Fatalf(`could not connect to database: %s`, err)
 	}
@@ -92,6 +93,7 @@ func ConnectToTestDB(dbSchema string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	rawDB.SetMaxOpenConns(20)
 
 	// Set the dao.DB in case any tests want to use it
@@ -101,7 +103,6 @@ func ConnectToTestDB(dbSchema string) {
 		Debug().
 		Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS %s`, dbSchema)).
 		Error
-
 	if err != nil {
 		log.Fatalf(`could not create schema "%s": %s`, dbSchema, err)
 	}
@@ -112,7 +113,6 @@ func ConnectToTestDB(dbSchema string) {
 		Debug().
 		Exec(fmt.Sprintf(`SET search_path TO %s`, dbSchema)).
 		Error
-
 	if err != nil {
 		log.Fatalf(`could not set search path to "%s": %s`, dbSchema, err)
 	}
@@ -147,7 +147,6 @@ func DropSchema(dbSchema string) {
 		Debug().
 		Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE", dbSchema)).
 		Error
-
 	if err != nil {
 		log.Fatalf(`Error when dropping the schema "%s": %s`, dbSchema, err)
 	}
@@ -157,8 +156,8 @@ func DropSchema(dbSchema string) {
 func MigrateSchema() {
 	// Perform the migrations and store the error for a proper return.
 	migrateTool := gormigrate.New(DB, gormigrate.DefaultOptions, migrations.MigrationsCollection)
-	err := migrateTool.Migrate()
 
+	err := migrateTool.Migrate()
 	if err != nil {
 		log.Fatalf(`error migrating the schema: %s`, err)
 	}
@@ -185,7 +184,6 @@ func SwitchSchema(schema string) {
 		Debug().
 		Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS %s`, schema)).
 		Error
-
 	if err != nil {
 		log.Fatalf(`could not create schema "%s": %s`, schema, err)
 	}
@@ -196,7 +194,6 @@ func SwitchSchema(schema string) {
 		Debug().
 		Exec(fmt.Sprintf(`SET search_path TO %s`, schema)).
 		Error
-
 	if err != nil {
 		log.Fatalf(`could not switch schema to "%s": %s`, schema, err)
 	}

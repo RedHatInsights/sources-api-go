@@ -38,6 +38,7 @@ func (l FeatureFlagListener) OnWarning(warning error) {
 
 func (l FeatureFlagListener) OnReady() {
 	ready = true
+
 	logging.Log.Info("connection to unleash instance is ready")
 }
 

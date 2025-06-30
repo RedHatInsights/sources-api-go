@@ -54,7 +54,6 @@ func (st *sourceTypeDaoImpl) GetById(id *int64) (*m.SourceType, error) {
 		Where("id = ?", *id).
 		First(&sourceType).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("source type")
 	}
@@ -71,11 +70,13 @@ func (st *sourceTypeDaoImpl) GetByName(name string) (*m.SourceType, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	if result.RowsAffected > int64(1) {
 		return nil, util.NewErrBadRequest("Found more than one of the same source type name")
 	} else if result.RowsAffected == int64(0) {
 		return nil, util.NewErrNotFound("source type")
 	}
+
 	return &sourceTypes[0], nil
 }
 

@@ -23,6 +23,7 @@ func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) 
 	}
 
 	headers = append(headers, kafka.Header{Key: "event_type", Value: []byte(eventType)})
+
 	err = Producer().RaiseEvent(eventType, msg, headers)
 	if err != nil {
 		return fmt.Errorf("failed to raise event to kafka: %v", err)
@@ -37,10 +38,14 @@ func RaiseEvent(eventType string, resource model.Event, headers []kafka.Header) 
 //  3. x-rh-sources-org-id -- always passed if present, and used for generation.
 func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 	headers := make([]kafka.Header, 0)
-	var account, orgId, xrhid string
-	var ok bool
+
+	var (
+		account, orgId, xrhid string
+		ok                    bool
+	)
 
 	// pulling the specified account if it exists
+
 	if c.Get(h.AccountNumber) != nil {
 		account, ok = c.Get(h.AccountNumber).(string)
 		if !ok {
@@ -73,6 +78,7 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 			if account == "" {
 				account = id.Identity.AccountNumber
 			}
+
 			if orgId == "" {
 				orgId = id.Identity.OrgID
 			}
@@ -85,6 +91,7 @@ func ForwadableHeaders(c echo.Context) ([]kafka.Header, error) {
 	if account != "" {
 		headers = append(headers, kafka.Header{Key: h.AccountNumber, Value: []byte(account)})
 	}
+
 	if orgId != "" {
 		headers = append(headers, kafka.Header{Key: h.OrgID, Value: []byte(orgId)})
 	}

@@ -50,6 +50,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		if err != nil {
 			return err
 		}
+
 		err = tx.Omit(clause.Associations).Create(&output.Sources[0]).Error
 		if err != nil {
 			return err
@@ -59,6 +60,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		if err != nil {
 			return err
 		}
+
 		err = tx.Omit(clause.Associations).Create(&output.Applications).Error
 		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
 			return err
@@ -68,6 +70,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		if err != nil {
 			return err
 		}
+
 		err = tx.Create(&output.Endpoints).Error
 		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
 			return err
@@ -135,8 +138,11 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 
 	for i, source := range reqSources {
 		s := m.Source{}
-		var sourceType *m.SourceType
-		var err error
+
+		var (
+			sourceType *m.SourceType
+			err        error
+		)
 
 		switch {
 		case source.SourceTypeIDRaw != nil:
@@ -303,6 +309,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		if err != nil {
 			return nil, err
 		}
+
 		err = a.SetExtra(auth.Extra)
 		if err != nil {
 			return nil, err
@@ -317,6 +324,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		id, err := strconv.ParseInt(auth.ResourceName, 10, 64)
 		if err == nil {
 			var err error
+
 			switch strings.ToLower(auth.ResourceType) {
 			case "source":
 				_, err = dao.GetSourceDao(&dao.RequestParams{TenantID: &tenant.Id, UserID: &userResource.User.Id}).GetById(&id)
@@ -324,6 +332,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					l.Log.Debugf("Found existing Source with id %v, adding to list and continuing", id)
 					a.ResourceID = id
 					authentications = append(authentications, a)
+
 					continue
 				}
 			case "application":
@@ -332,6 +341,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					l.Log.Debugf("Found existing Application with id %v, adding to list and continuing", id)
 					a.ResourceID = id
 					authentications = append(authentications, a)
+
 					continue
 				}
 			case "endpoint":
@@ -340,6 +350,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					l.Log.Debugf("Found existing Endpoint with id %v, adding to list and continuing", id)
 					a.ResourceID = id
 					authentications = append(authentications, a)
+
 					continue
 				}
 			}
@@ -386,7 +397,8 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		auth.ResourceIDRaw = a.ResourceID
 		auth.ResourceType = a.ResourceType
 
-		if err := ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest); err != nil {
+		err = ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest)
+		if err != nil {
 			return nil, fmt.Errorf("validation failed for authentication: %w", err)
 		}
 
@@ -439,6 +451,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 	go func() {
 		for i := range out.Sources {
 			src := out.Sources[i]
+
 			err := RaiseEvent("Source.create", &src, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)
@@ -447,6 +460,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 
 		for i := range out.Endpoints {
 			endpt := out.Endpoints[i]
+
 			err := RaiseEvent("Endpoint.create", &endpt, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)
@@ -471,6 +485,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 
 		for i := range out.ApplicationAuthentications {
 			appAuth := out.ApplicationAuthentications[i]
+
 			err := RaiseEvent("ApplicationAuthentication.create", &appAuth, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)
@@ -479,6 +494,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 
 		for i := range out.Authentications {
 			auth := out.Authentications[i]
+
 			err := RaiseEvent("Authentication.create", &auth, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)

@@ -13,6 +13,7 @@ func SliceContainsString(slice []string, target string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 

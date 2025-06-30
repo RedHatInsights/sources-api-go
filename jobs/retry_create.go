@@ -48,6 +48,7 @@ func (r *RetryCreateJob) Run() error {
 		// AND
 		// retry counter less than configured amount
 		apps := make([]m.Application, 0)
+
 		result = tx.Debug().
 			Select("id", "tenant_id", "application_type_id").
 			Model(&m.Application{}).
@@ -59,6 +60,7 @@ func (r *RetryCreateJob) Run() error {
 			l.Log.Errorf("Error listing applications that meet retry criteria")
 			return result.Error
 		}
+
 		if result.RowsAffected == 0 {
 			l.Log.Info("No retryable applications found - returning.")
 			return nil
@@ -92,6 +94,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		l.Log.Warnf("Failed to check if application type %v is opted in for retrying", applicationTypeId)
 		return
 	}
+
 	if !optedIn {
 		l.Log.Debugf("Application %v not opted into retrying, returning.", applicationId)
 		return
@@ -118,16 +121,19 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 	if err != nil {
 		l.Log.Warnf("Failed to raise Source.create event for source %v: %v", app.SourceID, err)
 	}
+
 	err = service.RaiseEvent("Application.create", app, headers)
 	if err != nil {
 		l.Log.Warnf("Failed to raise Application.create event for application %v: %v", app.ID, err)
 	}
+
 	for i := range authentications {
 		err = service.RaiseEvent("Authentication.create", &authentications[i], headers)
 		if err != nil {
 			l.Log.Warnf("Failed to raise Authentication.create event for authentication %v: %v", authentications[i].ID, err)
 		}
 	}
+
 	for i := range app.ApplicationAuthentications {
 		err = service.RaiseEvent("ApplicationAuthentication.create", &app.ApplicationAuthentications[i], headers)
 		if err != nil {

@@ -14,8 +14,10 @@ import (
 )
 
 func getFilters(c echo.Context) ([]util.Filter, error) {
-	var filters []util.Filter
-	var ok bool
+	var (
+		filters []util.Filter
+		ok      bool
+	)
 
 	filterVal := c.Get("filters")
 	if filters, ok = filterVal.([]util.Filter); !ok {
@@ -26,8 +28,10 @@ func getFilters(c echo.Context) ([]util.Filter, error) {
 }
 
 func getLimitAndOffset(c echo.Context) (int, int, error) {
-	var limit, offset int
-	var ok bool
+	var (
+		limit, offset int
+		ok            bool
+	)
 
 	limitVal := c.Get("limit")
 	if limit, ok = limitVal.(int); !ok {
@@ -64,6 +68,7 @@ func setEventStreamResource(c echo.Context, model m.Event) {
 
 	// get the event type that just happened based on the http request
 	event := ""
+
 	switch c.Request().Method {
 	case http.MethodPost:
 		event = ".create"

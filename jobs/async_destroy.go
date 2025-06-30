@@ -58,5 +58,6 @@ func (ad AsyncDestroyJob) ToJSON() []byte {
 	if err != nil {
 		panic(err)
 	}
+
 	return bytes
 }

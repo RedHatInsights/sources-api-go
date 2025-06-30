@@ -105,6 +105,7 @@ func TestAuthEditInvalidAvailabilityStatuses(t *testing.T) {
 	}
 
 	want := `availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
+
 	for _, tv := range testValues {
 		editRequest := model.AuthenticationEditRequest{
 			AvailabilityStatus: tv,
@@ -134,7 +135,6 @@ func TestAuthEditValidAvailabilityStatuses(t *testing.T) {
 		}
 
 		err := ValidateAuthenticationEditRequest(&editRequest)
-
 		if err != nil {
 			t.Errorf(`unexpected error when validating a valid availability status "%s" for an application edit: %s`, *tv, err)
 		}
@@ -148,11 +148,11 @@ func TestValidateAuthenticationCreateRequest_invalidUUID(t *testing.T) {
 		AuthType: "lighthouse_subscription_id",
 		Username: &invalidUsername,
 	}
+
 	err := ValidateAzureSubscriptionId(auth)
 	if err == nil {
 		t.Errorf("expected error for invalid UUID, but got nil")
 	}
-
 }
 
 // TestValidateAuthenticationCreateRequest_ValidUUID tests that an valid UUID should pass
@@ -162,9 +162,9 @@ func TestValidateAuthenticationCreateRequest_ValidUUID(t *testing.T) {
 		AuthType: "lighthouse_subscription_id",
 		Username: &validUsername,
 	}
+
 	err := ValidateAzureSubscriptionId(auth)
 	if err != nil {
 		t.Errorf("Expected no error for valid UUID, but got %s", err)
 	}
-
 }

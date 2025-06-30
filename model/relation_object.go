@@ -41,6 +41,7 @@ func (relationObject *RelationObject) tagsFromRelationDefinedAs(model interface{
 	statement := reflect.TypeOf(relationObject.baseObject)
 	field, _ := statement.FieldByName(relationName)
 	tag := field.Tag.Get("gorm")
+
 	return schema.ParseTagSetting(tag, ";")
 }
 
@@ -56,6 +57,7 @@ func (relationObject *RelationObject) HasMany(model interface{}, query *gorm.DB)
 
 func (relationObject *RelationObject) SelectStatementFor(query *gorm.DB, model interface{}) string {
 	statement := &gorm.Statement{DB: query}
+
 	err := statement.Parse(model)
 	if err != nil {
 		fmt.Println(fmt.Errorf("failed to parse statement: %v", err))
@@ -75,6 +77,7 @@ func (relationObject *RelationObject) HasManyThrough(query *gorm.DB, model inter
 
 	subCollectionModel := strcase.ToSnake(reflect.TypeOf(model).Elem().Name())
 	query.Model(model)
+
 	expression := []clause.Expression{clause.Eq{
 		Column: clause.Column{Table: clause.CurrentTable, Name: "id"},
 		Value:  clause.Column{Table: throughTable, Name: subCollectionModel + "_id"},
@@ -142,6 +145,7 @@ func (relationObject *RelationObject) checkIfPrimaryRecordExists(query *gorm.DB)
 
 func NewRelationObject(objectModel interface{}, currentTenantID int64, query *gorm.DB) (RelationObject, error) {
 	object := RelationObject{baseObject: objectModel, CurrentTenantID: currentTenantID}
+
 	err := object.setRelationObjectID()
 	if err != nil {
 		return object, err

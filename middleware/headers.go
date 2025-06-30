@@ -55,6 +55,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 		// received, generate an identity struct from the given "OrgId" and "EBS account number". If the "x-rh-identity"
 		// header is present, simply decode it and use the decided identity.
 		var id *identity.XRHID
+
 		xRhIdentityRaw := c.Request().Header.Get(h.XRHID)
 		if xRhIdentityRaw == "" {
 			generatedIdentity := util.GeneratedXRhIdentity(c.Request().Header.Get(h.AccountNumber), c.Request().Header.Get(h.OrgID))

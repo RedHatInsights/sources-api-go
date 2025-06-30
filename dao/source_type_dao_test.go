@@ -30,6 +30,7 @@ func TestSourceTypeListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(sourceTypes)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -38,19 +39,23 @@ func TestSourceTypeListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
 func TestSourceTypeGetByName(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("source_type_by_name")
+
 	wantSourceType := fixtures.TestSourceTypeData[1]
 
 	sourceTypeDao := GetSourceTypeDao()
+
 	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name)
 	if err != nil {
 		t.Error(err)
@@ -66,9 +71,11 @@ func TestSourceTypeGetByName(t *testing.T) {
 func TestSourceTypeGetByNameNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("source_type_by_name")
+
 	wantSourceType := m.SourceType{Name: "not existing name"}
 
 	sourceTypeDao := GetSourceTypeDao()
+
 	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name)
 	if gotSourceType != nil {
 		t.Error("got source type object, want nil")
@@ -84,9 +91,11 @@ func TestSourceTypeGetByNameNotFound(t *testing.T) {
 func TestSourceTypeGetByNameBadRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("source_type_by_name")
+
 	wantSourceType := m.SourceType{Name: "amazon"}
 
 	sourceTypeDao := GetSourceTypeDao()
+
 	gotSourceType, err := sourceTypeDao.GetByName(wantSourceType.Name)
 	if gotSourceType != nil {
 		t.Error("got source type object, want nil")

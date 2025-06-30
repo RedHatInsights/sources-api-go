@@ -60,6 +60,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 		xRhIdHeader := headers[1]
 		{
 			want := h.XRHID
+
 			got := xRhIdHeader.Key
 			if want != got {
 				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
@@ -128,6 +129,7 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 		xRhIdHeader := headers[1]
 		{
 			want := h.XRHID
+
 			got := xRhIdHeader.Key
 			if want != got {
 				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
@@ -334,5 +336,4 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 			}
 		}
 	}
-
 }

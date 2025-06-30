@@ -23,13 +23,13 @@ func TestFindOrCreateUser(t *testing.T) {
 	}
 
 	var expectedUser model.User
+
 	err = DB.
 		Debug().
 		Model(&model.User{}).
 		Where("id = ? AND tenant_id = ?", user.Id, user.TenantID).
 		First(&expectedUser).
 		Error
-
 	if err != nil {
 		t.Errorf(`error fetching the tenant. Want nil error, got "%s"`, err)
 	}

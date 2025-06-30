@@ -83,6 +83,7 @@ func (s *sourceDaoImpl) SubCollectionList(primaryCollection interface{}, limit, 
 	if err != nil {
 		return nil, 0, err
 	}
+
 	query := relationObject.HasMany(&m.Source{}, DB.Debug())
 
 	query = s.getDbWithTable(query, "sources")
@@ -202,7 +203,6 @@ func (s *sourceDaoImpl) GetById(id *int64) (*m.Source, error) {
 		Where("id = ?", *id).
 		First(&src).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("source")
 	}
@@ -220,10 +220,10 @@ func (s *sourceDaoImpl) GetByIdWithPreload(id *int64, preloads ...string) (*m.So
 	}
 
 	var src m.Source
+
 	err := q.
 		First(&src).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("source")
 	}
@@ -303,6 +303,7 @@ func (s *sourceDaoImpl) NameExistsInCurrentTenant(name string) bool {
 
 func (s *sourceDaoImpl) IsSuperkey(id int64) bool {
 	var valid bool
+
 	result := s.getDbWithModel().
 		Select("app_creation_workflow = ?", m.AccountAuth).
 		Where("id = ?", id).
@@ -323,7 +324,6 @@ func (s *sourceDaoImpl) BulkMessage(resource util.Resource) (map[string]interfac
 		Where("id = ?", resource.ResourceID).
 		Find(&src).
 		Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +413,6 @@ func (s *sourceDaoImpl) Pause(id int64) error {
 			Where("tenant_id = ?", s.TenantID).
 			Update("paused_at", time.Now()).
 			Error
-
 		if err != nil {
 			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to pause source: %s`, err)
 
@@ -426,7 +425,6 @@ func (s *sourceDaoImpl) Pause(id int64) error {
 			Where("tenant_id = ?", s.TenantID).
 			Update("paused_at", time.Now()).
 			Error
-
 		if err != nil {
 			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to pause source's applications': %s`, err)
 
@@ -448,7 +446,6 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 			Where("tenant_id = ?", s.TenantID).
 			Update("paused_at", nil).
 			Error
-
 		if err != nil {
 			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to resume source: %s`, err)
 
@@ -461,7 +458,6 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 			Where("tenant_id = ?", s.TenantID).
 			Update("paused_at", nil).
 			Error
-
 		if err != nil {
 			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": id}).Errorf(`Unable to resume source's applications': %s`, err)
 
@@ -477,11 +473,13 @@ func (s *sourceDaoImpl) Unpause(id int64) error {
 }
 
 func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error) {
-	var applicationAuthentications []m.ApplicationAuthentication
-	var applications []m.Application
-	var endpoints []m.Endpoint
-	var rhcConnections []m.RhcConnection
-	var source *m.Source
+	var (
+		applicationAuthentications []m.ApplicationAuthentication
+		applications               []m.Application
+		endpoints                  []m.Endpoint
+		rhcConnections             []m.RhcConnection
+		source                     *m.Source
+	)
 
 	// The different items are fetched with the "Tenant" table preloaded, so that all the objects are returned with the
 	// "external_tenant" column populated. This is required to be able to raise events with the "tenant" key populated.
@@ -501,7 +499,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				Where(`"applications"."tenant_id" = ?`, s.TenantID).
 				Find(&applicationAuthentications).
 				Error
-
 			if err != nil {
 				return err
 			}
@@ -510,7 +507,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				err = tx.
 					Delete(&applicationAuthentications).
 					Error
-
 				if err != nil {
 					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete application authentications: %s", err)
 
@@ -526,7 +522,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				Where("tenant_id = ?", s.TenantID).
 				Find(&applications).
 				Error
-
 			if err != nil {
 				return err
 			}
@@ -535,7 +530,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				err = tx.
 					Delete(&applications).
 					Error
-
 				if err != nil {
 					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete applications: %s", err)
 
@@ -551,7 +545,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				Where("tenant_id = ?", s.TenantID).
 				Find(&endpoints).
 				Error
-
 			if err != nil {
 				return err
 			}
@@ -560,7 +553,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				err = tx.
 					Delete(&endpoints).
 					Error
-
 				if err != nil {
 					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete endpoints: %s", err)
 
@@ -576,7 +568,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				Where(`"source_rhc_connections"."tenant_id" = ?`, s.TenantID).
 				Find(&rhcConnections).
 				Error
-
 			if err != nil {
 				return err
 			}
@@ -585,7 +576,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				err = tx.
 					Delete(&rhcConnections).
 					Error
-
 				if err != nil {
 					logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": sourceId}).Errorf("Unable to cascade delete source: unable to delete RHC connections: %s", err)
 
@@ -600,7 +590,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				Where("tenant_id = ?", s.TenantID).
 				Find(&source).
 				Error
-
 			if err != nil {
 				return err
 			}
@@ -619,7 +608,6 @@ func (s *sourceDaoImpl) DeleteCascade(sourceId int64) ([]m.ApplicationAuthentica
 				return nil
 			}
 		})
-
 	if err != nil {
 		return nil, nil, nil, nil, nil, err
 	}
@@ -654,7 +642,6 @@ func (s *sourceDaoImpl) Exists(sourceId int64) (bool, error) {
 		Where("id = ?", sourceId).
 		Scan(&sourceExists).
 		Error
-
 	if err != nil {
 		return false, err
 	}

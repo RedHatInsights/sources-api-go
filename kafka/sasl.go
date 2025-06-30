@@ -84,6 +84,7 @@ func CreateTLSConfig(caContents *string) *tls.Config {
 	}
 
 	TlsConfig = tlsConfig
+
 	return TlsConfig
 }
 
@@ -111,6 +112,7 @@ func CreateSaslMechanism(saslConfig *clowder.KafkaSASLConfig) (sasl.Mechanism, e
 	}
 
 	var algorithm scram.Algorithm
+
 	switch strings.ToLower(*saslConfig.SaslMechanism) {
 	case saslPlain:
 		return plain.Mechanism{Username: *saslConfig.Username, Password: *saslConfig.Password}, nil
@@ -128,6 +130,7 @@ func CreateSaslMechanism(saslConfig *clowder.KafkaSASLConfig) (sasl.Mechanism, e
 	}
 
 	SaslMechanism = mechanism
+
 	return SaslMechanism, nil
 }
 
@@ -138,5 +141,6 @@ func CreateTransport(sasl sasl.Mechanism, tls *tls.Config) *kafka.Transport {
 	}
 
 	Transport = &kafka.Transport{SASL: sasl, TLS: tls}
+
 	return Transport
 }

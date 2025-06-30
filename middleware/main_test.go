@@ -25,6 +25,7 @@ func TestMain(t *testing.M) {
 	xrhid = string(base64.StdEncoding.EncodeToString(rawId))
 
 	logger.InitLogger(conf)
+
 	e = echo.New()
 	code := t.Run()
 	os.Exit(code)

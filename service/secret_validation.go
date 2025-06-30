@@ -17,5 +17,6 @@ func ValidateSecretCreationRequest(requestParams *dao.RequestParams, auth model.
 			return fmt.Errorf("secret name %s exists in current tenant", *auth.Name)
 		}
 	}
+
 	return nil
 }

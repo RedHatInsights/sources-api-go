@@ -30,13 +30,13 @@ func TestGetOrCreateTenantIDEbsNumberCreate(t *testing.T) {
 	}
 
 	var tenant model.Tenant
+
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
 		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
-
 	if err != nil {
 		t.Errorf(`error fetching the tenant. Want nil error, got "%s"`, err)
 	}
@@ -69,13 +69,13 @@ func TestGetOrCreateTenantIDEbsNumberFind(t *testing.T) {
 	}
 
 	var tenant model.Tenant
+
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
 		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
-
 	if err != nil {
 		t.Errorf(`error fetching the tenant. Want nil error, got "%s"`, err)
 	}
@@ -108,13 +108,13 @@ func TestGetOrCreateTenantIDOrgIdCreate(t *testing.T) {
 	}
 
 	var tenant model.Tenant
+
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
 		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
-
 	if err != nil {
 		t.Errorf(`error fetching the tenant. Want nil error, got "%s"`, err)
 	}
@@ -146,13 +146,13 @@ func TestGetOrCreateTenantIDOrgIdFind(t *testing.T) {
 	}
 
 	var tenant model.Tenant
+
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
 		Where(`id = ?`, dbTenant.Id).
 		First(&tenant).
 		Error
-
 	if err != nil {
 		t.Errorf(`error fetching the tenant. Want nil error, got "%s"`, err)
 	}
@@ -222,7 +222,6 @@ func TestTenantByIdentityNotFound(t *testing.T) {
 	_, err := tenantDao.TenantByIdentity(&identity.Identity{
 		AccountNumber: "invalid",
 	})
-
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`unexpected error recevied. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
@@ -231,7 +230,6 @@ func TestTenantByIdentityNotFound(t *testing.T) {
 	_, err = tenantDao.TenantByIdentity(&identity.Identity{
 		OrgID: "invalid",
 	})
-
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`unexpected error recevied. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
@@ -258,13 +256,13 @@ func TestCreateTenantNullEbsOrgId(t *testing.T) {
 	// Fetch the created tenant. We need to use a "map[string]interface{}" because the tenant model doesn't use a
 	// pointer value, and therefore the "NULL" value from the database would get mapped as an empty string.
 	var createdTenant map[string]interface{}
+
 	err = DB.
 		Debug().
 		Model(&model.Tenant{}).
 		Where("id = ?", tenant.Id).
 		Find(&createdTenant).
 		Error
-
 	if err != nil {
 		t.Errorf(`error when trying to find the created tenant: %s`, err)
 	}

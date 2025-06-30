@@ -26,6 +26,7 @@ func InitializeEncryption() {
 	key = os.Getenv("ENCRYPTION_KEY")
 	if key == "" {
 		var err error
+
 		key, err = setDefaultEncryptionKey()
 		if err != nil {
 			panic(err)
@@ -36,6 +37,7 @@ func InitializeEncryption() {
 	if err != nil {
 		panic(err)
 	}
+
 	key = string(decoded)
 	keyPresent = true
 }
@@ -47,7 +49,9 @@ func setDefaultEncryptionKey() (string, error) {
 		if !ok {
 			return "", fmt.Errorf("not possible to recover the information")
 		}
+
 		filepath := path.Join(path.Dir(filename), "encryption_key.dev")
+
 		_, err := os.Stat(filepath)
 		if os.IsNotExist(err) {
 			panic("encryption_key.dev file does not exist. Please import encryption_key.dev file and create symlink encryption_key.dev to encryption_key using [ln -s FILE LINK].")
@@ -56,14 +60,18 @@ func setDefaultEncryptionKey() (string, error) {
 			if bodyErr != nil {
 				return "", fmt.Errorf("unable to read file: %v", err)
 			}
+
 			key = string(body)
+
 			keyErr := os.Setenv("ENCRYPTION_KEY", string(body))
 			if keyErr != nil {
 				return "", fmt.Errorf("error in setting variable in environment: %v", keyErr)
 			}
+
 			return key, nil
 		}
 	}
+
 	panic("Unable to set up default encryption key")
 }
 
@@ -160,6 +168,7 @@ func padString(text string, blockSize int) string {
 
 	padLength := blockSize - len(text)%blockSize
 	padding := bytes.Repeat([]byte{byte(0)}, padLength)
+
 	return text + string(padding)
 }
 

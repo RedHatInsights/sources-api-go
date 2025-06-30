@@ -63,7 +63,6 @@ func TestParseXRHIDHeader(t *testing.T) {
 			t.Errorf(`invalid account number returned. Want "%s", got "%s"`, want, got)
 		}
 	}
-
 }
 
 // TestParseXRHIDHeaderInvalidBase64String tests that an error is returned when the given string is not properly base64
@@ -114,6 +113,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 
 	{
 		want := accountNumber
+
 		got := id.AccountNumber
 		if want != got {
 			t.Errorf(`invalid account number extracted from identity. Want "%s", got "%s"`, want, got)
@@ -122,6 +122,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 
 	{
 		want := orgId
+
 		got := id.OrgID
 		if want != got {
 			t.Errorf(`invalid orgId extracted from identity. Want "%s", got "%s"`, want, got)
@@ -147,6 +148,7 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 
 	{
 		want := accountNumber
+
 		got := id.AccountNumber
 		if want != got {
 			t.Errorf(`invalid account number extracted from identity. Want "%s", got "%s"`, want, got)
@@ -155,10 +157,10 @@ func TestIdentityFromKafkaHeaders(t *testing.T) {
 
 	{
 		want := orgId
+
 		got := id.OrgID
 		if want != got {
 			t.Errorf(`invalid org id extracted from identity. Want "%s", got "%s"`, want, got)
 		}
 	}
-
 }

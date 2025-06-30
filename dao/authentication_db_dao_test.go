@@ -98,6 +98,7 @@ func TestAuthenticationDbList(t *testing.T) {
 
 	// We should have the authentication from the fixtures plus the one we just created.
 	want := len(fixtures.TestAuthenticationData) + 1
+
 	got := int(count)
 	if want != got {
 		t.Errorf(`incorrect number of authentications fetched. Want "%d", got "%d"`, want, got)
@@ -105,6 +106,7 @@ func TestAuthenticationDbList(t *testing.T) {
 
 	// Check that we can find the inserted fixture in the list.
 	var foundInsertedFixture bool
+
 	for _, auth := range authentications {
 		if auth.AuthType == TestAuthType {
 			foundInsertedFixture = true
@@ -142,6 +144,7 @@ func TestAuthenticationDbGetById(t *testing.T) {
 	}
 
 	want := TestAuthType
+
 	got := dbAuth.AuthType
 	if want != got {
 		t.Errorf(`wrong authentication fetched. Want "%s" authtype, got "%s"`, want, got)
@@ -184,6 +187,7 @@ func TestAuthenticationDbUpdate(t *testing.T) {
 	}
 
 	want := updatedAuthType
+
 	got := updatedAuthentication.AuthType
 	if want != got {
 		t.Errorf(`deleted the wrong authentication. Want authtype "%s", got "%s"`, want, got)
@@ -217,6 +221,7 @@ func TestAuthenticationDbDelete(t *testing.T) {
 
 	{
 		want := TestAuthType
+
 		got := deletedAuth.AuthType
 		if want != got {
 			t.Errorf(`deleted the wrong authentication. Want authtype "%s", got "%s"`, want, got)
@@ -239,6 +244,7 @@ func TestAuthenticationDbDeleteNotFound(t *testing.T) {
 	SwitchSchema("authentications_db")
 
 	dao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	_, err := dao.Delete("12345")
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
@@ -284,8 +290,12 @@ func TestListForSource(t *testing.T) {
 
 	// Create three new authentications for the new source.
 	dao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
-	var i int
-	var maxAuths = 3
+
+	var (
+		i        int
+		maxAuths = 3
+	)
+
 	for i < maxAuths {
 		auth := &model.Authentication{
 			AuthType:     TestAuthType,
@@ -296,7 +306,8 @@ func TestListForSource(t *testing.T) {
 		}
 
 		// Using bulk create so we don't check to see if the resource is there first
-		if err = dao.BulkCreate(auth); err != nil {
+		err = dao.BulkCreate(auth)
+		if err != nil {
 			t.Errorf(`error creating authentication: %s`, err)
 		}
 
@@ -310,6 +321,7 @@ func TestListForSource(t *testing.T) {
 	}
 
 	want := maxAuths
+
 	got := int(count)
 	if want != got {
 		t.Errorf(`incorrect amount of authentications fetched. Want "%d", got "%d"`, want, got)
@@ -335,7 +347,6 @@ func TestListForSourceNotFound(t *testing.T) {
 
 	// Call the function under test.
 	_, _, err := dao.ListForSource(12345, 100, 0, []util.Filter{})
-
 	if err == nil {
 		t.Errorf(`want error, got nil`)
 	}
@@ -384,8 +395,12 @@ func TestListForApplication(t *testing.T) {
 
 	// Create three new authentications for the new application.
 	dao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
-	var i int
-	var maxAuths = 3
+
+	var (
+		i        int
+		maxAuths = 3
+	)
+
 	for i < maxAuths {
 		auth := &model.Authentication{
 			AuthType:     TestAuthType,
@@ -395,7 +410,8 @@ func TestListForApplication(t *testing.T) {
 		}
 
 		// Using bulk create so we don't check to see if the resource is there first
-		if err = dao.BulkCreate(auth); err != nil {
+		err = dao.BulkCreate(auth)
+		if err != nil {
 			t.Errorf(`error creating authentication: %s`, err)
 		}
 
@@ -409,6 +425,7 @@ func TestListForApplication(t *testing.T) {
 	}
 
 	want := maxAuths
+
 	got := int(count)
 	if want != got {
 		t.Errorf(`incorrect amount of authentications fetched. Want "%d", got "%d"`, want, got)
@@ -434,7 +451,6 @@ func TestListForApplicationNotFound(t *testing.T) {
 
 	// Call the function under test.
 	_, _, err := dao.ListForApplication(12345, 100, 0, []util.Filter{})
-
 	if err == nil {
 		t.Errorf(`want error, got nil`)
 	}
@@ -492,7 +508,8 @@ func TestListForApplicationAuthentication(t *testing.T) {
 	}
 
 	// Using bulk create so we don't check to see if the resource is there first
-	if err = dao.BulkCreate(auth); err != nil {
+	err = dao.BulkCreate(auth)
+	if err != nil {
 		t.Errorf(`error creating authentication: %s`, err)
 	}
 
@@ -516,6 +533,7 @@ func TestListForApplicationAuthentication(t *testing.T) {
 	}
 
 	want := 1
+
 	got := int(count)
 	if want != got {
 		t.Errorf(`incorrect amount of authentications fetched. Want "%d", got "%d"`, want, got)
@@ -541,7 +559,6 @@ func TestListForApplicationAuthenticationNotFound(t *testing.T) {
 
 	// Call the function under test.
 	_, _, err := dao.ListForApplicationAuthentication(12345, 100, 0, []util.Filter{})
-
 	if err == nil {
 		t.Errorf(`want error, got nil`)
 	}
@@ -588,8 +605,12 @@ func TestListForEndpoint(t *testing.T) {
 
 	// Create three new authentications for the new application authentication.
 	dao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[1].Id})
-	var i int
-	var maxAuths = 3
+
+	var (
+		i        int
+		maxAuths = 3
+	)
+
 	for i < maxAuths {
 		auth := &model.Authentication{
 			AuthType:     TestAuthType,
@@ -599,7 +620,8 @@ func TestListForEndpoint(t *testing.T) {
 		}
 
 		// Using bulk create so we don't check to see if the resource is there first
-		if err = dao.BulkCreate(auth); err != nil {
+		err = dao.BulkCreate(auth)
+		if err != nil {
 			t.Errorf(`error creating authentication: %s`, err)
 		}
 
@@ -613,6 +635,7 @@ func TestListForEndpoint(t *testing.T) {
 	}
 
 	want := maxAuths
+
 	got := int(count)
 	if want != got {
 		t.Errorf(`incorrect amount of authentications fetched. Want "%d", got "%d"`, want, got)
@@ -638,7 +661,6 @@ func TestListForEndpointNotFound(t *testing.T) {
 
 	// Call the function under test.
 	_, _, err := dao.ListForEndpoint(12345, 0, 0, []util.Filter{})
-
 	if err == nil {
 		t.Errorf(`want error, got nil`)
 	}
@@ -761,6 +783,7 @@ func TestToEventJSON(t *testing.T) {
 	if err != nil {
 		t.Errorf(`could not fetch the authentication from the database: %s`, err)
 	}
+
 	want, err := json.Marshal(dbAuth.ToEvent())
 	if err != nil {
 		t.Errorf(`error marshalling the authentication fixture to JSON: %s`, err)
@@ -771,6 +794,7 @@ func TestToEventJSON(t *testing.T) {
 		ResourceUID: id,
 		TenantID:    fixtures.TestTenantData[0].Id,
 	}
+
 	got, err := dao.ToEventJSON(resource)
 	if err != nil {
 		t.Errorf(`error on "ToEventJSON": %s`, err)
@@ -797,6 +821,7 @@ func TestBulkMessage(t *testing.T) {
 	authFixture.ResourceType = "Source"
 
 	dao := GetAuthenticationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	err := dao.BulkCreate(authFixture)
 	if err != nil {
 		t.Errorf(`error creating the authentication: %s`, err)
@@ -810,7 +835,9 @@ func TestBulkMessage(t *testing.T) {
 	if err != nil {
 		t.Errorf(`could not fetch the authentication from the database: %s`, err)
 	}
+
 	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
+
 	source, err := sourceDao.GetById(&authFixture.SourceID)
 	if err != nil {
 		t.Errorf(`could not fetch source: %s`, err)
@@ -827,6 +854,7 @@ func TestBulkMessage(t *testing.T) {
 		ResourceUID: id,
 		TenantID:    fixtures.TestTenantData[0].Id,
 	}
+
 	bulkMessageOutput, err := dao.BulkMessage(resource)
 	if err != nil {
 		t.Errorf(`error on "ToEventJSON": %s`, err)
@@ -894,8 +922,11 @@ func TestListIdsForResource(t *testing.T) {
 
 	// Create the authentications.
 	for _, resource := range resources {
-		var createdAuthentications = make([]model.Authentication, 0, maxAuthenticationsPerResource)
-		var resourceIds = make([]int64, 0, maxAuthenticationsPerResource)
+		var (
+			createdAuthentications = make([]model.Authentication, 0, maxAuthenticationsPerResource)
+			resourceIds            = make([]int64, 0, maxAuthenticationsPerResource)
+		)
+
 		for i := 0; i < maxAuthenticationsPerResource; i++ {
 			authFixture := setUpValidAuthentication()
 			authFixture.ResourceID = resource.ValidResourceId
@@ -922,6 +953,7 @@ func TestListIdsForResource(t *testing.T) {
 		// We shouldn't have fetched more authentications than the ones we have inserted.
 		{
 			want := len(createdAuthentications)
+
 			got := len(fetchedAuthentications)
 			if want != got {
 				t.Errorf(`incorrect number of authentications fetched. Want "%d", got "%d"`, want, got)
@@ -1043,6 +1075,7 @@ func TestBulkDelete(t *testing.T) {
 	// Make sure that we haven't deleted more authentications than expected.
 	{
 		want := len(createdAuthentications)
+
 		got := len(deletedAuths)
 		if want != got {
 			t.Errorf(`the deleted authentications don't match the created ones. Want "%d" auths deleted, got "%d"`, want, got)
@@ -1053,6 +1086,7 @@ func TestBulkDelete(t *testing.T) {
 		for i := 0; i < len(createdAuthentications); i++ {
 			{
 				want := createdAuthentications[i].DbID
+
 				got := deletedAuths[i].DbID
 				if want != got {
 					t.Errorf(`wrong authentication deleted. Want ID "%d", got ID "%d"`, want, got)
@@ -1060,6 +1094,7 @@ func TestBulkDelete(t *testing.T) {
 			}
 			{
 				want := *createdAuthentications[i].Username
+
 				got := *deletedAuths[i].Username
 				if want != got {
 					t.Errorf(`wrong authentication deleted. Want username "%s", got username "%s"`, want, got)
@@ -1134,6 +1169,7 @@ func TestBulkDeleteRegression(t *testing.T) {
 	// Make sure that we haven't deleted more authentications than expected.
 	{
 		want := 0
+
 		got := len(deletedAuths)
 		if want != got {
 			t.Errorf(`there shouldn't be any deleted authentications. Want "%d" auths deleted, got "%d"`, want, got)
@@ -1146,6 +1182,7 @@ func TestBulkDeleteRegression(t *testing.T) {
 func TestAuthenticationGetUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -1155,6 +1192,7 @@ func TestAuthenticationGetUserOwnership(t *testing.T) {
 		*/
 		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
 		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+
 		authenticationUserA, err := authenticationDaoUserA.GetById(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the authenticationD: %s`, err)
@@ -1168,6 +1206,7 @@ func TestAuthenticationGetUserOwnership(t *testing.T) {
 		  Test 2 - UserA tries to GET authentication without user - expected result: success
 		*/
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationNoUser().DbID)
+
 		authenticationNoUser, err := authenticationDaoUserA.GetById(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the authentication: %s`, err)
@@ -1184,6 +1223,7 @@ func TestAuthenticationGetUserOwnership(t *testing.T) {
 		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
 
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+
 		_, err = authenticationDaoWithUser.GetById(authId)
 		if err == nil {
 			t.Errorf(`unexpected error after calling GetById for the authentication: %v`, suiteData.AuthenticationNoUser().DbID)
@@ -1195,7 +1235,6 @@ func TestAuthenticationGetUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -1206,6 +1245,7 @@ func TestAuthenticationGetUserOwnership(t *testing.T) {
 func TestAuthenticationEditUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -1216,12 +1256,14 @@ func TestAuthenticationEditUserOwnership(t *testing.T) {
 		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
 		newName := "new error"
 		newAuthenticationUserA := &model.Authentication{DbID: suiteData.AuthenticationUserA().DbID, Name: &newName}
+
 		err := authenticationDaoUserA.Update(newAuthenticationUserA)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
 		}
 
 		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+
 		updatedAuthentication, err := authenticationDaoUserA.GetById(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById: %v`, err)
@@ -1235,12 +1277,14 @@ func TestAuthenticationEditUserOwnership(t *testing.T) {
 		  Test 2 - UserA tries to update authentication without user - expected result: success
 		*/
 		newAuthenticationNoUser := &model.Authentication{DbID: suiteData.AuthenticationNoUser().DbID, Name: &newName}
+
 		err = authenticationDaoUserA.Update(newAuthenticationNoUser)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
 		}
 
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+
 		updatedAuthentication, err = authenticationDaoUserA.GetById(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById: %v`, err)
@@ -1258,6 +1302,7 @@ func TestAuthenticationEditUserOwnership(t *testing.T) {
 
 		newName = "new error"
 		newAuthenticationUserB := &model.Authentication{DbID: suiteData.AuthenticationUserB().DbID, Name: &newName}
+
 		err = authenticationDaoWithUser.Update(newAuthenticationUserB)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
@@ -1265,6 +1310,7 @@ func TestAuthenticationEditUserOwnership(t *testing.T) {
 
 		authenticationDaoUserB := GetAuthenticationDao(suiteData.GetRequestParamsUserB())
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+
 		updatedAuthentication, err = authenticationDaoUserB.GetById(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById: %v`, err)
@@ -1276,7 +1322,6 @@ func TestAuthenticationEditUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -1287,6 +1332,7 @@ func TestAuthenticationEditUserOwnership(t *testing.T) {
 func TestAuthenticationDeleteUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -1296,12 +1342,14 @@ func TestAuthenticationDeleteUserOwnership(t *testing.T) {
 		*/
 		authenticationDaoUserA := GetAuthenticationDao(suiteData.GetRequestParamsUserA())
 		authId, _ := util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+
 		_, err := authenticationDaoUserA.Delete(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Delete: %v`, err)
 		}
 
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserA().DbID)
+
 		_, err = authenticationDaoUserA.GetById(authId)
 		if err.Error() != "authentication not found" {
 			t.Errorf(`expected 'authentication not found', got %s`, err)
@@ -1311,12 +1359,14 @@ func TestAuthenticationDeleteUserOwnership(t *testing.T) {
 		  Test 2 - UserA tries to delete application without user - expected result: success
 		*/
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationNoUser().DbID)
+
 		_, err = authenticationDaoUserA.Delete(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Delete: %v`, err)
 		}
 
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationNoUser().DbID)
+
 		_, err = authenticationDaoUserA.GetById(authId)
 		if err.Error() != "authentication not found" {
 			t.Errorf(`expected 'authentication not found', got %s`, err)
@@ -1329,6 +1379,7 @@ func TestAuthenticationDeleteUserOwnership(t *testing.T) {
 		authenticationDaoWithUser := GetAuthenticationDao(requestParams)
 
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+
 		_, err = authenticationDaoWithUser.Delete(authId)
 		if err.Error() != "authentication not found" {
 			t.Errorf(`expected 'authentication not found', got %s`, err)
@@ -1336,6 +1387,7 @@ func TestAuthenticationDeleteUserOwnership(t *testing.T) {
 
 		authenticationDaoUserB := GetAuthenticationDao(suiteData.GetRequestParamsUserB())
 		authId, _ = util.InterfaceToString(suiteData.AuthenticationUserB().DbID)
+
 		_, err = authenticationDaoUserB.GetById(authId)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById: %v`, err)
@@ -1343,7 +1395,6 @@ func TestAuthenticationDeleteUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}

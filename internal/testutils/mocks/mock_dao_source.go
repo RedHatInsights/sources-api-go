@@ -20,6 +20,7 @@ func (mockSourceDao *MockSourceDao) SubCollectionList(primaryCollection interfac
 	switch object := primaryCollection.(type) {
 	case m.SourceType:
 		var sourceTypeExists bool
+
 		for _, sourceType := range fixtures.TestSourceTypeData {
 			if sourceType.Id == object.Id {
 				sourceTypeExists = true
@@ -40,6 +41,7 @@ func (mockSourceDao *MockSourceDao) SubCollectionList(primaryCollection interfac
 
 	case m.ApplicationType:
 		var appTypeExists bool
+
 		for _, appType := range fixtures.TestApplicationTypeData {
 			if appType.Id == object.Id {
 				appTypeExists = true
@@ -59,6 +61,7 @@ func (mockSourceDao *MockSourceDao) SubCollectionList(primaryCollection interfac
 	}
 
 	count := int64(len(sources))
+
 	return sources, count, nil
 }
 
@@ -99,6 +102,7 @@ func (mockSourceDao *MockSourceDao) Delete(id *int64) (*m.Source, error) {
 			return &source, nil
 		}
 	}
+
 	return nil, util.NewErrNotFound("source")
 }
 
@@ -150,6 +154,7 @@ func (mockSourceDao *MockSourceDao) ListForRhcConnection(_ *int64, _, _ int, _ [
 
 func (mockSourceDao *MockSourceDao) DeleteCascade(id int64) ([]m.ApplicationAuthentication, []m.Application, []m.Endpoint, []m.RhcConnection, *m.Source, error) {
 	var source *m.Source
+
 	for _, src := range fixtures.TestSourceData {
 		if src.ID == id {
 			source = &src

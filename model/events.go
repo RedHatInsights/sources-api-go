@@ -22,6 +22,7 @@ type bulkMessage struct {
 
 type updatingAttributes struct {
 	bulkMessage
+
 	Updated map[string]interface{} `json:"updated"`
 }
 

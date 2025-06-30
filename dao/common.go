@@ -15,6 +15,7 @@ const (
 
 func GetFromResourceType(resourceType string, tenantID int64) (m.EventModelDao, error) {
 	var resource m.EventModelDao
+
 	switch strings.ToLower(resourceType) {
 	case "source":
 		resource = GetSourceDao(&RequestParams{TenantID: &tenantID})
@@ -38,36 +39,43 @@ func GetAvailabilityStatusFromStatusMessage(tenantID int64, resourceID string, r
 		if err != nil {
 			return "", err
 		}
+
 		resource, err := GetSourceDao(&RequestParams{TenantID: &tenantID}).GetById(&recordID)
 		if err != nil {
 			return "", err
 		}
+
 		return resource.AvailabilityStatus, err
 	case "Endpoint":
 		recordID, err := util.InterfaceToInt64(resourceID)
 		if err != nil {
 			return "", err
 		}
+
 		resource, err := GetEndpointDao(&tenantID).GetById(&recordID)
 		if err != nil {
 			return "", err
 		}
+
 		return resource.AvailabilityStatus, err
 	case "Application":
 		recordID, err := util.InterfaceToInt64(resourceID)
 		if err != nil {
 			return "", err
 		}
+
 		resource, err := GetApplicationDao(&RequestParams{TenantID: &tenantID}).GetById(&recordID)
 		if err != nil {
 			return "", err
 		}
+
 		return resource.AvailabilityStatus, err
 	case "Authentication":
 		resource, err := GetAuthenticationDao(&RequestParams{TenantID: &tenantID}).GetById(resourceID)
 		if err != nil || resource.AvailabilityStatus == nil {
 			return "", err
 		}
+
 		return *resource.AvailabilityStatus, err
 	default:
 		return "", fmt.Errorf("invalid resource_type (%s) to get DAO instance", resourceType)
@@ -111,6 +119,7 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 	bulkMessage["applications"] = applications
 
 	authDao := GetAuthenticationDao(&RequestParams{TenantID: &source.TenantID})
+
 	authenticationsByResource, err := authDao.AuthenticationsByResource(authentication)
 	if err != nil {
 		return nil, err
@@ -123,8 +132,8 @@ func BulkMessageFromSource(source *m.Source, authentication *m.Authentication) (
 	}
 
 	applicationAuthenticationDao := GetApplicationAuthenticationDao(&RequestParams{TenantID: &source.TenantID})
-	applicationAuthenticationsFromResource, err := applicationAuthenticationDao.ApplicationAuthenticationsByResource(authentication.ResourceType, source.Applications, authenticationsByResource)
 
+	applicationAuthenticationsFromResource, err := applicationAuthenticationDao.ApplicationAuthenticationsByResource(authentication.ResourceType, source.Applications, authenticationsByResource)
 	if err != nil {
 		return nil, err
 	}

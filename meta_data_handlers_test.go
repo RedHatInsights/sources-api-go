@@ -38,6 +38,7 @@ func TestApplicationTypeMetaDataSubcollectionList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -95,6 +96,7 @@ func TestApplicationTypeMetaDataSubcollectionListNotFound(t *testing.T) {
 	c.SetParamValues("3908503985")
 
 	notFoundApplicationTypeListMetaData := ErrorHandlingContext(ApplicationTypeListMetaData)
+
 	err := notFoundApplicationTypeListMetaData(c)
 	if err != nil {
 		t.Error(err)
@@ -120,6 +122,7 @@ func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidSyntax(t *test
 	c.SetParamValues("xxx")
 
 	badRequestApplicationTypeListMetaData := ErrorHandlingContext(ApplicationTypeListMetaData)
+
 	err := badRequestApplicationTypeListMetaData(c)
 	if err != nil {
 		t.Error(err)
@@ -149,6 +152,7 @@ func TestApplicationTypeMetaDataSubcollectionListBadRequestInvalidFilter(t *test
 	c.SetParamValues("1")
 
 	badRequestApplicationTypeListMetaData := ErrorHandlingContext(ApplicationTypeListMetaData)
+
 	err := badRequestApplicationTypeListMetaData(c)
 	if err != nil {
 		t.Error(err)
@@ -179,6 +183,7 @@ func TestMetaDataList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -223,6 +228,7 @@ func TestMetaDataListBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestMetaDataList := ErrorHandlingContext(MetaDataList)
+
 	err := badRequestMetaDataList(c)
 	if err != nil {
 		t.Error(err)
@@ -252,6 +258,7 @@ func TestMetaDataGet(t *testing.T) {
 	}
 
 	var outMetaData m.MetaDataResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outMetaData)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -270,6 +277,7 @@ func TestMetaDataGetNotFound(t *testing.T) {
 	c.SetParamValues("13984739874")
 
 	notFoundMetaDataGet := ErrorHandlingContext(MetaDataGet)
+
 	err := notFoundMetaDataGet(c)
 	if err != nil {
 		t.Error(err)
@@ -290,6 +298,7 @@ func TestMetaDataGetBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestMetaDataGet := ErrorHandlingContext(MetaDataGet)
+
 	err := badRequestMetaDataGet(c)
 	if err != nil {
 		t.Error(err)

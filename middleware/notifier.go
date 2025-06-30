@@ -16,6 +16,7 @@ func Notifier(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
+
 		emailNotificationInfo, ok := c.Get("emailNotificationInfo").(*m.EmailNotificationInfo)
 		if emailNotificationInfo == nil || !ok {
 			return fmt.Errorf("unable to find emailNotificationInfo instance in middleware")

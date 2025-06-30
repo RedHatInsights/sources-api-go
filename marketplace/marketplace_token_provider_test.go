@@ -20,6 +20,7 @@ func TestNotReachingMarketplace(t *testing.T) {
 	_, err := marketplaceTokenProvider.RequestToken()
 
 	want := "could not reach the marketplace"
+
 	got := err.Error()
 	if want != got {
 		t.Errorf(`unexpected error: want "%s", got "%s"`, want, got)
@@ -46,6 +47,7 @@ func TestInvalidStatusCodeReturnsError(t *testing.T) {
 	_, err := marketplaceTokenProvider.RequestToken()
 
 	want := "unexpected response received from the marketplace"
+
 	got := err.Error()
 	if want != got {
 		t.Errorf(`unexpected error: want "%s", got "%s"`, want, err)

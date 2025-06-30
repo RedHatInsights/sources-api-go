@@ -93,6 +93,7 @@ func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Sou
 
 func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, app *m.Application, uri *url.URL) {
 	body := map[string]string{"source_id": strconv.FormatInt(app.SourceID, 10)}
+
 	raw, err := json.Marshal(body)
 	if err != nil {
 		acr.Logger().Errorf("[source_id: %d] Failed to marshal source body: %s", app.SourceID, err)
@@ -151,6 +152,7 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 		acr.Logger().Warnf("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL not set - skipping check for RHC Connection Availability Status [%v]", rhcConnection.RhcId)
 		return
 	}
+
 	if cloudConnectorStatusPath == "" {
 		acr.Logger().Warnf("CLOUD_CONNECTOR_STATUS_PATH not set - skipping check for RHC Connection Availability Status [%v]", rhcConnection.RhcId)
 		return
@@ -170,6 +172,7 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 		acr.Logger().Warnf("Failed to create request for RHC Connection for ID %v, e: %v", source.ID, err)
 		return
 	}
+
 	req.Header.Set("x-rh-cloud-connector-org-id", source.Tenant.OrgID)
 	req.Header.Set("x-rh-cloud-connector-account", source.Tenant.ExternalTenant)
 	req.Header.Set("x-rh-cloud-connector-client-id", cloudConnectorClientId)
@@ -193,6 +196,7 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 
 		// updating status to unavailable
 		acr.updateRhcStatus(source, "unavailable", unavailableRhc, rhcConnection, headers)
+
 		return
 	}
 
@@ -208,14 +212,18 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 	acr.Logger().Debugf(`[source_id: %d][rhc_connection_id: %d][rhc_connection_rhcid: %s] RHC connection status response body: %s`, source.ID, rhcConnection.ID, rhcConnection.RhcId, b)
 
 	var status rhcConnectionStatusResponse
+
 	err = json.Unmarshal(b, &status)
 	if err != nil {
 		acr.Logger().Warnf("failed to unmarshal response: %v", err)
 		return
 	}
 
-	var sanitizedStatus string
-	var errstr string
+	var (
+		sanitizedStatus string
+		errstr          string
+	)
+
 	switch status.Status {
 	case "connected":
 		sanitizedStatus = "available"
@@ -266,6 +274,7 @@ func (acr availabilityCheckRequester) updateRhcStatus(source *m.Source, status s
 	l.Log.Debugf(`[source_id: %d][rhc_connection_id: %d] RHC Connection's status updated to "%s"`, source.ID, rhcConnection.ID, status)
 	// we have to populate the Sources field in order to pass along the source_ids on the message.
 	rhcConnection.Sources = []m.Source{*source}
+
 	err = RaiseEvent("RhcConnection.update", rhcConnection, headers)
 	if err != nil {
 		acr.Logger().Warnf("error raising RhcConnection.update event: %v", err)

@@ -72,12 +72,14 @@ func (s *rhcConnectionDaoImpl) List(limit, offset int, filters []util.Filter) ([
 
 	// Loop through the rows to map both the connection and its related sources.
 	var rows []map[string]interface{}
+
 	err = DB.ScanRows(result, &rows)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	rhcConnections := make([]m.RhcConnection, 0)
+
 	for _, row := range rows {
 		rhcConnection, err := mappers.MapRowToRhcConnection(row)
 		if err != nil {
@@ -119,6 +121,7 @@ func (s *rhcConnectionDaoImpl) GetById(id *int64) (*m.RhcConnection, error) {
 
 	// Loop through the rows to map both the connection and its related sources.
 	var rows []map[string]interface{}
+
 	err = DB.ScanRows(result, &rows)
 	if err != nil {
 		return nil, err
@@ -145,6 +148,7 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 	// If the source doesn't exist we cannot create the RhcConnection, since it needs to be linked to at least one
 	// source.
 	var sourceExists bool
+
 	err := s.getDb().
 		Model(&m.Source{}).
 		Select(`1`).
@@ -168,7 +172,6 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 			Omit(clause.Associations).
 			FirstOrCreate(&rhcConnection).
 			Error
-
 		if err != nil {
 			logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_id": rhcConnection.Sources[0].ID}).Errorf("Unable to create RHC connection: %s", err)
 
@@ -184,6 +187,7 @@ func (s *rhcConnectionDaoImpl) Create(rhcConnection *m.RhcConnection) (*m.RhcCon
 
 		// Check if it exists first.
 		var relationExists bool
+
 		err = tx.Debug().
 			Model(&m.SourceRhcConnection{}).
 			Select(`1`).
@@ -227,7 +231,6 @@ func (s *rhcConnectionDaoImpl) Update(rhcConnection *m.RhcConnection) error {
 		Select("*").
 		Updates(rhcConnection).
 		Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *s.TenantID, "source_ids": rhcConnection.Sources, "rhc_connection_id": rhcConnection.ID}).Errorf("Unable to update RHC connection: %s", err)
 

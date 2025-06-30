@@ -30,6 +30,7 @@ type metaDataDaoImpl struct{}
 
 func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limit int, offset int, filters []util.Filter) ([]m.MetaData, int64, error) {
 	metadatas := make([]m.MetaData, 0, limit)
+
 	relationObject, err := m.NewRelationObject(primaryCollection, -1, DB.Debug())
 	if err != nil {
 		return nil, 0, err
@@ -50,6 +51,7 @@ func (md *metaDataDaoImpl) SubCollectionList(primaryCollection interface{}, limi
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
+
 	return metadatas, count, result.Error
 }
 
@@ -69,6 +71,7 @@ func (md *metaDataDaoImpl) List(limit int, offset int, filters []util.Filter) ([
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
+
 	return metaData, count, nil
 }
 
@@ -81,7 +84,6 @@ func (md *metaDataDaoImpl) GetById(id *int64) (*m.MetaData, error) {
 		Where("id = ?", *id).
 		First(&metaData).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("metadata")
 	}
@@ -103,6 +105,7 @@ func (md *metaDataDaoImpl) GetSuperKeySteps(applicationTypeId int64) ([]m.MetaDa
 
 func (md *metaDataDaoImpl) GetSuperKeyAccountNumber(applicationTypeId int64) (string, error) {
 	var account string
+
 	result := DB.Model(&m.MetaData{}).
 		Select("payload").
 		Where("type = ?", m.AppMetaData).

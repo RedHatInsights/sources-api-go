@@ -30,7 +30,6 @@ func setUp() model.SourceCreateRequest {
 		AvailabilityStatus:  model.Available,
 		SourceTypeIDRaw:     &sourceTypeId,
 	}
-
 }
 
 // setUpSourceEditRequest returns a freshly created and valid SourceEditRequest.
@@ -87,11 +86,11 @@ func TestInvalidDuplicatedNameInTenant(t *testing.T) {
 	sourceName := "Source350"
 	sourceUid := "abcde-fghijk"
 	newSource := model.Source{ID: 350, Name: sourceName, SourceTypeID: 1, TenantID: 1, Uid: &sourceUid}
+
 	err := dao.DB.
 		Debug().
 		Create(&newSource).
 		Error
-
 	if err != nil {
 		t.Errorf(`could not create the source fixture for the test: %s`, err)
 	}
@@ -100,7 +99,6 @@ func TestInvalidDuplicatedNameInTenant(t *testing.T) {
 	request.Name = &sourceName
 
 	err = ValidateSourceCreationRequest(sourceDao, &request)
-
 	if err == nil {
 		t.Errorf("Error expected, got none")
 	}
@@ -141,8 +139,8 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 
 	for _, validValue := range validValues {
 		request.AppCreationWorkflow = validValue
-		err := ValidateSourceCreationRequest(sourceDao, &request)
 
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 		if err != nil {
 			t.Errorf("No errors expected, got \"%s\"", err)
 		}
@@ -158,8 +156,8 @@ func TestAppCreationWorkflowValues(t *testing.T) {
 
 	for _, invalidValue := range invalidValues {
 		request.AppCreationWorkflow = invalidValue
-		err := ValidateSourceCreationRequest(sourceDao, &request)
 
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 		if err != nil {
 			t.Errorf("No errors expected, got %s", err)
 		}
@@ -195,6 +193,7 @@ func TestAvailabilityStatusValues(t *testing.T) {
 	// Test that the default value is set on the request when no availability status is provided.
 
 	request.AvailabilityStatus = ""
+
 	err := ValidateSourceCreationRequest(sourceDao, &request)
 	if err != nil {
 		t.Errorf("unexpected error received when setting a default value for the availability status of a source: %s", err)
@@ -230,9 +229,11 @@ func TestAvailabilityStatusValues(t *testing.T) {
 func TestSourceTypeIdLowerOne(t *testing.T) {
 	request := setUp()
 
-	var pointerNegativeInt int64 = -10
-	var pointerNegativeFloat float64 = -1921
-	var pointerNegativeString = "-12345"
+	var (
+		pointerNegativeInt    int64   = -10
+		pointerNegativeFloat  float64 = -1921
+		pointerNegativeString         = "-12345"
+	)
 
 	lowerZero := []struct {
 		value interface{}
@@ -253,7 +254,6 @@ func TestSourceTypeIdLowerOne(t *testing.T) {
 		request.SourceTypeIDRaw = tt.value
 
 		err := ValidateSourceCreationRequest(sourceDao, &request)
-
 		if err == nil {
 			t.Errorf("Error expected, got none")
 		}
@@ -282,8 +282,8 @@ func TestInvalidSourceTypeIdFormat(t *testing.T) {
 
 	for _, tt := range invalidTypes {
 		request.SourceTypeIDRaw = tt.value
-		err := ValidateSourceCreationRequest(sourceDao, &request)
 
+		err := ValidateSourceCreationRequest(sourceDao, &request)
 		if err == nil {
 			t.Errorf("Error expected, got none")
 		}
@@ -301,7 +301,6 @@ func TestSourceTypeIdIsNil(t *testing.T) {
 	}
 
 	err := ValidateSourceCreationRequest(sourceDao, &request)
-
 	if err == nil {
 		t.Errorf("Error expected, got none")
 	}
@@ -319,11 +318,11 @@ func TestEditSourceNameRequest(t *testing.T) {
 	sourceName := "Source350"
 	sourceUid := "abcde-fghijk"
 	newSource := model.Source{ID: 350, Name: sourceName, SourceTypeID: 1, TenantID: 1, Uid: &sourceUid}
+
 	err := dao.DB.
 		Debug().
 		Create(&newSource).
 		Error
-
 	if err != nil {
 		t.Errorf(`could not create the source fixture for the test: %s`, err)
 	}
@@ -332,7 +331,6 @@ func TestEditSourceNameRequest(t *testing.T) {
 	request.Name = &sourceName
 
 	err = ValidateSourceEditRequest(sourceDao, &request)
-
 	if err == nil {
 		t.Errorf("Error expected, got none")
 	}
@@ -353,6 +351,7 @@ func TestEditSourceInvalidName(t *testing.T) {
 	err := ValidateSourceEditRequest(sourceDao, &request)
 
 	want := "name cannot be empty"
+
 	got := err.Error()
 	if want != got {
 		t.Errorf(`unexpected error when editing a source and giving it an empty name. Want "%s", got "%s"`, want, got)
@@ -371,6 +370,7 @@ func TestEditSourceInvalidAvailabilityStatuses(t *testing.T) {
 	}
 
 	want := `availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
+
 	for _, tv := range testValues {
 		editRequest := setUpSourceEditRequest()
 		editRequest.AvailabilityStatus = tv
@@ -398,7 +398,6 @@ func TestEditSourceValidAvailabilityStatuses(t *testing.T) {
 		editRequest.AvailabilityStatus = tv
 
 		err := ValidateSourceEditRequest(sourceDao, &editRequest)
-
 		if err != nil {
 			t.Errorf(`unexpected error when validating a valid availability status "%s" for a source edit: %s`, *tv, err)
 		}
@@ -416,8 +415,8 @@ func TestEditSourceInvalidAvailabilityStatusPaused(t *testing.T) {
 	}
 
 	want := `invalid availability status. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
-	for _, tv := range testValues {
 
+	for _, tv := range testValues {
 		editRequest := model.SourcePausedEditRequest{
 			AvailabilityStatus: tv,
 		}
@@ -448,8 +447,8 @@ func TestEditSourceValidAvailabilityStatusPaused(t *testing.T) {
 		}
 
 		source := model.Source{}
-		err := source.UpdateFromRequestPaused(&editRequest)
 
+		err := source.UpdateFromRequestPaused(&editRequest)
 		if err != nil {
 			t.Errorf(`unexpected error when validating a valid availability status "%s" for a paused endpoint edit: %s`, *tv, err)
 		}

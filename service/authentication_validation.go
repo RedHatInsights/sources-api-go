@@ -16,6 +16,7 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 	if auth.ResourceType == "" {
 		return fmt.Errorf("resource_type is required")
 	}
+
 	if auth.ResourceIDRaw == nil {
 		return fmt.Errorf("resource_id is required")
 	}
@@ -24,6 +25,7 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 	if err != nil {
 		return fmt.Errorf("resource_id must be a valid integer or string")
 	}
+
 	auth.ResourceID = rid
 
 	if !util.SliceContainsString(validAuthenticationResources, strings.ToLower(auth.ResourceType)) {
@@ -33,7 +35,8 @@ func ValidateAuthenticationCreationRequest(auth *model.AuthenticationCreateReque
 	// capitalize it so it's always the same format.
 	auth.ResourceType = util.Capitalize(auth.ResourceType)
 
-	if err = ValidateAzureSubscriptionId(auth); err != nil {
+	err = ValidateAzureSubscriptionId(auth)
+	if err != nil {
 		return fmt.Errorf("subscription ID is invalid: %w", err)
 	}
 
@@ -64,11 +67,12 @@ func ValidateAzureSubscriptionId(auth *model.AuthenticationCreateRequest) error 
 		if trimmed == "" {
 			return errors.New("username must not be blank or empty for Azure Source Types")
 		}
-		if _, err := uuid.Parse(trimmed); err != nil {
+
+		_, err := uuid.Parse(trimmed)
+		if err != nil {
 			return fmt.Errorf("the username must be a valid UUID for Azure Source Types")
 		}
 	}
 
 	return nil
-
 }

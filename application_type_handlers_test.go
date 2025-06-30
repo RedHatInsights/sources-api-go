@@ -43,6 +43,7 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -59,6 +60,7 @@ func TestSourceApplicationTypeSubcollectionList(t *testing.T) {
 	// We are looking for source's applications and then application
 	// types of these applications
 	appTypes := make(map[int64]int)
+
 	for _, app := range fixtures.TestApplicationData {
 		if app.SourceID == sourceId {
 			appTypes[app.ApplicationTypeID]++
@@ -116,6 +118,7 @@ func TestSourceApplicationTypeSubcollectionListEmptyList(t *testing.T) {
 // for not existing tenant
 func TestSourceApplicationTypeSubcollectionListTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	sourceId := int64(1)
 
@@ -135,6 +138,7 @@ func TestSourceApplicationTypeSubcollectionListTenantNotExist(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+
 	err := notFoundSourceListApplicationTypes(c)
 	if err != nil {
 		t.Error(err)
@@ -147,6 +151,7 @@ func TestSourceApplicationTypeSubcollectionListTenantNotExist(t *testing.T) {
 // for tenant who doesn't own the source
 func TestSourceApplicationTypeSubcollectionListInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	sourceId := int64(1)
 
@@ -166,6 +171,7 @@ func TestSourceApplicationTypeSubcollectionListInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", sourceId))
 
 	notFoundSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+
 	err := notFoundSourceListApplicationTypes(c)
 	if err != nil {
 		t.Error(err)
@@ -191,6 +197,7 @@ func TestSourceApplicationTypeSubcollectionListNotFound(t *testing.T) {
 	c.SetParamValues("109830938")
 
 	notFoundSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+
 	err := notFoundSourceListApplicationTypes(c)
 	if err != nil {
 		t.Error(err)
@@ -216,6 +223,7 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidSyntax(t *testin
 	c.SetParamValues("xxx")
 
 	badRequestSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+
 	err := badRequestSourceListApplicationTypes(c)
 	if err != nil {
 		t.Error(err)
@@ -245,6 +253,7 @@ func TestSourceApplicationTypeSubcollectionListBadRequestInvalidFilter(t *testin
 	c.SetParamValues("1")
 
 	badRequestSourceListApplicationTypes := ErrorHandlingContext(SourceListApplicationTypes)
+
 	err := badRequestSourceListApplicationTypes(c)
 	if err != nil {
 		t.Error(err)
@@ -275,6 +284,7 @@ func TestApplicationTypeList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -349,6 +359,7 @@ func TestApplicationTypeListBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestApplicationTypeList := ErrorHandlingContext(ApplicationTypeList)
+
 	err := badRequestApplicationTypeList(c)
 	if err != nil {
 		t.Error(err)
@@ -378,6 +389,7 @@ func TestApplicationTypeGet(t *testing.T) {
 	}
 
 	var outAppType m.ApplicationTypeResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outAppType)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -414,6 +426,7 @@ func TestApplicationTypeGetWithTenant(t *testing.T) {
 	}
 
 	var outAppType m.ApplicationTypeResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outAppType)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -436,6 +449,7 @@ func TestApplicationTypeGetNotFound(t *testing.T) {
 	c.SetParamValues("12362095")
 
 	notFoundApplicationTypeGet := ErrorHandlingContext(ApplicationTypeGet)
+
 	err := notFoundApplicationTypeGet(c)
 	if err != nil {
 		t.Error(err)
@@ -456,6 +470,7 @@ func TestApplicationTypeGetBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestApplicationTypeGet := ErrorHandlingContext(ApplicationTypeGet)
+
 	err := badRequestApplicationTypeGet(c)
 	if err != nil {
 		t.Error(err)

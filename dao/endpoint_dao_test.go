@@ -66,8 +66,8 @@ func TestDeleteEndpointNotExists(t *testing.T) {
 	endpointDao := GetEndpointDao(&fixtures.TestSourceData[0].TenantID)
 
 	nonExistentId := int64(12345)
-	_, err := endpointDao.Delete(&nonExistentId)
 
+	_, err := endpointDao.Delete(&nonExistentId)
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
@@ -133,6 +133,7 @@ func TestEndpointListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(endpoints)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -141,10 +142,12 @@ func TestEndpointListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -158,6 +161,7 @@ func TestEndpointSubCollectionListOffsetAndLimit(t *testing.T) {
 	sourceId := int64(1)
 
 	var wantCount int64
+
 	for _, e := range fixtures.TestEndpointData {
 		if e.SourceID == sourceId {
 			wantCount++
@@ -175,6 +179,7 @@ func TestEndpointSubCollectionListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(endpoints)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -183,9 +188,11 @@ func TestEndpointSubCollectionListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }

@@ -28,6 +28,7 @@ func SecretCreate(c echo.Context) error {
 	}
 
 	createRequest := m.SecretCreateRequest{}
+
 	err = c.Bind(&createRequest)
 	if err != nil {
 		return err
@@ -126,6 +127,7 @@ func SecretEdit(c echo.Context) error {
 	}
 
 	updateRequest := &m.SecretEditRequest{}
+
 	err = c.Bind(updateRequest)
 	if err != nil {
 		return err

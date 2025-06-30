@@ -56,8 +56,8 @@ func SetMarketplaceTokenAuthExtraField(tenantId int64, auth *model.Authenticatio
 
 	// First try to fetch the token from the cache
 	marketplaceTokenCacher = GetMarketplaceTokenCacher(&tenantId)
-	token, err := marketplaceTokenCacher.FetchToken()
 
+	token, err := marketplaceTokenCacher.FetchToken()
 	if err != nil {
 		// If the error isn't "redis.Nil" something went wrong with Redis.
 		if err != redis.Nil {

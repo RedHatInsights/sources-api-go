@@ -64,16 +64,19 @@ func (mockAuthDao MockAuthenticationDao) ListForSource(sourceID int64, _, _ int,
 
 func (mockAuthDao MockAuthenticationDao) ListForApplication(appId int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
 	var appExists bool
+
 	for _, app := range fixtures.TestApplicationData {
 		if app.ID == appId {
 			appExists = true
 		}
 	}
+
 	if !appExists {
 		return nil, 0, util.NewErrNotFound("application")
 	}
 
 	var out []m.Authentication
+
 	for _, auth := range fixtures.TestAuthenticationData {
 		if auth.ResourceType == "Application" && auth.ResourceID == appId {
 			out = append(out, auth)
@@ -84,13 +87,16 @@ func (mockAuthDao MockAuthenticationDao) ListForApplication(appId int64, _, _ in
 }
 
 func (mockAuthDao MockAuthenticationDao) ListForApplicationAuthentication(appAuthID int64, _, _ int, _ []util.Filter) ([]m.Authentication, int64, error) {
-	var appAuthExists bool
-	var authID int64
+	var (
+		appAuthExists bool
+		authID        int64
+	)
 
 	for _, appAuth := range fixtures.TestApplicationAuthenticationData {
 		if appAuth.ID == appAuthID {
 			authID = appAuth.AuthenticationID
 			appAuthExists = true
+
 			break
 		}
 	}
@@ -147,6 +153,7 @@ func (mockAuthDao MockAuthenticationDao) Update(auth *m.Authentication) error {
 	if auth.ID == fixtures.TestAuthenticationData[0].ID {
 		return nil
 	}
+
 	return util.NewErrNotFound("authentication")
 }
 
@@ -164,6 +171,7 @@ func (mockAuthDao MockAuthenticationDao) Delete(id string) (*m.Authentication, e
 			}
 		}
 	}
+
 	return nil, util.NewErrNotFound("authentication")
 }
 
@@ -194,6 +202,7 @@ func (mockAuthDao MockAuthenticationDao) BulkCreate(_ *m.Authentication) error {
 
 func (mockAuthDao MockAuthenticationDao) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
 	var authsList []m.Authentication
+
 	for _, auth := range fixtures.TestAuthenticationData {
 		for _, rid := range resourceIds {
 			if auth.ResourceType == resourceType && auth.ResourceID == rid {

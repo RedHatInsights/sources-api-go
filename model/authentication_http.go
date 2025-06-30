@@ -62,12 +62,15 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 	if update.Name != nil {
 		auth.Name = update.Name
 	}
+
 	if update.AuthType != nil {
 		auth.AuthType = *update.AuthType
 	}
+
 	if update.Username != nil {
 		auth.Username = update.Username
 	}
+
 	if update.Password != nil {
 		err := auth.SetPassword(update.Password)
 		if err != nil {
@@ -85,6 +88,7 @@ func (auth *Authentication) UpdateFromRequest(update *AuthenticationEditRequest)
 	if update.AvailabilityStatus != nil {
 		auth.AvailabilityStatus = update.AvailabilityStatus
 	}
+
 	if update.AvailabilityStatusError != nil {
 		auth.AvailabilityStatusError = update.AvailabilityStatusError
 	}

@@ -36,6 +36,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", id.Identity.OrgID, id.Identity.AccountNumber)
 
 		tenantDao := dao.GetTenantDao()
+
 		tenant, err := tenantDao.GetOrCreateTenant(&id.Identity)
 		if err != nil {
 			c.Logger().Errorf("[identity struct: %v] unable to get or create the tenant: %w", err)

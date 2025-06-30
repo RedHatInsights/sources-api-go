@@ -13,6 +13,7 @@ import (
 
 func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
 	var XRHIdentity *identity.XRHID
+
 	decodedIdentity, err := base64.StdEncoding.DecodeString(inputIdentity)
 	if err != nil {
 		return nil, fmt.Errorf("error decoding Identity: %v", err)
