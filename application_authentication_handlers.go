@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -156,12 +155,6 @@ func ApplicationAuthenticationListAuthentications(c echo.Context) error {
 
 	out := make([]interface{}, count)
 	for i := 0; i < int(count); i++ {
-		// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
-		err := marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, &auths[i])
-		if err != nil {
-			return err
-		}
-
 		out[i] = auths[i].ToResponse()
 	}
 
