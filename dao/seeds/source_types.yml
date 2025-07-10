@@ -389,27 +389,7 @@ quay:
           - component: text-field
             name: authentication.password
             label: Quay account's encrypted password
-rh-marketplace:
-  product_name: Red Hat Marketplace
-  category: Red Hat
-  vendor: Red Hat
-  icon_url: "/apps/frontend-assets/red-hat-logos/stacked.svg"
-  schema:
-    authentication:
-    - type: marketplace-token
-      name: API Token
-      fields:
-      - component: text-field
-        name: authentication.authtype
-        hideField: true
-        initializeOnMount: true
-        initialValue: token
-      - component: text-field
-        name: authentication.password
-        label: API Token
-        isRequired: true
-        validate:
-        - type: required
+
 satellite:
   product_name: Red Hat Satellite
   category: Red Hat

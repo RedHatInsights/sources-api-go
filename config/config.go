@@ -34,7 +34,6 @@ type SourcesApiConfig struct {
 	MetricsPort             int
 	LogLevel                string
 	LogGroup                string
-	MarketplaceHost         string
 	AwsRegion               string
 	AwsAccessKeyID          string
 	AwsSecretAccessKey      string
@@ -82,7 +81,6 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "MetricsPort", s.MetricsPort)
 	fmt.Fprintf(&b, "%s=%v ", "LogLevel", s.LogLevel)
 	fmt.Fprintf(&b, "%s=%v ", "LogGroup", s.LogGroup)
-	fmt.Fprintf(&b, "%s=%v ", "MarketplaceHost", s.MarketplaceHost)
 	fmt.Fprintf(&b, "%s=%v ", "AwsRegion", s.AwsRegion)
 	fmt.Fprintf(&b, "%s=%v ", "DatabaseHost", s.DatabaseHost)
 	fmt.Fprintf(&b, "%s=%v ", "DatabasePort", s.DatabasePort)
@@ -253,7 +251,6 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("KafkaTopics", kafkaTopics)
 
 	options.SetDefault("LogLevel", os.Getenv("LOG_LEVEL"))
-	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
 
@@ -332,7 +329,6 @@ func Get() *SourcesApiConfig {
 		LogLevel:                options.GetString("LogLevel"),
 		SlowSQLThreshold:        options.GetInt("SlowSQLThreshold"),
 		LogGroup:                options.GetString("LogGroup"),
-		MarketplaceHost:         options.GetString("MarketplaceHost"),
 		AwsRegion:               options.GetString("AwsRegion"),
 		AwsAccessKeyID:          options.GetString("AwsAccessKeyID"),
 		AwsSecretAccessKey:      options.GetString("AwsSecretAccessKey"),
