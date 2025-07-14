@@ -42,8 +42,6 @@ func AuthenticationList(c echo.Context) error {
 		return err
 	}
 
-	tenantId := authDao.Tenant()
-
 	out := make([]interface{}, 0, len(authentications))
 	for _, auth := range authentications {
 		out = append(out, *auth.ToResponse())

@@ -307,8 +307,6 @@ func EndpointListAuthentications(c echo.Context) error {
 		return err
 	}
 
-	tenantId := authDB.Tenant()
-
 	out := make([]interface{}, len(auths))
 	for i := 0; i < len(auths); i++ {
 		out[i] = auths[i].ToResponse()

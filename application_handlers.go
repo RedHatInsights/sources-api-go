@@ -276,8 +276,6 @@ func ApplicationListAuthentications(c echo.Context) error {
 		return err
 	}
 
-	tenantId := authDao.Tenant()
-
 	out := make([]interface{}, count)
 	for i := 0; i < int(count); i++ {
 		out[i] = auths[i].ToResponse()
