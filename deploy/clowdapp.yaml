@@ -196,8 +196,6 @@ objects:
           value: ${PROVISIONING_SCHEME}://${PROVISIONING_HOST}:${PROVISIONING_PORT}${PROVISIONING_CHECK_PATH}
         - name: SOURCES_ENV
           value: ${SOURCES_ENV}
-        - name: MARKETPLACE_HOST
-          value: ${MARKETPLACE_HOST}
         - name: SOURCES_PSKS
           valueFrom:
             secretKeyRef:
@@ -392,11 +390,6 @@ parameters:
   displayName: Bypass RBAC option enabled
   name: BYPASS_RBAC
   value: "false"
-- description: Host to use for the marketplace URL.
-  displayName: Marketplace host URL
-  name: MARKETPLACE_HOST
-  required: true
-  value: 'https://sandbox.marketplace.redhat.com'
 - description: Env name for seed
   name: SOURCES_ENV
   required: true
