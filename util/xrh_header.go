@@ -8,7 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	logging "github.com/RedHatInsights/sources-api-go/logger"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 func ParseXRHIDHeader(inputIdentity string) (*identity.XRHID, error) {
