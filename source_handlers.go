@@ -9,7 +9,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
@@ -248,16 +247,8 @@ func SourceListAuthentications(c echo.Context) error {
 		return err
 	}
 
-	tenantId := authDao.Tenant()
-
 	out := make([]interface{}, count)
 	for i := 0; i < int(count); i++ {
-		// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
-		err := marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, &auths[i])
-		if err != nil {
-			return err
-		}
-
 		out[i] = auths[i].ToResponse()
 	}
 

@@ -34,7 +34,6 @@ type SourcesApiConfig struct {
 	MetricsPort             int
 	LogLevel                string
 	LogGroup                string
-	MarketplaceHost         string
 	AwsRegion               string
 	AwsAccessKeyID          string
 	AwsSecretAccessKey      string
@@ -74,36 +73,34 @@ type SourcesApiConfig struct {
 // String() returns a string that shows the settings in which the pod is running in
 func (s SourcesApiConfig) String() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "%s=%s ", "AppName", parsedConfig.AppName)
-	fmt.Fprintf(&b, "%s=%v ", "Hostname", parsedConfig.Hostname)
-	fmt.Fprintf(&b, "%s=%v ", "KafkaBrokerConfig", parsedConfig.KafkaBrokerConfig)
-	fmt.Fprintf(&b, "%s=%v ", "KafkaTopics", parsedConfig.KafkaTopics)
-	fmt.Fprintf(&b, "%s=%v ", "KafkaGroupID", parsedConfig.KafkaGroupID)
-	fmt.Fprintf(&b, "%s=%v ", "MetricsPort", parsedConfig.MetricsPort)
-	fmt.Fprintf(&b, "%s=%v ", "LogLevel", parsedConfig.LogLevel)
-	fmt.Fprintf(&b, "%s=%v ", "LogGroup", parsedConfig.LogGroup)
-	fmt.Fprintf(&b, "%s=%v ", "MarketplaceHost", parsedConfig.MarketplaceHost)
-	fmt.Fprintf(&b, "%s=%v ", "AwsRegion", parsedConfig.AwsRegion)
-	fmt.Fprintf(&b, "%s=%v ", "DatabaseHost", parsedConfig.DatabaseHost)
-	fmt.Fprintf(&b, "%s=%v ", "DatabasePort", parsedConfig.DatabasePort)
-	fmt.Fprintf(&b, "%s=%v ", "DatabaseName", parsedConfig.DatabaseName)
-	fmt.Fprintf(&b, "%s=%v ", "DatabaseSSLMode", parsedConfig.DatabaseSSLMode)
-	fmt.Fprintf(&b, "%s=%v ", "DatabaseCert", parsedConfig.DatabaseCert)
-	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsEnvironment", parsedConfig.FeatureFlagsEnvironment)
-	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsUrl", parsedConfig.FeatureFlagsUrl)
-	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsService", parsedConfig.FeatureFlagsService)
-	fmt.Fprintf(&b, "%s=%v ", "CacheHost", parsedConfig.CacheHost)
-	fmt.Fprintf(&b, "%s=%v ", "CachePort", parsedConfig.CachePort)
-	fmt.Fprintf(&b, "%s=%v ", "SlowSQLThreshold", parsedConfig.SlowSQLThreshold)
-	fmt.Fprintf(&b, "%s=%v ", "BypassRbac", parsedConfig.BypassRbac)
-	fmt.Fprintf(&b, "%s=%v ", "SecretStore", parsedConfig.SecretStore)
-	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", parsedConfig.TenantTranslatorUrl)
-	fmt.Fprintf(&b, "%s=%v ", "Env", parsedConfig.Env)
-	fmt.Fprintf(&b, "%s=%v ", "HandleTenantRefresh", parsedConfig.HandleTenantRefresh)
-	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", parsedConfig.SecretsManagerPrefix)
-	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", parsedConfig.LocalStackURL)
-	fmt.Fprintf(&b, "%s=%v ", "RbacHost", parsedConfig.RbacHost)
-
+	fmt.Fprintf(&b, "%s=%s ", "AppName", s.AppName)
+	fmt.Fprintf(&b, "%s=%v ", "Hostname", s.Hostname)
+	fmt.Fprintf(&b, "%s=%v ", "KafkaBrokerConfig", s.KafkaBrokerConfig)
+	fmt.Fprintf(&b, "%s=%v ", "KafkaTopics", s.KafkaTopics)
+	fmt.Fprintf(&b, "%s=%v ", "KafkaGroupID", s.KafkaGroupID)
+	fmt.Fprintf(&b, "%s=%v ", "MetricsPort", s.MetricsPort)
+	fmt.Fprintf(&b, "%s=%v ", "LogLevel", s.LogLevel)
+	fmt.Fprintf(&b, "%s=%v ", "LogGroup", s.LogGroup)
+	fmt.Fprintf(&b, "%s=%v ", "AwsRegion", s.AwsRegion)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseHost", s.DatabaseHost)
+	fmt.Fprintf(&b, "%s=%v ", "DatabasePort", s.DatabasePort)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseName", s.DatabaseName)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseSSLMode", s.DatabaseSSLMode)
+	fmt.Fprintf(&b, "%s=%v ", "DatabaseCert", s.DatabaseCert)
+	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsEnvironment", s.FeatureFlagsEnvironment)
+	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsUrl", s.FeatureFlagsUrl)
+	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsService", s.FeatureFlagsService)
+	fmt.Fprintf(&b, "%s=%v ", "CacheHost", s.CacheHost)
+	fmt.Fprintf(&b, "%s=%v ", "CachePort", s.CachePort)
+	fmt.Fprintf(&b, "%s=%v ", "SlowSQLThreshold", s.SlowSQLThreshold)
+	fmt.Fprintf(&b, "%s=%v ", "BypassRbac", s.BypassRbac)
+	fmt.Fprintf(&b, "%s=%v ", "SecretStore", s.SecretStore)
+	fmt.Fprintf(&b, "%s=%v ", "TenantTranslatorUrl", s.TenantTranslatorUrl)
+	fmt.Fprintf(&b, "%s=%v ", "Env", s.Env)
+	fmt.Fprintf(&b, "%s=%v ", "HandleTenantRefresh", s.HandleTenantRefresh)
+	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", s.SecretsManagerPrefix)
+	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", s.LocalStackURL)
+	fmt.Fprintf(&b, "%s=%v ", "RbacHost", s.RbacHost)
 	return b.String()
 }
 
@@ -254,7 +251,6 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("KafkaTopics", kafkaTopics)
 
 	options.SetDefault("LogLevel", os.Getenv("LOG_LEVEL"))
-	options.SetDefault("MarketplaceHost", os.Getenv("MARKETPLACE_HOST"))
 	options.SetDefault("SlowSQLThreshold", 2) //seconds
 	options.SetDefault("BypassRbac", os.Getenv("BYPASS_RBAC") == "true")
 
@@ -333,7 +329,6 @@ func Get() *SourcesApiConfig {
 		LogLevel:                options.GetString("LogLevel"),
 		SlowSQLThreshold:        options.GetInt("SlowSQLThreshold"),
 		LogGroup:                options.GetString("LogGroup"),
-		MarketplaceHost:         options.GetString("MarketplaceHost"),
 		AwsRegion:               options.GetString("AwsRegion"),
 		AwsAccessKeyID:          options.GetString("AwsAccessKeyID"),
 		AwsSecretAccessKey:      options.GetString("AwsSecretAccessKey"),
