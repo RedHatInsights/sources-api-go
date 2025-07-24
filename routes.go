@@ -6,13 +6,14 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
-func setupRoutes(e *echo.Echo) {
+func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
@@ -63,7 +64,7 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
 		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
-		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy, middleware.LoggerFields)
+		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability(metricsService), middleware.Tenancy, middleware.LoggerFields)
 		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)

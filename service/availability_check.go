@@ -14,6 +14,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
+	"github.com/RedHatInsights/sources-api-go/metrics"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/echo/v4"
@@ -27,6 +28,9 @@ const (
 type availabilityCheckRequester struct {
 	// storing the echo context so we can pull the logger
 	c echo.Context
+	// metricsService is used to count the successful and failed availability check requests sent to downstream
+	// services.
+	metricsService metrics.MetricsService
 }
 
 type availabilityChecker interface {
@@ -52,8 +56,8 @@ var (
 )
 
 // requests both types of availability checks for a source
-func RequestAvailabilityCheck(c echo.Context, source *m.Source, headers []kafka.Header, skipEmptySources bool) {
-	var ac availabilityChecker = &availabilityCheckRequester{c: c}
+func RequestAvailabilityCheck(metricsService metrics.MetricsService, c echo.Context, source *m.Source, headers []kafka.Header, skipEmptySources bool) {
+	var ac availabilityChecker = &availabilityCheckRequester{metricsService: metricsService, c: c}
 	ac.Logger().Infof("[source_id: %d] Requesting availability check for source", source.ID)
 
 	if len(source.Applications) != 0 {
@@ -83,6 +87,8 @@ func (acr availabilityCheckRequester) ApplicationAvailabilityCheck(source *m.Sou
 		uri := app.ApplicationType.AvailabilityCheckURL()
 		if uri == nil {
 			acr.Logger().Errorf("[source_id: %d][application_id: %d][application_type: %s] Failed to fetch availability check url - continuing", source.ID, app.ID, app.ApplicationType.Name)
+			acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
 			continue
 		}
 
@@ -97,6 +103,8 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	raw, err := json.Marshal(body)
 	if err != nil {
 		acr.Logger().Errorf("[source_id: %d] Failed to marshal source body: %s", app.SourceID, err)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
 		return
 	}
 
@@ -107,6 +115,8 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uri.String(), bytes.NewBuffer(raw))
 	if err != nil {
 		acr.Logger().Errorf("[source_id: %d][application_id: %d][uri: %s] Failed to make request for application: %s", source.ID, app.ID, uri.String(), err)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
 		return
 	}
 
@@ -114,6 +124,8 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	xrhid, ok := acr.c.Get(h.XRHID).(string)
 	if !ok {
 		acr.Logger().Warnf("couldn't pull xrhid from request")
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
 		return
 	}
 
@@ -125,6 +137,8 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		acr.Logger().Errorf("[source_id: %d][application_id: %d] Error requesting availability status for application: %s", source.ID, app.ID, err)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginExternal)
+
 		return
 	}
 	defer resp.Body.Close()
@@ -132,7 +146,10 @@ func (acr availabilityCheckRequester) httpAvailabilityRequest(source *m.Source, 
 	// anything greater than 299 is bad, right??? right????
 	if resp.StatusCode/100 > 2 {
 		acr.Logger().Errorf("[source_id: %d][application_id: %d] Bad response from client: %d", source.ID, app.ID, resp.StatusCode)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginExternal)
 	}
+
+	acr.metricsService.IncrementSourcesAvailabilityCheckRequestsCounter()
 }
 
 type rhcConnectionStatusResponse struct {
@@ -150,6 +167,8 @@ func (acr availabilityCheckRequester) RhcConnectionAvailabilityCheck(source *m.S
 func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m.RhcConnection, headers []kafka.Header) {
 	if cloudConnectorUrl == "" {
 		acr.Logger().Warnf("CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL not set - skipping check for RHC Connection Availability Status [%v]", rhcConnection.RhcId)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
 		return
 	}
 
@@ -170,6 +189,8 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 	req, err := http.NewRequestWithContext(ctx, "GET", cloudConnectorStatusUrl, nil)
 	if err != nil {
 		acr.Logger().Warnf("Failed to create request for RHC Connection for ID %v, e: %v", source.ID, err)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginInternal)
+
 		return
 	}
 
@@ -184,6 +205,8 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		acr.Logger().Warnf("Failed to request connection_status for RHC ID [%v]: %v", rhcConnection.RhcId, err)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginExternal)
+
 		return
 	}
 
@@ -193,12 +216,17 @@ func (acr availabilityCheckRequester) pingRHC(source *m.Source, rhcConnection *m
 		acr.Logger().Warnf("Invalid return code received for RHC ID [%v]: %v", rhcConnection.RhcId, resp.StatusCode)
 		b, _ := io.ReadAll(resp.Body)
 		acr.Logger().Warnf("Body Returned from RHC ID [%v]: %s", rhcConnection.ID, b)
+		acr.metricsService.IncrementSourcesAvailabilityCheckFailedRequestsCounter(metrics.OriginExternal)
 
 		// updating status to unavailable
 		acr.updateRhcStatus(source, "unavailable", unavailableRhc, rhcConnection, headers)
 
 		return
 	}
+
+	// Increment the successes' counter, because even though we might face errors further down, we still successfully
+	// sent the request and got a proper response.
+	acr.metricsService.IncrementSourcesAvailabilityCheckRequestsCounter()
 
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
