@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.24.4
 
 require (
-	github.com/99designs/gqlgen v0.17.77
+	github.com/99designs/gqlgen v0.17.78
 	github.com/RedHatInsights/rbac-client-go v1.0.0
 	github.com/RedHatInsights/tenant-utils v1.0.0
 	github.com/Unleash/unleash-client-go/v4 v4.4.0
