@@ -64,6 +64,8 @@ type SourcesApiConfig struct {
 	Env                      string
 	HandleTenantRefresh      bool
 	RbacHost                 string
+	JWKSUrl                  string
+	AuthorizedJWTSubjects    []string
 
 	SecretsManagerAccessKey string
 	SecretsManagerSecretKey string
@@ -103,8 +105,14 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", s.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", s.LocalStackURL)
 	fmt.Fprintf(&b, "%s=%v ", "RbacHost", s.RbacHost)
+	fmt.Fprintf(&b, "%s=%v ", "JWKSUrl", s.JWKSUrl)
 
 	return b.String()
+}
+
+// Reset clears the cached configuration - primarily for testing purposes
+func Reset() {
+	parsedConfig = nil
 }
 
 // Get - returns the config parsed from runtime vars
@@ -313,6 +321,10 @@ func Get() *SourcesApiConfig {
 	// psks for .... psk authentication
 	options.SetDefault("AuthorizedPsks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
+	// JWT authentication configuration
+	options.SetDefault("JWKSUrl", os.Getenv("JWKS_URL"))
+	options.SetDefault("AuthorizedJWTSubjects", strings.Split(os.Getenv("AUTHORIZED_JWT_SUBJECTS"), ","))
+
 	// Grab the Kafka Sasl Settings.
 	var brokerConfig []clowder.BrokerConfig
 
@@ -378,6 +390,8 @@ func Get() *SourcesApiConfig {
 		SecretsManagerPrefix:     options.GetString("SecretsManagerPrefix"),
 		LocalStackURL:            options.GetString("LocalStackURL"),
 		RbacHost:                 options.GetString("RbacHost"),
+		JWKSUrl:                  options.GetString("JWKSUrl"),
+		AuthorizedJWTSubjects:    options.GetStringSlice("AuthorizedJWTSubjects"),
 	}
 
 	return parsedConfig

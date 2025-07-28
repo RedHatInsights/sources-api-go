@@ -13,6 +13,7 @@ objects:
     encryption-key: "${ENCRYPTION_KEY}"
     secret-key: "${SECRET_KEY}"
     psks: "thisMustBeEphemeralOrMinikube"
+    authorized-jwt-subjects: "thisMustBeEphemeralOrMinikube"
 - apiVersion: v1
   kind: Secret # For ephemeral/local environment
   metadata:
@@ -210,11 +211,11 @@ objects:
               optional: true
         - name: RBAC_HOST
           value: ${RBAC_HOST}
-        - name: SOURCES_PSKS
+        - name: AUTHORIZED_JWT_SUBJECTS
           valueFrom:
             secretKeyRef:
               name: sources-api-secrets
-              key: psks
+              key: authorized-jwt-subjects
               optional: true
         - name: BYPASS_RBAC
           value: ${BYPASS_RBAC}
@@ -271,6 +272,8 @@ objects:
           value: ${HANDLE_TENANT_REFRESH}
         - name: DISABLED_APPLICATION_TYPES
           value: ${DISABLED_APPLICATION_TYPES}
+        - name: JWKS_URL
+          value: ${JWKS_URL}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -460,4 +463,7 @@ parameters:
   value: "false"
 - description: A comma-separated list of application types that are disabled in Sources
   name: DISABLED_APPLICATION_TYPES
+  value: ""
+- description: Endpoint used to retrieve the public keys needed to verify the signature of JWT tokens.
+  name: JWKS_URL
   value: ""

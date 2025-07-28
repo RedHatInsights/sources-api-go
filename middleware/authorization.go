@@ -24,7 +24,7 @@ import (
 //     operation on a subset of paths.
 //   - The request is a regularly authenticated one, so we will call RBAC to verify that the principal that comes in
 //     the header has the authorization to perform the operation in Sources.
-func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.Client) echo.MiddlewareFunc {
+func PermissionCheck(bypassRbac bool, authorizedPsks []string, authorizedJWTSubjects []string, rbacClient rbac.Client) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			switch {
@@ -38,6 +38,16 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 
 				if !pskMatches(authorizedPsks, psk) {
 					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
+				}
+
+			case c.Get(h.JWTSubject) != nil:
+				jwtSubject, ok := c.Get(h.JWTSubject).(string)
+				if !ok {
+					return fmt.Errorf("error casting jwt subject to string: %v", c.Get(h.JWTSubject))
+				}
+
+				if !jwtSubjectMatches(authorizedJWTSubjects, jwtSubject) {
+					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Incorrect JWT subject", "401"))
 				}
 
 			case c.Get(h.XRHID) != nil:
@@ -95,7 +105,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				}
 
 			default:
-				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
+				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity], [x-rh-sources-psk] or [Authorization: Bearer <token>]", "401"))
 			}
 
 			return next(c)
@@ -113,4 +123,9 @@ func certDeleteAllowed(c echo.Context) bool {
 // pskMatches returns true if the given PSK is in the list of allowed PSKs.
 func pskMatches(authorizedPsks []string, psk string) bool {
 	return util.SliceContainsString(authorizedPsks, psk)
+}
+
+// jwtSubjectMatches returns true if the given JWT subject is in the list of authorized JWT subjects.
+func jwtSubjectMatches(authorizedJWTSubjects []string, jwtSubject string) bool {
+	return util.SliceContainsString(authorizedJWTSubjects, jwtSubject)
 }

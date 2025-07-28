@@ -18,6 +18,9 @@ var conf = config.Get()
 
 var ready = false
 
+// Test overrides for feature flags - used in testing to control feature flag behavior
+var testFeatureOverrides = make(map[string]bool)
+
 func featureFlagsConfigPresent() bool {
 	return conf.FeatureFlagsUrl != ""
 }
@@ -78,7 +81,22 @@ func init() {
 	}
 }
 
+// SetTestFeatureFlag sets a feature flag override for testing purposes
+func SetTestFeatureFlag(feature string, enabled bool) {
+	testFeatureOverrides[feature] = enabled
+}
+
+// ClearTestFeatureFlags clears all test feature flag overrides
+func ClearTestFeatureFlags() {
+	testFeatureOverrides = make(map[string]bool)
+}
+
 func FeatureEnabled(feature string) bool {
+	// Check for test overrides first
+	if override, exists := testFeatureOverrides[feature]; exists {
+		return override
+	}
+
 	if !featureFlagsServiceUnleash() {
 		return false
 	}

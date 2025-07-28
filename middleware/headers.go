@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"strings"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -51,6 +52,29 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.InsightsRequestID, c.Request().Header.Get(h.InsightsRequestID))
 		}
 
+		// Handle JWT Authorization header
+		if authHeader := c.Request().Header.Get(h.Authorization); authHeader != "" {
+			c.Set(h.Authorization, authHeader)
+
+			// Extract JWT token if present
+			if strings.HasPrefix(authHeader, "Bearer ") {
+				token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+				if token != "" {
+					// Validate token early for security and performance:
+					// - Length check (8KB max) prevents DoS attacks with massive "tokens"
+					// - Format check ensures basic JWT structure (3 parts)
+					// - Fail fast principle: reject invalid tokens immediately rather than wasting CPU cycles in downstream JWT validation
+					if len(token) > 8192 {
+						c.Logger().Warn("JWT token ignored: exceeds maximum length")
+					} else if !isValidJWTFormat(token) {
+						c.Logger().Warn("JWT token ignored: invalid format")
+					} else {
+						c.Set(h.JWTToken, token)
+					}
+				}
+			}
+		}
+
 		// id is the XrhId struct we will store in the context. The idea is: if no "x-rh-identity" header has been
 		// received, generate an identity struct from the given "OrgId" and "EBS account number". If the "x-rh-identity"
 		// header is present, simply decode it and use the decided identity.
@@ -91,4 +115,23 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return next(c)
 	}
+}
+
+// isValidJWTFormat performs basic JWT format validation
+// This is a lightweight check to reject obviously invalid tokens early,
+// preventing unnecessary processing in the JWT authentication middleware
+func isValidJWTFormat(token string) bool {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return false
+	}
+
+	// Check each part is non-empty (header.payload.signature)
+	for _, part := range parts {
+		if part == "" {
+			return false
+		}
+	}
+
+	return true
 }

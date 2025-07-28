@@ -12,4 +12,8 @@ const (
 	ParsedIdentity    = "identity"
 	TenantID          = "tenantID"
 	UserID            = "userID"
+	// JWT-related: Authorization is actual HTTP header, others are internal context keys
+	Authorization = "Authorization" // HTTP header: "Authorization: Bearer <token>"
+	JWTToken      = "jwt-token"     // Context key: extracted JWT token string
+	JWTSubject    = "jwt-subject"   // Context key: validated JWT subject
 )
