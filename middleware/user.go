@@ -27,6 +27,14 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 
 			userIDFromContext = userID
 
+		case c.Get(h.JWTUserID) != nil:
+			userID, ok := c.Get(h.JWTUserID).(string)
+			if !ok {
+				return fmt.Errorf("failed to pull JWT user id from request")
+			}
+
+			userIDFromContext = userID
+
 		case c.Get(h.ParsedIdentity) != nil:
 			xRhIdentity, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 			if !ok {

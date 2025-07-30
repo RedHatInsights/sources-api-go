@@ -6,10 +6,17 @@ import (
 	"regexp"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
+	"github.com/RedHatInsights/sources-api-go/middleware/oidc"
 	"github.com/RedHatInsights/sources-api-go/rbac"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/identity"
+)
+
+// Feature flag constants
+const (
+	FeatureFlagOIDCAuth = "sources.oidc_authentication"
 )
 
 // PermissionCheck takes the authentication information stored in the context and returns a "401 — Unauthorized" if the
@@ -40,6 +47,32 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
 				}
 
+			case c.Get(h.JWTToken) != nil && service.FeatureEnabled(FeatureFlagOIDCAuth):
+				// JWT-based authentication for S2S communication - prioritize over XRHID
+				// This feature is gated behind the OIDC authentication feature flag
+				jwtConfig := oidc.LoadJWTConfigFromGlobal()
+
+				tokenString, ok := c.Get(h.JWTToken).(string)
+				if !ok {
+					return fmt.Errorf("error casting JWT token to string: %v", c.Get(h.JWTToken))
+				}
+
+				userID, err := oidc.ValidateJWTWithConfig(tokenString, jwtConfig)
+				if err != nil {
+					c.Logger().Debugf("JWT validation failed: %v", err)
+					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Invalid JWT token", "401"))
+				}
+
+				// Store JWT user ID in context for user middleware
+				c.Set(h.JWTUserID, userID)
+				c.Logger().Debugf("JWT authentication successful for user: %s", userID)
+
+			case c.Get(h.JWTToken) != nil && !service.FeatureEnabled(FeatureFlagOIDCAuth):
+				// JWT token present but OIDC authentication feature flag is disabled
+				// Log this and fall through to XRHID authentication
+				c.Logger().Debugf("JWT token present but OIDC authentication is disabled via feature flag")
+				fallthrough
+
 			case c.Get(h.XRHID) != nil:
 				// first check the identity (already parsed) to see if it contains
 				// the system key and if it does do some extra checks to authorize
@@ -47,6 +80,21 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 				if !ok {
 					return fmt.Errorf("error casting identity to struct: %+v", c.Get(h.ParsedIdentity))
+				}
+
+				// If the identity is empty AND it's the generated default identity (no real auth provided),
+				// fall through to default case
+				if id.Identity.AccountNumber == "" && id.Identity.OrgID == "" && id.Identity.System == (identity.System{}) {
+					// Check if this is the generated empty identity from ParseHeaders
+					xrhidRaw, ok := c.Get(h.XRHID).(string)
+					if !ok {
+						return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get(h.XRHID))
+					}
+
+					generatedEmptyIdentity := "eyJpZGVudGl0eSI6eyJvcmdfaWQiOiIiLCJpbnRlcm5hbCI6eyJvcmdfaWQiOiIifSwidXNlciI6eyJ1c2VybmFtZSI6IiIsImVtYWlsIjoiIiwiZmlyc3RfbmFtZSI6IiIsImxhc3RfbmFtZSI6IiIsImlzX2FjdGl2ZSI6ZmFsc2UsImlzX29yZ19hZG1pbiI6ZmFsc2UsImlzX2ludGVybmFsIjpmYWxzZSwibG9jYWxlIjoiIiwidXNlcl9pZCI6IiJ9LCJzeXN0ZW0iOnt9LCJhc3NvY2lhdGUiOnsiUm9sZSI6bnVsbCwiZW1haWwiOiIiLCJnaXZlbk5hbWUiOiIiLCJyaGF0VVVJRCI6IiIsInN1cm5hbWUiOiIifSwieDUwOSI6eyJzdWJqZWN0X2RuIjoiIiwiaXNzdWVyX2RuIjoiIn0sInR5cGUiOiJTeXN0ZW0iLCJhdXRoX3R5cGUiOiIifX0="
+					if xrhidRaw == generatedEmptyIdentity {
+						return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity], [x-rh-sources-psk], or [Authorization: Bearer <token>]", "401"))
+					}
 				}
 
 				// checking to see if we're going to change the results since
@@ -93,7 +141,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				}
 
 			default:
-				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
+				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity], [x-rh-sources-psk], or [Authorization: Bearer <token>]", "401"))
 			}
 
 			return next(c)
