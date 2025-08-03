@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // mockTenantDao is a mock which will help us mocking the "GetOrCreateTenant" function.

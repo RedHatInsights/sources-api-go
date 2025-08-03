@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 var conf = config.Get()

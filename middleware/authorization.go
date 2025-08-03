@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // PermissionCheck takes the authentication information stored in the context and returns a "401 — Unauthorized" if the

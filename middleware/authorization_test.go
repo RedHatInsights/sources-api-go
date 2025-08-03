@@ -8,7 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // mockedRbacResponse defines the response that we will get from the RBAC client.
