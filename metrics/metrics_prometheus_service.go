@@ -36,7 +36,8 @@ func NewPrometheusMetricsService() (MetricsService, error) {
 func (s *prometheusMetricsService) IncrementSourcesAvailabilityCheckRequestsCounter() {
 	s.availabilityCheckRequestsCounter.With(
 		prometheus.Labels{
-			"status": outcomeName[resultSuccess],
+			"status":       outcomeName[resultSuccess],
+			"error_origin": "",
 		},
 	).Inc()
 }
