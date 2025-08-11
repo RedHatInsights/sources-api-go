@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"strings"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -49,6 +50,17 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 
 		if c.Request().Header.Get(h.InsightsRequestID) != "" {
 			c.Set(h.InsightsRequestID, c.Request().Header.Get(h.InsightsRequestID))
+		}
+
+		// Handle JWT Authorization header
+		if authHeader := c.Request().Header.Get("Authorization"); authHeader != "" {
+			c.Set(h.Authorization, authHeader)
+
+			// Extract JWT token if present
+			if strings.HasPrefix(authHeader, "Bearer ") {
+				token := strings.TrimPrefix(authHeader, "Bearer ")
+				c.Set(h.JWTToken, token)
+			}
 		}
 
 		// id is the XrhId struct we will store in the context. The idea is: if no "x-rh-identity" header has been
