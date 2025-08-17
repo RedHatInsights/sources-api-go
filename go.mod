@@ -2,7 +2,7 @@ module github.com/RedHatInsights/sources-api-go
 
 go 1.24
 
-toolchain go1.24.4
+toolchain go1.25.0
 
 require (
 	github.com/99designs/gqlgen v0.17.78
