@@ -61,6 +61,14 @@
   supported_authentication_types:
     satellite:
     - receptor_node
+"/insights/platform/image-builder":
+  display_name: Image Builder
+  dependent_applications: []
+  supported_source_types:
+    - amazon
+  supported_authentication_types:
+    amazon:
+      - provisioning-arn
 "/insights/platform/provisioning":
   display_name: Launch images
   dependent_applications: []
