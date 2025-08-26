@@ -73,4 +73,4 @@ func MigrateAwsProvisioningToImageBuilder() *gormigrate.Migration {
 			return err
 		},
 	}
-} 
+}
