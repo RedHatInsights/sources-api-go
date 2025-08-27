@@ -28,7 +28,7 @@ var MigrationsCollection = []*gormigrate.Migration{
 	RenameForeignKeysIndexes(),
 	RemoveProcessedDuplicatedTenants(),
 	AvailabilityStatusColumnsNotNullConstraintDefaultValue(),
-	MigrateAwsProvisioningToImageBuilder(),
+	//MigrateAwsProvisioningToImageBuilder(),
 }
 
 var ctx = context.Background()
