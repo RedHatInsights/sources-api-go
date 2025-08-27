@@ -64,6 +64,16 @@ type SourcesApiConfig struct {
 	HandleTenantRefresh     bool
 	RbacHost                string
 
+	// JWT Configuration - supports dual validation strategy for maximum deployment flexibility:
+	// 1. JWTJWKSUrl: Modern JWKS endpoint for dynamic key discovery and automatic key rotation
+	// 2. JWTPublicKey: Static RSA public key fallback for network-restricted environments,
+	//    development/testing, legacy deployments, or when JWKS endpoint is unavailable
+	// JWKS takes precedence when both are configured for security and operational benefits
+	JWTPublicKey string
+	JWTIssuer    string
+	JWTAudience  string
+	JWTJWKSUrl   string
+
 	SecretsManagerAccessKey string
 	SecretsManagerSecretKey string
 	SecretsManagerPrefix    string
@@ -101,7 +111,16 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", s.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", s.LocalStackURL)
 	fmt.Fprintf(&b, "%s=%v ", "RbacHost", s.RbacHost)
+	fmt.Fprintf(&b, "%s=%v ", "JWTIssuer", s.JWTIssuer)
+	fmt.Fprintf(&b, "%s=%v ", "JWTAudience", s.JWTAudience)
+	fmt.Fprintf(&b, "%s=%v ", "JWTJWKSUrl", s.JWTJWKSUrl)
+	fmt.Fprintf(&b, "JWTPublicKey=<redacted> ")
 	return b.String()
+}
+
+// Reset clears the cached configuration - primarily for testing purposes
+func Reset() {
+	parsedConfig = nil
 }
 
 // Get - returns the config parsed from runtime vars
@@ -310,6 +329,12 @@ func Get() *SourcesApiConfig {
 	// psks for .... psk authentication
 	options.SetDefault("AuthorizedPsks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
+	// JWT authentication configuration
+	options.SetDefault("JWTPublicKey", os.Getenv("JWT_PUBLIC_KEY"))
+	options.SetDefault("JWTIssuer", os.Getenv("JWT_ISSUER"))
+	options.SetDefault("JWTAudience", os.Getenv("JWT_AUDIENCE"))
+	options.SetDefault("JWTJWKSUrl", os.Getenv("JWT_JWKS_URL"))
+
 	// Grab the Kafka Sasl Settings.
 	var brokerConfig []clowder.BrokerConfig
 
@@ -361,6 +386,10 @@ func Get() *SourcesApiConfig {
 		SecretsManagerPrefix:    options.GetString("SecretsManagerPrefix"),
 		LocalStackURL:           options.GetString("LocalStackURL"),
 		RbacHost:                options.GetString("RbacHost"),
+		JWTPublicKey:            options.GetString("JWTPublicKey"),
+		JWTIssuer:               options.GetString("JWTIssuer"),
+		JWTAudience:             options.GetString("JWTAudience"),
+		JWTJWKSUrl:              options.GetString("JWTJWKSUrl"),
 	}
 
 	return parsedConfig
