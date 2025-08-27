@@ -66,6 +66,7 @@
   dependent_applications: []
   supported_source_types:
     - amazon
+  supported_authentication_types: []
 "/insights/platform/provisioning":
   display_name: Launch images
   dependent_applications: []
