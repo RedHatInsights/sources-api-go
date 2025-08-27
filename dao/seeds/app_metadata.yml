@@ -24,7 +24,6 @@ stage:
     retry_source_creation: true
   "/insights/platform/image-builder":
     aws_wizard_account_number: "351356922033"
-    gcp_service_account: provisioning-stage@red-hat-hcc.iam.gserviceaccount.com
 prod:
   "/insights/platform/cost-management":
     gcp_service_account: billing-export@red-hat-cost-management.iam.gserviceaccount.com
