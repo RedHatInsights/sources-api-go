@@ -19,7 +19,7 @@ func CleanupProvisioningAuthentications() *gormigrate.Migration {
 				// These types are no longer supported by any application type
 				provisioningAuthTypes := []string{
 					"provisioning-arn",
-					"provisioning_lighthouse_subscription_id", 
+					"provisioning_lighthouse_subscription_id",
 					"provisioning_project_id",
 				}
 
@@ -40,4 +40,4 @@ func CleanupProvisioningAuthentications() *gormigrate.Migration {
 			return nil
 		},
 	}
-} 
+}
