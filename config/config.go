@@ -26,43 +26,44 @@ var parsedConfig *SourcesApiConfig
 
 // SourcesApiConfig is the struct for storing runtime configuration
 type SourcesApiConfig struct {
-	AppName                 string
-	Hostname                string
-	KafkaBrokerConfig       []clowder.BrokerConfig
-	KafkaTopics             map[string]string
-	KafkaGroupID            string
-	MetricsPort             int
-	LogLevel                string
-	LogGroup                string
-	AwsRegion               string
-	AwsAccessKeyID          string
-	AwsSecretAccessKey      string
-	DatabaseHost            string
-	DatabasePort            int
-	DatabaseUser            string
-	DatabasePassword        string
-	DatabaseName            string
-	DatabaseSSLMode         string
-	DatabaseCert            string
-	FeatureFlagsEnvironment string
-	FeatureFlagsUrl         string
-	FeatureFlagsAPIToken    string
-	FeatureFlagsService     string
-	CacheHost               string
-	CachePort               int
-	CachePassword           string
-	SlowSQLThreshold        int
-	AuthorizedPsks          []string
-	BypassRbac              bool
-	StatusListener          bool
-	BackgroundWorker        bool
-	MigrationsSetup         bool
-	MigrationsReset         bool
-	SecretStore             string
-	TenantTranslatorUrl     string
-	Env                     string
-	HandleTenantRefresh     bool
-	RbacHost                string
+	AppName                  string
+	Hostname                 string
+	KafkaBrokerConfig        []clowder.BrokerConfig
+	KafkaTopics              map[string]string
+	KafkaGroupID             string
+	MetricsPort              int
+	LogLevel                 string
+	LogGroup                 string
+	AwsRegion                string
+	AwsAccessKeyID           string
+	AwsSecretAccessKey       string
+	DatabaseHost             string
+	DatabasePort             int
+	DatabaseUser             string
+	DatabasePassword         string
+	DatabaseName             string
+	DatabaseSSLMode          string
+	DatabaseCert             string
+	DisabledApplicationTypes []string
+	FeatureFlagsEnvironment  string
+	FeatureFlagsUrl          string
+	FeatureFlagsAPIToken     string
+	FeatureFlagsService      string
+	CacheHost                string
+	CachePort                int
+	CachePassword            string
+	SlowSQLThreshold         int
+	AuthorizedPsks           []string
+	BypassRbac               bool
+	StatusListener           bool
+	BackgroundWorker         bool
+	MigrationsSetup          bool
+	MigrationsReset          bool
+	SecretStore              string
+	TenantTranslatorUrl      string
+	Env                      string
+	HandleTenantRefresh      bool
+	RbacHost                 string
 
 	SecretsManagerAccessKey string
 	SecretsManagerSecretKey string
@@ -87,6 +88,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "DatabaseName", s.DatabaseName)
 	fmt.Fprintf(&b, "%s=%v ", "DatabaseSSLMode", s.DatabaseSSLMode)
 	fmt.Fprintf(&b, "%s=%v ", "DatabaseCert", s.DatabaseCert)
+	fmt.Fprintf(&b, "%s=%v ", "DisabledApplicationTypes", s.DisabledApplicationTypes)
 	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsEnvironment", s.FeatureFlagsEnvironment)
 	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsUrl", s.FeatureFlagsUrl)
 	fmt.Fprintf(&b, "%s=%v ", "FeatureFlagsService", s.FeatureFlagsService)
@@ -101,6 +103,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", s.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", s.LocalStackURL)
 	fmt.Fprintf(&b, "%s=%v ", "RbacHost", s.RbacHost)
+
 	return b.String()
 }
 
@@ -318,49 +321,63 @@ func Get() *SourcesApiConfig {
 		brokerConfig = bcRaw
 	}
 
+	// Grab the disabled application types.
+	disabledAppTypesEnv := os.Getenv("DISABLED_APPLICATION_TYPES")
+
+	var disabledAppTypes []string
+	if disabledAppTypesEnv != "" {
+		disabledAppTypes = strings.Split(disabledAppTypesEnv, ",")
+	} else {
+		disabledAppTypes = []string{}
+	}
+
+	options.SetDefault("DisabledApplicationTypes", disabledAppTypes)
+
+	// Parse all the configuration.
 	options.AutomaticEnv()
 	parsedConfig = &SourcesApiConfig{
-		AppName:                 options.GetString("AppName"),
-		Hostname:                options.GetString("Hostname"),
-		KafkaBrokerConfig:       brokerConfig,
-		KafkaTopics:             options.GetStringMapString("KafkaTopics"),
-		KafkaGroupID:            options.GetString("KafkaGroupID"),
-		MetricsPort:             options.GetInt("MetricsPort"),
-		LogLevel:                options.GetString("LogLevel"),
-		SlowSQLThreshold:        options.GetInt("SlowSQLThreshold"),
-		LogGroup:                options.GetString("LogGroup"),
-		AwsRegion:               options.GetString("AwsRegion"),
-		AwsAccessKeyID:          options.GetString("AwsAccessKeyID"),
-		AwsSecretAccessKey:      options.GetString("AwsSecretAccessKey"),
-		DatabaseHost:            options.GetString("DatabaseHost"),
-		DatabasePort:            options.GetInt("DatabasePort"),
-		DatabaseUser:            options.GetString("DatabaseUser"),
-		DatabasePassword:        options.GetString("DatabasePassword"),
-		DatabaseName:            options.GetString("DatabaseName"),
-		DatabaseSSLMode:         options.GetString("DatabaseSSLMode"),
-		DatabaseCert:            options.GetString("DatabaseCert"),
-		FeatureFlagsEnvironment: options.GetString("FeatureFlagsEnvironment"),
-		FeatureFlagsUrl:         options.GetString("FeatureFlagsUrl"),
-		FeatureFlagsAPIToken:    options.GetString("FeatureFlagsAPIToken"),
-		FeatureFlagsService:     options.GetString("FeatureFlagsService"),
-		CacheHost:               options.GetString("CacheHost"),
-		CachePort:               options.GetInt("CachePort"),
-		CachePassword:           options.GetString("CachePassword"),
-		AuthorizedPsks:          options.GetStringSlice("AuthorizedPsks"),
-		BypassRbac:              options.GetBool("BypassRbac"),
-		StatusListener:          options.GetBool("StatusListener"),
-		BackgroundWorker:        options.GetBool("BackgroundWorker"),
-		MigrationsSetup:         options.GetBool("MigrationsSetup"),
-		MigrationsReset:         options.GetBool("MigrationsReset"),
-		SecretStore:             options.GetString("SecretStore"),
-		TenantTranslatorUrl:     options.GetString("TenantTranslatorUrl"),
-		Env:                     options.GetString("Env"),
-		HandleTenantRefresh:     options.GetBool("HandleTenantRefresh"),
-		SecretsManagerAccessKey: options.GetString("SecretsManagerAccessKey"),
-		SecretsManagerSecretKey: options.GetString("SecretsManagerSecretKey"),
-		SecretsManagerPrefix:    options.GetString("SecretsManagerPrefix"),
-		LocalStackURL:           options.GetString("LocalStackURL"),
-		RbacHost:                options.GetString("RbacHost"),
+		AppName:                  options.GetString("AppName"),
+		Hostname:                 options.GetString("Hostname"),
+		KafkaBrokerConfig:        brokerConfig,
+		KafkaTopics:              options.GetStringMapString("KafkaTopics"),
+		KafkaGroupID:             options.GetString("KafkaGroupID"),
+		MetricsPort:              options.GetInt("MetricsPort"),
+		LogLevel:                 options.GetString("LogLevel"),
+		SlowSQLThreshold:         options.GetInt("SlowSQLThreshold"),
+		LogGroup:                 options.GetString("LogGroup"),
+		AwsRegion:                options.GetString("AwsRegion"),
+		AwsAccessKeyID:           options.GetString("AwsAccessKeyID"),
+		AwsSecretAccessKey:       options.GetString("AwsSecretAccessKey"),
+		DatabaseHost:             options.GetString("DatabaseHost"),
+		DatabasePort:             options.GetInt("DatabasePort"),
+		DatabaseUser:             options.GetString("DatabaseUser"),
+		DatabasePassword:         options.GetString("DatabasePassword"),
+		DatabaseName:             options.GetString("DatabaseName"),
+		DatabaseSSLMode:          options.GetString("DatabaseSSLMode"),
+		DatabaseCert:             options.GetString("DatabaseCert"),
+		DisabledApplicationTypes: options.GetStringSlice("DisabledApplicationTypes"),
+		FeatureFlagsEnvironment:  options.GetString("FeatureFlagsEnvironment"),
+		FeatureFlagsUrl:          options.GetString("FeatureFlagsUrl"),
+		FeatureFlagsAPIToken:     options.GetString("FeatureFlagsAPIToken"),
+		FeatureFlagsService:      options.GetString("FeatureFlagsService"),
+		CacheHost:                options.GetString("CacheHost"),
+		CachePort:                options.GetInt("CachePort"),
+		CachePassword:            options.GetString("CachePassword"),
+		AuthorizedPsks:           options.GetStringSlice("AuthorizedPsks"),
+		BypassRbac:               options.GetBool("BypassRbac"),
+		StatusListener:           options.GetBool("StatusListener"),
+		BackgroundWorker:         options.GetBool("BackgroundWorker"),
+		MigrationsSetup:          options.GetBool("MigrationsSetup"),
+		MigrationsReset:          options.GetBool("MigrationsReset"),
+		SecretStore:              options.GetString("SecretStore"),
+		TenantTranslatorUrl:      options.GetString("TenantTranslatorUrl"),
+		Env:                      options.GetString("Env"),
+		HandleTenantRefresh:      options.GetBool("HandleTenantRefresh"),
+		SecretsManagerAccessKey:  options.GetString("SecretsManagerAccessKey"),
+		SecretsManagerSecretKey:  options.GetString("SecretsManagerSecretKey"),
+		SecretsManagerPrefix:     options.GetString("SecretsManagerPrefix"),
+		LocalStackURL:            options.GetString("LocalStackURL"),
+		RbacHost:                 options.GetString("RbacHost"),
 	}
 
 	return parsedConfig

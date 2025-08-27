@@ -3,8 +3,10 @@ package dao
 import (
 	"fmt"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 )
 
 // GetApplicationTypeDao is a function definition that can be replaced in runtime in case some other DAO provider is
@@ -14,7 +16,8 @@ var GetApplicationTypeDao func(*int64) ApplicationTypeDao
 // getDefaultApplicationAuthenticationDao gets the default DAO implementation which will have the given tenant ID.
 func getDefaultApplicationTypeDao(tenantId *int64) ApplicationTypeDao {
 	return &applicationTypeDaoImpl{
-		TenantID: tenantId,
+		SourcesConfig: config.Get(),
+		TenantID:      tenantId,
 	}
 }
 
@@ -24,7 +27,8 @@ func init() {
 }
 
 type applicationTypeDaoImpl struct {
-	TenantID *int64
+	SourcesConfig *config.SourcesApiConfig
+	TenantID      *int64
 }
 
 func (at *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{}, limit, offset int, filters []util.Filter) ([]m.ApplicationType, int64, error) {
@@ -43,6 +47,9 @@ func (at *applicationTypeDaoImpl) SubCollectionList(primaryCollection interface{
 	if err != nil {
 		return nil, 0, util.NewErrBadRequest(err.Error())
 	}
+
+	// Apply the disabled application types' restriction.
+	at.applyDisabledApplicationTypesRestriction(query)
 
 	// getting the total count (filters included) for pagination
 	count := int64(0)
@@ -68,6 +75,9 @@ func (at *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter)
 		return nil, 0, util.NewErrBadRequest(err)
 	}
 
+	// Apply the disabled application types' restriction.
+	at.applyDisabledApplicationTypesRestriction(query)
+
 	// getting the total count (filters included) for pagination
 	count := int64(0)
 	query.Count(&count)
@@ -84,12 +94,14 @@ func (at *applicationTypeDaoImpl) List(limit, offset int, filters []util.Filter)
 func (at *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error) {
 	var appType m.ApplicationType
 
-	err := DB.Debug().
+	query := DB.Debug().
 		Model(&m.ApplicationType{}).
-		Where("id = ?", *id).
-		First(&appType).
-		Error
-	if err != nil {
+		Where("id = ?", *id)
+
+	// Apply the disabled application types' restriction.
+	at.applyDisabledApplicationTypesRestriction(query)
+
+	if query.First(&appType).Error != nil {
 		return nil, util.NewErrNotFound("application type")
 	}
 
@@ -98,9 +110,14 @@ func (at *applicationTypeDaoImpl) GetById(id *int64) (*m.ApplicationType, error)
 
 func (at *applicationTypeDaoImpl) GetByName(name string) (*m.ApplicationType, error) {
 	appTypes := make([]m.ApplicationType, 0)
-	result := DB.Debug().
-		Where("name LIKE ?", "%"+name+"%").
-		Find(&appTypes)
+	query := DB.Debug().
+		Where("name LIKE ?", "%"+name+"%")
+
+	// Apply the disabled application types' restriction.
+	at.applyDisabledApplicationTypesRestriction(query)
+
+	// Run the query.
+	result := query.Find(&appTypes)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -139,6 +156,10 @@ func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSource(typeId, so
 		Find(&source).
 		Error
 	if err != nil {
+		return err
+	}
+
+	if source.ID == 0 {
 		return fmt.Errorf("source not found")
 	}
 
@@ -153,14 +174,16 @@ func (at *applicationTypeDaoImpl) ApplicationTypeCompatibleWithSourceType(appTyp
 	// datatypes.JsonQuery("application_types.supported_source_types") but that
 	// doesn't work when we're specifying something joined in, in this case
 	// "source_types.name"
-	result := DB.Debug().
+	query := DB.Debug().
 		Select("application_types.*").
 		Joins("LEFT JOIN source_types ON source_types.id = ?", sourceTypeId).
 		Where("application_types.id = ?", appTypeId).
-		Where("application_types.supported_source_types::jsonb ? source_types.name").
-		First(&m.ApplicationType{})
+		Where("application_types.supported_source_types::jsonb ? source_types.name")
 
-	return result.Error
+	// Apply the disabled application types' restriction.
+	at.applyDisabledApplicationTypesRestriction(query)
+
+	return query.First(&m.ApplicationType{}).Error
 }
 
 func (at *applicationTypeDaoImpl) GetSuperKeyResultType(applicationTypeId int64, authType string) (string, error) {
@@ -171,14 +194,26 @@ func (at *applicationTypeDaoImpl) GetSuperKeyResultType(applicationTypeId int64,
 	//
 	// the short story is that we're pulling the `authType` key out of the
 	// supportedAuthenticationTypes which is an array and then plucking index 0
-	result := DB.Debug().
+	query := DB.Debug().
 		Model(&m.ApplicationType{Id: applicationTypeId}).
-		Select("application_types.supported_authentication_types::json -> ? ->> 0", authType).
-		Scan(&resultType)
+		Select("application_types.supported_authentication_types::json -> ? ->> 0", authType)
 
-	if result.Error != nil {
-		return "", result.Error
+	// Apply the disabled application types' restriction.
+	at.applyDisabledApplicationTypesRestriction(query)
+
+	// Run the query.
+	err := query.Scan(&resultType).Error
+	if err != nil {
+		return "", err
 	}
 
-	return resultType, result.Error
+	return resultType, nil
+}
+
+// applyDisabledApplicationTypesRestriction applies a condition to the given
+// query to avoid fetching the disabled application types from the database.
+func (at *applicationTypeDaoImpl) applyDisabledApplicationTypesRestriction(query *gorm.DB) {
+	if len(at.SourcesConfig.DisabledApplicationTypes) > 0 {
+		query.Where("application_types.name NOT IN ?", at.SourcesConfig.DisabledApplicationTypes)
+	}
 }
