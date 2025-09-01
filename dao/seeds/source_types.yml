@@ -95,6 +95,7 @@ amazon:
       name: Image Builder AWS Account ID
       fields:
         - name: authentication.authtype
+          component: text-field
           hideField: true
           initializeOnMount: true
           initialValue: image-builder-aws-account-id
