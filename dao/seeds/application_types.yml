@@ -67,7 +67,8 @@
   supported_source_types:
     - amazon
   supported_authentication_types:
-    - image-builder-aws-account-id
+    amazon:
+      - image-builder-aws-account-id
 "/insights/platform/provisioning":
   display_name: Launch images
   dependent_applications: []
