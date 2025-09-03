@@ -66,6 +66,8 @@ objects:
           value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
@@ -124,6 +126,8 @@ objects:
           value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
@@ -192,6 +196,8 @@ objects:
           value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_BASE_PATH}
         - name: CLOUD_CONNECTOR_STATUS_PATH
           value: ${CLOUD_CONNECTOR_STATUS_PATH}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         - name: PROVISIONING_AVAILABILITY_CHECK_URL
           value: ${PROVISIONING_SCHEME}://${PROVISIONING_HOST}:${PROVISIONING_PORT}${PROVISIONING_CHECK_PATH}
         - name: SOURCES_ENV
@@ -263,6 +269,8 @@ objects:
               optional: true
         - name: HANDLE_TENANT_REFRESH
           value: ${HANDLE_TENANT_REFRESH}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -450,3 +458,6 @@ parameters:
 - description: Whether to handle conflicts on user_ids during a tenant refresh
   name: HANDLE_TENANT_REFRESH
   value: "false"
+- description: A comma-separated list of application types that are disabled in Sources
+  name: DISABLED_APPLICATION_TYPES
+  value: ""

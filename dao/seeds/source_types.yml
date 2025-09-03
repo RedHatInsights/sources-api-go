@@ -46,7 +46,7 @@ amazon:
       - name: authentication.extra.external_id
         component: text-field
         hideField: true
-        initializeOnMount: true   
+        initializeOnMount: true
       - name: authentication.username
         stepKey: arn
         component: text-field
@@ -62,7 +62,7 @@ amazon:
         name: application.extra.metered
         label: Metered Product
         simpleValue: true
-        options: 
+        options:
           - label: None
             value: ""
           - label: Red Hat Enterprise Linux
@@ -191,7 +191,7 @@ azure:
         name: application.extra.metered
         label: Metered Product
         simpleValue: true
-        options: 
+        options:
           - label: None
             value: ""
           - label: Red Hat Enterprise Linux
