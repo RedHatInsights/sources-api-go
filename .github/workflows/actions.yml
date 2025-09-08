@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-go@v5.4.0
+      - uses: actions/setup-go@v6.0.0
         with:
           go-version: "1.24"
       - uses: Jerome1337/gofmt-action@v1.0.5
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-go@v5.4.0
+      - uses: actions/setup-go@v6.0.0
         with:
           go-version: "1.24"
       - run: |
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-go@v5.4.0
+      - uses: actions/setup-go@v6.0.0
         with:
           go-version: "1.24"
       - name: golangci-lint
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-go@v5.4.0
+      - uses: actions/setup-go@v6.0.0
         with:
           go-version: "1.24"
       - run: |
