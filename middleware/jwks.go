@@ -23,7 +23,7 @@ const (
 
 // Simple JWKS cache - reduces load on the JWKS endpoint
 type jwksCache struct {
-	mu     sync.Mutex
+	mu     sync.RWMutex
 	keySet jwk.Set
 	expiry time.Time
 }
@@ -51,11 +51,23 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 		return nil, fmt.Errorf("JWKS URL must be HTTPS")
 	}
 
-	// Single lock to prevent race conditions
+	// Double-checked locking: first check with read lock for performance
+	globalJWKSCache.mu.RLock()
+
+	if globalJWKSCache.keySet != nil && time.Now().Before(globalJWKSCache.expiry) {
+		keySet := globalJWKSCache.keySet
+		globalJWKSCache.mu.RUnlock()
+
+		return keySet, nil
+	}
+
+	globalJWKSCache.mu.RUnlock()
+
+	// Cache expired or missing, acquire write lock
 	globalJWKSCache.mu.Lock()
 	defer globalJWKSCache.mu.Unlock()
 
-	// Return cached JWKS if it's not expired
+	// Double-check with write lock: another goroutine might have updated the cache
 	if globalJWKSCache.keySet != nil && time.Now().Before(globalJWKSCache.expiry) {
 		return globalJWKSCache.keySet, nil
 	}
