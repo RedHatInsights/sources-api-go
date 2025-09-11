@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/service"
@@ -153,6 +155,77 @@ func TestValidateJWTSubject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateJWTSubject(tt.subject)
+
+			if tt.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateJWTIssuer(t *testing.T) {
+	tests := []struct {
+		name         string
+		configIssuer string
+		tokenIssuer  string
+		expectError  bool
+		errorMsg     string
+	}{
+		{
+			name:         "no issuer configured - should pass",
+			configIssuer: "",
+			tokenIssuer:  "any-issuer",
+			expectError:  false,
+		},
+		{
+			name:         "matching issuer - should pass",
+			configIssuer: "https://example.com",
+			tokenIssuer:  "https://example.com",
+			expectError:  false,
+		},
+		{
+			name:         "mismatched issuer - should fail",
+			configIssuer: "https://example.com",
+			tokenIssuer:  "https://wrong.com",
+			expectError:  true,
+			errorMsg:     "invalid issuer: expected https://example.com, got https://wrong.com",
+		},
+		{
+			name:         "empty token issuer - should fail",
+			configIssuer: "https://example.com",
+			tokenIssuer:  "",
+			expectError:  true,
+			errorMsg:     "missing or empty issuer claim, expected: https://example.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up config with the test issuer
+			originalIssuer := os.Getenv("JWT_ISSUER")
+
+			defer func() {
+				if originalIssuer != "" {
+					os.Setenv("JWT_ISSUER", originalIssuer)
+				} else {
+					os.Unsetenv("JWT_ISSUER")
+				}
+
+				config.Reset()
+			}()
+
+			if tt.configIssuer != "" {
+				os.Setenv("JWT_ISSUER", tt.configIssuer)
+			} else {
+				os.Unsetenv("JWT_ISSUER")
+			}
+
+			config.Reset() // Force config reload
+
+			err := validateJWTIssuer(tt.tokenIssuer)
 
 			if tt.expectError {
 				require.Error(t, err)

@@ -274,6 +274,8 @@ objects:
           value: ${DISABLED_APPLICATION_TYPES}
         - name: JWKS_URL
           value: ${JWKS_URL}
+        - name: JWTIssuer
+          value: ${JWTIssuer}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -467,3 +469,6 @@ parameters:
 - description: Endpoint used to retrieve the public keys needed to verify the signature of JWT tokens.
   name: JWKS_URL
   value: ""
+- description: Issuer of the JWT tokens.
+  name: JWT_ISSUER
+  value: https://sso.redhat.com/auth/realms/redhat-external

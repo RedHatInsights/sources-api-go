@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -85,6 +86,12 @@ func validateJWTToken(ctx context.Context, tokenString string) (string, error) {
 		return "", err
 	}
 
+	// Validate issuer
+	err = validateJWTIssuer(token.Issuer())
+	if err != nil {
+		return "", err
+	}
+
 	// Extract and validate subject
 	subject := token.Subject()
 
@@ -110,6 +117,28 @@ func validateJWTAlgorithm(token jwt.Token) error {
 		default:
 			return fmt.Errorf("unsupported algorithm: %s", algStr)
 		}
+	}
+
+	return nil
+}
+
+// validateJWTIssuer validates the JWT issuer claim
+func validateJWTIssuer(issuer string) error {
+	cfg := config.Get()
+	expectedIssuer := cfg.JWTIssuer
+
+	// If no issuer is configured, skip validation
+	if expectedIssuer == "" {
+		return nil
+	}
+
+	// Reject tokens with empty or missing issuer when issuer validation is enabled
+	if issuer == "" {
+		return fmt.Errorf("missing or empty issuer claim, expected: %s", expectedIssuer)
+	}
+
+	if issuer != expectedIssuer {
+		return fmt.Errorf("invalid issuer: expected %s, got %s", expectedIssuer, issuer)
 	}
 
 	return nil

@@ -65,6 +65,7 @@ type SourcesApiConfig struct {
 	HandleTenantRefresh      bool
 	RbacHost                 string
 	JWKSUrl                  string
+	JWTIssuer                string
 	AuthorizedJWTSubjects    []string
 
 	SecretsManagerAccessKey string
@@ -106,6 +107,7 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", s.LocalStackURL)
 	fmt.Fprintf(&b, "%s=%v ", "RbacHost", s.RbacHost)
 	fmt.Fprintf(&b, "%s=%v ", "JWKSUrl", s.JWKSUrl)
+	fmt.Fprintf(&b, "%s=%v ", "JWTIssuer", s.JWTIssuer)
 
 	return b.String()
 }
@@ -323,6 +325,7 @@ func Get() *SourcesApiConfig {
 
 	// JWT authentication configuration
 	options.SetDefault("JWKSUrl", os.Getenv("JWKS_URL"))
+	options.SetDefault("JWTIssuer", os.Getenv("JWT_ISSUER"))
 	options.SetDefault("AuthorizedJWTSubjects", strings.Split(os.Getenv("AUTHORIZED_JWT_SUBJECTS"), ","))
 
 	// Grab the Kafka Sasl Settings.
@@ -391,6 +394,7 @@ func Get() *SourcesApiConfig {
 		LocalStackURL:            options.GetString("LocalStackURL"),
 		RbacHost:                 options.GetString("RbacHost"),
 		JWKSUrl:                  options.GetString("JWKSUrl"),
+		JWTIssuer:                options.GetString("JWTIssuer"),
 		AuthorizedJWTSubjects:    options.GetStringSlice("AuthorizedJWTSubjects"),
 	}
 
