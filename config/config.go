@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -21,6 +22,12 @@ const (
 	VaultStore          = "vault"
 	SecretsManagerStore = "secrets-manager"
 )
+
+// AuthorizedJWTSubject represents an authorized JWT issuer-subject pair
+type AuthorizedJWTSubject struct {
+	Issuer  string `json:"issuer"`
+	Subject string `json:"subject"`
+}
 
 var parsedConfig *SourcesApiConfig
 
@@ -66,7 +73,7 @@ type SourcesApiConfig struct {
 	RbacHost                 string
 	JWKSUrl                  string
 	JWTIssuer                string
-	AuthorizedJWTSubjects    []string
+	AuthorizedJWTSubjects    []AuthorizedJWTSubject
 
 	SecretsManagerAccessKey string
 	SecretsManagerSecretKey string
@@ -326,7 +333,19 @@ func Get() *SourcesApiConfig {
 	// JWT authentication configuration
 	options.SetDefault("JWKSUrl", os.Getenv("JWKS_URL"))
 	options.SetDefault("JWTIssuer", os.Getenv("JWT_ISSUER"))
-	options.SetDefault("AuthorizedJWTSubjects", strings.Split(os.Getenv("AUTHORIZED_JWT_SUBJECTS"), ","))
+
+	// Parse AuthorizedJWTSubjects from JSON
+	var authorizedJWTSubjects []AuthorizedJWTSubject
+
+	jwtSubjectsJSON := os.Getenv("AUTHORIZED_JWT_SUBJECTS")
+	if jwtSubjectsJSON != "" {
+		err = json.Unmarshal([]byte(jwtSubjectsJSON), &authorizedJWTSubjects)
+		if err != nil {
+			log.Fatalf("Failed to parse AUTHORIZED_JWT_SUBJECTS JSON: %v. Expected format: '[{\"issuer\":\"...\",\"subject\":\"...\"}]'", err)
+		}
+	}
+
+	options.SetDefault("AuthorizedJWTSubjects", authorizedJWTSubjects)
 
 	// Grab the Kafka Sasl Settings.
 	var brokerConfig []clowder.BrokerConfig
@@ -395,7 +414,7 @@ func Get() *SourcesApiConfig {
 		RbacHost:                 options.GetString("RbacHost"),
 		JWKSUrl:                  options.GetString("JWKSUrl"),
 		JWTIssuer:                options.GetString("JWTIssuer"),
-		AuthorizedJWTSubjects:    options.GetStringSlice("AuthorizedJWTSubjects"),
+		AuthorizedJWTSubjects:    options.Get("AuthorizedJWTSubjects").([]AuthorizedJWTSubject),
 	}
 
 	return parsedConfig

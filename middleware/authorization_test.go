@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/labstack/echo/v4"
@@ -32,7 +33,7 @@ func (m *mockRbacClient) Allowed(string) (bool, error) {
 
 // setUpMiddleware sets up a "PermissionCheck" middleware with the given arguments. It also sets the middleware up so
 // that if no errors occur, a "204 — No content" response is returned.
-func setUpMiddleware(bypassRbac bool, allowedPsks []string, authorizedJWTSubjects []string, rbacResponse mockedRbacResponse) echo.HandlerFunc {
+func setUpMiddleware(bypassRbac bool, allowedPsks []string, authorizedJWTSubjects []config.AuthorizedJWTSubject, rbacResponse mockedRbacResponse) echo.HandlerFunc {
 	mockedRbacClient := mockRbacClient{mockedRbacResponse: rbacResponse}
 
 	middleware := PermissionCheck(bypassRbac, allowedPsks, authorizedJWTSubjects, &mockedRbacClient)
@@ -50,7 +51,7 @@ func TestRbacDisabled(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	middleware := setUpMiddleware(true, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(true, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -82,7 +83,7 @@ func TestGoodPSK(t *testing.T) {
 		map[string]interface{}{h.PSK: "1234"},
 	)
 
-	middleware := setUpMiddleware(true, []string{"1234"}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(true, []string{"1234"}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -102,7 +103,7 @@ func TestBadPSK(t *testing.T) {
 		map[string]interface{}{h.PSK: "1234"},
 	)
 
-	middleware := setUpMiddleware(false, []string{"abcdef"}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{"abcdef"}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -122,7 +123,7 @@ func TestNoPSK(t *testing.T) {
 		map[string]interface{}{},
 	)
 
-	middleware := setUpMiddleware(false, []string{"abcdef"}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{"abcdef"}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -151,7 +152,7 @@ func TestSystemClusterID(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(true, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(true, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -180,7 +181,7 @@ func TestSystemCN(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(true, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(true, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -209,7 +210,7 @@ func TestSystemPatch(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -238,7 +239,7 @@ func TestSystemDelete(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -267,7 +268,7 @@ func TestSystemDeleteSource(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -296,7 +297,7 @@ func TestSystemDeleteSourceVersioned(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -319,7 +320,7 @@ func TestRbacWithAccess(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{}, mockedRbacResponse{AllowedResponse: true})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{AllowedResponse: true})
 
 	err := middleware(c)
 	if err != nil {
@@ -342,7 +343,7 @@ func TestRbacWithoutAccess(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{}, mockedRbacResponse{AllowedResponse: false})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{AllowedResponse: false})
 
 	err := middleware(c)
 	if err != nil {
@@ -365,7 +366,7 @@ func TestRbacNoConnection(t *testing.T) {
 		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{}, mockedRbacResponse{ErrorResponse: fmt.Errorf("unable to connect to rbac")})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{ErrorResponse: fmt.Errorf("unable to connect to rbac")})
 
 	err := middleware(c)
 	if err == nil {
@@ -373,15 +374,21 @@ func TestRbacNoConnection(t *testing.T) {
 	}
 }
 
-func TestJWTSubjectMatches(t *testing.T) {
-	authorizedJWTSubjects := []string{"test-subject"}
-
-	if jwtSubjectMatches(authorizedJWTSubjects, "test-subject") != true {
-		t.Errorf("jwt subject didn't match when it should have")
+func TestJWTClaimsMatches(t *testing.T) {
+	authorizedJWTSubjects := []config.AuthorizedJWTSubject{
+		{Issuer: "https://example.com", Subject: "test-subject"},
 	}
 
-	if jwtSubjectMatches(authorizedJWTSubjects, "wrong-subject") == true {
-		t.Errorf("jwt subject matched when it should not have")
+	if jwtClaimsMatches(authorizedJWTSubjects, "https://example.com", "test-subject") != true {
+		t.Errorf("jwt claims didn't match when they should have")
+	}
+
+	if jwtClaimsMatches(authorizedJWTSubjects, "https://wrong.com", "test-subject") == true {
+		t.Errorf("jwt claims matched wrong issuer when they should not have")
+	}
+
+	if jwtClaimsMatches(authorizedJWTSubjects, "https://example.com", "wrong-subject") == true {
+		t.Errorf("jwt claims matched wrong subject when they should not have")
 	}
 }
 
@@ -390,10 +397,13 @@ func TestGoodJWTSubject(t *testing.T) {
 		http.MethodPost,
 		"/",
 		nil,
-		map[string]interface{}{h.JWTSubject: "test-subject"},
+		map[string]interface{}{
+			h.JWTIssuer:  "https://example.com",
+			h.JWTSubject: "test-subject",
+		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{"test-subject"}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{{Issuer: "https://example.com", Subject: "test-subject"}}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -410,10 +420,13 @@ func TestBadJWTSubject(t *testing.T) {
 		http.MethodPost,
 		"/",
 		nil,
-		map[string]interface{}{h.JWTSubject: "wrong-subject"},
+		map[string]interface{}{
+			h.JWTIssuer:  "https://example.com",
+			h.JWTSubject: "wrong-subject",
+		},
 	)
 
-	middleware := setUpMiddleware(false, []string{}, []string{"test-subject"}, mockedRbacResponse{})
+	middleware := setUpMiddleware(false, []string{}, []config.AuthorizedJWTSubject{{Issuer: "https://example.com", Subject: "test-subject"}}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {
@@ -433,7 +446,7 @@ func TestJWTSubjectBypassRbac(t *testing.T) {
 		map[string]interface{}{h.JWTSubject: "any-subject"},
 	)
 
-	middleware := setUpMiddleware(true, []string{}, []string{}, mockedRbacResponse{})
+	middleware := setUpMiddleware(true, []string{}, []config.AuthorizedJWTSubject{}, mockedRbacResponse{})
 
 	err := middleware(c)
 	if err != nil {

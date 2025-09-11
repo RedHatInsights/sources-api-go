@@ -19,6 +19,12 @@ const (
 	FeatureFlagOIDCAuth = "sources-api.oidc-auth.enabled"
 )
 
+// ValidatedJWTClaims holds the validated JWT claims
+type ValidatedJWTClaims struct {
+	Issuer  string
+	Subject string
+}
+
 // JWTAuthentication validates JWT tokens using JWKS and extracts user identity.
 //
 // Flow: Extracts JWT from context → Validates signature with JWKS → Checks claims → Sets subject
@@ -44,15 +50,16 @@ func JWTAuthentication() echo.MiddlewareFunc {
 			ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Second)
 			defer cancel()
 
-			subject, err := validateJWTToken(ctx, token)
+			validatedClaims, err := validateJWTToken(ctx, token)
 			if err != nil {
 				c.Logger().Debugf("JWT validation failed: %v", err)
 				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication failed", "401"))
 			}
 
-			// Store JWT subject
-			c.Set(h.JWTSubject, subject)
-			c.Logger().Debugf("JWT authentication successful for subject: %s", subject)
+			// Store JWT issuer and subject
+			c.Set(h.JWTIssuer, validatedClaims.Issuer)
+			c.Set(h.JWTSubject, validatedClaims.Subject)
+			c.Logger().Debugf("JWT authentication successful for issuer: %s, subject: %s", validatedClaims.Issuer, validatedClaims.Subject)
 
 			return next(c)
 		}
@@ -60,11 +67,11 @@ func JWTAuthentication() echo.MiddlewareFunc {
 }
 
 // validateJWTToken validates JWT using JWKS
-func validateJWTToken(ctx context.Context, tokenString string) (string, error) {
+func validateJWTToken(ctx context.Context, tokenString string) (ValidatedJWTClaims, error) {
 	// Fetch JWKS with caching
 	keySet, err := FetchJWKS(ctx)
 	if err != nil {
-		return "", fmt.Errorf("JWKS fetch failed")
+		return ValidatedJWTClaims{}, fmt.Errorf("JWKS fetch failed")
 	}
 
 	// Parse and validate token with enhanced validation
@@ -77,30 +84,35 @@ func validateJWTToken(ctx context.Context, tokenString string) (string, error) {
 		jwt.WithAcceptableSkew(30*time.Second), // Allow 30s clock drift for time claims
 	)
 	if err != nil {
-		return "", fmt.Errorf("token validation failed")
+		return ValidatedJWTClaims{}, fmt.Errorf("token validation failed")
 	}
 
 	// Validate algorithm is in allowlist
 	err = validateJWTAlgorithm(token)
 	if err != nil {
-		return "", err
+		return ValidatedJWTClaims{}, err
 	}
 
-	// Validate issuer
-	err = validateJWTIssuer(token.Issuer())
-	if err != nil {
-		return "", err
-	}
-
-	// Extract and validate subject
+	// Extract issuer and subject
+	issuer := token.Issuer()
 	subject := token.Subject()
 
-	err = validateJWTSubject(subject)
+	// Validate issuer
+	err = validateJWTIssuer(issuer)
 	if err != nil {
-		return "", err
+		return ValidatedJWTClaims{}, err
 	}
 
-	return subject, nil
+	// Validate subject
+	err = validateJWTSubject(subject)
+	if err != nil {
+		return ValidatedJWTClaims{}, err
+	}
+
+	return ValidatedJWTClaims{
+		Issuer:  issuer,
+		Subject: subject,
+	}, nil
 }
 
 // validateJWTAlgorithm validates that the JWT uses an allowed signing algorithm

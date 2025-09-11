@@ -15,5 +15,6 @@ const (
 	// JWT-related: Authorization is actual HTTP header, others are internal context keys
 	Authorization = "Authorization" // HTTP header: "Authorization: Bearer <token>"
 	JWTToken      = "jwt-token"     // Context key: extracted JWT token string
+	JWTIssuer     = "jwt-issuer"    // Context key: validated JWT issuer
 	JWTSubject    = "jwt-subject"   // Context key: validated JWT subject
 )

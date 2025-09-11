@@ -13,7 +13,7 @@ objects:
     encryption-key: "${ENCRYPTION_KEY}"
     secret-key: "${SECRET_KEY}"
     psks: "thisMustBeEphemeralOrMinikube"
-    authorized-jwt-subjects: "thisMustBeEphemeralOrMinikube"
+    authorized-jwt-subjects: '[{"issuer": "https://sso.redhat.com/auth/realms/redhat-external", "subject": "ephemeral-test-user"}]'
 - apiVersion: v1
   kind: Secret # For ephemeral/local environment
   metadata:
