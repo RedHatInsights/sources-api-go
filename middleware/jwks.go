@@ -31,7 +31,7 @@ type jwksCache struct {
 var globalJWKSCache = &jwksCache{}
 
 // FetchJWKS fetches JWKS with intelligent caching to optimize performance and reliability.
-// Caches valid JWKS for 1 minute to reduce load on identity providers while ensuring fresh keys.
+// Caches valid JWKS for 10 minutes to reduce load on identity providers while ensuring fresh keys.
 // Includes cache invalidation on errors to prevent poisoned cache states and comprehensive
 // security validation before caching. Essential for high-traffic applications with frequent JWT validation.
 func FetchJWKS(ctx context.Context) (jwk.Set, error) {
@@ -84,9 +84,9 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 		return nil, fmt.Errorf("JWKS key validation failed: %v", err)
 	}
 
-	// Cache for 1 minute (balances performance and security)
+	// Cache for 10 minutes (balances performance and security)
 	globalJWKSCache.keySet = keySet
-	globalJWKSCache.expiry = time.Now().Add(1 * time.Minute)
+	globalJWKSCache.expiry = time.Now().Add(10 * time.Minute)
 
 	return keySet, nil
 }

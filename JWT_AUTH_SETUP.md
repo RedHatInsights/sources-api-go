@@ -61,7 +61,7 @@ Your JWT token must:
 - **Clock Skew Tolerance**: 30 seconds tolerance for time-based claims
 - **Subject Length Limits**: Maximum 256 bytes to prevent memory exhaustion attacks
 - **Timeout Protection**: 10-second timeout for token validation
-- **JWKS Caching**: 1-minute cache with error invalidation
+- **JWKS Caching**: 10-minute cache with error invalidation
 
 ### Rejected Algorithms (Security)
 
@@ -167,7 +167,7 @@ Common error responses:
 
 ### Performance Optimizations
 
-- **JWKS Caching**: 1-minute cache to reduce external calls
+- **JWKS Caching**: 10-minute cache to reduce external calls
 - **Cache Invalidation**: Automatic cache clearing on errors
 - **Timeout Protection**: Request-scoped timeouts prevent hanging
 - **Size Limits**: Response size limits prevent DoS attacks
