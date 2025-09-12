@@ -11,7 +11,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -87,12 +86,6 @@ func validateJWTToken(ctx context.Context, tokenString string) (ValidatedJWTClai
 		return ValidatedJWTClaims{}, fmt.Errorf("token validation failed")
 	}
 
-	// Validate algorithm is in allowlist
-	err = validateJWTAlgorithm(token)
-	if err != nil {
-		return ValidatedJWTClaims{}, err
-	}
-
 	// Extract issuer and subject
 	issuer := token.Issuer()
 	subject := token.Subject()
@@ -113,25 +106,6 @@ func validateJWTToken(ctx context.Context, tokenString string) (ValidatedJWTClai
 		Issuer:  issuer,
 		Subject: subject,
 	}, nil
-}
-
-// validateJWTAlgorithm validates that the JWT uses an allowed signing algorithm
-func validateJWTAlgorithm(token jwt.Token) error {
-	alg := token.PrivateClaims()["alg"]
-	if algStr, ok := alg.(string); ok {
-		switch jwa.SignatureAlgorithm(algStr) {
-		case jwa.RS256, jwa.RS384, jwa.RS512, jwa.ES256, jwa.ES384, jwa.ES512:
-			// Allowed algorithms
-			return nil
-		case jwa.ES256K, jwa.EdDSA, jwa.HS256, jwa.HS384, jwa.HS512, jwa.NoSignature, jwa.PS256, jwa.PS384, jwa.PS512:
-			// Explicitly rejected algorithms
-			return fmt.Errorf("unsupported algorithm: %s", algStr)
-		default:
-			return fmt.Errorf("unsupported algorithm: %s", algStr)
-		}
-	}
-
-	return nil
 }
 
 // validateJWTIssuer validates the JWT issuer claim

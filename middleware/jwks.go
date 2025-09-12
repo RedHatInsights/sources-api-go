@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"crypto/rsa"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
@@ -118,20 +116,6 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 		return nil, fmt.Errorf("JWKS fetch failed and no cached keyset available: %v", err)
 	}
 
-	// Validate key strength before caching
-	err = validateJWKSKeyStrength(keySet)
-	if err != nil {
-		logger.Log.Errorf("JWKS validation failed for %s: %v", jwksURL, err)
-
-		// If validation fails but we have a cached keyset, return it
-		if globalJWKSCache.keySet != nil {
-			logger.Log.Warnf("Using cached JWKS due to validation failure")
-			return globalJWKSCache.keySet, nil
-		}
-
-		return nil, fmt.Errorf("JWKS key validation failed and no cached keyset available: %v", err)
-	}
-
 	// Cache for 10 minutes (balances performance and security)
 	globalJWKSCache.keySet = keySet
 	globalJWKSCache.expiry = now.Add(10 * time.Minute)
@@ -166,12 +150,6 @@ func refreshJWKSAsync(ctx context.Context, jwksURL string) {
 	keySet, err := secureJWKSFetch(refreshCtx, jwksURL)
 	if err != nil {
 		logger.Log.Warnf("Async JWKS refresh failed from %s: %v", jwksURL, err)
-		return
-	}
-
-	err = validateJWKSKeyStrength(keySet)
-	if err != nil {
-		logger.Log.Warnf("Async JWKS validation failed for %s: %v", jwksURL, err)
 		return
 	}
 
@@ -229,52 +207,4 @@ func secureJWKSFetch(ctx context.Context, jwksURL string) (jwk.Set, error) {
 	}
 
 	return keySet, nil
-}
-
-// validateJWKSKeyStrength validates RSA key strength in JWKS to prevent cryptographic attacks.
-// Ensures all RSA keys meet minimum 2048-bit strength requirements and that at least one
-// valid RSA key exists. Weak keys (< 2048 bits) are vulnerable to factorization attacks
-// and should be rejected to maintain security standards.
-func validateJWKSKeyStrength(keySet jwk.Set) error {
-	rsaKeyCount := 0
-
-	for i := 0; i < keySet.Len(); i++ {
-		key, ok := keySet.Key(i)
-		if !ok {
-			continue
-		}
-
-		// Check key type
-		keyType := key.KeyType()
-		if keyType != jwa.RSA {
-			continue // Skip non-RSA keys
-		}
-
-		rsaKeyCount++
-
-		// Extract RSA key and check bit size
-		var rawKey interface{}
-
-		err := key.Raw(&rawKey)
-		if err != nil {
-			return fmt.Errorf("failed to extract raw key: %v", err)
-		}
-
-		rsaKey, ok := rawKey.(*rsa.PublicKey)
-		if !ok {
-			return fmt.Errorf("key is not RSA public key")
-		}
-
-		// Validate minimum key size (2048 bits)
-		if rsaKey.N.BitLen() < 2048 {
-			return fmt.Errorf("RSA key too weak: %d bits (minimum 2048)", rsaKey.N.BitLen())
-		}
-	}
-
-	// Ensure at least one valid RSA key exists
-	if rsaKeyCount == 0 {
-		return fmt.Errorf("JWKS contains no valid RSA keys")
-	}
-
-	return nil
 }

@@ -70,62 +70,6 @@ func createValidJWKSJSON() string {
 	return string(data)
 }
 
-func TestValidateJWKSKeyStrength(t *testing.T) {
-	tests := []struct {
-		name    string
-		keySet  jwk.Set
-		wantErr bool
-		errMsg  string
-	}{
-		{
-			name:    "strong 2048-bit key",
-			keySet:  createTestJWKS(generateTestRSAKey(2048)),
-			wantErr: false,
-		},
-		{
-			name:    "strong 4096-bit key",
-			keySet:  createTestJWKS(generateTestRSAKey(4096)),
-			wantErr: false,
-		},
-		{
-			name:    "multiple strong keys",
-			keySet:  createTestJWKS(generateTestRSAKey(2048), generateTestRSAKey(4096)),
-			wantErr: false,
-		},
-		{
-			name:    "weak 1024-bit key",
-			keySet:  createTestJWKS(generateTestRSAKey(1024)),
-			wantErr: true,
-			errMsg:  "RSA key too weak: 1024 bits",
-		},
-		{
-			name:    "mixed strong and weak keys",
-			keySet:  createTestJWKS(generateTestRSAKey(2048), generateTestRSAKey(1024)),
-			wantErr: true,
-			errMsg:  "RSA key too weak: 1024 bits",
-		},
-		{
-			name:    "empty JWKS",
-			keySet:  jwk.NewSet(),
-			wantErr: true,
-			errMsg:  "JWKS contains no valid RSA keys",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validateJWKSKeyStrength(tt.keySet)
-
-			if tt.wantErr {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errMsg)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
 func TestSecureJWKSFetch(t *testing.T) {
 	validJWKS := createValidJWKSJSON()
 

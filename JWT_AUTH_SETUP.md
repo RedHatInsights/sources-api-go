@@ -49,7 +49,7 @@ Checks authorization in this order:
 Your JWT token must:
 
 - Be provided in `Authorization: Bearer <token>` header
-- Be signed with an **allowed algorithm**: RS256, RS384, RS512, ES256, ES384, ES512
+- Be signed with a cryptographic algorithm supported by your issuer
 - Include a `sub` (subject) claim with the user/service identifier (max 256 bytes)
 - Include `exp` (expiration) claim
 - Include `iat` (issued at) claim
@@ -57,20 +57,11 @@ Your JWT token must:
 
 ### Security Features
 
-- **Algorithm Allowlist**: Only secure asymmetric algorithms are allowed
 - **Clock Skew Tolerance**: 30 seconds tolerance for time-based claims
 - **Subject Length Limits**: Maximum 256 bytes to prevent memory exhaustion attacks
 - **Timeout Protection**: 10-second timeout for token validation
 - **JWKS Caching**: 10-minute cache with async refresh and fallback protection
 
-### Rejected Algorithms (Security)
-
-The following algorithms are explicitly rejected for security reasons:
-- **Symmetric algorithms**: HS256, HS384, HS512 (shared secret vulnerabilities)
-- **None algorithm**: `none` (no signature)
-- **PSS algorithms**: PS256, PS384, PS512 (complexity)
-- **EdDSA**: Not commonly used in OIDC
-- **ES256K**: Bitcoin-specific variant
 
 ### Example JWT Claims
 
@@ -101,8 +92,7 @@ Your JWKS endpoint must:
 - Return HTTP 200 status code
 - Use `Content-Type: application/json`
 - Return valid JWKS JSON format
-- Contain at least one valid RSA key
-- Have RSA keys with minimum 2048-bit strength
+- Contain at least one valid cryptographic key
 - Be accessible over HTTPS (HTTP only allowed for localhost in test environments)
 - Respond within 8 seconds
 
@@ -162,7 +152,6 @@ Common error responses:
 
 - **JWTAuthentication()** - Echo middleware function
 - **validateJWTToken()** - Core token validation with JWKS
-- **validateJWTAlgorithm()** - Algorithm security validation
 - **validateJWTSubject()** - Subject claim validation
 - **FetchJWKS()** - JWKS discovery with caching
 - **refreshJWKSAsync()** - Background JWKS refresh functionality
@@ -190,8 +179,6 @@ This design prioritizes availability over freshness, ensuring that IdP outages d
 ## Security Considerations
 
 - **JWKS Security**: JWKS endpoint must be trusted and secured
-- **Algorithm Restrictions**: Only secure asymmetric algorithms allowed
-- **Key Strength**: Minimum 2048-bit RSA keys enforced
 - **Subject Validation**: Length limits prevent memory exhaustion
 - **Network Security**: HTTPS required for JWKS endpoints (except localhost in tests)
 - **Timeout Protection**: Prevents hanging on slow/malicious endpoints
@@ -205,6 +192,5 @@ If migrating from a previous JWT implementation:
 3. Configure `JWKS_URL` environment variable
 4. Enable feature flag `sources-api.oidc-auth.enabled`
 5. Update JWT tokens to include required claims (`sub`, `exp`, `iat`)
-6. Ensure JWT signing algorithm is in the allowed list
 
 For questions or issues, please refer to the test files for examples of proper usage.
