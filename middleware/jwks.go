@@ -5,15 +5,23 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 )
+
+// JWKSDiscoverer interface abstracts JWKS URL discovery to facilitate testing and mocking.
+// This interface allows us to inject different discovery implementations during testing
+// without having to test JWKS URL discovery logic in unrelated tests.
+type JWKSDiscoverer interface {
+	Discover(ctx context.Context) (string, error)
+}
+
+// Default JWKS discoverer instance
+var defaultJWKSDiscoverer = &DefaultJWKSDiscoverer{}
 
 // JWKS cache with async refresh and fallback capabilities to prevent outages
 type jwksCache struct {
@@ -31,22 +39,12 @@ var globalJWKSCache = &jwksCache{}
 // Falls back to cached JWKS on fetch failures to prevent IdP outages from causing service outages.
 // Essential for high-traffic applications requiring resilience against IdP unavailability.
 func FetchJWKS(ctx context.Context) (jwk.Set, error) {
-	cfg := config.Get()
-	jwksURL := cfg.JWKSUrl
+	return FetchJWKSWithDiscoverer(ctx, defaultJWKSDiscoverer)
+}
 
-	// Validate JWKS URL is configured and HTTPS
-	if jwksURL == "" {
-		return nil, fmt.Errorf("JWKS URL not configured")
-	}
-
-	// Allow HTTP URLs only for localhost/127.0.0.1 in test environment
-	isTestEnv := os.Getenv("GO_ENV") == "test" || strings.Contains(os.Args[0], ".test")
-	isLocalHTTP := isTestEnv && strings.HasPrefix(jwksURL, "http://") && (strings.Contains(jwksURL, "localhost") || strings.Contains(jwksURL, "127.0.0.1"))
-
-	if !strings.HasPrefix(jwksURL, "https://") && !isLocalHTTP {
-		return nil, fmt.Errorf("JWKS URL must be HTTPS")
-	}
-
+// FetchJWKSWithDiscoverer fetches JWKS using the provided discoverer interface.
+// This function enables dependency injection for testing.
+func FetchJWKSWithDiscoverer(ctx context.Context, jwksDiscoverer JWKSDiscoverer) (jwk.Set, error) {
 	now := time.Now()
 
 	// Double-checked locking: first check with read lock for performance
@@ -66,7 +64,7 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 		globalJWKSCache.mu.RUnlock()
 
 		// Start async refresh
-		go refreshJWKSAsync(ctx, jwksURL)
+		go refreshJWKSAsync(ctx, jwksDiscoverer)
 
 		logger.Log.Debugf("Using cached JWKS while refreshing in background")
 
@@ -103,9 +101,9 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 	defer func() { globalJWKSCache.refreshing = false }()
 
 	// Fetch JWKS securely
-	keySet, err := secureJWKSFetch(ctx, jwksURL)
+	keySet, err := secureJWKSFetch(ctx, jwksDiscoverer)
 	if err != nil {
-		logger.Log.Errorf("JWKS fetch failed from %s: %v", jwksURL, err)
+		logger.Log.Errorf("JWKS fetch failed: %v", err)
 
 		// If we have a cached keyset, return it instead of failing
 		if globalJWKSCache.keySet != nil {
@@ -127,7 +125,7 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 }
 
 // refreshJWKSAsync performs background JWKS refresh to keep cache fresh without blocking requests
-func refreshJWKSAsync(ctx context.Context, jwksURL string) {
+func refreshJWKSAsync(ctx context.Context, jwksDiscoverer JWKSDiscoverer) {
 	globalJWKSCache.mu.Lock()
 
 	if globalJWKSCache.refreshing {
@@ -147,9 +145,9 @@ func refreshJWKSAsync(ctx context.Context, jwksURL string) {
 	refreshCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	keySet, err := secureJWKSFetch(refreshCtx, jwksURL)
+	keySet, err := secureJWKSFetch(refreshCtx, jwksDiscoverer)
 	if err != nil {
-		logger.Log.Warnf("Async JWKS refresh failed from %s: %v", jwksURL, err)
+		logger.Log.Warnf("Async JWKS refresh failed: %v", err)
 		return
 	}
 
@@ -166,7 +164,13 @@ func refreshJWKSAsync(ctx context.Context, jwksURL string) {
 // Implements multiple defenses against attacks: HTTP timeouts, status validation,
 // Content-Type verification, response size limits, and key count restrictions.
 // These protections prevent DoS attacks, SSRF exploitation, and malicious JWKS responses.
-func secureJWKSFetch(ctx context.Context, jwksURL string) (jwk.Set, error) {
+func secureJWKSFetch(ctx context.Context, jwksDiscoverer JWKSDiscoverer) (jwk.Set, error) {
+	// Discover JWKS URL from the issuer's OIDC discovery endpoint
+	jwksURL, err := jwksDiscoverer.Discover(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("JWKS URL discovery failed: %v", err)
+	}
+
 	// Create HTTP client with timeout (shorter than context timeout)
 	client := &http.Client{
 		Timeout: 8 * time.Second,

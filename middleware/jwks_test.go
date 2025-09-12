@@ -8,15 +8,28 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// Mock JWKS discoverer for testing
+type mockJWKSDiscoverer struct {
+	jwksURL string
+	err     error
+}
+
+func (m *mockJWKSDiscoverer) Discover(ctx context.Context) (string, error) {
+	return m.jwksURL, m.err
+}
+
+// Helper to create mock JWKS discoverer
+func newMockJWKSDiscoverer(jwksURL string, err error) JWKSDiscoverer {
+	return &mockJWKSDiscoverer{jwksURL: jwksURL, err: err}
+}
 
 // Test helper to reset global cache
 func resetGlobalCache() {
@@ -139,6 +152,9 @@ func TestSecureJWKSFetch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			resetGlobalCache()
+
+			// JWKS server
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if tt.contentType != "" {
 					w.Header().Set("Content-Type", tt.contentType)
@@ -150,7 +166,8 @@ func TestSecureJWKSFetch(t *testing.T) {
 			defer server.Close()
 
 			ctx := context.Background()
-			keySet, err := secureJWKSFetch(ctx, server.URL)
+			mockJWKSDiscoverer := newMockJWKSDiscoverer(server.URL, nil)
+			keySet, err := secureJWKSFetch(ctx, mockJWKSDiscoverer)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -172,6 +189,7 @@ func TestFetchJWKS(t *testing.T) {
 	validJWKS := createValidJWKSJSON()
 	httpCallCount := 0
 
+	// JWKS server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		httpCallCount++
 
@@ -181,21 +199,8 @@ func TestFetchJWKS(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Set environment variable for JWKS URL (config reads from env)
-	originalURL := os.Getenv("JWKS_URL")
+	mockJWKSDiscoverer := newMockJWKSDiscoverer(server.URL, nil)
 
-	defer func() {
-		if originalURL != "" {
-			os.Setenv("JWKS_URL", originalURL)
-		} else {
-			os.Unsetenv("JWKS_URL")
-		}
-
-		config.Reset() // Reset config cache
-	}()
-
-	os.Setenv("JWKS_URL", server.URL)
-	config.Reset() // Force config reload
 	t.Run("successful fetch and cache", func(t *testing.T) {
 		httpCallCount = 0
 
@@ -204,13 +209,13 @@ func TestFetchJWKS(t *testing.T) {
 		ctx := context.Background()
 
 		// First call - should fetch from server
-		keys1, err := FetchJWKS(ctx)
+		keys1, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 		assert.NotNil(t, keys1)
 		assert.Equal(t, 1, httpCallCount)
 
 		// Second call - should use cache
-		keys2, err := FetchJWKS(ctx)
+		keys2, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 		assert.NotNil(t, keys2)
 		assert.Equal(t, 1, httpCallCount) // No additional HTTP call
@@ -227,7 +232,7 @@ func TestFetchJWKS(t *testing.T) {
 		ctx := context.Background()
 
 		// First call
-		_, err := FetchJWKS(ctx)
+		_, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 		assert.Equal(t, 1, httpCallCount)
 
@@ -238,7 +243,7 @@ func TestFetchJWKS(t *testing.T) {
 
 		// Second call - with async refresh, this returns cached value immediately
 		// and triggers background refresh
-		_, err = FetchJWKS(ctx)
+		_, err = FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 
 		// Wait for async refresh to complete
@@ -252,27 +257,31 @@ func TestFetchJWKS(t *testing.T) {
 func TestFetchJWKS_ConfigValidation(t *testing.T) {
 	tests := []struct {
 		name    string
-		jwksURL string
+		mockURL string
+		mockErr error
 		wantErr bool
 		errMsg  string
 	}{
 		{
-			name:    "missing JWKS URL",
-			jwksURL: "",
+			name:    "missing JWT issuer",
+			mockURL: "",
+			mockErr: fmt.Errorf("OIDC discovery URL validation failed: JWT issuer not configured"),
 			wantErr: true,
-			errMsg:  "JWKS URL not configured",
+			errMsg:  "JWT issuer not configured",
 		},
 		{
-			name:    "HTTP URL (not HTTPS)",
-			jwksURL: "http://example.com/.well-known/jwks.json",
+			name:    "HTTP issuer (not HTTPS)",
+			mockURL: "",
+			mockErr: fmt.Errorf("OIDC discovery URL validation failed: OIDC discovery URL must be HTTPS"),
 			wantErr: true,
-			errMsg:  "JWKS URL must be HTTPS",
+			errMsg:  "OIDC discovery URL must be HTTPS",
 		},
 		{
-			name:    "valid HTTPS URL",
-			jwksURL: "https://example.com/.well-known/jwks.json",
-			wantErr: true,                // Will fail due to network, but should pass URL validation
-			errMsg:  "JWKS fetch failed", // Different error - means URL validation passed
+			name:    "discovery network failure",
+			mockURL: "",
+			mockErr: fmt.Errorf("JWKS URL discovery failed: no such host"),
+			wantErr: true,
+			errMsg:  "JWKS URL discovery failed",
 		},
 	}
 
@@ -280,29 +289,10 @@ func TestFetchJWKS_ConfigValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			resetGlobalCache()
 
-			// Set environment variable for this test
-			originalURL := os.Getenv("JWKS_URL")
-
-			defer func() {
-				if originalURL != "" {
-					os.Setenv("JWKS_URL", originalURL)
-				} else {
-					os.Unsetenv("JWKS_URL")
-				}
-
-				config.Reset()
-			}()
-
-			if tt.jwksURL != "" {
-				os.Setenv("JWKS_URL", tt.jwksURL)
-			} else {
-				os.Unsetenv("JWKS_URL")
-			}
-
-			config.Reset() // Force config reload
-
 			ctx := context.Background()
-			_, err := FetchJWKS(ctx)
+			// Create mock JWKS discoverer with the specified error
+			mockJWKSDiscoverer := newMockJWKSDiscoverer(tt.mockURL, tt.mockErr)
+			_, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 
 			if tt.wantErr {
 				require.Error(t, err)
@@ -321,6 +311,7 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 	httpCallCount := 0
 	shouldFail := false
 
+	// JWKS server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		httpCallCount++
 
@@ -337,21 +328,8 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Set environment variable for JWKS URL
-	originalURL := os.Getenv("JWKS_URL")
-
-	defer func() {
-		if originalURL != "" {
-			os.Setenv("JWKS_URL", originalURL)
-		} else {
-			os.Unsetenv("JWKS_URL")
-		}
-
-		config.Reset()
-	}()
-
-	os.Setenv("JWKS_URL", server.URL)
-	config.Reset()
+	// Create mock JWKS discoverer
+	mockJWKSDiscoverer := newMockJWKSDiscoverer(server.URL, nil)
 
 	t.Run("fallback to cached JWKS on fetch failure", func(t *testing.T) {
 		httpCallCount = 0
@@ -362,7 +340,7 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 		ctx := context.Background()
 
 		// First call - should succeed and cache the result
-		keys1, err := FetchJWKS(ctx)
+		keys1, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 		assert.NotNil(t, keys1)
 		assert.Equal(t, 1, httpCallCount)
@@ -376,7 +354,7 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 		shouldFail = true
 
 		// Second call - should use cached value despite server failure
-		keys2, err := FetchJWKS(ctx)
+		keys2, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 		assert.NotNil(t, keys2)
 		assert.Equal(t, keys1.Len(), keys2.Len())
@@ -394,7 +372,7 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 		ctx := context.Background()
 
 		// First call - should succeed and cache the result
-		keys1, err := FetchJWKS(ctx)
+		keys1, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 		assert.NotNil(t, keys1)
 		assert.Equal(t, 1, httpCallCount)
@@ -406,7 +384,7 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 		globalJWKSCache.mu.Unlock()
 
 		// Second call - should return cached value immediately and trigger async refresh
-		keys2, err := FetchJWKS(ctx)
+		keys2, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
 		require.NoError(t, err)
 		assert.NotNil(t, keys2)
 		assert.Equal(t, keys1.Len(), keys2.Len())

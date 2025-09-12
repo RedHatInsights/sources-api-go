@@ -272,8 +272,6 @@ objects:
           value: ${HANDLE_TENANT_REFRESH}
         - name: DISABLED_APPLICATION_TYPES
           value: ${DISABLED_APPLICATION_TYPES}
-        - name: JWKS_URL
-          value: ${JWKS_URL}
         - name: JWTIssuer
           value: ${JWTIssuer}
         readinessProbe:
@@ -465,9 +463,6 @@ parameters:
   value: "false"
 - description: A comma-separated list of application types that are disabled in Sources
   name: DISABLED_APPLICATION_TYPES
-  value: ""
-- description: Endpoint used to retrieve the public keys needed to verify the signature of JWT tokens.
-  name: JWKS_URL
   value: ""
 - description: Issuer of the JWT tokens.
   name: JWT_ISSUER

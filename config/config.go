@@ -71,7 +71,6 @@ type SourcesApiConfig struct {
 	Env                      string
 	HandleTenantRefresh      bool
 	RbacHost                 string
-	JWKSUrl                  string
 	JWTIssuer                string
 	AuthorizedJWTSubjects    []AuthorizedJWTSubject
 
@@ -113,7 +112,6 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", s.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", s.LocalStackURL)
 	fmt.Fprintf(&b, "%s=%v ", "RbacHost", s.RbacHost)
-	fmt.Fprintf(&b, "%s=%v ", "JWKSUrl", s.JWKSUrl)
 	fmt.Fprintf(&b, "%s=%v ", "JWTIssuer", s.JWTIssuer)
 
 	return b.String()
@@ -331,7 +329,6 @@ func Get() *SourcesApiConfig {
 	options.SetDefault("AuthorizedPsks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
 	// JWT authentication configuration
-	options.SetDefault("JWKSUrl", os.Getenv("JWKS_URL"))
 	options.SetDefault("JWTIssuer", os.Getenv("JWT_ISSUER"))
 
 	// Parse AuthorizedJWTSubjects from JSON
@@ -412,7 +409,6 @@ func Get() *SourcesApiConfig {
 		SecretsManagerPrefix:     options.GetString("SecretsManagerPrefix"),
 		LocalStackURL:            options.GetString("LocalStackURL"),
 		RbacHost:                 options.GetString("RbacHost"),
-		JWKSUrl:                  options.GetString("JWKSUrl"),
 		JWTIssuer:                options.GetString("JWTIssuer"),
 		AuthorizedJWTSubjects:    options.Get("AuthorizedJWTSubjects").([]AuthorizedJWTSubject),
 	}

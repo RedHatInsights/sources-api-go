@@ -10,11 +10,11 @@ JWT authentication has been added as an additional authentication method that wo
 
 ### Environment Variables
 
-JWT authentication requires JWKS (JSON Web Key Set) for dynamic key discovery:
+JWT authentication uses OIDC Discovery for automatic JWKS endpoint discovery:
 
 ```bash
-# Required: JWKS endpoint URL for key discovery
-JWKS_URL="https://your-oidc-provider/.well-known/jwks.json"
+# Required: JWT issuer URL for OIDC discovery
+JWT_ISSUER="https://your-oidc-provider"
 ```
 
 ### Feature Flag
@@ -34,7 +34,8 @@ The API processes authentication in the following order:
 - Extracts JWT from `Authorization: Bearer <token>` header (processed by ParseHeaders middleware)
 - If feature flag `sources-api.oidc-auth.enabled` is disabled, skips JWT processing
 - If no token present, continues to next authentication method
-- Validates token signature using JWKS
+- Discovers JWKS URL from issuer's OIDC discovery endpoint
+- Validates token signature using discovered JWKS
 - Extracts and stores JWT subject in context
 
 ### Phase 2: Authorization Middleware
@@ -60,6 +61,7 @@ Your JWT token must:
 - **Clock Skew Tolerance**: 30 seconds tolerance for time-based claims
 - **Subject Length Limits**: Maximum 256 bytes to prevent memory exhaustion attacks
 - **Timeout Protection**: 10-second timeout for token validation
+- **OIDC Discovery**: Automatic JWKS URL discovery (fetched every time JWKS is refreshed)
 - **JWKS Caching**: 10-minute cache with async refresh and fallback protection
 
 
@@ -85,16 +87,35 @@ curl -H "Authorization: Bearer <your-jwt-token>" \
      https://your-sources-api/api/sources/v3.1/sources
 ```
 
-## JWKS Requirements
+## OIDC Discovery Requirements
 
-Your JWKS endpoint must:
+Your OIDC provider must:
 
+### Discovery Endpoint
+- Provide discovery document at `https://your-issuer/.well-known/openid-configuration`
+- Return HTTP 200 status code with `Content-Type: application/json`
+- Include required fields: `issuer` and `jwks_uri`
+- Be accessible over HTTPS (HTTP only allowed for localhost in test environments)
+- Respond within 8 seconds
+
+### JWKS Endpoint
 - Return HTTP 200 status code
 - Use `Content-Type: application/json`
 - Return valid JWKS JSON format
 - Contain at least one valid cryptographic key
 - Be accessible over HTTPS (HTTP only allowed for localhost in test environments)
 - Respond within 8 seconds
+
+### Example Discovery Document
+
+```json
+{
+  "issuer": "https://your-oidc-provider",
+  "jwks_uri": "https://your-oidc-provider/.well-known/jwks.json",
+  "authorization_endpoint": "https://your-oidc-provider/oauth/authorize",
+  "token_endpoint": "https://your-oidc-provider/oauth/token"
+}
+```
 
 ### Example JWKS Response
 
@@ -129,6 +150,15 @@ go test ./middleware -v -run TestFetchJWKS
 
 # Test JWKS security validation
 go test ./middleware -v -run TestSecureJWKSFetch
+
+# Test OIDC discovery functionality
+go test ./middleware -v -run TestDiscoverJWKSURL
+
+# Test discovery URL building and validation
+go test ./middleware -v -run TestBuildDiscoveryURL
+
+# Test discovery document fetching
+go test ./middleware -v -run TestPerformDiscovery
 ```
 
 ## Error Handling
@@ -144,53 +174,91 @@ Common error responses:
 ### Key Files
 
 - `middleware/jwt_auth.go` - Main JWT authentication middleware and validation
-- `middleware/jwks.go` - JWKS fetching, caching, and key validation
+- `middleware/jwks_discovery.go` - OIDC discovery document fetching
+- `middleware/jwks.go` - JWKS fetching, caching, and key validation with dependency injection
 - `middleware/authorization.go` - Authorization logic integrating JWT subjects
-- `config/config.go` - Configuration management for JWKS_URL
+- `config/config.go` - Configuration management for JWT_ISSUER
 
 ### Architecture
 
 - **JWTAuthentication()** - Echo middleware function
 - **validateJWTToken()** - Core token validation with JWKS
 - **validateJWTSubject()** - Subject claim validation
-- **FetchJWKS()** - JWKS discovery with caching
+- **discoverJWKSURL()** - OIDC discovery function (in jwks_discovery.go)
+- **FetchJWKS()** - JWKS fetching with caching (in jwks.go)
+- **FetchJWKSWithDiscoverer()** - JWKS fetching with dependency injection support
 - **refreshJWKSAsync()** - Background JWKS refresh functionality
 
-### JWKS Caching Behavior
+### Caching Behavior
 
-The JWKS cache implements sophisticated caching with async refresh to ensure high availability:
+The implementation uses two separate caches for optimal performance:
 
+#### OIDC Discovery (No Caching)
+1. **Fresh Discovery**: Fetches discovery document every time JWKS needs to be refreshed
+2. **Simplified Logic**: No cache management complexity
+3. **Always Current**: Uses latest discovery information from IdP
+4. **Reasonable Load**: ~144 discovery calls per day (every 10 minutes)
+
+#### JWKS Cache (10-minute TTL)
 1. **Cache Hit (Fresh)**: Returns cached JWKS immediately if within 10-minute TTL
 2. **Cache Hit (Expired)**: Returns cached JWKS immediately and triggers background refresh
-3. **Cache Miss**: Fetches JWKS synchronously and caches result
+3. **Cache Miss**: Fetches JWKS synchronously using discovered URL and caches result
 4. **Fetch Failure**: Falls back to cached JWKS to prevent service outages
-5. **Async Refresh**: Background refresh updates cache without blocking requests
+5. **Async Refresh**: Background refresh updates JWKS cache without blocking requests
 
-This design prioritizes availability over freshness, ensuring that IdP outages don't impact authentication.
+This design prioritizes availability over freshness for JWKS data, ensuring that IdP outages don't impact authentication.
+
+### Dependency Injection Architecture
+
+The implementation uses interface-based dependency injection for testability:
+
+#### JWKSDiscoverer Interface
+```go
+type JWKSDiscoverer interface {
+    Discover(ctx context.Context) (string, error)
+}
+```
+
+#### Production Implementation
+- **DefaultJWKSDiscoverer**: Production implementation using real OIDC discovery
+- **FetchJWKS()**: Uses default discoverer for normal operation
+- **FetchJWKSWithDiscoverer()**: Accepts custom discoverer for testing
+
+#### Testing Implementation
+- **mockJWKSDiscoverer**: Test implementation for controlled testing
+- **newMockJWKSDiscoverer()**: Helper to create mock discoverers with specified URLs/errors
+- Enables isolated testing without real HTTP calls or OIDC discovery
+- Allows testing error conditions, timeouts, and various JWKS URL scenarios
+- Separates JWKS fetching tests from OIDC discovery tests for better test isolation
 
 ### Performance Optimizations
 
-- **JWKS Caching**: 10-minute cache to reduce external calls
-- **Async Refresh**: Background JWKS refresh to avoid blocking requests
+- **JWKS Caching**: 10-minute cache to reduce JWKS endpoint calls
+- **Async Refresh**: Background refresh for JWKS to avoid blocking requests
 - **Fallback Protection**: Returns cached JWKS on fetch failures to prevent outages
 - **Double-Checked Locking**: Optimized cache access with minimal lock contention
 - **Timeout Protection**: Request-scoped timeouts prevent hanging
+- **Simplified Discovery**: No discovery caching reduces complexity while maintaining reasonable load
+- **Dependency Injection**: Interface-based design enables clean testing with mock discoverers
 
 ## Security Considerations
 
+- **Discovery Security**: OIDC discovery endpoint must be trusted and secured
 - **JWKS Security**: JWKS endpoint must be trusted and secured
 - **Subject Validation**: Length limits prevent memory exhaustion
-- **Network Security**: HTTPS required for JWKS endpoints (except localhost in tests)
+- **Network Security**: HTTPS required for discovery and JWKS endpoints (except localhost in tests)
 - **Timeout Protection**: Prevents hanging on slow/malicious endpoints
+- **Issuer Validation**: Discovery document issuer must match requested issuer
 
 ## Migration from Previous Setup
 
 If migrating from a previous JWT implementation:
 
 1. Remove any static JWT public key configuration
-2. Set up JWKS endpoint with your OIDC provider
-3. Configure `JWKS_URL` environment variable
-4. Enable feature flag `sources-api.oidc-auth.enabled`
-5. Update JWT tokens to include required claims (`sub`, `exp`, `iat`)
+2. Remove `JWKS_URL` environment variable (no longer used)
+3. Configure `JWT_ISSUER` environment variable with your OIDC provider's issuer URL
+4. Ensure your OIDC provider supports discovery at `/.well-known/openid-configuration`
+5. Enable feature flag `sources-api.oidc-auth.enabled`
+6. Update JWT tokens to include required claims (`sub`, `exp`, `iat`)
 
 For questions or issues, please refer to the test files for examples of proper usage.
