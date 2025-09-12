@@ -233,20 +233,10 @@ func secureJWKSFetch(ctx context.Context, jwksURL string) (jwk.Set, error) {
 		return nil, fmt.Errorf("JWKS response too large: %d bytes", len(body))
 	}
 
-	// Pre-validate key count before parsing (quick check)
-	if strings.Count(string(body), `"kid"`) > 10 {
-		return nil, fmt.Errorf("too many keys in JWKS")
-	}
-
 	// Parse JWKS
 	keySet, err := jwk.Parse(body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse JWKS: %w", err)
-	}
-
-	// Final validation
-	if keySet.Len() > 10 {
-		return nil, fmt.Errorf("too many keys in JWKS: %d", keySet.Len())
 	}
 
 	return keySet, nil

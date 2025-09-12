@@ -71,23 +71,6 @@ func createValidJWKSJSON() string {
 	return string(data)
 }
 
-// Test helper to create JWKS with many keys
-func createJWKSWithManyKeys() string {
-	keys := make([]*rsa.PrivateKey, 15) // More than the 10 key limit
-	for i := range keys {
-		keys[i] = generateTestRSAKey(2048)
-	}
-
-	jwks := createTestJWKS(keys...)
-
-	data, err := json.Marshal(jwks)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal large JWKS: %v", err))
-	}
-
-	return string(data)
-}
-
 func TestValidateJWKSKeyStrength(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -146,7 +129,6 @@ func TestValidateJWKSKeyStrength(t *testing.T) {
 
 func TestSecureJWKSFetch(t *testing.T) {
 	validJWKS := createValidJWKSJSON()
-	largeJWKS := createJWKSWithManyKeys()
 	oversizedBody := strings.Repeat("x", MaxJWKSSize+1000)
 
 	tests := []struct {
@@ -210,14 +192,6 @@ func TestSecureJWKSFetch(t *testing.T) {
 			body:         oversizedBody,
 			wantErr:      true,
 			errMsg:       "JWKS response too large:",
-		},
-		{
-			name:         "too many keys",
-			responseCode: http.StatusOK,
-			contentType:  "application/json",
-			body:         largeJWKS,
-			wantErr:      true,
-			errMsg:       "too many keys in JWKS",
 		},
 		{
 			name:         "invalid JSON",

@@ -106,7 +106,6 @@ Your JWKS endpoint must:
 - Be accessible over HTTPS (HTTP only allowed for localhost in test environments)
 - Respond within 8 seconds
 - Return responses under 32KB
-- Contain no more than 10 keys
 
 ### Example JWKS Response
 
