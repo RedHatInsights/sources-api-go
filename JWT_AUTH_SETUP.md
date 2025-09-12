@@ -105,7 +105,6 @@ Your JWKS endpoint must:
 - Have RSA keys with minimum 2048-bit strength
 - Be accessible over HTTPS (HTTP only allowed for localhost in test environments)
 - Respond within 8 seconds
-- Return responses under 32KB
 
 ### Example JWKS Response
 
@@ -187,7 +186,6 @@ This design prioritizes availability over freshness, ensuring that IdP outages d
 - **Fallback Protection**: Returns cached JWKS on fetch failures to prevent outages
 - **Double-Checked Locking**: Optimized cache access with minimal lock contention
 - **Timeout Protection**: Request-scoped timeouts prevent hanging
-- **Size Limits**: Response size limits prevent DoS attacks
 
 ## Security Considerations
 

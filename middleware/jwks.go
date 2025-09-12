@@ -17,10 +17,6 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
-const (
-	MaxJWKSSize = 32768 // 32KB max JWKS response
-)
-
 // JWKS cache with async refresh and fallback capabilities to prevent outages
 type jwksCache struct {
 	mu          sync.RWMutex
@@ -220,17 +216,10 @@ func secureJWKSFetch(ctx context.Context, jwksURL string) (jwk.Set, error) {
 		return nil, fmt.Errorf("JWKS endpoint returned invalid Content-Type: %s", contentType)
 	}
 
-	// Read response with size limit (ignore Content-Length as it's spoofable)
-	limitedReader := io.LimitReader(resp.Body, MaxJWKSSize+1) // +1 to detect oversized
-
-	body, err := io.ReadAll(limitedReader)
+	// Read response
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read JWKS response: %w", err)
-	}
-
-	// Check actual size
-	if len(body) > MaxJWKSSize {
-		return nil, fmt.Errorf("JWKS response too large: %d bytes", len(body))
 	}
 
 	// Parse JWKS

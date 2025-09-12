@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -129,7 +128,6 @@ func TestValidateJWKSKeyStrength(t *testing.T) {
 
 func TestSecureJWKSFetch(t *testing.T) {
 	validJWKS := createValidJWKSJSON()
-	oversizedBody := strings.Repeat("x", MaxJWKSSize+1000)
 
 	tests := []struct {
 		name         string
@@ -184,14 +182,6 @@ func TestSecureJWKSFetch(t *testing.T) {
 			body:         validJWKS,
 			wantErr:      true,
 			errMsg:       "JWKS endpoint returned invalid Content-Type:",
-		},
-		{
-			name:         "oversized response",
-			responseCode: http.StatusOK,
-			contentType:  "application/json",
-			body:         oversizedBody,
-			wantErr:      true,
-			errMsg:       "JWKS response too large:",
 		},
 		{
 			name:         "invalid JSON",
