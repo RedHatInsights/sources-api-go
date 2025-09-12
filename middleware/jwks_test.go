@@ -446,6 +446,9 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, keys2)
 		assert.Equal(t, keys1.Len(), keys2.Len())
+
+		// Wait for any pending async operations to complete and prevent race conditions between tests
+		time.Sleep(200 * time.Millisecond)
 	})
 
 	t.Run("async refresh behavior", func(t *testing.T) {
@@ -485,5 +488,6 @@ func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
 
 		assert.True(t, newExpiry.After(originalExpiry), "Cache should be refreshed with new expiry")
 		assert.False(t, refreshing, "Should not be refreshing anymore")
+		assert.Equal(t, 2, httpCallCount)
 	})
 }
