@@ -4,7 +4,7 @@ This document explains how to configure and use JWT-based OIDC authentication in
 
 ## Overview
 
-JWT authentication has been added as an additional authentication method that works alongside existing PSK and x-rh-identity authentication. This enables secure Service-to-Service (S2S) communication using industry-standard OIDC JWT tokens with JWKS-based key discovery.
+JWT authentication has been added as an additional authentication method that works alongside existing PSK and x-rh-identity authentication. This enables secure Service-to-Service (S2S) communication using industry-standard OIDC JWT tokens with automatic public key retrieval from your OIDC provider's JWKS endpoint.
 
 ## Configuration
 
@@ -15,6 +15,9 @@ JWT authentication uses OIDC Discovery for automatic JWKS endpoint discovery:
 ```bash
 # Required: JWT issuer URL for OIDC discovery
 JWT_ISSUER="https://your-oidc-provider"
+
+# Optional: JSON array of authorized issuer-subject pairs for additional authorization
+AUTHORIZED_JWT_SUBJECTS='[{"issuer":"https://your-oidc-provider", "subject":"service-user-123"}]'
 ```
 
 ### Feature Flag
@@ -31,7 +34,7 @@ JWT authentication is controlled by a feature flag:
 The API processes authentication in the following order:
 
 ### Phase 1: JWT Authentication Middleware
-- Extracts JWT from `Authorization: Bearer <token>` header (processed by ParseHeaders middleware)
+- Extracts JWT from `Authorization: Bearer <token>` header
 - If feature flag `sources-api.oidc-auth.enabled` is disabled, skips JWT processing
 - If no token present, continues to next authentication method
 - Discovers JWKS URL from issuer's OIDC discovery endpoint
@@ -41,9 +44,16 @@ The API processes authentication in the following order:
 ### Phase 2: Authorization Middleware
 Checks authorization in this order:
 1. **PSK Authentication** - `x-rh-sources-psk` header
-2. **JWT Authentication** - Subject from validated JWT token
+2. **JWT Authentication** - Subject from validated JWT token (optionally restricted by `AUTHORIZED_JWT_SUBJECTS`)
 3. **x-rh-identity** - Red Hat Identity header
 4. **Unauthorized** - If none of the above are present/valid
+
+#### JWT Subject Authorization
+
+JWT subject authorization requires explicit configuration:
+- JWT must have both valid issuer and subject claims
+- The issuer-subject pair must match one of the configured authorized pairs in `AUTHORIZED_JWT_SUBJECTS`
+- If `AUTHORIZED_JWT_SUBJECTS` is not set or empty, **all JWT tokens will be rejected** (secure by default)
 
 ## JWT Token Requirements
 
@@ -54,7 +64,7 @@ Your JWT token must:
 - Include a `sub` (subject) claim with the user/service identifier (max 256 bytes)
 - Include `exp` (expiration) claim
 - Include `iat` (issued at) claim
-- Be verifiable using public keys from the configured JWKS endpoint
+- Be verifiable using public keys from the JWKS endpoint discovered via OIDC discovery
 
 ### Security Features
 
@@ -63,7 +73,6 @@ Your JWT token must:
 - **Timeout Protection**: 10-second timeout for token validation
 - **OIDC Discovery**: Automatic JWKS URL discovery (fetched every time JWKS is refreshed)
 - **JWKS Caching**: 10-minute cache with async refresh and fallback protection
-
 
 ### Example JWT Claims
 
@@ -174,30 +183,14 @@ Common error responses:
 ### Key Files
 
 - `middleware/jwt_auth.go` - Main JWT authentication middleware and validation
-- `middleware/jwks_discovery.go` - OIDC discovery document fetching
+- `middleware/jwks_discovery.go` - OIDC discovery URL building and JWKS URL discovery
 - `middleware/jwks.go` - JWKS fetching, caching, and key validation with dependency injection
 - `middleware/authorization.go` - Authorization logic integrating JWT subjects
 - `config/config.go` - Configuration management for JWT_ISSUER
 
-### Architecture
-
-- **JWTAuthentication()** - Echo middleware function
-- **validateJWTToken()** - Core token validation with JWKS
-- **validateJWTSubject()** - Subject claim validation
-- **discoverJWKSURL()** - OIDC discovery function (in jwks_discovery.go)
-- **FetchJWKS()** - JWKS fetching with caching (in jwks.go)
-- **FetchJWKSWithDiscoverer()** - JWKS fetching with dependency injection support
-- **refreshJWKSAsync()** - Background JWKS refresh functionality
-
 ### Caching Behavior
 
-The implementation uses two separate caches for optimal performance:
-
-#### OIDC Discovery (No Caching)
-1. **Fresh Discovery**: Fetches discovery document every time JWKS needs to be refreshed
-2. **Simplified Logic**: No cache management complexity
-3. **Always Current**: Uses latest discovery information from IdP
-4. **Reasonable Load**: ~144 discovery calls per day (every 10 minutes)
+The implementation uses a single cache with the following behavior:
 
 #### JWKS Cache (10-minute TTL)
 1. **Cache Hit (Fresh)**: Returns cached JWKS immediately if within 10-minute TTL
@@ -249,16 +242,5 @@ type JWKSDiscoverer interface {
 - **Network Security**: HTTPS required for discovery and JWKS endpoints (except localhost in tests)
 - **Timeout Protection**: Prevents hanging on slow/malicious endpoints
 - **Issuer Validation**: Discovery document issuer must match requested issuer
-
-## Migration from Previous Setup
-
-If migrating from a previous JWT implementation:
-
-1. Remove any static JWT public key configuration
-2. Remove `JWKS_URL` environment variable (no longer used)
-3. Configure `JWT_ISSUER` environment variable with your OIDC provider's issuer URL
-4. Ensure your OIDC provider supports discovery at `/.well-known/openid-configuration`
-5. Enable feature flag `sources-api.oidc-auth.enabled`
-6. Update JWT tokens to include required claims (`sub`, `exp`, `iat`)
 
 For questions or issues, please refer to the test files for examples of proper usage.
