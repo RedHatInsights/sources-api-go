@@ -26,6 +26,8 @@ func resetGlobalCache() {
 
 	globalJWKSCache.keySet = nil
 	globalJWKSCache.expiry = time.Time{}
+	globalJWKSCache.refreshing = false
+	globalJWKSCache.lastFetched = time.Time{}
 }
 
 // Test helper to create RSA key with specific bit size
@@ -326,9 +328,15 @@ func TestFetchJWKS(t *testing.T) {
 		globalJWKSCache.expiry = time.Now().Add(-1 * time.Hour) // Expired
 		globalJWKSCache.mu.Unlock()
 
-		// Second call - should fetch again due to expiry
+		// Second call - with async refresh, this returns cached value immediately
+		// and triggers background refresh
 		_, err = FetchJWKS(ctx)
 		require.NoError(t, err)
+
+		// Wait for async refresh to complete
+		time.Sleep(200 * time.Millisecond)
+
+		// Now the HTTP call count should be 2 due to async refresh
 		assert.Equal(t, 2, httpCallCount)
 	})
 }
@@ -396,4 +404,112 @@ func TestFetchJWKS_ConfigValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
+	resetGlobalCache()
+
+	validJWKS := createValidJWKSJSON()
+	httpCallCount := 0
+	shouldFail := false
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		httpCallCount++
+
+		if shouldFail {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error": "server error"}`))
+
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(validJWKS))
+	}))
+	defer server.Close()
+
+	// Set environment variable for JWKS URL
+	originalURL := os.Getenv("JWKS_URL")
+
+	defer func() {
+		if originalURL != "" {
+			os.Setenv("JWKS_URL", originalURL)
+		} else {
+			os.Unsetenv("JWKS_URL")
+		}
+
+		config.Reset()
+	}()
+
+	os.Setenv("JWKS_URL", server.URL)
+	config.Reset()
+
+	t.Run("fallback to cached JWKS on fetch failure", func(t *testing.T) {
+		httpCallCount = 0
+		shouldFail = false
+
+		resetGlobalCache()
+
+		ctx := context.Background()
+
+		// First call - should succeed and cache the result
+		keys1, err := FetchJWKS(ctx)
+		require.NoError(t, err)
+		assert.NotNil(t, keys1)
+		assert.Equal(t, 1, httpCallCount)
+
+		// Manually expire cache to trigger refresh
+		globalJWKSCache.mu.Lock()
+		globalJWKSCache.expiry = time.Now().Add(-1 * time.Hour)
+		globalJWKSCache.mu.Unlock()
+
+		// Make server fail
+		shouldFail = true
+
+		// Second call - should use cached value despite server failure
+		keys2, err := FetchJWKS(ctx)
+		require.NoError(t, err)
+		assert.NotNil(t, keys2)
+		assert.Equal(t, keys1.Len(), keys2.Len())
+	})
+
+	t.Run("async refresh behavior", func(t *testing.T) {
+		httpCallCount = 0
+		shouldFail = false
+
+		resetGlobalCache()
+
+		ctx := context.Background()
+
+		// First call - should succeed and cache the result
+		keys1, err := FetchJWKS(ctx)
+		require.NoError(t, err)
+		assert.NotNil(t, keys1)
+		assert.Equal(t, 1, httpCallCount)
+
+		// Manually expire cache to trigger async refresh
+		globalJWKSCache.mu.Lock()
+		originalExpiry := globalJWKSCache.expiry
+		globalJWKSCache.expiry = time.Now().Add(-1 * time.Hour)
+		globalJWKSCache.mu.Unlock()
+
+		// Second call - should return cached value immediately and trigger async refresh
+		keys2, err := FetchJWKS(ctx)
+		require.NoError(t, err)
+		assert.NotNil(t, keys2)
+		assert.Equal(t, keys1.Len(), keys2.Len())
+
+		// Wait a bit for async refresh to complete
+		time.Sleep(200 * time.Millisecond)
+
+		// Verify that cache was refreshed (expiry should be updated)
+		globalJWKSCache.mu.RLock()
+		newExpiry := globalJWKSCache.expiry
+		refreshing := globalJWKSCache.refreshing
+		globalJWKSCache.mu.RUnlock()
+
+		assert.True(t, newExpiry.After(originalExpiry), "Cache should be refreshed with new expiry")
+		assert.False(t, refreshing, "Should not be refreshing anymore")
+	})
 }

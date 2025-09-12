@@ -61,7 +61,7 @@ Your JWT token must:
 - **Clock Skew Tolerance**: 30 seconds tolerance for time-based claims
 - **Subject Length Limits**: Maximum 256 bytes to prevent memory exhaustion attacks
 - **Timeout Protection**: 10-second timeout for token validation
-- **JWKS Caching**: 10-minute cache with error invalidation
+- **JWKS Caching**: 10-minute cache with async refresh and fallback protection
 
 ### Rejected Algorithms (Security)
 
@@ -136,8 +136,11 @@ go test ./middleware -v -run TestJWTAuthentication
 # Test JWT validation functions
 go test ./middleware -v -run TestValidateJWT
 
-# Test JWKS functionality
-go test ./middleware -v -run TestJWKS
+# Test JWKS functionality (includes async refresh tests)
+go test ./middleware -v -run TestFetchJWKS
+
+# Test JWKS security validation
+go test ./middleware -v -run TestSecureJWKSFetch
 ```
 
 ## Error Handling
@@ -164,11 +167,26 @@ Common error responses:
 - **validateJWTAlgorithm()** - Algorithm security validation
 - **validateJWTSubject()** - Subject claim validation
 - **FetchJWKS()** - JWKS discovery with caching
+- **refreshJWKSAsync()** - Background JWKS refresh functionality
+
+### JWKS Caching Behavior
+
+The JWKS cache implements sophisticated caching with async refresh to ensure high availability:
+
+1. **Cache Hit (Fresh)**: Returns cached JWKS immediately if within 10-minute TTL
+2. **Cache Hit (Expired)**: Returns cached JWKS immediately and triggers background refresh
+3. **Cache Miss**: Fetches JWKS synchronously and caches result
+4. **Fetch Failure**: Falls back to cached JWKS to prevent service outages
+5. **Async Refresh**: Background refresh updates cache without blocking requests
+
+This design prioritizes availability over freshness, ensuring that IdP outages don't impact authentication.
 
 ### Performance Optimizations
 
 - **JWKS Caching**: 10-minute cache to reduce external calls
-- **Cache Invalidation**: Automatic cache clearing on errors
+- **Async Refresh**: Background JWKS refresh to avoid blocking requests
+- **Fallback Protection**: Returns cached JWKS on fetch failures to prevent outages
+- **Double-Checked Locking**: Optimized cache access with minimal lock contention
 - **Timeout Protection**: Request-scoped timeouts prevent hanging
 - **Size Limits**: Response size limits prevent DoS attacks
 

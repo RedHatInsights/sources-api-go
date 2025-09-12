@@ -21,19 +21,21 @@ const (
 	MaxJWKSSize = 32768 // 32KB max JWKS response
 )
 
-// Simple JWKS cache - reduces load on the JWKS endpoint
+// JWKS cache with async refresh and fallback capabilities to prevent outages
 type jwksCache struct {
-	mu     sync.RWMutex
-	keySet jwk.Set
-	expiry time.Time
+	mu          sync.RWMutex
+	keySet      jwk.Set
+	expiry      time.Time
+	refreshing  bool
+	lastFetched time.Time
 }
 
 var globalJWKSCache = &jwksCache{}
 
-// FetchJWKS fetches JWKS with intelligent caching to optimize performance and reliability.
-// Caches valid JWKS for 10 minutes to reduce load on identity providers while ensuring fresh keys.
-// Includes cache invalidation on errors to prevent poisoned cache states and comprehensive
-// security validation before caching. Essential for high-traffic applications with frequent JWT validation.
+// FetchJWKS fetches JWKS with async refresh and fallback to prevent outages.
+// Uses cached JWKS immediately when available, refreshes asynchronously in background.
+// Falls back to cached JWKS on fetch failures to prevent IdP outages from causing service outages.
+// Essential for high-traffic applications requiring resilience against IdP unavailability.
 func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 	cfg := config.Get()
 	jwksURL := cfg.JWKSUrl
@@ -51,10 +53,34 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 		return nil, fmt.Errorf("JWKS URL must be HTTPS")
 	}
 
+	now := time.Now()
+
 	// Double-checked locking: first check with read lock for performance
 	globalJWKSCache.mu.RLock()
 
-	if globalJWKSCache.keySet != nil && time.Now().Before(globalJWKSCache.expiry) {
+	// If we have a cached keyset that hasn't expired, return it immediately
+	if globalJWKSCache.keySet != nil && now.Before(globalJWKSCache.expiry) {
+		keySet := globalJWKSCache.keySet
+		globalJWKSCache.mu.RUnlock()
+
+		return keySet, nil
+	}
+
+	// If we have a cached keyset but it's expired, trigger async refresh and return cached value
+	if globalJWKSCache.keySet != nil && !globalJWKSCache.refreshing {
+		keySet := globalJWKSCache.keySet
+		globalJWKSCache.mu.RUnlock()
+
+		// Start async refresh
+		go refreshJWKSAsync(ctx, jwksURL)
+
+		logger.Log.Debugf("Using cached JWKS while refreshing in background")
+
+		return keySet, nil
+	}
+
+	// If already refreshing, return cached value if available
+	if globalJWKSCache.refreshing && globalJWKSCache.keySet != nil {
 		keySet := globalJWKSCache.keySet
 		globalJWKSCache.mu.RUnlock()
 
@@ -63,44 +89,103 @@ func FetchJWKS(ctx context.Context) (jwk.Set, error) {
 
 	globalJWKSCache.mu.RUnlock()
 
-	// Cache expired or missing, acquire write lock
+	// No cached value or initial fetch - fetch synchronously
 	globalJWKSCache.mu.Lock()
 	defer globalJWKSCache.mu.Unlock()
 
-	// Double-check with write lock: another goroutine might have updated the cache
-	if globalJWKSCache.keySet != nil && time.Now().Before(globalJWKSCache.expiry) {
+	// Double-check with write lock
+	if globalJWKSCache.keySet != nil && now.Before(globalJWKSCache.expiry) {
 		return globalJWKSCache.keySet, nil
 	}
+
+	// If already refreshing and we have cached value, return it
+	if globalJWKSCache.refreshing && globalJWKSCache.keySet != nil {
+		return globalJWKSCache.keySet, nil
+	}
+
+	// Mark as refreshing
+	globalJWKSCache.refreshing = true
+
+	defer func() { globalJWKSCache.refreshing = false }()
 
 	// Fetch JWKS securely
 	keySet, err := secureJWKSFetch(ctx, jwksURL)
 	if err != nil {
-		// Invalidate cache on error to prevent poisoning
-		globalJWKSCache.keySet = nil
-		globalJWKSCache.expiry = time.Time{}
-
 		logger.Log.Errorf("JWKS fetch failed from %s: %v", jwksURL, err)
 
-		return nil, fmt.Errorf("JWKS fetch failed: %v", err)
+		// If we have a cached keyset, return it instead of failing
+		if globalJWKSCache.keySet != nil {
+			logger.Log.Warnf("Using cached JWKS due to fetch failure, last fetched: %v", globalJWKSCache.lastFetched)
+			return globalJWKSCache.keySet, nil
+		}
+
+		return nil, fmt.Errorf("JWKS fetch failed and no cached keyset available: %v", err)
 	}
 
 	// Validate key strength before caching
 	err = validateJWKSKeyStrength(keySet)
 	if err != nil {
-		// Invalidate cache on validation failure
-		globalJWKSCache.keySet = nil
-		globalJWKSCache.expiry = time.Time{}
-
 		logger.Log.Errorf("JWKS validation failed for %s: %v", jwksURL, err)
 
-		return nil, fmt.Errorf("JWKS key validation failed: %v", err)
+		// If validation fails but we have a cached keyset, return it
+		if globalJWKSCache.keySet != nil {
+			logger.Log.Warnf("Using cached JWKS due to validation failure")
+			return globalJWKSCache.keySet, nil
+		}
+
+		return nil, fmt.Errorf("JWKS key validation failed and no cached keyset available: %v", err)
 	}
 
 	// Cache for 10 minutes (balances performance and security)
 	globalJWKSCache.keySet = keySet
-	globalJWKSCache.expiry = time.Now().Add(10 * time.Minute)
+	globalJWKSCache.expiry = now.Add(10 * time.Minute)
+	globalJWKSCache.lastFetched = now
+
+	logger.Log.Debugf("JWKS successfully fetched synchronously and cached")
 
 	return keySet, nil
+}
+
+// refreshJWKSAsync performs background JWKS refresh to keep cache fresh without blocking requests
+func refreshJWKSAsync(ctx context.Context, jwksURL string) {
+	globalJWKSCache.mu.Lock()
+
+	if globalJWKSCache.refreshing {
+		globalJWKSCache.mu.Unlock()
+		return // Another refresh is already in progress
+	}
+
+	globalJWKSCache.refreshing = true
+	globalJWKSCache.mu.Unlock()
+
+	defer func() {
+		globalJWKSCache.mu.Lock()
+		globalJWKSCache.refreshing = false
+		globalJWKSCache.mu.Unlock()
+	}()
+
+	refreshCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	keySet, err := secureJWKSFetch(refreshCtx, jwksURL)
+	if err != nil {
+		logger.Log.Warnf("Async JWKS refresh failed from %s: %v", jwksURL, err)
+		return
+	}
+
+	err = validateJWKSKeyStrength(keySet)
+	if err != nil {
+		logger.Log.Warnf("Async JWKS validation failed for %s: %v", jwksURL, err)
+		return
+	}
+
+	globalJWKSCache.mu.Lock()
+	globalJWKSCache.keySet = keySet
+	globalJWKSCache.expiry = time.Now().Add(10 * time.Minute)
+	globalJWKSCache.lastFetched = time.Now()
+	globalJWKSCache.mu.Unlock()
+
+	logger.Log.Debugf("JWKS async refresh completed successfully")
 }
 
 // secureJWKSFetch performs secure JWKS fetching with comprehensive safety controls.
