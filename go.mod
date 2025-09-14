@@ -37,7 +37,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.30
 	gorm.io/datatypes v1.2.5
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.1
+	gorm.io/gorm v1.31.0
 	sigs.k8s.io/yaml v1.6.0
 )
 
