@@ -2,213 +2,249 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/logger"
+	"github.com/hashicorp/golang-lru/v2"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 )
 
-// JWKSDiscoverer interface abstracts JWKS URL discovery to facilitate testing and mocking.
-// This interface allows us to inject different discovery implementations during testing
-// without having to test JWKS URL discovery logic in unrelated tests.
-type JWKSDiscoverer interface {
-	Discover(ctx context.Context) (string, error)
+// jwksCache stores JWKS documents with automatic background refresh.
+// Uses jwx library's built-in caching with 1-hour refresh interval.
+// Thread-safe with graceful handling of refresh failures.
+var jwksCache = jwk.NewCache(context.Background())
+
+// discoveryCache maps issuer URLs to discovered JWKS URLs with timestamps.
+// LRU cache with 10 issuer capacity, 1-hour TTL, stale-while-revalidate pattern.
+// Thread-safe for concurrent access.
+var discoveryCache, _ = lru.New[string, CachedJWKSURL](10)
+
+// CachedJWKSURL stores a discovered JWKS URL with timestamp for cache expiration.
+// Used to implement stale-while-revalidate pattern in discoveryCache.
+type CachedJWKSURL struct {
+	URL      string    // The JWKS endpoint URL
+	CachedAt time.Time // When this URL was discovered and cached
 }
 
-// Default JWKS discoverer instance
-var defaultJWKSDiscoverer = &DefaultJWKSDiscoverer{}
+const (
+	// discoveryTTL defines TTL for JWKS URL discovery cache (1 hour).
+	// After expiration, triggers async refresh while serving stale data.
+	discoveryTTL = time.Hour
+)
 
-// JWKS cache with async refresh and fallback capabilities to prevent outages
-type jwksCache struct {
-	mu          sync.RWMutex
-	keySet      jwk.Set
-	expiry      time.Time
-	refreshing  bool
-	lastFetched time.Time
+// IsExpired returns true if the cached entry has exceeded discoveryTTL.
+// Used for stale-while-revalidate: expired entries trigger async refresh.
+func (c CachedJWKSURL) IsExpired() bool {
+	return time.Since(c.CachedAt) > discoveryTTL
 }
 
-var globalJWKSCache = &jwksCache{}
+// GetJWKS retrieves JWKS for the given issuer with two-level caching.
+// Function variable allows mocking in tests.
+var GetJWKS = getJWKSImpl
 
-// FetchJWKS fetches JWKS with async refresh and fallback to prevent outages.
-// Uses cached JWKS immediately when available, refreshes asynchronously in background.
-// Falls back to cached JWKS on fetch failures to prevent IdP outages from causing service outages.
-// Essential for high-traffic applications requiring resilience against IdP unavailability.
-func FetchJWKS(ctx context.Context) (jwk.Set, error) {
-	return FetchJWKSWithDiscoverer(ctx, defaultJWKSDiscoverer)
-}
+// getJWKSImpl retrieves JWKS (JSON Web Key Set) for JWT signature verification.
+//
+// This function implements a sophisticated caching strategy with two levels:
+// 1. JWKS URL discovery cache (1-hour TTL with stale-while-revalidate)
+// 2. JWKS content cache (1-hour refresh interval with automatic background updates)
+//
+// Flow:
+//  1. Check discovery cache for JWKS URL
+//     - Cache miss: Discover JWKS URL synchronously, cache result
+//     - Cache hit (fresh): Use cached JWKS URL
+//     - Cache hit (expired): Use stale JWKS URL, trigger async refresh
+//  2. Register JWKS URL with automatic refresh (if not already registered)
+//  3. Fetch JWKS from content cache (handles background refresh automatically)
+//
+// Caching Benefits:
+//   - Reduces latency by avoiding repeated OIDC discovery calls
+//   - Improves reliability with stale-while-revalidate pattern
+//   - Scales well under high load with background refresh
+//   - Maintains performance during temporary issuer unavailability
+//
+// Error Handling:
+//   - Discovery failures: Return error immediately (fail-fast)
+//   - JWKS fetch failures: Return error with issuer context
+//   - Async refresh failures: Log warning, continue with stale data
+//
+// Thread Safety:
+//   - LRU cache is thread-safe for concurrent access
+//   - JWX cache handles concurrent JWKS fetching
+//   - Async refresh uses separate goroutine to avoid blocking
+func getJWKSImpl(ctx context.Context, issuer string) (jwk.Set, error) {
+	// Try to get cached JWKS URL entry
+	cachedEntry, found := discoveryCache.Get(issuer)
 
-// FetchJWKSWithDiscoverer fetches JWKS using the provided discoverer interface.
-// This function enables dependency injection for testing.
-func FetchJWKSWithDiscoverer(ctx context.Context, jwksDiscoverer JWKSDiscoverer) (jwk.Set, error) {
-	now := time.Now()
+	var jwksURL string
 
-	// Double-checked locking: first check with read lock for performance
-	globalJWKSCache.mu.RLock()
-
-	// If we have a cached keyset that hasn't expired, return it immediately
-	if globalJWKSCache.keySet != nil && now.Before(globalJWKSCache.expiry) {
-		keySet := globalJWKSCache.keySet
-		globalJWKSCache.mu.RUnlock()
-
-		return keySet, nil
-	}
-
-	// If we have a cached keyset but it's expired, trigger async refresh and return cached value
-	if globalJWKSCache.keySet != nil && !globalJWKSCache.refreshing {
-		keySet := globalJWKSCache.keySet
-		globalJWKSCache.mu.RUnlock()
-
-		// Start async refresh
-		go refreshJWKSAsync(ctx, jwksDiscoverer)
-
-		logger.Log.Debugf("Using cached JWKS while refreshing in background")
-
-		return keySet, nil
-	}
-
-	// If already refreshing, return cached value if available
-	if globalJWKSCache.refreshing && globalJWKSCache.keySet != nil {
-		keySet := globalJWKSCache.keySet
-		globalJWKSCache.mu.RUnlock()
-
-		return keySet, nil
-	}
-
-	globalJWKSCache.mu.RUnlock()
-
-	// No cached value or initial fetch - fetch synchronously
-	globalJWKSCache.mu.Lock()
-	defer globalJWKSCache.mu.Unlock()
-
-	// Double-check with write lock
-	if globalJWKSCache.keySet != nil && now.Before(globalJWKSCache.expiry) {
-		return globalJWKSCache.keySet, nil
-	}
-
-	// If already refreshing and we have cached value, return it
-	if globalJWKSCache.refreshing && globalJWKSCache.keySet != nil {
-		return globalJWKSCache.keySet, nil
-	}
-
-	// Mark as refreshing
-	globalJWKSCache.refreshing = true
-
-	defer func() { globalJWKSCache.refreshing = false }()
-
-	// Fetch JWKS securely
-	keySet, err := secureJWKSFetch(ctx, jwksDiscoverer)
-	if err != nil {
-		logger.Log.Errorf("JWKS fetch failed: %v", err)
-
-		// If we have a cached keyset, return it instead of failing
-		if globalJWKSCache.keySet != nil {
-			logger.Log.Warnf("Using cached JWKS due to fetch failure, last fetched: %v", globalJWKSCache.lastFetched)
-			return globalJWKSCache.keySet, nil
+	if !found {
+		// Cache miss - discover JWKS URL synchronously for first request
+		discoveredURL, err := discoverJWKSURL(ctx, issuer)
+		if err != nil {
+			return nil, fmt.Errorf("JWKS URL discovery failed for issuer %s: %v", issuer, err)
 		}
 
-		return nil, fmt.Errorf("JWKS fetch failed and no cached keyset available: %v", err)
+		jwksURL = discoveredURL
+		logger.Log.Debugf("Initial JWKS URL discovery for issuer: %s -> %s", issuer, jwksURL)
+	} else {
+		// Cache hit - we're using the cached URL regardless of expiration
+		jwksURL = cachedEntry.URL
+
+		if !cachedEntry.IsExpired() {
+			logger.Log.Debugf("Using fresh cached JWKS URL for issuer: %s -> %s", issuer, jwksURL)
+		} else {
+			// Cache hit but expired - use stale value and trigger async refresh
+			logger.Log.Debugf("Using expired cached JWKS URL for issuer: %s -> %s (triggering refresh)", issuer, jwksURL)
+
+			// Trigger async refresh (fire-and-forget) for future requests
+			go func() { //nolint:contextcheck
+				// Use context.Background() since this refresh is for future requests,
+				// not the current request which is already being served with stale data
+				refreshedURL, err := discoverJWKSURL(context.Background(), issuer)
+				if err != nil {
+					logger.Log.Warnf("Async JWKS URL refresh failed for issuer %s: %v", issuer, err)
+					return // Keep using stale URL
+				}
+
+				if refreshedURL != jwksURL {
+					logger.Log.Infof("JWKS URL updated for issuer %s: %s -> %s", issuer, jwksURL, refreshedURL)
+				}
+			}()
+		}
 	}
 
-	// Cache for 10 minutes (balances performance and security)
-	globalJWKSCache.keySet = keySet
-	globalJWKSCache.expiry = now.Add(10 * time.Minute)
-	globalJWKSCache.lastFetched = now
+	// Register JWKS URL with 1-hour refresh interval only if not already registered
+	if !jwksCache.IsRegistered(jwksURL) {
+		jwksCache.Register(jwksURL, jwk.WithMinRefreshInterval(time.Hour))
+		logger.Log.Debugf("Registered JWKS URL for JWKS caching: %s", jwksURL)
+	}
 
-	logger.Log.Debugf("JWKS successfully fetched synchronously and cached")
+	// Fetch JWKS from cache (handles JWKS caching and refresh automatically)
+	keySet, err := jwksCache.Get(ctx, jwksURL)
+	if err != nil {
+		return nil, fmt.Errorf("JWKS fetch failed for issuer %s: %v", issuer, err)
+	}
+
+	logger.Log.Debugf("JWKS successfully fetched from cache for issuer %s", issuer)
 
 	return keySet, nil
 }
 
-// refreshJWKSAsync performs background JWKS refresh to keep cache fresh without blocking requests
-func refreshJWKSAsync(ctx context.Context, jwksDiscoverer JWKSDiscoverer) {
-	globalJWKSCache.mu.Lock()
-
-	if globalJWKSCache.refreshing {
-		globalJWKSCache.mu.Unlock()
-		return // Another refresh is already in progress
-	}
-
-	globalJWKSCache.refreshing = true
-	globalJWKSCache.mu.Unlock()
-
-	defer func() {
-		globalJWKSCache.mu.Lock()
-		globalJWKSCache.refreshing = false
-		globalJWKSCache.mu.Unlock()
-	}()
-
-	refreshCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
-	keySet, err := secureJWKSFetch(refreshCtx, jwksDiscoverer)
+// discoverJWKSURL discovers JWKS URL using OIDC discovery endpoint.
+// Implements RFC 8414 with issuer validation and HTTPS enforcement.
+// Caches result with timestamp for future use.
+func discoverJWKSURL(ctx context.Context, issuer string) (string, error) {
+	// Build and validate OIDC discovery URL
+	discoveryURL, err := buildDiscoveryURL(issuer)
 	if err != nil {
-		logger.Log.Warnf("Async JWKS refresh failed: %v", err)
-		return
+		return "", fmt.Errorf("OIDC discovery URL validation failed: %v", err)
 	}
 
-	globalJWKSCache.mu.Lock()
-	globalJWKSCache.keySet = keySet
-	globalJWKSCache.expiry = time.Now().Add(10 * time.Minute)
-	globalJWKSCache.lastFetched = time.Now()
-	globalJWKSCache.mu.Unlock()
+	// Perform JWKS URL discovery
+	jwksURL, err := performDiscovery(ctx, discoveryURL, issuer)
+	if err != nil {
+		return "", fmt.Errorf("JWKS URL discovery failed: %v", err)
+	}
 
-	logger.Log.Debugf("JWKS async refresh completed successfully")
+	// Cache the discovered JWKS URL with timestamp
+	newCacheEntry := CachedJWKSURL{
+		URL:      jwksURL,
+		CachedAt: time.Now(),
+	}
+	discoveryCache.Add(issuer, newCacheEntry)
+
+	logger.Log.Infof("JWKS URL discovery successful: %s", jwksURL)
+
+	return jwksURL, nil
 }
 
-// secureJWKSFetch performs secure JWKS fetching with comprehensive safety controls.
-// Implements multiple defenses against attacks: HTTP timeouts, status validation,
-// Content-Type verification, response size limits, and key count restrictions.
-// These protections prevent DoS attacks, SSRF exploitation, and malicious JWKS responses.
-func secureJWKSFetch(ctx context.Context, jwksDiscoverer JWKSDiscoverer) (jwk.Set, error) {
-	// Discover JWKS URL from the issuer's OIDC discovery endpoint
-	jwksURL, err := jwksDiscoverer.Discover(ctx)
+// buildDiscoveryURL constructs OIDC discovery URL from issuer.
+// Appends "/.well-known/openid-configuration" with HTTPS validation.
+// Allows HTTP for localhost in test environments only.
+func buildDiscoveryURL(issuer string) (string, error) {
+	// Parse issuer URL
+	parsedURL, err := url.Parse(issuer)
 	if err != nil {
-		return nil, fmt.Errorf("JWKS URL discovery failed: %v", err)
+		return "", fmt.Errorf("invalid JWT issuer URL: %v", err)
 	}
 
-	// Create HTTP client with timeout (shorter than context timeout)
+	// Ensure HTTPS for production, allow HTTP for localhost in tests
+	isTestEnv := os.Getenv("GO_ENV") == "test" || strings.Contains(os.Args[0], ".test")
+	isLocalHTTP := isTestEnv && parsedURL.Scheme == "http" && (parsedURL.Hostname() == "localhost" || parsedURL.Hostname() == "127.0.0.1")
+
+	if parsedURL.Scheme != "https" && !isLocalHTTP {
+		return "", fmt.Errorf("invalid JWT issuer URL: HTTPS scheme required")
+	}
+
+	// Build OIDC discovery URL according to RFC 8414
+	discoveryURL := strings.TrimSuffix(issuer, "/") + "/.well-known/openid-configuration"
+
+	return discoveryURL, nil
+}
+
+// performDiscovery fetches OIDC discovery document and extracts jwks_uri.
+// Validates HTTP status, content-type, and issuer field for security.
+// Uses 8-second timeout with context cancellation support.
+func performDiscovery(ctx context.Context, discoveryURL, expectedIssuer string) (string, error) {
+	// Create HTTP client with timeout
 	client := &http.Client{
 		Timeout: 8 * time.Second,
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", jwksURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", discoveryURL, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	// Validate HTTP status code
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("JWKS endpoint returned status %d", resp.StatusCode)
+		return "", fmt.Errorf("OIDC discovery endpoint returned status %d", resp.StatusCode)
 	}
 
 	// Validate Content-Type header
 	contentType := resp.Header.Get("Content-Type")
 	if !strings.Contains(contentType, "application/json") {
-		return nil, fmt.Errorf("JWKS endpoint returned invalid Content-Type: %s", contentType)
+		return "", fmt.Errorf("OIDC discovery endpoint returned invalid Content-Type: %s", contentType)
 	}
 
-	// Read response
+	// Read and parse response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read JWKS response: %w", err)
+		return "", fmt.Errorf("failed to read OIDC discovery response body: %w", err)
 	}
 
-	// Parse JWKS
-	keySet, err := jwk.Parse(body)
+	// Parse only the fields we need from the OIDC discovery document
+	var discoveryDoc struct {
+		Issuer  string `json:"issuer"`
+		JWKSUri string `json:"jwks_uri"`
+	}
+
+	err = json.Unmarshal(body, &discoveryDoc)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse JWKS: %w", err)
+		return "", fmt.Errorf("failed to parse OIDC discovery document: %w", err)
 	}
 
-	return keySet, nil
+	// Validate that returned issuer matches expected issuer
+	if discoveryDoc.Issuer != expectedIssuer {
+		return "", fmt.Errorf("OIDC discovery document issuer mismatch: expected %s, got %s", expectedIssuer, discoveryDoc.Issuer)
+	}
+
+	if discoveryDoc.JWKSUri == "" {
+		return "", fmt.Errorf("OIDC discovery document missing jwks_uri field")
+	}
+
+	return discoveryDoc.JWKSUri, nil
 }

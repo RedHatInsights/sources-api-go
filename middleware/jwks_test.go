@@ -2,404 +2,537 @@ package middleware
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
-	"time"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// Mock JWKS discoverer for testing
-type mockJWKSDiscoverer struct {
-	jwksURL string
-	err     error
-}
+// TestGetJWKS_Integration tests the GetJWKS function variable for mocking capability.
+// Verifies that the function can be replaced for testing and restored properly.
+// Tests the mocking pattern used in JWT authentication tests.
+func TestGetJWKS_Integration(t *testing.T) {
+	originalGetJWKS := GetJWKS
 
-func (m *mockJWKSDiscoverer) Discover(ctx context.Context) (string, error) {
-	return m.jwksURL, m.err
-}
+	defer func() {
+		GetJWKS = originalGetJWKS
+	}()
 
-// Helper to create mock JWKS discoverer
-func newMockJWKSDiscoverer(jwksURL string, err error) JWKSDiscoverer {
-	return &mockJWKSDiscoverer{jwksURL: jwksURL, err: err}
-}
+	// Test mocking capability
+	mockKeySet := jwk.NewSet()
+	mockCalled := false
 
-// Test helper to reset global cache
-func resetGlobalCache() {
-	globalJWKSCache.mu.Lock()
-	defer globalJWKSCache.mu.Unlock()
+	GetJWKS = func(ctx context.Context, issuer string) (jwk.Set, error) {
+		mockCalled = true
 
-	globalJWKSCache.keySet = nil
-	globalJWKSCache.expiry = time.Time{}
-	globalJWKSCache.refreshing = false
-	globalJWKSCache.lastFetched = time.Time{}
-}
+		assert.Equal(t, "https://example.com", issuer)
 
-// Test helper to create RSA key with specific bit size
-func generateTestRSAKey(bits int) *rsa.PrivateKey {
-	key, err := rsa.GenerateKey(rand.Reader, bits)
-	if err != nil {
-		panic(fmt.Sprintf("failed to generate %d-bit RSA key: %v", bits, err))
+		return mockKeySet, nil
 	}
 
-	return key
+	// Call mocked function
+	keySet, err := GetJWKS(context.Background(), "https://example.com")
+
+	require.NoError(t, err)
+	assert.True(t, mockCalled)
+	assert.Equal(t, mockKeySet, keySet)
 }
 
-// Test helper to create JWKS with given RSA keys
-func createTestJWKS(keys ...*rsa.PrivateKey) jwk.Set {
-	set := jwk.NewSet()
-	for i, key := range keys {
-		jwkKey, err := jwk.FromRaw(&key.PublicKey)
-		if err != nil {
-			panic(fmt.Sprintf("failed to create JWK from RSA key: %v", err))
-		}
-
-		jwkKey.Set("kid", fmt.Sprintf("key-%d", i))
-		jwkKey.Set("use", "sig")
-		jwkKey.Set("alg", "RS256")
-		set.AddKey(jwkKey)
-	}
-
-	return set
-}
-
-// Test helper to create valid JWKS JSON
-func createValidJWKSJSON() string {
-	key2048 := generateTestRSAKey(2048)
-	jwks := createTestJWKS(key2048)
-
-	data, err := json.Marshal(jwks)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal JWKS: %v", err))
-	}
-
-	return string(data)
-}
-
-func TestSecureJWKSFetch(t *testing.T) {
-	validJWKS := createValidJWKSJSON()
-
+// TestBuildDiscoveryURL tests OIDC discovery URL construction from issuer URLs.
+// Verifies HTTPS enforcement, trailing slash handling, and error cases.
+// Tests both production HTTPS requirements and localhost HTTP allowances in test environments.
+func TestBuildDiscoveryURL(t *testing.T) {
 	tests := []struct {
-		name         string
-		responseCode int
-		contentType  string
-		body         string
-		wantErr      bool
-		errMsg       string
+		name        string
+		issuer      string
+		wantURL     string
+		wantErr     bool
+		errContains string
 	}{
 		{
-			name:         "valid JWKS response",
-			responseCode: http.StatusOK,
-			contentType:  "application/json",
-			body:         validJWKS,
-			wantErr:      false,
+			name:    "valid HTTPS issuer",
+			issuer:  "https://example.com",
+			wantURL: "https://example.com/.well-known/openid-configuration",
+			wantErr: false,
 		},
 		{
-			name:         "valid JWKS with charset",
-			responseCode: http.StatusOK,
-			contentType:  "application/json; charset=utf-8",
-			body:         validJWKS,
-			wantErr:      false,
+			name:    "valid HTTPS issuer with trailing slash",
+			issuer:  "https://example.com/",
+			wantURL: "https://example.com/.well-known/openid-configuration",
+			wantErr: false,
 		},
 		{
-			name:         "404 not found",
-			responseCode: http.StatusNotFound,
-			contentType:  "application/json",
-			body:         `{"error": "not found"}`,
-			wantErr:      true,
-			errMsg:       "JWKS endpoint returned status 404",
+			name:    "valid HTTPS issuer with path",
+			issuer:  "https://example.com/auth",
+			wantURL: "https://example.com/auth/.well-known/openid-configuration",
+			wantErr: false,
 		},
 		{
-			name:         "500 internal error",
-			responseCode: http.StatusInternalServerError,
-			contentType:  "application/json",
-			body:         `{"error": "internal error"}`,
-			wantErr:      true,
-			errMsg:       "JWKS endpoint returned status 500",
+			name:        "empty issuer",
+			issuer:      "",
+			wantErr:     true,
+			errContains: "invalid JWT issuer URL",
 		},
 		{
-			name:         "wrong content type",
-			responseCode: http.StatusOK,
-			contentType:  "text/html",
-			body:         `<html><body>Not JSON</body></html>`,
-			wantErr:      true,
-			errMsg:       "JWKS endpoint returned invalid Content-Type: text/html",
+			name:        "invalid URL",
+			issuer:      "not-a-url",
+			wantErr:     true,
+			errContains: "HTTPS scheme required",
 		},
 		{
-			name:         "missing content type",
-			responseCode: http.StatusOK,
-			contentType:  "",
-			body:         validJWKS,
-			wantErr:      true,
-			errMsg:       "JWKS endpoint returned invalid Content-Type:",
+			name:        "HTTP issuer (not HTTPS)",
+			issuer:      "http://example.com",
+			wantErr:     true,
+			errContains: "HTTPS scheme required",
 		},
 		{
-			name:         "invalid JSON",
-			responseCode: http.StatusOK,
-			contentType:  "application/json",
-			body:         `{"keys": [invalid json`,
-			wantErr:      true,
-			errMsg:       "failed to parse JWKS:",
+			name:        "FTP scheme",
+			issuer:      "ftp://example.com",
+			wantErr:     true,
+			errContains: "HTTPS scheme required",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resetGlobalCache()
+			url, err := buildDiscoveryURL(tt.issuer)
 
-			// JWKS server
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if tt.contentType != "" {
-					w.Header().Set("Content-Type", tt.contentType)
-				}
+			if tt.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errContains)
+				assert.Empty(t, url)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantURL, url)
+			}
+		})
+	}
+}
 
-				w.WriteHeader(tt.responseCode)
-				w.Write([]byte(tt.body))
-			}))
+// TestBuildDiscoveryURL_LocalhostHTTP tests localhost HTTP allowance in test environments.
+// Verifies that HTTP is permitted for localhost/127.0.0.1 when GO_ENV=test.
+// Tests the special case handling for local development and testing.
+func TestBuildDiscoveryURL_LocalhostHTTP(t *testing.T) {
+	// Set test environment
+	originalGoEnv := os.Getenv("GO_ENV")
+
+	defer func() {
+		if originalGoEnv != "" {
+			os.Setenv("GO_ENV", originalGoEnv)
+		} else {
+			os.Unsetenv("GO_ENV")
+		}
+	}()
+
+	os.Setenv("GO_ENV", "test")
+
+	tests := []struct {
+		name    string
+		issuer  string
+		wantURL string
+		wantErr bool
+	}{
+		{
+			name:    "localhost HTTP in test environment",
+			issuer:  "http://localhost:8080",
+			wantURL: "http://localhost:8080/.well-known/openid-configuration",
+			wantErr: false,
+		},
+		{
+			name:    "127.0.0.1 HTTP in test environment",
+			issuer:  "http://127.0.0.1:8080",
+			wantURL: "http://127.0.0.1:8080/.well-known/openid-configuration",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			url, err := buildDiscoveryURL(tt.issuer)
+
+			if tt.wantErr {
+				require.Error(t, err)
+				assert.Empty(t, url)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.wantURL, url)
+			}
+		})
+	}
+}
+
+// TestPerformDiscovery tests OIDC discovery document fetching and parsing.
+// Covers HTTP status validation, content-type checking, JSON parsing, and issuer verification.
+// Tests various server error conditions and malformed response scenarios.
+func TestPerformDiscovery(t *testing.T) {
+	tests := []struct {
+		name           string
+		setupServer    func() *httptest.Server
+		expectedIssuer string
+		wantJWKSURL    string
+		wantErr        bool
+		errContains    string
+	}{
+		{
+			name: "valid discovery document",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					doc := map[string]interface{}{
+						"issuer":   "https://example.com",
+						"jwks_uri": "https://example.com/.well-known/jwks.json",
+					}
+
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(doc)
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantJWKSURL:    "https://example.com/.well-known/jwks.json",
+			wantErr:        false,
+		},
+		{
+			name: "discovery document with charset",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					doc := map[string]interface{}{
+						"issuer":   "https://example.com",
+						"jwks_uri": "https://example.com/.well-known/jwks.json",
+					}
+
+					w.Header().Set("Content-Type", "application/json; charset=utf-8")
+					json.NewEncoder(w).Encode(doc)
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantJWKSURL:    "https://example.com/.well-known/jwks.json",
+			wantErr:        false,
+		},
+		{
+			name: "404 not found",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNotFound)
+					w.Write([]byte(`{"error": "not found"}`))
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "OIDC discovery endpoint returned status 404",
+		},
+		{
+			name: "500 internal server error",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"error": "internal error"}`))
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "OIDC discovery endpoint returned status 500",
+		},
+		{
+			name: "wrong content type",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "text/html")
+					w.Write([]byte(`<html><body>Not JSON</body></html>`))
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "OIDC discovery endpoint returned invalid Content-Type: text/html",
+		},
+		{
+			name: "missing content type",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Write([]byte(`{"issuer": "https://example.com", "jwks_uri": "https://example.com/.well-known/jwks.json"}`))
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "OIDC discovery endpoint returned invalid Content-Type:",
+		},
+		{
+			name: "invalid JSON",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.Header().Set("Content-Type", "application/json")
+					w.Write([]byte(`{"issuer": "https://example.com", "jwks_uri": invalid json`))
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "failed to parse OIDC discovery document",
+		},
+		{
+			name: "issuer mismatch",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					doc := map[string]interface{}{
+						"issuer":   "https://different.com",
+						"jwks_uri": "https://different.com/.well-known/jwks.json",
+					}
+
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(doc)
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "OIDC discovery document issuer mismatch: expected https://example.com, got https://different.com",
+		},
+		{
+			name: "missing jwks_uri",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					doc := map[string]interface{}{
+						"issuer": "https://example.com",
+					}
+
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(doc)
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "OIDC discovery document missing jwks_uri field",
+		},
+		{
+			name: "empty jwks_uri",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					doc := map[string]interface{}{
+						"issuer":   "https://example.com",
+						"jwks_uri": "",
+					}
+
+					w.Header().Set("Content-Type", "application/json")
+					json.NewEncoder(w).Encode(doc)
+				}))
+			},
+			expectedIssuer: "https://example.com",
+			wantErr:        true,
+			errContains:    "OIDC discovery document missing jwks_uri field",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := tt.setupServer()
 			defer server.Close()
 
 			ctx := context.Background()
-			mockJWKSDiscoverer := newMockJWKSDiscoverer(server.URL, nil)
-			keySet, err := secureJWKSFetch(ctx, mockJWKSDiscoverer)
+			jwksURL, err := performDiscovery(ctx, server.URL, tt.expectedIssuer)
 
 			if tt.wantErr {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errMsg)
-				assert.Nil(t, keySet)
+				assert.Contains(t, err.Error(), tt.errContains)
+				assert.Empty(t, jwksURL)
 			} else {
 				require.NoError(t, err)
-				assert.NotNil(t, keySet)
-				assert.Positive(t, keySet.Len())
+				assert.Equal(t, tt.wantJWKSURL, jwksURL)
 			}
 		})
 	}
 }
 
-func TestFetchJWKS(t *testing.T) {
-	// Reset cache before each test
-	resetGlobalCache()
-
-	validJWKS := createValidJWKSJSON()
-	httpCallCount := 0
-
-	// JWKS server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		httpCallCount++
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(validJWKS))
-	}))
-	defer server.Close()
-
-	mockJWKSDiscoverer := newMockJWKSDiscoverer(server.URL, nil)
-
-	t.Run("successful fetch and cache", func(t *testing.T) {
-		httpCallCount = 0
-
-		resetGlobalCache()
-
-		ctx := context.Background()
-
-		// First call - should fetch from server
-		keys1, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-		assert.NotNil(t, keys1)
-		assert.Equal(t, 1, httpCallCount)
-
-		// Second call - should use cache
-		keys2, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-		assert.NotNil(t, keys2)
-		assert.Equal(t, 1, httpCallCount) // No additional HTTP call
-
-		// Keys should be the same (from cache)
-		assert.Equal(t, keys1.Len(), keys2.Len())
-	})
-
-	t.Run("cache expiry", func(t *testing.T) {
-		httpCallCount = 0
-
-		resetGlobalCache()
-
-		ctx := context.Background()
-
-		// First call
-		_, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-		assert.Equal(t, 1, httpCallCount)
-
-		// Manually expire cache
-		globalJWKSCache.mu.Lock()
-		globalJWKSCache.expiry = time.Now().Add(-1 * time.Hour) // Expired
-		globalJWKSCache.mu.Unlock()
-
-		// Second call - with async refresh, this returns cached value immediately
-		// and triggers background refresh
-		_, err = FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-
-		// Wait for async refresh to complete
-		time.Sleep(200 * time.Millisecond)
-
-		// Now the HTTP call count should be 2 due to async refresh
-		assert.Equal(t, 2, httpCallCount)
-	})
-}
-
-func TestFetchJWKS_ConfigValidation(t *testing.T) {
+// TestDiscoverJWKSURL tests the complete JWKS URL discovery workflow.
+// Integrates URL building, HTTP discovery, and caching with proper error handling.
+// Tests end-to-end discovery scenarios including cache population.
+func TestDiscoverJWKSURL(t *testing.T) {
 	tests := []struct {
-		name    string
-		mockURL string
-		mockErr error
-		wantErr bool
-		errMsg  string
+		name        string
+		jwtIssuer   string
+		setupServer func(issuerURL string) *httptest.Server
+		wantJWKSURL string
+		wantErr     bool
+		errContains string
 	}{
 		{
-			name:    "missing JWT issuer",
-			mockURL: "",
-			mockErr: fmt.Errorf("OIDC discovery URL validation failed: JWT issuer not configured"),
-			wantErr: true,
-			errMsg:  "JWT issuer not configured",
+			name:      "successful discovery",
+			jwtIssuer: "", // Will be set to server URL
+			setupServer: func(issuerURL string) *httptest.Server {
+				var server *httptest.Server
+
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					if r.URL.Path == "/.well-known/openid-configuration" {
+						doc := map[string]interface{}{
+							"issuer":   server.URL,
+							"jwks_uri": server.URL + "/.well-known/jwks.json",
+						}
+
+						w.Header().Set("Content-Type", "application/json")
+						json.NewEncoder(w).Encode(doc)
+					} else {
+						w.WriteHeader(http.StatusNotFound)
+					}
+				}))
+
+				return server
+			},
+			wantJWKSURL: "", // Will be set to server URL + "/.well-known/jwks.json"
+			wantErr:     false,
 		},
 		{
-			name:    "HTTP issuer (not HTTPS)",
-			mockURL: "",
-			mockErr: fmt.Errorf("OIDC discovery URL validation failed: OIDC discovery URL must be HTTPS"),
-			wantErr: true,
-			errMsg:  "OIDC discovery URL must be HTTPS",
+			name:      "missing JWT issuer",
+			jwtIssuer: "",
+			setupServer: func(issuerURL string) *httptest.Server {
+				return nil // No server needed for this test
+			},
+			wantErr:     true,
+			errContains: "OIDC discovery URL validation failed",
 		},
 		{
-			name:    "discovery network failure",
-			mockURL: "",
-			mockErr: fmt.Errorf("JWKS URL discovery failed: no such host"),
-			wantErr: true,
-			errMsg:  "JWKS URL discovery failed",
+			name:      "HTTP issuer (not HTTPS)",
+			jwtIssuer: "http://example.com",
+			setupServer: func(issuerURL string) *httptest.Server {
+				return nil // No server needed for this test
+			},
+			wantErr:     true,
+			errContains: "OIDC discovery URL validation failed",
+		},
+		{
+			name:      "discovery endpoint failure",
+			jwtIssuer: "", // Will be set to server URL
+			setupServer: func(issuerURL string) *httptest.Server {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Write([]byte(`{"error": "server error"}`))
+				}))
+
+				return server
+			},
+			wantErr:     true,
+			errContains: "JWKS URL discovery failed",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resetGlobalCache()
+			// Set up environment
+			originalIssuer := os.Getenv("JWT_ISSUER")
+
+			defer func() {
+				if originalIssuer != "" {
+					os.Setenv("JWT_ISSUER", originalIssuer)
+				} else {
+					os.Unsetenv("JWT_ISSUER")
+				}
+
+				config.Reset()
+			}()
+
+			var server *httptest.Server
+
+			if tt.setupServer != nil {
+				if tt.jwtIssuer == "" && tt.name == "successful discovery" {
+					// For successful discovery test, create server first
+					server = tt.setupServer("")
+					defer server.Close()
+
+					tt.jwtIssuer = server.URL
+					tt.wantJWKSURL = server.URL + "/.well-known/jwks.json"
+				} else if tt.jwtIssuer == "" && tt.name == "discovery endpoint failure" {
+					// For failure test, create server first
+					server = tt.setupServer("")
+					defer server.Close()
+
+					tt.jwtIssuer = server.URL
+				} else {
+					server = tt.setupServer(tt.jwtIssuer)
+					if server != nil {
+						defer server.Close()
+					}
+				}
+			}
+
+			if tt.jwtIssuer != "" {
+				os.Setenv("JWT_ISSUER", tt.jwtIssuer)
+			} else {
+				os.Unsetenv("JWT_ISSUER")
+			}
+
+			config.Reset()
 
 			ctx := context.Background()
-			// Create mock JWKS discoverer with the specified error
-			mockJWKSDiscoverer := newMockJWKSDiscoverer(tt.mockURL, tt.mockErr)
-			_, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
+			issuer := config.Get().JWTIssuer
+			jwksURL, err := discoverJWKSURL(ctx, issuer)
 
 			if tt.wantErr {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errMsg)
+				assert.Contains(t, err.Error(), tt.errContains)
+				assert.Empty(t, jwksURL)
 			} else {
 				require.NoError(t, err)
+				assert.Equal(t, tt.wantJWKSURL, jwksURL)
 			}
 		})
 	}
 }
 
-func TestFetchJWKS_AsyncRefreshAndFallback(t *testing.T) {
-	resetGlobalCache()
+// TestDiscoverJWKSURL_Localhost tests JWKS discovery with localhost HTTP servers.
+// Verifies that localhost HTTP discovery works in test environments.
+// Tests the integration of localhost HTTP support with full discovery flow.
+func TestDiscoverJWKSURL_Localhost(t *testing.T) {
+	// Set test environment to allow localhost HTTP
+	originalGoEnv := os.Getenv("GO_ENV")
 
-	validJWKS := createValidJWKSJSON()
-	httpCallCount := 0
-	shouldFail := false
-
-	// JWKS server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		httpCallCount++
-
-		if shouldFail {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error": "server error"}`))
-
-			return
+	defer func() {
+		if originalGoEnv != "" {
+			os.Setenv("GO_ENV", originalGoEnv)
+		} else {
+			os.Unsetenv("GO_ENV")
 		}
+	}()
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(validJWKS))
+	os.Setenv("GO_ENV", "test")
+
+	// Create test server
+	var server *httptest.Server
+
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			doc := map[string]interface{}{
+				"issuer":   server.URL,
+				"jwks_uri": server.URL + "/.well-known/jwks.json",
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(doc)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
 	}))
 	defer server.Close()
 
-	// Create mock JWKS discoverer
-	mockJWKSDiscoverer := newMockJWKSDiscoverer(server.URL, nil)
+	// Set up environment
+	originalIssuer := os.Getenv("JWT_ISSUER")
 
-	t.Run("fallback to cached JWKS on fetch failure", func(t *testing.T) {
-		httpCallCount = 0
-		shouldFail = false
+	defer func() {
+		if originalIssuer != "" {
+			os.Setenv("JWT_ISSUER", originalIssuer)
+		} else {
+			os.Unsetenv("JWT_ISSUER")
+		}
 
-		resetGlobalCache()
+		config.Reset()
+	}()
 
-		ctx := context.Background()
+	os.Setenv("JWT_ISSUER", server.URL)
+	config.Reset()
 
-		// First call - should succeed and cache the result
-		keys1, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-		assert.NotNil(t, keys1)
-		assert.Equal(t, 1, httpCallCount)
+	ctx := context.Background()
+	issuer := config.Get().JWTIssuer
+	jwksURL, err := discoverJWKSURL(ctx, issuer)
 
-		// Manually expire cache to trigger refresh
-		globalJWKSCache.mu.Lock()
-		globalJWKSCache.expiry = time.Now().Add(-1 * time.Hour)
-		globalJWKSCache.mu.Unlock()
-
-		// Make server fail
-		shouldFail = true
-
-		// Second call - should use cached value despite server failure
-		keys2, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-		assert.NotNil(t, keys2)
-		assert.Equal(t, keys1.Len(), keys2.Len())
-
-		// Wait for any pending async operations to complete and prevent race conditions between tests
-		time.Sleep(200 * time.Millisecond)
-	})
-
-	t.Run("async refresh behavior", func(t *testing.T) {
-		httpCallCount = 0
-		shouldFail = false
-
-		resetGlobalCache()
-
-		ctx := context.Background()
-
-		// First call - should succeed and cache the result
-		keys1, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-		assert.NotNil(t, keys1)
-		assert.Equal(t, 1, httpCallCount)
-
-		// Manually expire cache to trigger async refresh
-		globalJWKSCache.mu.Lock()
-		originalExpiry := globalJWKSCache.expiry
-		globalJWKSCache.expiry = time.Now().Add(-1 * time.Hour)
-		globalJWKSCache.mu.Unlock()
-
-		// Second call - should return cached value immediately and trigger async refresh
-		keys2, err := FetchJWKSWithDiscoverer(ctx, mockJWKSDiscoverer)
-		require.NoError(t, err)
-		assert.NotNil(t, keys2)
-		assert.Equal(t, keys1.Len(), keys2.Len())
-
-		// Wait a bit for async refresh to complete
-		time.Sleep(200 * time.Millisecond)
-
-		// Verify that cache was refreshed (expiry should be updated)
-		globalJWKSCache.mu.RLock()
-		newExpiry := globalJWKSCache.expiry
-		refreshing := globalJWKSCache.refreshing
-		globalJWKSCache.mu.RUnlock()
-
-		assert.True(t, newExpiry.After(originalExpiry), "Cache should be refreshed with new expiry")
-		assert.False(t, refreshing, "Should not be refreshing anymore")
-		assert.Equal(t, 2, httpCallCount)
-	})
+	require.NoError(t, err)
+	assert.Equal(t, server.URL+"/.well-known/jwks.json", jwksURL)
 }

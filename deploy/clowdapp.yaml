@@ -272,8 +272,8 @@ objects:
           value: ${HANDLE_TENANT_REFRESH}
         - name: DISABLED_APPLICATION_TYPES
           value: ${DISABLED_APPLICATION_TYPES}
-        - name: JWTIssuer
-          value: ${JWTIssuer}
+        - name: JWT_ISSUER
+          value: ${JWT_ISSUER}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -464,6 +464,6 @@ parameters:
 - description: A comma-separated list of application types that are disabled in Sources
   name: DISABLED_APPLICATION_TYPES
   value: ""
-- description: Issuer of the JWT tokens.
+- description: Issuer of the JSON Web Tokens used for authentication.
   name: JWT_ISSUER
   value: https://sso.redhat.com/auth/realms/redhat-external
