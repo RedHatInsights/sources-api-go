@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
@@ -18,19 +19,44 @@ const (
 	FeatureFlagOIDCAuth = "sources-api.oidc-auth.enabled"
 )
 
-// ValidatedJWTClaims holds the validated JWT claims
-type ValidatedJWTClaims struct {
-	Issuer  string
-	Subject string
-}
-
-// JWTAuthentication validates JWT tokens using JWKS and extracts user identity.
+// JWTAuthentication is an Echo middleware that validates JWT tokens and extracts user identity.
 //
-// Flow: Extracts JWT from context → Validates signature with JWKS → Checks claims → Sets subject
-// Returns 401 on validation failure, continues to other auth methods if no token present.
-// Controlled by feature flag "sources-api.oidc-auth.enabled".
+// This middleware implements OpenID Connect (OIDC) JWT authentication with comprehensive security
+// measures. It validates tokens against configured JWT issuers using JWKS for signature verification.
 //
-// Security: JWKS caching, 30s clock skew tolerance, subject length limits, timeout protection.
+// Authentication Flow:
+//  1. Check feature flag - skip if OIDC authentication is disabled
+//  2. Extract JWT token from Authorization header (Bearer token)
+//  3. If no token present, continue to next middleware (allowing other auth methods)
+//  4. Validate token using two-step process:
+//     a. Parse token and verify issuer is whitelisted
+//     b. Verify signature against JWKS and validate claims
+//  5. On success: store issuer/subject in context and continue
+//  6. On failure: return HTTP 401 Unauthorized
+//
+// Security Features:
+//   - Two-step validation (issuer check before expensive JWKS operation)
+//   - JWKS URL discovery with caching (1-hour TTL, stale-while-revalidate)
+//   - Signature verification
+//   - Claims validation (exp, sub, iat required)
+//   - Clock skew tolerance (30 seconds)
+//   - Timeout protection (10 seconds per validation)
+//   - Fails fast on JWKS retrieval errors
+//
+// Configuration:
+//   - Feature flag: "sources-api.oidc-auth.enabled"
+//   - JWT_ISSUER environment variable (required when feature enabled)
+//   - Validates issuer configuration at startup
+//
+// Context Values Set:
+//   - h.JWTIssuer: verified JWT issuer
+//   - h.JWTSubject: verified JWT subject
+//
+// Error Handling:
+//   - Returns 401 with error document on validation failure
+//   - Logs validation failures at debug level
+//   - Logs successful authentications at debug level
+//   - Continues to next middleware if no token (non-blocking)
 func JWTAuthentication() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -39,43 +65,74 @@ func JWTAuthentication() echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// Extract token from context (already processed by ParseHeaders)
-			token, ok := c.Get(h.JWTToken).(string)
-			if !ok || token == "" {
-				return next(c) // No token, continue to other auth
+			// Extract JWT from request
+			token := extractJWT(c.Request())
+			if token == "" {
+				return next(c) // No JWT, continue to other auth
 			}
 
 			// Validate JWT with timeout
 			ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Second)
 			defer cancel()
 
-			validatedClaims, err := validateJWTToken(ctx, token)
+			err := validateJWT(ctx, c, token)
 			if err != nil {
 				c.Logger().Debugf("JWT validation failed: %v", err)
 				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication failed", "401"))
 			}
-
-			// Store JWT issuer and subject
-			c.Set(h.JWTIssuer, validatedClaims.Issuer)
-			c.Set(h.JWTSubject, validatedClaims.Subject)
-			c.Logger().Debugf("JWT authentication successful for issuer: %s, subject: %s", validatedClaims.Issuer, validatedClaims.Subject)
 
 			return next(c)
 		}
 	}
 }
 
-// validateJWTToken validates JWT using JWKS
-func validateJWTToken(ctx context.Context, tokenString string) (ValidatedJWTClaims, error) {
-	// Fetch JWKS with caching
-	keySet, err := FetchJWKS(ctx)
-	if err != nil {
-		return ValidatedJWTClaims{}, fmt.Errorf("JWKS fetch failed")
+func extractJWT(r *http.Request) string {
+	authHeader := r.Header.Get(h.Authorization)
+	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+		token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+		return token
 	}
 
-	// Parse and validate token with enhanced validation
-	token, err := jwt.Parse([]byte(tokenString),
-		jwt.WithKeySet(keySet),
+	return ""
+}
+
+// validateJWT validates JWT using a two-step process and sets context values:
+// 1. Parse token and check if its issuer is whitelisted
+// 2. Validate token claims and verify its signature with JWKS
+func validateJWT(ctx context.Context, c echo.Context, token string) error {
+	// Step 1: Parse token with verify and validate flags disabled to extract the issuer
+	unverifiedToken, err := jwt.Parse([]byte(token),
+		jwt.WithVerify(false),   // Skip signature verification - it will be done in step 2
+		jwt.WithValidate(false), // Skip claims validation - it will be done in step 2
+	)
+	if err != nil {
+		return fmt.Errorf("JWT parsing failed: %v", err)
+	}
+
+	// Reject tokens with empty or missing issuer or subject
+	if unverifiedToken.Issuer() == "" {
+		return fmt.Errorf("invalid JWT issuer: missing issuer")
+	}
+
+	if unverifiedToken.Subject() == "" {
+		return fmt.Errorf("invalid JWT subject: missing subject")
+	}
+
+	// Validate issuer is whitelisted
+	expectedIssuer := config.Get().JWTIssuer
+	if unverifiedToken.Issuer() != expectedIssuer {
+		return fmt.Errorf("invalid JWT issuer: expected %s, got %s", expectedIssuer, unverifiedToken.Issuer())
+	}
+
+	// Step 2: Validate token claims and verify its signature with JWKS
+	jwks, err := GetJWKS(ctx, unverifiedToken.Issuer())
+	if err != nil {
+		return fmt.Errorf("JWKS retrieval failed: %v", err)
+	}
+
+	verifiedToken, err := jwt.Parse([]byte(token),
+		jwt.WithVerify(true),
+		jwt.WithKeySet(jwks),
 		jwt.WithValidate(true),
 		jwt.WithRequiredClaim("exp"),
 		jwt.WithRequiredClaim("sub"),
@@ -83,63 +140,14 @@ func validateJWTToken(ctx context.Context, tokenString string) (ValidatedJWTClai
 		jwt.WithAcceptableSkew(30*time.Second), // Allow 30s clock drift for time claims
 	)
 	if err != nil {
-		return ValidatedJWTClaims{}, fmt.Errorf("token validation failed")
+		return fmt.Errorf("JWT validation failed: %v", err)
 	}
 
-	// Extract issuer and subject
-	issuer := token.Issuer()
-	subject := token.Subject()
+	// Set context values for further use in the authorization process
+	c.Set(h.JWTIssuer, verifiedToken.Issuer())
+	c.Set(h.JWTSubject, verifiedToken.Subject())
 
-	// Validate issuer
-	err = validateJWTIssuer(issuer)
-	if err != nil {
-		return ValidatedJWTClaims{}, err
-	}
-
-	// Validate subject
-	err = validateJWTSubject(subject)
-	if err != nil {
-		return ValidatedJWTClaims{}, err
-	}
-
-	return ValidatedJWTClaims{
-		Issuer:  issuer,
-		Subject: subject,
-	}, nil
-}
-
-// validateJWTIssuer validates the JWT issuer claim
-func validateJWTIssuer(issuer string) error {
-	cfg := config.Get()
-	expectedIssuer := cfg.JWTIssuer
-
-	// If no issuer is configured, skip validation
-	if expectedIssuer == "" {
-		return nil
-	}
-
-	// Reject tokens with empty or missing issuer when issuer validation is enabled
-	if issuer == "" {
-		return fmt.Errorf("missing or empty issuer claim, expected: %s", expectedIssuer)
-	}
-
-	if issuer != expectedIssuer {
-		return fmt.Errorf("invalid issuer: expected %s, got %s", expectedIssuer, issuer)
-	}
-
-	return nil
-}
-
-// validateJWTSubject validates the JWT subject claim
-func validateJWTSubject(subject string) error {
-	if subject == "" {
-		return fmt.Errorf("missing subject")
-	}
-
-	// Validate subject length to prevent memory exhaustion attacks
-	if len(subject) > 256 {
-		return fmt.Errorf("subject too long: %d bytes (max 256)", len(subject))
-	}
+	c.Logger().Debugf("JWT authentication successful for issuer: %s, subject: %s", verifiedToken.Issuer(), verifiedToken.Subject())
 
 	return nil
 }

@@ -13,7 +13,9 @@ import (
 	"github.com/RedHatInsights/sources-api-go/jobs"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/metrics"
+	m "github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	"github.com/RedHatInsights/sources-api-go/util"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
@@ -37,6 +39,12 @@ func main() {
 	util.InitializeEncryption()
 
 	l.InitLogger(conf)
+
+	// Validate JWT configuration early to fail fast if misconfigured
+	err := config.ValidateJWTConfiguration(service.FeatureEnabled(m.FeatureFlagOIDCAuth))
+	if err != nil {
+		l.Log.Fatalf("JWT configuration validation failed: %v", err)
+	}
 
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
 	// a time can run the migrations.

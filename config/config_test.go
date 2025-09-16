@@ -2,11 +2,14 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	clowder "github.com/redhatinsights/app-common-go/pkg/api/v1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMain(t *testing.M) {
@@ -101,4 +104,56 @@ func TestFindDependentApplication(t *testing.T) {
 			}
 		}
 	}
+}
+
+func setupTestEnv(t *testing.T, issuer string) func() {
+	originalIssuer := os.Getenv("JWT_ISSUER")
+
+	if issuer != "" {
+		os.Setenv("JWT_ISSUER", issuer)
+	} else {
+		os.Unsetenv("JWT_ISSUER")
+	}
+
+	Reset()
+
+	return func() {
+		if originalIssuer != "" {
+			os.Setenv("JWT_ISSUER", originalIssuer)
+		} else {
+			os.Unsetenv("JWT_ISSUER")
+		}
+
+		Reset()
+	}
+}
+
+func TestValidateJWTConfiguration_OIDCDisabled(t *testing.T) {
+	// Even with empty issuer, should not fail when OIDC is disabled
+	cleanup := setupTestEnv(t, "")
+	defer cleanup()
+
+	err := ValidateJWTConfiguration(false)
+	assert.NoError(t, err)
+}
+
+func TestValidateJWTConfiguration_OIDCEnabledWithIssuer(t *testing.T) {
+	// With issuer configured, should pass
+	cleanup := setupTestEnv(t, "https://example.com")
+	defer cleanup()
+
+	err := ValidateJWTConfiguration(true)
+	assert.NoError(t, err)
+}
+
+func TestValidateJWTConfiguration_OIDCEnabledWithoutIssuer(t *testing.T) {
+	// Without issuer configured, should fail
+	cleanup := setupTestEnv(t, "")
+	defer cleanup()
+
+	err := ValidateJWTConfiguration(true)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "JWT issuer must be configured")
+	assert.Contains(t, err.Error(), "sources-api.oidc-auth.enabled=true")
+	assert.Contains(t, err.Error(), "Set JWT_ISSUER environment variable")
 }

@@ -443,3 +443,16 @@ func findDependentApplication(name string, endpoints []clowder.DependencyEndpoin
 		return endpoints[idx], nil
 	}
 }
+
+// ValidateJWTConfiguration validates that JWT issuer is configured when OIDC auth is enabled.
+// Takes the OIDC feature flag state as a parameter to avoid circular dependencies with the service package.
+func ValidateJWTConfiguration(oidcAuthEnabled bool) error {
+	if oidcAuthEnabled {
+		issuer := Get().JWTIssuer
+		if issuer == "" {
+			return fmt.Errorf("JWT issuer must be configured when OIDC authentication is enabled (sources-api.oidc-auth.enabled=true). Set JWT_ISSUER environment variable")
+		}
+	}
+
+	return nil
+}
