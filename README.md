@@ -1,4 +1,4 @@
-# --== Sources API ==-- 
+# --== Sources API ==--
 ###### _but in Go_
 
 Here lies the source code for the Sources API re-write, based on the [original Rails Application](https://github.com/RedHatInsights/sources-api)
@@ -22,13 +22,13 @@ Here lies the source code for the Sources API re-write, based on the [original R
 
 ### Development
 - Check out the repository, then run `make setup` to download the dependencies
-- The `Makefile` contains various targets for development, e.g.  
-    - `make run` to build the binary + run 
+- The `Makefile` contains various targets for development, e.g.
+    - `make run` to build the binary + run
     - `make inlinerun` to just run the application inline (no output binary, all in memory)
     - `make debug` to run `dlv debug`, allowing setting of breakpoints etc
     - `make tidy` to check go files for new imports and add them to `go.sum`
     - `make lint` to run the same linters as the PR action, and print errors.
-- Tests are currently in the same package adjacent to the source file. ex: `source_handlers.go` -> `source_handlers_test.go`, just using the standard library testing library. May change in the future. 
+- Tests are currently in the same package adjacent to the source file. ex: `source_handlers.go` -> `source_handlers_test.go`, just using the standard library testing library. May change in the future.
 
 ### Launch the integration tests
 
@@ -37,6 +37,6 @@ In order to launch the integration tests just do the following:
 - Launch a test database with the following command: `podman run --rm --name sources_test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=sources_api_test_go -p 5432:5432 --rm docker.io/postgres:13 postgres -c log_statement=all`
 - Launch the tests themselves: `DATABASE_HOST=localhost DATABASE_PORT=5432 DATABASE_USER=postgres DATABASE_PASSWORD=postgres make alltest`
 
-## License
+## Licenses
 
 This project is available as open source under the terms of the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
