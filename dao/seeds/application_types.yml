@@ -66,20 +66,4 @@
   dependent_applications: []
   supported_source_types:
     - amazon
-  supported_authentication_types:
-    amazon:
-      - image-builder-aws-account-id
-"/insights/platform/provisioning":
-  display_name: Launch images
-  dependent_applications: []
-  supported_source_types:
-    - amazon
-    - azure
-    - google
-  supported_authentication_types:
-    amazon:
-      - provisioning-arn
-    azure:
-      - provisioning_lighthouse_subscription_id
-    google:
-      - provisioning_project_id
+    

@@ -147,7 +147,7 @@
     payload: {}
     substitutions: {}
 
-"/insights/platform/provisioning":
+"/insights/platform/image-builder":
   steps:
     - step: 1
       name: policy
@@ -156,7 +156,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "RedHatProvisioning",
+              "Sid": "RedHatImageBuilder",
               "Effect": "Allow",
               "Action": [
                   "iam:GetPolicyVersion",

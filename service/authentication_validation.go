@@ -58,7 +58,7 @@ func ValidateAzureSubscriptionId(auth *model.AuthenticationCreateRequest) error 
 		return errors.New("auth is nil")
 	}
 
-	if auth.AuthType == "provisioning_lighthouse_subscription_id" || auth.AuthType == "lighthouse_subscription_id" {
+	if auth.AuthType == "lighthouse_subscription_id" {
 		if auth.Username == nil {
 			return errors.New("username is required for Azure Source Types")
 		}
