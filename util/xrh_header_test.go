@@ -8,7 +8,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // accountNumber to be used in the tests.

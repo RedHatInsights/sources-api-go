@@ -8,7 +8,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 func BulkCreate(c echo.Context) error {
@@ -39,7 +39,10 @@ func BulkCreate(c echo.Context) error {
 	userID, ok := c.Get(h.UserID).(int64)
 
 	if ok {
-		user.UserID = id.Identity.User.UserID
+		if id.Identity.User != nil {
+			user.UserID = id.Identity.User.UserID
+		}
+
 		user.Id = userID
 	}
 

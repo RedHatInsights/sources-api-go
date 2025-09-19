@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 var conf = config.Get()
@@ -74,7 +74,7 @@ func IdentityHeaderForUser(testUserId string) *identity.XRHID {
 	accountNumber := fixtures.TestTenantData[0].ExternalTenant
 	orgID := fixtures.TestTenantData[0].OrgID
 
-	return &identity.XRHID{Identity: identity.Identity{OrgID: orgID, AccountNumber: accountNumber, User: identity.User{UserID: testUserId}}}
+	return &identity.XRHID{Identity: identity.Identity{OrgID: orgID, AccountNumber: accountNumber, User: &identity.User{UserID: testUserId}}}
 }
 
 func SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType string) *model.BulkCreateRequest {
