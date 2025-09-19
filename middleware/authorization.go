@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // PermissionCheck takes the authentication information stored in the context and returns a "401 — Unauthorized" if the
@@ -52,7 +52,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				// checking to see if we're going to change the results since
 				// system-auth is treated completely differently than
 				// org_admin/rbac/psk
-				if id.Identity.System != (identity.System{}) {
+				if id.Identity.System != (&identity.System{}) {
 					// system-auth only allows GET and POST requests.
 					method := c.Request().Method
 					if method != http.MethodGet && method != http.MethodPost && method != http.MethodDelete {
@@ -70,10 +70,12 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 					// can go through (but only if it's a POST)
 					//
 					// we're returning early because this is easier than a goto.
-					if id.Identity.System.ClusterId != "" || id.Identity.System.CommonName != "" {
-						return next(c)
-					} else {
-						return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
+					if id.Identity.System != nil {
+						if id.Identity.System.ClusterId != "" || id.Identity.System.CommonName != "" {
+							return next(c)
+						} else {
+							return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
+						}
 					}
 				}
 
