@@ -90,7 +90,27 @@ amazon:
       - name: authentication.extra.external_id
         component: text-field
         hideField: true
-        initializeOnMount: true       
+        initializeOnMount: true
+    - type: image-builder-aws-account-id
+      name: Image Builder AWS Account ID
+      fields:
+        - name: authentication.authtype
+          component: text-field
+          hideField: true
+          initializeOnMount: true
+          initialValue: image-builder-aws-account-id
+        - name: authentication.username
+          component: text-field
+          label: Account ID
+          isRequired: true
+          validate:
+          - type: required
+          - type: pattern
+            pattern: "^\\d{12}$"
+          - type: max-length
+            threshold: 12
+          - type: min-length
+            threshold: 12
   vendor: Amazon
   icon_url: "/apps/frontend-assets/partners-icons/aws-long.svg"
 google:
