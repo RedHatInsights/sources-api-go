@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -24,7 +25,7 @@ import (
 //     operation on a subset of paths.
 //   - The request is a regularly authenticated one, so we will call RBAC to verify that the principal that comes in
 //     the header has the authorization to perform the operation in Sources.
-func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.Client) echo.MiddlewareFunc {
+func PermissionCheck(bypassRbac bool, authorizedPsks []string, authorizedJWTSubjects []config.AuthorizedJWTSubject, rbacClient rbac.Client) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			switch {
@@ -38,6 +39,21 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 
 				if !pskMatches(authorizedPsks, psk) {
 					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
+				}
+
+			case c.Get(h.JWTIssuer) != nil && c.Get(h.JWTSubject) != nil:
+				jwtIssuer, ok := c.Get(h.JWTIssuer).(string)
+				if !ok {
+					return fmt.Errorf("error casting jwt issuer to string: %v", c.Get(h.JWTIssuer))
+				}
+
+				jwtSubject, ok := c.Get(h.JWTSubject).(string)
+				if !ok {
+					return fmt.Errorf("error casting jwt subject to string: %v", c.Get(h.JWTSubject))
+				}
+
+				if !jwtClaimsMatches(authorizedJWTSubjects, jwtIssuer, jwtSubject) {
+					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: JWT issuer/subject not authorized", "401"))
 				}
 
 			case c.Get(h.XRHID) != nil:
@@ -95,7 +111,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				}
 
 			default:
-				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
+				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity], [x-rh-sources-psk] or [Authorization: Bearer <token>]", "401"))
 			}
 
 			return next(c)
@@ -113,4 +129,15 @@ func certDeleteAllowed(c echo.Context) bool {
 // pskMatches returns true if the given PSK is in the list of allowed PSKs.
 func pskMatches(authorizedPsks []string, psk string) bool {
 	return util.SliceContainsString(authorizedPsks, psk)
+}
+
+// jwtClaimsMatches returns true if the given JWT issuer/subject pair matches any authorized combination.
+func jwtClaimsMatches(authorizedJWTSubjects []config.AuthorizedJWTSubject, jwtIssuer, jwtSubject string) bool {
+	for _, authorized := range authorizedJWTSubjects {
+		if authorized.Issuer == jwtIssuer && authorized.Subject == jwtSubject {
+			return true
+		}
+	}
+
+	return false
 }

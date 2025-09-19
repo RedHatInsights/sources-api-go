@@ -28,7 +28,7 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 	rbacClient := rbac.NewRbacClient(config.Get().RbacHost)
 
 	// Set up the middlewares.
-	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().AuthorizedPsks, rbacClient)
+	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().AuthorizedPsks, config.Get().AuthorizedJWTSubjects, rbacClient)
 
 	var (
 		listMiddleware    = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
@@ -50,6 +50,7 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 			middleware.HandleErrors,
 			middleware.IdValidation,
 			middleware.ParseHeaders,
+			middleware.JWTAuthentication(),
 		)
 
 		// openapi

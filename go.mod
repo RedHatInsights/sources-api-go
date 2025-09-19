@@ -26,6 +26,7 @@ require (
 	github.com/labstack/echo-contrib v0.17.4
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
+	github.com/lestrrat-go/jwx/v2 v2.1.6 // Comprehensive JWT/JWK library for JWKS support - enables dynamic key discovery, advanced JWT operations, and JSON Web Key Set handling for OIDC authentication
 	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redhatinsights/app-common-go v1.6.8
@@ -35,6 +36,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.49
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.21.0
+	github.com/stretchr/testify v1.11.1 // Enhanced testing framework for JWT/OIDC auth - provides clearer assertions, better error messages, and separates fatal (require) vs non-fatal (assert) test conditions
 	github.com/vektah/gqlparser/v2 v2.5.30
 	gorm.io/datatypes v1.2.6
 	gorm.io/driver/postgres v1.6.0
@@ -56,23 +58,30 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.38.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.2 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
+	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-7 // indirect
 	github.com/jackc/pgconn v1.14.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.3 // indirect
+	github.com/lestrrat-go/httpcc v1.0.1 // indirect
+	github.com/lestrrat-go/httprc v1.0.6 // indirect
+	github.com/lestrrat-go/iter v1.0.2 // indirect
+	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
+	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
