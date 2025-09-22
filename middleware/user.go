@@ -33,7 +33,9 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to fetch the identity header")
 			}
 
-			userIDFromContext = xRhIdentity.Identity.User.UserID
+			if xRhIdentity.Identity.User != nil {
+				userIDFromContext = xRhIdentity.Identity.User.UserID
+			}
 		}
 
 		if userIDFromContext != "" {
