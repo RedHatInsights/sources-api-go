@@ -166,3 +166,44 @@ func ConnectAndMigrateDB(packageName string) {
 		log.Fatalf("error in setting schema" + out.Error.Error())
 	}
 }
+
+// CloseConnection closes the connection to the database. Useful to avoid the "max connections reached" error due to
+// the many database tests we have.
+func CloseConnection() {
+	connection, err := dao.DB.DB()
+	if err != nil {
+		log.Fatalf(`could not get the database connection: %s`, err)
+	}
+
+	err = connection.Close()
+	if err != nil {
+		log.Fatalf(`could not close the connection to the database: %s`, err)
+	}
+}
+
+// SwitchSchema switches the schema to the specified one, migrates the schema and creates the fixtures for it.
+func SwitchSchema(schema string) {
+	CloseConnection()
+	ConnectToTestDB(schema)
+
+	err := dao.DB.
+		Debug().
+		Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS %s`, schema)).
+		Error
+	if err != nil {
+		log.Fatalf(`could not create schema "%s": %s`, schema, err)
+	}
+
+	// Set the database's search path to the schema, so that no prefix needs to be added by default to the tables in
+	// the queries.
+	err = dao.DB.
+		Debug().
+		Exec(fmt.Sprintf(`SET search_path TO %s`, schema)).
+		Error
+	if err != nil {
+		log.Fatalf(`could not switch schema to "%s": %s`, schema, err)
+	}
+
+	MigrateSchema()
+	CreateFixtures(schema)
+}
