@@ -49,45 +49,49 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 					return fmt.Errorf("error casting identity to struct: %+v", c.Get(h.ParsedIdentity))
 				}
 
-				// checking to see if we're going to change the results since
-				// system-auth is treated completely differently than
-				// org_admin/rbac/psk
-				if id.Identity.System != (&identity.System{}) {
-					// system-auth only allows GET and POST requests.
+				// For system based authentications, we need to make sure that
+				// the "Cluster ID" and the "Common name" fields are set in the
+				// identity header.
+				//
+				// We also allow a subset of the HTTP methods when using this
+				// type of authentications.
+				if isUsingCertificateBasedAuthentication(id) {
+					// Make sure that the incoming system-authenticated request
+					// is using the allowed method.
 					method := c.Request().Method
-					if method != http.MethodGet && method != http.MethodPost && method != http.MethodDelete {
+					if !isMethodAllowedForCertificateBasedAuthentication(method) {
 						c.Response().Header().Set("Allow", "GET, POST, DELETE")
 						return c.JSON(http.StatusMethodNotAllowed, util.NewErrorDoc("Method not allowed", "405"))
 					}
-					// Secondary check for delete - we could move this to middleware
+
+					// Make sure that the deletion operation is allowed.
 					if method == http.MethodDelete && !certDeleteAllowed(c) {
 						c.Response().Header().Set("Allow", "GET, POST")
 						return c.JSON(http.StatusMethodNotAllowed, util.NewErrorDoc("Method not allowed", "405"))
 					}
 
-					// basically we're checking whether cn or cluster_id is set in
-					// the system section of the header, if it is then this request
-					// can go through (but only if it's a POST)
-					//
-					// we're returning early because this is easier than a goto.
-					if id.Identity.System != nil {
-						if id.Identity.System.ClusterId != "" || id.Identity.System.CommonName != "" {
-							return next(c)
-						} else {
-							return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
-						}
+					// The "Cluster ID" and the "Common name" fields of the
+					// certificate must have been specified in the header.
+					if id.Identity.System.ClusterId == "" && id.Identity.System.CommonName == "" {
+						return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
 					}
+
+					// At this point the request is properly authenticated, so
+					// there is no need to call RBAC.
+					return next(c)
 				}
 
-				// otherwise, ship the xrhid off to rbac and check access rights.
+				// For other types of authentications, we need to forward the
+				// "x-rh-identity" header to RBAC to check if the principal
+				// is authorized to perform the call.
 				rhid, ok := c.Get(h.XRHID).(string)
 				if !ok {
-					return fmt.Errorf("error casting x-rh-identity to string: %v", c.Get(h.XRHID))
+					return fmt.Errorf(`authorization failed. The given "x-rh-identity" header is not a string: %v`, c.Get(h.XRHID))
 				}
 
 				allowed, err := rbacClient.Allowed(rhid)
 				if err != nil {
-					return fmt.Errorf("error hitting rbac: %v", err)
+					return fmt.Errorf("authorization failed. Unable to contact RBAC: %w", err)
 				}
 
 				if !allowed {
@@ -110,7 +114,26 @@ func certDeleteAllowed(c echo.Context) bool {
 	return regexp.MustCompile(`/sources/\d+$`).MatchString(c.Request().URL.Path)
 }
 
+// isMethodAllowedForCertificateAuthentication returns true when the request's
+// method is in the allowed list of methods for certificate based authenticated
+// requests.
+func isMethodAllowedForCertificateBasedAuthentication(method string) bool {
+	return method == http.MethodGet || method == http.MethodPost || method == http.MethodDelete
+}
+
 // pskMatches returns true if the given PSK is in the list of allowed PSKs.
 func pskMatches(authorizedPsks []string, psk string) bool {
 	return util.SliceContainsString(authorizedPsks, psk)
+}
+
+// isUsingCertificateBasedAuthentication returns true if the given identity
+// contains certificate details which could be used to perform a
+// certificate-based authentication.
+func isUsingCertificateBasedAuthentication(id *identity.XRHID) bool {
+	// Check that the "System" struct is not "nil", and also make sure that it
+	// is not empty or defined with empty values.
+	//
+	// The latter might happen if the header's JSON contents contain an empty
+	// '"system": {}' object.
+	return id.Identity.System != nil && *id.Identity.System != (identity.System{})
 }
