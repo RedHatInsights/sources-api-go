@@ -92,7 +92,7 @@ func TestSourceTypeGetByNameBadRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("source_type_by_name")
 
-	wantSourceType := m.SourceType{Name: "amazon"}
+	wantSourceType := m.SourceType{Name: "a"}
 
 	sourceTypeDao := GetSourceTypeDao()
 
