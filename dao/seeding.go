@@ -291,7 +291,7 @@ func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 	seeds := make(appMetadataSeedMap)
 	// reading from the embedded fs for the seeds directory
-	data, err := seedsFS.ReadFile("seeds/app_metadata.yml")
+	data, err := os.ReadFile("/tmp/sources/app_metadata.yml")
 	if err != nil {
 		return err
 	}
