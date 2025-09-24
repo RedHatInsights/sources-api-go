@@ -288,7 +288,7 @@ objects:
             memory: ${MEMORY_REQUEST}
         volumeMounts:
           - name: sources-app-metadata
-            mountPath: /tmp/sources
+            mountPath: /mnt/sources
             readOnly: true
         volumes:
           - name: sources-app-metadata

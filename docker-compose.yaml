@@ -43,7 +43,7 @@ services:
       - BYPASS_RBAC=true
       - ENCRYPTION_KEY=YWFhYWFhYWFhYWFhYWFhYQ
     volumes:
-      - ./dao/seeds:/tmp/sources
+      - ./dao/seeds:/mnt/sources
     ports:
       - 3000:8000
       - 9394:9394
