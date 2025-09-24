@@ -7,8 +7,8 @@
 # Fallback metadata file for local development
 "/insights/platform/cost-management":
   gcp_service_account: test-billing-service-account@cloud-billing-292519.iam.gserviceaccount.com
-  aws_wizard_account_number: "111111111111"
+  aws_wizard_account_number: "587172791893"
 "/insights/platform/cloud-meter":
-  aws_wizard_account_number: "222222222222"
+  aws_wizard_account_number: "587172791893"
 "/insights/platform/image-builder":
-  aws_wizard_account_number: "333333333333"
+  aws_wizard_account_number: "587172791893"
