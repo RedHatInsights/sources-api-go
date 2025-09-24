@@ -1,7 +1,6 @@
 ######
 # Seed file for application specific metadata.
-# Outer object is the env (in case there are per-env settings)
-# Inner object is in the form of `key`: `jsonb`, but a plain
+# The object is in the form of `key`: `jsonb`, but a plain
 # string is valid json. So plain key/value works fine.
 #####
 
