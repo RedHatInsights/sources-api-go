@@ -289,9 +289,9 @@ func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 }
 
 func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
-	seeds := make(appMetadataSeedMap)
+	seeds := make(appMetaDataSeed)
 	// reading from the embedded fs for the seeds directory
-	data, err := seedsFS.ReadFile("seeds/app_metadata.yml")
+	data, err := os.ReadFile("/mnt/sources/app_metadata.yml")
 	if err != nil {
 		return err
 	}
@@ -301,15 +301,7 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 		return err
 	}
 
-	// defaulting to "eph" if no var is set.
-	env, ok := os.LookupEnv("SOURCES_ENV")
-	if !ok {
-		l.Log.Infof("Defaulting SOURCES_ENV to eph")
-
-		env = "eph"
-	}
-
-	for name, values := range seeds[env] {
+	for name, values := range seeds {
 		appType, ok := appTypes[name]
 		if !ok {
 			return fmt.Errorf("failed find application type %v", name)
