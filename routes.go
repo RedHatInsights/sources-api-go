@@ -50,6 +50,7 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 			middleware.HandleErrors,
 			middleware.IdValidation,
 			middleware.ParseHeaders,
+			middleware.JWTAuthentication(),
 		)
 
 		// openapi

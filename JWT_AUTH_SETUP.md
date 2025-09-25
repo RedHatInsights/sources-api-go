@@ -6,7 +6,7 @@ This document explains how to configure and use JWT-based OIDC authentication in
 
 JWT authentication has been added as an additional authentication method that works alongside existing PSK and x-rh-identity authentication. This enables secure Service-to-Service (S2S) communication using industry-standard OIDC JWT tokens with automatic public key retrieval from your OIDC provider's JWKS endpoint.
 
-**Important**: JWT authentication is **only available on internal API endpoints** (`/internal/v1.0`, `/internal/v2.0`).
+**Note**: JWT authentication is available on **both public and internal API endpoints** for complete feature parity with PSK authentication.
 
 ## Architecture Overview
 
@@ -23,7 +23,7 @@ The JWT authentication system consists of three main components:
    - Stale-while-revalidate pattern for high availability
 
 3. **Route Integration** (`routes.go`)
-   - JWT middleware applied only to internal API routes
+   - JWT middleware applied to both public and internal API routes
 
 ## Configuration
 
@@ -55,9 +55,9 @@ When disabled, JWT middleware is completely bypassed, allowing fallback to PSK a
 
 ## Authentication Flow
 
-### Phase 1: JWT Authentication Middleware (Internal APIs Only)
+### Phase 1: JWT Authentication Middleware (All APIs)
 
-Applied only to `/internal/*` routes in this order:
+Applied to both `/api/sources/*` and `/internal/*` routes in this order:
 
 1. **Feature Flag Check**: If `sources-api.oidc-auth.enabled` is disabled, skips JWT processing
 2. **Token Extraction**: Extracts JWT from `Authorization: Bearer <token>` header
@@ -70,12 +70,20 @@ Applied only to `/internal/*` routes in this order:
 
 ### Phase 2: Permission Check Middleware
 
-For **internal APIs**, checks authorization in this order:
+For **both public and internal APIs**, checks authorization in this order:
 1. **JWT Authentication** - Uses JWT context values set by JWT middleware (if present)
-2. **PSK Authentication** - `x-rh-sources-psk` header
-3. **Unauthorized** - If neither JWT context nor valid PSK are present
+2. **PSK Authentication** - `x-rh-sources-psk` header  
+3. **RBAC Authentication** - `x-rh-identity` header (public APIs only)
+4. **Unauthorized** - If no valid authentication method is present
 
 **Note**: JWT whitelist checking happens in Phase 1 (JWT middleware), not in Permission Check middleware.
+
+### Phase 3: User Management Middleware
+
+The `UserCatcher` middleware currently handles:
+- **PSK Authentication**: Uses `x-rh-sources-user-id` header to create/find users in database
+- **RBAC Authentication**: Uses `x-rh-identity` header to extract user ID and create/find users in database
+- **JWT Authentication**: Does **not** create users in database (JWT context values are not processed by UserCatcher)
 
 #### JWT Subject Authorization (Phase 1)
 
@@ -106,6 +114,22 @@ The implementation uses a sophisticated two-level caching system:
 This design prioritizes **availability over freshness**, ensuring that IdP outages don't impact authentication.
 
 ## API Coverage
+
+### Public APIs (JWT + PSK + RBAC Support)
+```
+/api/sources/v1.0/*
+/api/sources/v2.0/*
+/api/sources/v3.0/*
+/api/sources/v3.1/*
+/api/sources/v1/*
+/api/sources/v2/*
+/api/sources/v3/*
+```
+
+**Authentication methods supported**:
+- JWT tokens (with `Authorization: Bearer` header)
+- PSK authentication (with `x-rh-sources-psk` header)
+- RBAC authentication (with `x-rh-identity` header)
 
 ### Internal APIs (JWT + PSK Support)
 ```
@@ -158,6 +182,25 @@ Your JWT token must:
 ```
 
 ## Usage Examples
+
+### Public API Authentication
+
+```bash
+# Option 1: JWT authentication (preferred for service-to-service)
+curl -H "Authorization: Bearer <your-jwt-token>" \
+     -H "Content-Type: application/json" \
+     https://your-sources-api/api/sources/v3.1/sources
+
+# Option 2: PSK authentication
+curl -H "x-rh-sources-psk: <your-psk>" \
+     -H "Content-Type: application/json" \
+     https://your-sources-api/api/sources/v3.1/sources
+
+# Option 3: RBAC authentication
+curl -H "x-rh-identity: <base64-encoded-identity>" \
+     -H "Content-Type: application/json" \
+     https://your-sources-api/api/sources/v3.1/sources
+```
 
 ### Internal API Authentication
 
@@ -319,7 +362,7 @@ go test ./middleware -v -run "(JWT|JWKS|Discovery|Cache)"
 - `middleware/jwt_auth_test.go` - Comprehensive data-driven JWT authentication tests
 - `middleware/jwks_test.go` - JWKS unit tests with mocking support
 - `middleware/jwks_integration_test.go` - End-to-end JWKS integration tests
-- `routes.go` - JWT middleware integration (internal APIs only)
+- `routes.go` - JWT middleware integration (both public and internal APIs)
 - `config/config.go` - Configuration management for JWT settings
 
 ### Performance Optimizations
@@ -348,11 +391,12 @@ go test ./middleware -v -run "(JWT|JWKS|Discovery|Cache)"
 ### Authorization Security
 - **Secure by Default**: Empty `AUTHORIZED_JWT_SUBJECTS` rejects all JWTs
 - **Explicit Allow-listing**: Only configured issuer-subject pairs are authorized
-- **Principle of Least Privilege**: JWT authentication restricted to internal APIs only
+- **Multiple Authentication Options**: JWT available alongside PSK and RBAC methods
+- **JWT User Management**: JWT authentication does not create users in the database (handled separately from PSK/RBAC user management)
 
 ### Availability Security
-- **Graceful Degradation**: Internal APIs fall back to PSK auth if JWT fails
-- **Multiple Auth Options**: Both API types support PSK as an alternative authentication method
+- **Graceful Degradation**: All APIs fall back to other auth methods if JWT fails
+- **Multiple Auth Options**: Public APIs support JWT, PSK, and RBAC; Internal APIs support JWT and PSK
 - **Cache Fallback**: Uses stale JWKS cache during IdP outages
 - **Feature Flag Control**: Can disable JWT auth instantly if needed
 - **Non-blocking Design**: JWT middleware doesn't block other auth methods
