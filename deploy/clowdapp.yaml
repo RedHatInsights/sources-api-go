@@ -286,6 +286,14 @@ objects:
           requests:
             cpu: ${CPU_REQUEST}
             memory: ${MEMORY_REQUEST}
+        volumeMounts:
+          - name: sources-app-metadata
+            mountPath: /mnt/sources
+            readOnly: true
+        volumes:
+          - name: sources-app-metadata
+            configMap:
+              name: sources-app-metadata
     database:
       name: sources
       version: 12
@@ -306,6 +314,15 @@ objects:
     featureFlags: true
     dependencies:
     - rbac
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: sources-api
+    name: sources-app-metadata
+  data:
+    app_metadata.yml: |
+      ${APP_METADATA}
 parameters:
 - description: Scheme of the Cloud Meter API
   displayName: Cloud Meter API Scheme
@@ -460,4 +477,7 @@ parameters:
   value: "false"
 - description: A comma-separated list of application types that are disabled in Sources
   name: DISABLED_APPLICATION_TYPES
+  value: ""
+- description: A YAML file containing app_metadata for the supported applications in Sources.
+  name: APP_METADATA
   value: ""
