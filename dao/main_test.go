@@ -220,6 +220,7 @@ func UpdateTablesSequences(schema string) {
 		"rhc_connections",
 		"authentications",
 		"application_authentications",
+		"meta_data",
 	}
 
 	for _, table := range tables {

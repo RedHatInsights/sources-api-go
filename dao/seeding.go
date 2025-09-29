@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -291,7 +292,17 @@ func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 	seeds := make(appMetaDataSeed)
 	// reading from the embedded fs for the seeds directory
-	data, err := os.ReadFile("/mnt/sources/app_metadata.yml")
+	env := config.Get().Env
+
+	var data []byte
+
+	var err error
+	if strings.ToLower(env) == "stage" || strings.ToLower(env) == "prod" {
+		data, err = os.ReadFile("/mnt/sources/app_metadata.yml")
+	} else {
+		data, err = seedsFS.ReadFile("seeds/app_metadata.yml")
+	}
+
 	if err != nil {
 		return err
 	}
