@@ -5,7 +5,6 @@ type (
 	sourceTypeSeedMap       map[string]sourceTypeSeed
 	applicationTypeSeedMap  map[string]applicationTypeSeed
 	superkeyMetadataSeedMap map[string]superKeySeed
-	appMetadataSeedMap      map[string]appMetaDataSeed
 )
 
 type sourceTypeSeed struct {

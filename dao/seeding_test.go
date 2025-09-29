@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"sigs.k8s.io/yaml"
 )
@@ -21,9 +22,11 @@ func getSeedFilesystemDir() string {
 
 func TestSeedingSourceTypes(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
-	CloseConnection()
-	ConnectToTestDB("seeding")
-	MigrateSchema()
+	SwitchSchema("seeding_source_types")
+
+	defer func() {
+		DropSchema("seeding_source_types")
+	}()
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -58,6 +61,11 @@ func TestSeedingSourceTypes(t *testing.T) {
 
 func TestSeedingApplicationTypes(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("seeding_application_types")
+
+	defer func() {
+		DropSchema("seeding_application_types")
+	}()
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -92,6 +100,11 @@ func TestSeedingApplicationTypes(t *testing.T) {
 
 func TestSeedingSuperkeyMetadata(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("seeding_superkey_metadata")
+
+	defer func() {
+		DropSchema("seeding_superkey_metadata")
+	}()
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -134,6 +147,11 @@ func TestSeedingSuperkeyMetadata(t *testing.T) {
 
 func TestSeedingApplicationMetadata(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("seeding_application_metadata")
+
+	defer func() {
+		DropSchema("seeding_application_metadata")
+	}()
 
 	if DB == nil {
 		t.Fatal("DB is nil - cannot continue test.")
@@ -148,7 +166,7 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 	}
 
 	bytes, _ := os.ReadFile(seedsDir + "app_metadata.yml")
-	seeds := make(appMetadataSeedMap)
+	seeds := make(appMetaDataSeed)
 
 	err = yaml.Unmarshal(bytes, &seeds)
 	if err != nil {
@@ -164,14 +182,12 @@ func TestSeedingApplicationMetadata(t *testing.T) {
 		t.Fatalf("failed to list appmetadata: %v", result.Error)
 	}
 
-	count := 0
-	for _, v := range seeds["eph"] {
+	count := 0 + len(fixtures.TestMetaDataData)
+	for _, v := range seeds {
 		count += len(v)
 	}
 
 	if len(appmdata) != count {
 		t.Errorf("Seeding did not match values, got %v expected %v", len(appmdata), count)
 	}
-
-	DropSchema("seeding")
 }
