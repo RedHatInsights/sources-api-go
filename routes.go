@@ -50,6 +50,7 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 			middleware.HandleErrors,
 			middleware.IdValidation,
 			middleware.ParseHeaders,
+			middleware.JWTAuthentication(),
 		)
 
 		// openapi
@@ -159,7 +160,12 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 	\**            **/
 	internalVersions := []string{"v1.0", "v2.0"}
 	for _, version := range internalVersions {
-		r := e.Group("/internal/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
+		r := e.Group("/internal/"+version,
+			middleware.HandleErrors,
+			middleware.ParseHeaders,
+			middleware.LoggerFields,
+			middleware.JWTAuthentication(),
+		)
 
 		// Authentications
 		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
