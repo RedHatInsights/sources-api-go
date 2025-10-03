@@ -17,7 +17,7 @@ var TestSourceTypeData = []m.SourceType{
 	},
 	{
 		Id:   4,
-		Name: "amazon123",
+		Name: "ibm",
 	},
 	{
 		Id:   100,

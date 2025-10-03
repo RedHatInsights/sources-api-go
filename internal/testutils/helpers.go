@@ -78,15 +78,25 @@ func IdentityHeaderForUser(testUserId string) *identity.XRHID {
 }
 
 func SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType string) *model.BulkCreateRequest {
-	sourceCreateRequest := model.SourceCreateRequest{Name: &nameSource, AvailabilityStatus: model.Available}
+	return SingleResourceBulkCreateRequestWithStatus(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType, model.Available)
+}
+
+// SingleResourceBulkCreateRequestWithStatus similar to the other function, but
+// it allows specifying the availability status for the resources.
+func SingleResourceBulkCreateRequestWithStatus(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType, availablityStatus string) *model.BulkCreateRequest {
+	// Set up the source.
+	sourceCreateRequest := model.SourceCreateRequest{Name: &nameSource, AvailabilityStatus: availablityStatus}
 	bulkCreateSource := model.BulkCreateSource{SourceCreateRequest: sourceCreateRequest, SourceTypeName: sourceTypeName}
 
+	// Set up the application.
 	bulkCreateApplication := model.BulkCreateApplication{SourceName: nameSource, ApplicationTypeName: applicationTypeName}
 
+	// Set up the authentication.
 	authenticationCreateRequest := model.AuthenticationCreateRequest{ResourceType: authenticationResourceType}
 	bulkCreateAuthentication := model.BulkCreateAuthentication{AuthenticationCreateRequest: authenticationCreateRequest, ResourceName: applicationTypeName}
 
-	endpointCreateRequest := model.EndpointCreateRequest{AvailabilityStatus: model.Unavailable}
+	// set up the endpoint.
+	endpointCreateRequest := model.EndpointCreateRequest{AvailabilityStatus: availablityStatus}
 	bulkCreateEndpoints := model.BulkCreateEndpoint{EndpointCreateRequest: endpointCreateRequest, SourceName: nameSource}
 
 	return &model.BulkCreateRequest{Sources: []model.BulkCreateSource{bulkCreateSource},
