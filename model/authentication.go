@@ -156,7 +156,7 @@ func (auth *Authentication) ToVaultMap() (map[string]interface{}, error) {
 
 func (auth *Authentication) ToEvent() interface{} {
 	return &AuthenticationEvent{
-		ID:                      auth.GetID(),
+		ID:                      auth.DbID,
 		CreatedAt:               auth.CreatedAt,
 		Name:                    util.ValueOrBlank(auth.Name),
 		AuthType:                auth.AuthType,
