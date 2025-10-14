@@ -28,10 +28,8 @@ func (r *RhcConnection) UpdateFromRequest(input *RhcConnectionEditRequest) {
 }
 
 func (r *RhcConnection) ToEvent() interface{} {
-	id := strconv.FormatInt(r.ID, 10)
-
 	rhcConnectionEvent := &RhcConnectionEvent{
-		ID:                      &id,
+		ID:                      &r.ID,
 		RhcId:                   &r.RhcId,
 		Extra:                   r.Extra,
 		AvailabilityStatus:      util.StringValueOrNil(r.AvailabilityStatus),

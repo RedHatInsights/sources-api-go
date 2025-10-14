@@ -25,7 +25,7 @@ type ApplicationEvent struct {
 }
 
 type AuthenticationEvent struct {
-	ID        string    `json:"id"`
+	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 
 	Name                    string                 `json:"name"`
@@ -103,7 +103,7 @@ type SourceEvent struct {
 }
 
 type RhcConnectionEvent struct {
-	ID                      *string        `json:"id"`
+	ID                      *int64         `json:"id"`
 	RhcId                   *string        `json:"rhc_id"`
 	Extra                   datatypes.JSON `json:"extra"`
 	AvailabilityStatus      *string        `json:"availability_status"`
