@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -21,6 +22,12 @@ const (
 	VaultStore          = "vault"
 	SecretsManagerStore = "secrets-manager"
 )
+
+// AuthorizedJWTSubject represents an authorized JWT issuer-subject pair
+type AuthorizedJWTSubject struct {
+	Issuer  string `json:"issuer"`
+	Subject string `json:"subject"`
+}
 
 var parsedConfig *SourcesApiConfig
 
@@ -64,6 +71,8 @@ type SourcesApiConfig struct {
 	Env                      string
 	HandleTenantRefresh      bool
 	RbacHost                 string
+	JWTIssuer                string
+	AuthorizedJWTSubjects    []AuthorizedJWTSubject
 
 	SecretsManagerAccessKey string
 	SecretsManagerSecretKey string
@@ -103,8 +112,14 @@ func (s SourcesApiConfig) String() string {
 	fmt.Fprintf(&b, "%s=%v ", "SecretsManagerPrefix", s.SecretsManagerPrefix)
 	fmt.Fprintf(&b, "%s=%v ", "LocalStackURL", s.LocalStackURL)
 	fmt.Fprintf(&b, "%s=%v ", "RbacHost", s.RbacHost)
+	fmt.Fprintf(&b, "%s=%v ", "JWTIssuer", s.JWTIssuer)
 
 	return b.String()
+}
+
+// Reset clears the cached configuration - primarily for testing purposes
+func Reset() {
+	parsedConfig = nil
 }
 
 // Get - returns the config parsed from runtime vars
@@ -313,6 +328,22 @@ func Get() *SourcesApiConfig {
 	// psks for .... psk authentication
 	options.SetDefault("AuthorizedPsks", strings.Split(os.Getenv("SOURCES_PSKS"), ","))
 
+	// JWT authentication configuration
+	options.SetDefault("JWTIssuer", os.Getenv("JWT_ISSUER"))
+
+	// Parse AuthorizedJWTSubjects from JSON
+	var authorizedJWTSubjects []AuthorizedJWTSubject
+
+	jwtSubjectsJSON := os.Getenv("AUTHORIZED_JWT_SUBJECTS")
+	if jwtSubjectsJSON != "" {
+		err = json.Unmarshal([]byte(jwtSubjectsJSON), &authorizedJWTSubjects)
+		if err != nil {
+			log.Fatalf("Failed to parse AUTHORIZED_JWT_SUBJECTS JSON: %v. Expected format: '[{\"issuer\":\"...\",\"subject\":\"...\"}]'", err)
+		}
+	}
+
+	options.SetDefault("AuthorizedJWTSubjects", authorizedJWTSubjects)
+
 	// Grab the Kafka Sasl Settings.
 	var brokerConfig []clowder.BrokerConfig
 
@@ -378,6 +409,8 @@ func Get() *SourcesApiConfig {
 		SecretsManagerPrefix:     options.GetString("SecretsManagerPrefix"),
 		LocalStackURL:            options.GetString("LocalStackURL"),
 		RbacHost:                 options.GetString("RbacHost"),
+		JWTIssuer:                options.GetString("JWTIssuer"),
+		AuthorizedJWTSubjects:    options.Get("AuthorizedJWTSubjects").([]AuthorizedJWTSubject),
 	}
 
 	return parsedConfig
@@ -409,4 +442,17 @@ func findDependentApplication(name string, endpoints []clowder.DependencyEndpoin
 	} else {
 		return endpoints[idx], nil
 	}
+}
+
+// ValidateJWTConfiguration validates that JWT issuer is configured when OIDC auth is enabled.
+// Takes the OIDC feature flag state as a parameter to avoid circular dependencies with the service package.
+func ValidateJWTConfiguration(oidcAuthEnabled bool) error {
+	if oidcAuthEnabled {
+		issuer := Get().JWTIssuer
+		if issuer == "" {
+			return fmt.Errorf("JWT issuer must be configured when OIDC authentication is enabled (sources-api.oidc-auth.enabled=true). Set JWT_ISSUER environment variable")
+		}
+	}
+
+	return nil
 }

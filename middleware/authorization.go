@@ -30,6 +30,9 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 			switch {
 			case bypassRbac:
 				c.Logger().Debugf("Skipping authorization check -- disabled in ENV")
+			case c.Get(h.JWTIssuer) != nil && c.Get(h.JWTSubject) != nil:
+				// JWT authentication already succeeded, allow through
+				c.Logger().Debugf("JWT authentication already validated for issuer: %s, subject: %s", c.Get(h.JWTIssuer), c.Get(h.JWTSubject))
 			case c.Get(h.PSK) != nil:
 				psk, ok := c.Get(h.PSK).(string)
 				if !ok {
@@ -99,7 +102,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				}
 
 			default:
-				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
+				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity], [x-rh-sources-psk] or [Authorization: Bearer <token>]", "401"))
 			}
 
 			return next(c)
