@@ -1,7 +1,6 @@
-FROM registry.access.redhat.com/ubi9/ubi:latest as build
+FROM registry.access.redhat.com/ubi9/go-toolset:latest as build
 WORKDIR /build
 
-RUN dnf --assumeyes --disableplugin=subscription-manager install go
 
 COPY . .
 RUN go mod download \

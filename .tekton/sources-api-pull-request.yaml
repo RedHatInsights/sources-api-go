@@ -33,7 +33,7 @@ spec:
   - name: hermetic
     value: "true"
   - name: prefetch-input
-    value: '[{"type": "gomod", "path": "."}, {"type": "rpm", "path": "."}]'
+    value: '[{"type": "gomod", "path": "."}]'
   pipelineRef:
     params:
     - name: url
