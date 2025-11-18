@@ -1,7 +1,9 @@
 FROM registry.access.redhat.com/ubi9/go-toolset:latest as build
-WORKDIR /build
 
 USER root
+
+WORKDIR /build
+
 
 COPY . .
 RUN go mod download \
