@@ -10,6 +10,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
@@ -331,4 +332,143 @@ func cleanSourceForTenant(sourceName string, tenantID *int64) error {
 	time.Sleep(2 * time.Second)
 
 	return err
+}
+
+// TestBulkCreateAvailableByDefault tests that specific source-application
+// pairs, and their corresponding authentications, get their availability
+// status as "available".
+func TestBulkCreateAvailableByDefault(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	database.SwitchSchema("test_bulk_create_corresponding_resouces_available")
+
+	defer func() {
+		database.DropSchema("test_bulk_create_corresponding_resouces_available")
+		database.SwitchSchema("service")
+	}()
+
+	// Prepare the test cases.
+	testCases := []struct {
+		RequestBody                *m.BulkCreateRequest
+		ShouldResourcesBeAvailable bool
+	}{
+		{
+			RequestBody:                testutils.SingleResourceBulkCreateRequestWithStatus("Test source 1", "amazon", "cloud-meter", "Application", m.Unavailable),
+			ShouldResourcesBeAvailable: false,
+		},
+		{
+			RequestBody:                testutils.SingleResourceBulkCreateRequestWithStatus("Test source 2", "amazon", "image-builder", "Application", m.Unavailable),
+			ShouldResourcesBeAvailable: true,
+		},
+		{
+			RequestBody:                testutils.SingleResourceBulkCreateRequestWithStatus("Test source 3", "google", "cloud-meter", "Application", m.Unavailable),
+			ShouldResourcesBeAvailable: true,
+		},
+		{
+			RequestBody:                testutils.SingleResourceBulkCreateRequestWithStatus("Test source 4", "google", "image-builder", "Application", m.Unavailable),
+			ShouldResourcesBeAvailable: false,
+		},
+		{
+			RequestBody:                testutils.SingleResourceBulkCreateRequestWithStatus("Test source 5", "ibm", "cloud-meter", "Application", m.Unavailable),
+			ShouldResourcesBeAvailable: false,
+		},
+		{
+			RequestBody:                testutils.SingleResourceBulkCreateRequestWithStatus("Test source 6", "ibm", "image-builder", "Application", m.Unavailable),
+			ShouldResourcesBeAvailable: false,
+		},
+	}
+
+	// Define a function to check if the availability status is the expected
+	// one.
+	isExpectedAvailabilityStatus := func(shouldResourcesBeAvailable bool, gotAvailabilityStatus string) bool {
+		if shouldResourcesBeAvailable {
+			return m.Available == gotAvailabilityStatus
+		} else {
+			return m.Available != gotAvailabilityStatus
+		}
+	}
+
+	// Go through all the test cases.
+	for _, testCase := range testCases {
+		// Prepare the request body.
+		body, err := json.Marshal(testCase.RequestBody)
+		if err != nil {
+			t.Error("Could not marshal JSON")
+		}
+
+		// Prepare the request.
+		c, res := request.CreateTestContext(
+			http.MethodPost,
+			"/api/sources/v3.1/bulk_create",
+			bytes.NewReader(body),
+			map[string]interface{}{
+				"tenantID": fixtures.TestTenantData[0].Id,
+			},
+		)
+
+		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
+		c.Set(h.ParsedIdentity, testutils.IdentityHeaderForUser("testUser"))
+
+		// Call the handler under test.
+		err = BulkCreate(c)
+		if err != nil {
+			t.Errorf(`unexpected error when calling the "bulk create" handler: %s`, err)
+		}
+
+		if res.Code != http.StatusCreated {
+			t.Errorf(`unexpected status code received. Want "%d", got "%d"`, http.StatusCreated, res.Code)
+		}
+
+		// Unmarshall the response.
+		var response m.BulkCreateResponse
+
+		err = json.Unmarshal(res.Body.Bytes(), &response)
+		if err != nil {
+			t.Errorf(`unexpected error when unmarshalling the "bulk create" response: %s`, err)
+		}
+
+		// Prepare the expected availability status for the resources.
+		var wantAvailability string
+		if testCase.ShouldResourcesBeAvailable {
+			wantAvailability = m.Available
+		} else {
+			wantAvailability = "anything but available status"
+		}
+
+		// Verify that the returned source is correct and has the expected
+		// availability status.
+		source := response.Sources[0]
+		if *testCase.RequestBody.Sources[0].Name != *source.Name {
+			t.Errorf(`unexpected source returned. Want "%s", got "%s"`, *testCase.RequestBody.Sources[0].Name, *source.Name)
+		}
+
+		if !isExpectedAvailabilityStatus(testCase.ShouldResourcesBeAvailable, *source.AvailabilityStatus) {
+			t.Errorf(`unexpected availability status returned for source "%s". Want "%s", got "%s"`, *source.Name, wantAvailability, *source.AvailabilityStatus)
+		}
+
+		// Verify that the application is tied to the source and that it has
+		// the expected availability status.
+		application := response.Applications[0]
+		if source.ID != application.SourceID {
+			t.Errorf(`the application is bound to an unexpected source. Want source ID "%s", got "%s"`, source.ID, application.SourceID)
+		}
+
+		if !isExpectedAvailabilityStatus(testCase.ShouldResourcesBeAvailable, *application.AvailabilityStatus) {
+			t.Errorf(`unexpected availability status returned for application "%s". Want "%s", got "%s"`, application.ID, wantAvailability, *application.AvailabilityStatus)
+		}
+
+		// Verify that the authentication is bound to the correct application
+		// and that it has the expected availability status.
+		authentication := response.Authentications[0]
+		if application.ID != authentication.ResourceID {
+			t.Errorf(`the authentication "%s" is bound to an unexpected resource. Want resource ID "%s", got "%s"`, authentication.Name, application.ID, authentication.ResourceID)
+		}
+
+		if authentication.ResourceType != "Application" {
+			t.Errorf(`the authentication "%s" is bound to an unexpected resource type. Want resource type "%s", got "%s"`, authentication.Name, authentication.ResourceType, authentication.ResourceType)
+		}
+
+		if !isExpectedAvailabilityStatus(testCase.ShouldResourcesBeAvailable, authentication.AvailabilityStatus) {
+			t.Errorf(`unexpected availability status returned for authentication "%s". Want "%s", got "%s"`, authentication.ID, wantAvailability, authentication.AvailabilityStatus)
+		}
+	}
 }

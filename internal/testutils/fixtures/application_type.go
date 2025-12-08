@@ -51,7 +51,7 @@ var TestApplicationTypeData = []m.ApplicationType{
 		Id:                           7,
 		DisplayName:                  "Image Builder",
 		Name:                         "/insights/platform/image-builder",
-		SupportedSourceTypes:         []byte(`["amazon"]`),
-		SupportedAuthenticationTypes: []byte(`{"amazon": ["arn", "arn-2", "arn-3"]}`),
+		SupportedSourceTypes:         []byte(`["amazon", "azure", "google", "openshift", "ibm"]`),
+		SupportedAuthenticationTypes: []byte(`{"amazon": ["arn", "arn-2", "arn-3"], "azure": ["azure-auth", "azure-auth-2"]}`),
 	},
 }
