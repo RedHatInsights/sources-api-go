@@ -36,7 +36,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.21.0
 	github.com/vektah/gqlparser/v2 v2.5.30
-	gorm.io/datatypes v1.2.6
+	gorm.io/datatypes v1.2.7
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.0
 	sigs.k8s.io/yaml v1.6.0
