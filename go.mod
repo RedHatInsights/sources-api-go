@@ -74,7 +74,7 @@ require (
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/scram v1.2.0 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
