@@ -9,5 +9,6 @@ import (
 
 func TestMain(t *testing.M) {
 	_ = parser.ParseFlags()
+
 	os.Exit(t.Run())
 }

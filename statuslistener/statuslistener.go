@@ -35,6 +35,7 @@ var (
 
 type AvailabilityStatusListener struct {
 	*events.EventStreamProducer
+
 	healthcheck chan struct{}
 	lastMsg     time.Time
 }
@@ -79,6 +80,7 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 
 	<-shutdown
 	kafka.CloseReader(kf, "subscribe availability status. Shutdown signal received")
+
 	shutdown <- struct{}{}
 }
 
@@ -101,6 +103,7 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 	}
 
 	var statusMessage types.StatusMessage
+
 	err := message.ParseTo(&statusMessage)
 	if err != nil {
 		l.Log.Errorf("Error in parsing status message %v", err)
@@ -112,6 +115,7 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 	if err != nil {
 		l.Log.Errorf("Invalid ID Passed: %v", statusMessage.ResourceIDRaw)
 	}
+
 	statusMessage.ResourceID = id
 
 	headers := message.TranslateHeaders()
@@ -128,6 +132,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}).Debugf("Status message received")
 
 	resource := &util.Resource{}
+
 	resource, err := util.ParseStatusMessageToResource(resource, statusMessage)
 	if err != nil {
 		l.Log.Errorf("Invalid Status: %s", statusMessage.Status)
@@ -146,6 +151,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}
 
 	tenantDao := dao.GetTenantDao()
+
 	tenant, err := tenantDao.TenantByIdentity(id)
 	if err != nil {
 		l.Log.Error(err)
@@ -157,6 +163,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	}
 
 	updateAttributes := avs.attributesForUpdate(statusMessage)
+
 	modelEventDao, err := dao.GetFromResourceType(statusMessage.ResourceType, tenant.Id)
 	if err != nil {
 		l.Log.Error(err)
@@ -171,6 +178,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 
 	resource.TenantID = tenant.Id
 	resource.AccountNumber = tenant.ExternalTenant
+
 	resultRecord, err := modelEventDao.FetchAndUpdateBy(*resource, updateAttributes)
 	if err != nil {
 		l.Log.Errorf("[tenant_id: %d][resource_type: %s][resource_id: %d][resource_uuid: %s] unable to update availability status: %s", resource.TenantID, resource.ResourceType, resource.ResourceID, resource.ResourceUID, err)
@@ -180,6 +188,7 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	if previousStatus != statusMessage.Status {
 		if statusMessage.ResourceType == "Application" {
 			appDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &tenant.Id})
+
 			app, err := appDao.GetById(&resource.ResourceID)
 			if err != nil {
 				l.Log.Errorf("[tenant_id: %d][application_id: %d] unable to fetch application: %s", tenant.Id, resource.ResourceID, err)
@@ -208,12 +217,11 @@ func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMe
 	updateAttributeKeys := make([]string, 0)
 	for k := range updateAttributes {
 		updateAttributeKeys = append(updateAttributeKeys, k)
-
 	}
+
 	sort.Strings(updateAttributeKeys)
 
 	err = avs.RaiseEventForUpdate(modelEventDao, *resource, updateAttributeKeys, headers)
-
 	if err != nil {
 		l.Log.Errorf("Error in raising event for update: %s, resource: %s(%s)", err.Error(), statusMessage.ResourceType, statusMessage.ResourceID)
 	}
@@ -256,6 +264,7 @@ func (avs *AvailabilityStatusListener) Healthcheck() {
 		if avs.lastMsg.IsZero() || avs.lastMsg.Before(time.Now().Add(-healthCheckInterval*time.Second)) {
 			errstr := fmt.Sprintf("no successful kafka production in %v seconds or more", healthCheckInterval)
 			l.Log.Warn(errstr)
+
 			return c.String(http.StatusInternalServerError, errstr)
 		}
 
@@ -296,12 +305,14 @@ func (avs *AvailabilityStatusListener) healthCheckProducer() {
 		msg.AddHeaders([]kafka.Header{
 			{Key: "event_type", Value: []byte(eventHealthcheck)},
 		})
+
 		now := time.Now()
 
 		// should be 0, since we have produced 0 messages.
 		before := w.Stats().Writes
 
 		l.Log.Debugf("Producing Healthcheck message %v", now.Format(time.Kitchen))
+
 		err = kafka.Produce(w, &msg)
 		if err != nil {
 			l.Log.Warnf("Failed to produce healthcheck msg at %v", now.Format(time.Kitchen))

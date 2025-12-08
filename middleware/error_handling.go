@@ -13,8 +13,10 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := next(c)
 		if err != nil {
-			var statusCode int
-			var message interface{}
+			var (
+				statusCode int
+				message    interface{}
+			)
 
 			switch err.(type) {
 			case util.ErrNotFound:
@@ -25,6 +27,7 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 				message = util.NewErrorDoc(err.Error(), "400")
 			default:
 				c.Logger().Error(err)
+
 				uuid, ok := c.Get(h.InsightsRequestID).(string)
 				if !ok {
 					uuid = ""
@@ -33,6 +36,7 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 				statusCode = http.StatusInternalServerError
 				message = util.ErrorDocWithRequestId(fmt.Sprintf("Internal Server Error: %v", err.Error()), "500", uuid)
 			}
+
 			return c.JSON(statusCode, message)
 		}
 

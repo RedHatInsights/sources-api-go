@@ -10,7 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // TestForwadableHeadersPskAccountNumber tests that when the "psk-account" context value is present, two headers are returned from
@@ -60,6 +60,7 @@ func TestForwadableHeadersAccountNumber(t *testing.T) {
 		xRhIdHeader := headers[1]
 		{
 			want := h.XRHID
+
 			got := xRhIdHeader.Key
 			if want != got {
 				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
@@ -128,6 +129,7 @@ func TestForwadableHeadersOrgId(t *testing.T) {
 		xRhIdHeader := headers[1]
 		{
 			want := h.XRHID
+
 			got := xRhIdHeader.Key
 			if want != got {
 				t.Errorf(`incorrect Kafka header generated. Want "%s", got "%s"`, want, got)
@@ -334,5 +336,4 @@ func TestForwadableHeadersPskOrgId(t *testing.T) {
 			}
 		}
 	}
-
 }

@@ -16,6 +16,7 @@ func EmptySubcollectionListTest(t *testing.T, c echo.Context, rec *httptest.Resp
 	}
 
 	var out util.Collection
+
 	err := json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")

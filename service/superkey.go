@@ -58,6 +58,7 @@ func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Heade
 	}
 
 	m := kafka.Message{}
+
 	err = m.AddValueAsJSON(&req)
 	if err != nil {
 		return err
@@ -93,6 +94,7 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 	if err != nil {
 		return err
 	}
+
 	if skData == nil {
 		l.Log.Warnf("SuperKey Data was nil - cleaning up incomplete superkey")
 		return nil
@@ -110,6 +112,7 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 	}
 
 	m := kafka.Message{}
+
 	err = m.AddValueAsJSON(&req)
 	if err != nil {
 		return err

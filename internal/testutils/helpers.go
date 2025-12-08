@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 var conf = config.Get()
@@ -44,6 +44,7 @@ func GetSourcesWithAppType(appTypeId int64) []model.Source {
 
 	// Find sources for source IDs
 	var sources []model.Source
+
 	for id := range sourceIds {
 		for _, src := range fixtures.TestSourceData {
 			if id == src.ID {
@@ -58,6 +59,7 @@ func GetSourcesWithAppType(appTypeId int64) []model.Source {
 
 func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset int) {
 	expectedFirstLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, offset)
+
 	expectedLastLink := fmt.Sprintf("%s?limit=%d&offset=%d", path, limit, limit+offset)
 	if links.First != expectedFirstLink {
 		t.Error("first link is not correct for " + path)
@@ -71,19 +73,30 @@ func AssertLinks(t *testing.T, path string, links util.Links, limit int, offset 
 func IdentityHeaderForUser(testUserId string) *identity.XRHID {
 	accountNumber := fixtures.TestTenantData[0].ExternalTenant
 	orgID := fixtures.TestTenantData[0].OrgID
-	return &identity.XRHID{Identity: identity.Identity{OrgID: orgID, AccountNumber: accountNumber, User: identity.User{UserID: testUserId}}}
+
+	return &identity.XRHID{Identity: identity.Identity{OrgID: orgID, AccountNumber: accountNumber, User: &identity.User{UserID: testUserId}}}
 }
 
 func SingleResourceBulkCreateRequest(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType string) *model.BulkCreateRequest {
-	sourceCreateRequest := model.SourceCreateRequest{Name: &nameSource, AvailabilityStatus: model.Available}
+	return SingleResourceBulkCreateRequestWithStatus(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType, model.Available)
+}
+
+// SingleResourceBulkCreateRequestWithStatus similar to the other function, but
+// it allows specifying the availability status for the resources.
+func SingleResourceBulkCreateRequestWithStatus(nameSource, sourceTypeName, applicationTypeName, authenticationResourceType, availablityStatus string) *model.BulkCreateRequest {
+	// Set up the source.
+	sourceCreateRequest := model.SourceCreateRequest{Name: &nameSource, AvailabilityStatus: availablityStatus}
 	bulkCreateSource := model.BulkCreateSource{SourceCreateRequest: sourceCreateRequest, SourceTypeName: sourceTypeName}
 
+	// Set up the application.
 	bulkCreateApplication := model.BulkCreateApplication{SourceName: nameSource, ApplicationTypeName: applicationTypeName}
 
+	// Set up the authentication.
 	authenticationCreateRequest := model.AuthenticationCreateRequest{ResourceType: authenticationResourceType}
 	bulkCreateAuthentication := model.BulkCreateAuthentication{AuthenticationCreateRequest: authenticationCreateRequest, ResourceName: applicationTypeName}
 
-	endpointCreateRequest := model.EndpointCreateRequest{AvailabilityStatus: model.Unavailable}
+	// set up the endpoint.
+	endpointCreateRequest := model.EndpointCreateRequest{AvailabilityStatus: availablityStatus}
 	bulkCreateEndpoints := model.BulkCreateEndpoint{EndpointCreateRequest: endpointCreateRequest, SourceName: nameSource}
 
 	return &model.BulkCreateRequest{Sources: []model.BulkCreateSource{bulkCreateSource},

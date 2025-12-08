@@ -156,7 +156,6 @@ func Produce(writer *Writer, message *Message) error {
 
 	if !message.isEmpty() {
 		err := writer.WriteMessages(context.Background(), kafka.Message(*message))
-
 		if err != nil {
 			headersMap := make(map[string]string)
 			for _, h := range message.Headers {

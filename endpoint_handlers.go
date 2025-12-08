@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
-	"github.com/RedHatInsights/sources-api-go/marketplace"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -19,7 +18,6 @@ var getEndpointDao func(c echo.Context) (dao.EndpointDao, error)
 
 func getEndpointDaoWithTenant(c echo.Context) (dao.EndpointDao, error) {
 	tenantId, err := echoUtils.GetTenantFromEchoContext(c)
-
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +52,6 @@ func SourceListEndpoint(c echo.Context) error {
 	}
 
 	endpoints, count, err = endpointDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
-
 	if err != nil {
 		return err
 	}
@@ -119,7 +116,6 @@ func EndpointGet(c echo.Context) error {
 	c.Logger().Infof("Getting Endpoint ID %v", id)
 
 	app, err := endpointDB.GetById(&id)
-
 	if err != nil {
 		return err
 	}
@@ -134,6 +130,7 @@ func EndpointCreate(c echo.Context) error {
 	}
 
 	input := &m.EndpointCreateRequest{}
+
 	err = c.Bind(input)
 	if err != nil {
 		return err
@@ -184,6 +181,7 @@ func EndpointCreate(c echo.Context) error {
 	}
 
 	setEventStreamResource(c, endpoint)
+
 	return c.JSON(http.StatusCreated, endpoint.ToResponse())
 }
 
@@ -209,20 +207,26 @@ func EndpointEdit(c echo.Context) error {
 	// If "PausedAt" contains a date it means that the endpoint was paused back then.
 	if endpoint.PausedAt != nil {
 		input := &m.ResourceEditPausedRequest{}
-		if err := c.Bind(input); err != nil {
+
+		err := c.Bind(input)
+		if err != nil {
 			return err
 		}
 
-		if err := endpoint.UpdateFromRequestPaused(input); err != nil {
+		err = endpoint.UpdateFromRequestPaused(input)
+		if err != nil {
 			return util.NewErrBadRequest(err)
 		}
 	} else {
 		input := &m.EndpointEditRequest{}
-		if err := c.Bind(input); err != nil {
+
+		err := c.Bind(input)
+		if err != nil {
 			return err
 		}
 
-		if err = service.ValidateEndpointEditRequest(endpointDao, endpoint.SourceID, input); err != nil {
+		err = service.ValidateEndpointEditRequest(endpointDao, endpoint.SourceID, input)
+		if err != nil {
 			return util.NewErrBadRequest(err)
 		}
 
@@ -268,6 +272,7 @@ func EndpointDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
 	err = service.DeleteCascade(endpointDao.Tenant(), nil, "Endpoint", id, forwardableHeaders)
 	if err != nil {
 		return util.NewErrBadRequest(err)
@@ -302,15 +307,8 @@ func EndpointListAuthentications(c echo.Context) error {
 		return err
 	}
 
-	tenantId := authDB.Tenant()
 	out := make([]interface{}, len(auths))
 	for i := 0; i < len(auths); i++ {
-		// Set the marketplace token —if the auth is of the marketplace type— for the authentication.
-		err := marketplace.SetMarketplaceTokenAuthExtraField(*tenantId, &auths[i])
-		if err != nil {
-			return err
-		}
-
 		out[i] = auths[i].ToResponse()
 	}
 

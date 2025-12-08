@@ -2,7 +2,7 @@ package mocks
 
 import (
 	m "github.com/RedHatInsights/sources-api-go/model"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 type MockAvailabilityStatusNotificationProducer struct {
@@ -17,5 +17,6 @@ func (producer *MockAvailabilityStatusNotificationProducer) EmitAvailabilityStat
 	producer.EmailNotificationInfo = emailNotificationInfo
 	producer.AccountNumber = id.AccountNumber
 	producer.OrgId = id.OrgID
+
 	return nil
 }

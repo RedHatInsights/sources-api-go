@@ -65,6 +65,7 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 	}
 
 	errors := make([]error, 0)
+
 	for i := range apps {
 		err := sk.sendForApplication(apps[i].ID)
 		if err != nil {
@@ -114,5 +115,6 @@ func (sk SuperkeyDestroyJob) ToJSON() []byte {
 	if err != nil {
 		panic(err)
 	}
+
 	return bytes
 }

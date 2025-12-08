@@ -12,6 +12,7 @@ import (
 
 func TestValidApplicationRequest(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: true}
 
 	req := m.ApplicationCreateRequest{
@@ -40,6 +41,7 @@ func TestValidApplicationRequest(t *testing.T) {
 
 func TestInvalidApplicationTypeForSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	AppTypeDao = &mocks.MockApplicationTypeDao{Compatible: false}
 
 	req := m.ApplicationCreateRequest{
@@ -94,7 +96,6 @@ func TestEditNilAvailabilityStatus(t *testing.T) {
 	}
 
 	err := ValidateApplicationEditRequest(&editRequest)
-
 	if err != nil {
 		t.Errorf(`unexpected error when validating an empty availability status for an application edit: %s`, err)
 	}
@@ -112,6 +113,7 @@ func TestEditInvalidAvailabilityStatuses(t *testing.T) {
 	}
 
 	want := `availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
+
 	for _, tv := range testValues {
 		editRequest := m.ApplicationEditRequest{
 			AvailabilityStatus: tv,
@@ -141,7 +143,6 @@ func TestEditValidAvailabilityStatuses(t *testing.T) {
 		}
 
 		err := ValidateApplicationEditRequest(&editRequest)
-
 		if err != nil {
 			t.Errorf(`unexpected error when validating a valid availability status "%s" for an application edit: %s`, *tv, err)
 		}
@@ -160,8 +161,8 @@ func TestEditInvalidAvailabilityStatusPaused(t *testing.T) {
 	}
 
 	want := `invalid availability status. Must be one of "available", "in_progress", "partially_available" or "unavailable"`
-	for _, tv := range testValues {
 
+	for _, tv := range testValues {
 		editRequest := m.ResourceEditPausedRequest{
 			AvailabilityStatus: tv,
 		}
@@ -192,8 +193,8 @@ func TestEditValidAvailabilityStatusPaused(t *testing.T) {
 		}
 
 		app := m.Application{}
-		err := app.UpdateFromRequestPaused(&editRequest)
 
+		err := app.UpdateFromRequestPaused(&editRequest)
 		if err != nil {
 			t.Errorf(`unexpected error when validating a valid availability status "%s" for a paused application edit: %s`, *tv, err)
 		}

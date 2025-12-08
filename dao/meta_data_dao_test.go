@@ -20,6 +20,7 @@ func TestMetaDataSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	appTypeId := fixtures.TestApplicationTypeData[0].Id
 	// How many meta data with given application type id is in fixtures
 	var wantCount int64
+
 	for _, appMetaData := range fixtures.TestMetaDataData {
 		if appMetaData.ApplicationTypeID == appTypeId {
 			wantCount++
@@ -37,6 +38,7 @@ func TestMetaDataSubcollectionListWithOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(metaDatas)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -45,10 +47,12 @@ func TestMetaDataSubcollectionListWithOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -74,6 +78,7 @@ func TestMetaDataListOffsetAndLimit(t *testing.T) {
 
 		// Check of object's count returned from List()
 		got := len(metaDatas)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -82,9 +87,11 @@ func TestMetaDataListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }

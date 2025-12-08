@@ -61,17 +61,11 @@
   supported_authentication_types:
     satellite:
     - receptor_node
-"/insights/platform/provisioning":
-  display_name: Launch images
+"/insights/platform/image-builder":
+  display_name: Image Builder
   dependent_applications: []
   supported_source_types:
     - amazon
-    - azure
-    - google
   supported_authentication_types:
     amazon:
-      - provisioning-arn
-    azure:
-      - provisioning_lighthouse_subscription_id
-    google:
-      - provisioning_project_id
+      - image-builder-aws-account-id

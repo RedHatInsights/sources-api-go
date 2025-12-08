@@ -34,6 +34,7 @@ func ValidateApplicationCreateRequest(requestParams *dao.RequestParams, appReq *
 	if err != nil {
 		return fmt.Errorf("invalid application type id %v", appReq.ApplicationTypeIDRaw)
 	}
+
 	appReq.ApplicationTypeID = appTypeID
 
 	sourceID, err := util.InterfaceToInt64(appReq.SourceIDRaw)
@@ -43,6 +44,7 @@ func ValidateApplicationCreateRequest(requestParams *dao.RequestParams, appReq *
 
 	// Check if sourceID exists
 	sourceDao := dao.GetSourceDao(requestParams)
+
 	sourceExists, err := sourceDao.Exists(sourceID)
 	if err != nil {
 		return err

@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // GeneratedXRhIdentity returns a base64 encoded header to use as x-rh-identity when one is not provided
@@ -17,6 +17,7 @@ func GeneratedXRhIdentity(account, orgId string) string {
 			Type: "System",
 		},
 	}
+
 	bytes, err := json.Marshal(id)
 	if err != nil {
 		return ""

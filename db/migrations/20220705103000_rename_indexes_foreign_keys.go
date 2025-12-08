@@ -11,13 +11,21 @@ import (
 // RenameForeignKeysIndexes renames the foreign keys and indexes to what Postgres names them by default.
 func RenameForeignKeysIndexes() *gormigrate.Migration {
 	type ApplicationAuthentications struct{}
+
 	type ApplicationTypes struct{}
+
 	type Applications struct{}
+
 	type Authentications struct{}
+
 	type Endpoints struct{}
+
 	type RhcConnections struct{}
+
 	type SourceRhcConnections struct{}
+
 	type SourceTypes struct{}
+
 	type Sources struct{}
 
 	type renameStruct struct {

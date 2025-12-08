@@ -40,7 +40,6 @@ func (u *userDaoImpl) FindOrCreate(userID string) (*m.User, error) {
 		Where("tenant_id = ?", *u.TenantID).
 		First(&user).
 		Error
-
 	if err != nil {
 		user.TenantID = *u.TenantID
 		user.UserID = userID

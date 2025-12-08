@@ -8,7 +8,7 @@ import (
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // Tenancy is a middleware which makes sure the EBS account number or OrgId are present, and therefore, the request is
@@ -36,6 +36,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Logger().Debugf("[org_id: %s][account_number: %s] Looking up Tenant ID", id.Identity.OrgID, id.Identity.AccountNumber)
 
 		tenantDao := dao.GetTenantDao()
+
 		tenant, err := tenantDao.GetOrCreateTenant(&id.Identity)
 		if err != nil {
 			c.Logger().Errorf("[identity struct: %v] unable to get or create the tenant: %w", err)

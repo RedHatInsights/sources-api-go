@@ -43,19 +43,22 @@ func (esp *EventStreamSender) RaiseEvent(eventType string, payload []byte, heade
 	defer kafka.CloseWriter(kf, "raise event")
 
 	m := &kafka.Message{}
+
 	for index, header := range headers {
 		if header.Key == "event_type" {
 			headers[index] = kafka.Header{Key: "event_type", Value: []byte(eventType)}
 			break
 		}
 	}
+
 	headers = append(headers, kafka.Header{Key: "encoding", Value: []byte("json")})
 
 	m.AddHeaders(headers)
 	m.AddValue(payload)
 	m.SetKeyFromHeaders()
 
-	if err := kafka.Produce(kf, m); err != nil {
+	err = kafka.Produce(kf, m)
+	if err != nil {
 		return err
 	}
 
@@ -74,6 +77,7 @@ func (esp *EventStreamProducer) RaiseEventIf(allowed bool, eventType string, pay
 
 func (esp *EventStreamProducer) RaiseEventForUpdate(eventModelDao m.EventModelDao, resource util.Resource, updateAttributes []string, headers []kafka.Header) error {
 	allowed := esp.RaiseEventAllowed(resource.ResourceType, updateAttributes)
+
 	resourceJSON, err := eventModelDao.ToEventJSON(resource)
 	if err != nil {
 		return err

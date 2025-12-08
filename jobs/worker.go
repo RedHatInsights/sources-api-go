@@ -64,8 +64,8 @@ func Run(shutdown chan struct{}) {
 	go healthCheck.healthChecker()
 
 	<-shutdown
-	shutdown <- struct{}{}
 
+	shutdown <- struct{}{}
 }
 
 // Run a Job with a delay but in the background so it does _not_ block the
@@ -91,11 +91,13 @@ func RunJob(j Job) {
 // `Enqueue` if you want to run the job immediately.
 func RunJobNow(j Job) {
 	l.Log.Infof("Running Job %v with %v", j.Name(), j.Arguments())
+
 	err := j.Run()
 	if err != nil {
 		l.Log.Warnf("Error running job [ %v ], args [ %v ] : [ %v ]", j.Name(), j.Arguments(), err)
 		return
 	}
+
 	l.Log.Infof("Finished Job %v with %v", j.Name(), j.Arguments())
 }
 
@@ -119,6 +121,7 @@ func (hc *BackgroundWorkerHealthChecker) healthChecker() {
 		if hc.timeStamp.Before(time.Now().Add(-30 * time.Second)) {
 			return c.String(http.StatusInternalServerError, "Failed to hit redis for more than 30 seconds.")
 		}
+
 		return c.String(http.StatusOK, "OK")
 	})
 

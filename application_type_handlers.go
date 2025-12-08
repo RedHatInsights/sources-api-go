@@ -16,7 +16,6 @@ var getApplicationTypeDao func(c echo.Context) (dao.ApplicationTypeDao, error)
 
 func getApplicationTypeDaoWithTenant(c echo.Context) (dao.ApplicationTypeDao, error) {
 	tenantId, err := echoUtils.GetTenantFromEchoContext(c)
-
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +54,6 @@ func SourceListApplicationTypes(c echo.Context) error {
 	}
 
 	appTypes, count, err = applicationTypeDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
-
 	if err != nil {
 		return err
 	}
@@ -92,7 +90,6 @@ func ApplicationTypeList(c echo.Context) error {
 	)
 
 	appTypes, count, err = applicationTypeDB.List(limit, offset, filters)
-
 	if err != nil {
 		return err
 	}
@@ -119,7 +116,6 @@ func ApplicationTypeGet(c echo.Context) error {
 	}
 
 	appType, err := applicationTypeDB.GetById(&id)
-
 	if err != nil {
 		return err
 	}

@@ -42,6 +42,7 @@ func TestRhcConnectionList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshalling output")
@@ -56,6 +57,7 @@ func TestRhcConnectionList(t *testing.T) {
 	}
 
 	var wantCount int
+
 	for _, rhc := range fixtures.TestRhcConnectionData {
 		for _, srcRhc := range fixtures.TestSourceRhcConnectionData {
 			if srcRhc.RhcConnectionId == rhc.ID && srcRhc.TenantId == tenantId {
@@ -81,6 +83,7 @@ func TestRhcConnectionList(t *testing.T) {
 				if srcRhc.TenantId != tenantId {
 					t.Errorf("wrong tenant id in returned object, expected %d, got %d", tenantId, srcRhc.TenantId)
 				}
+
 				break
 			}
 		}
@@ -159,6 +162,7 @@ func TestRhcConnectionListInvalidFilter(t *testing.T) {
 	)
 
 	badRequestRhcConnectionList := ErrorHandlingContext(RhcConnectionList)
+
 	err := badRequestRhcConnectionList(c)
 	if err != nil {
 		t.Error(err)
@@ -193,6 +197,7 @@ func TestRhcConnectionGetById(t *testing.T) {
 	}
 
 	var outRhcConnectionResponse model.RhcConnectionResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outRhcConnectionResponse)
 	if err != nil {
 		t.Error("Failed unmarshalling output")
@@ -203,6 +208,7 @@ func TestRhcConnectionGetById(t *testing.T) {
 	}
 
 	var outRhcId int64
+
 	outRhcId, err = strconv.ParseInt(*outRhcConnectionResponse.Id, 10, 64)
 	if err != nil {
 		t.Error(err)
@@ -214,6 +220,7 @@ func TestRhcConnectionGetById(t *testing.T) {
 			if srcRhc.TenantId != tenantId {
 				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, srcRhc.TenantId)
 			}
+
 			break
 		}
 	}
@@ -228,6 +235,7 @@ func TestRhcConnectionGetByIdMissingIdParam(t *testing.T) {
 	)
 
 	badRequestRhcConnectionGetById := ErrorHandlingContext(RhcConnectionGetById)
+
 	err := badRequestRhcConnectionGetById(c)
 	if err != nil {
 		t.Error(err)
@@ -248,6 +256,7 @@ func TestRhcConnectionGetByIdInvalidParam(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	badRequestRhcConnectionGetById := ErrorHandlingContext(RhcConnectionGetById)
+
 	err := badRequestRhcConnectionGetById(c)
 	if err != nil {
 		t.Error(err)
@@ -260,6 +269,7 @@ func TestRhcConnectionGetByIdInvalidParam(t *testing.T) {
 // existing rhc connection but when tenant is not owner of rhc connection
 func TestRhcConnectionGetByIdInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 	rhcId := int64(1)
 
@@ -276,6 +286,7 @@ func TestRhcConnectionGetByIdInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", rhcId))
 
 	notFoundRhcConnectionGetByUuid := ErrorHandlingContext(RhcConnectionGetById)
+
 	err := notFoundRhcConnectionGetByUuid(c)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -288,6 +299,7 @@ func TestRhcConnectionGetByIdInvalidTenant(t *testing.T) {
 // not existing tenant
 func TestRhcConnectionGetByIdTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	rhcId := int64(1)
 
@@ -304,6 +316,7 @@ func TestRhcConnectionGetByIdTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", rhcId))
 
 	notFoundRhcConnectionGetByUuid := ErrorHandlingContext(RhcConnectionGetById)
+
 	err := notFoundRhcConnectionGetByUuid(c)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -328,6 +341,7 @@ func TestRhcConnectionGetByIdNotFound(t *testing.T) {
 	c.SetParamValues(nonExistingId)
 
 	notFoundRhcConnectionGetByUuid := ErrorHandlingContext(RhcConnectionGetById)
+
 	err := notFoundRhcConnectionGetByUuid(c)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -373,6 +387,7 @@ func TestRhcConnectionCreate(t *testing.T) {
 // not existing tenant
 func TestRhcConnectionCreateTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 
 	requestBody := model.RhcConnectionCreateRequest{
@@ -398,6 +413,7 @@ func TestRhcConnectionCreateTenantNotExists(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+
 	err = notFoundRhcConnectionCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -410,6 +426,7 @@ func TestRhcConnectionCreateTenantNotExists(t *testing.T) {
 // existing tenant who doesn't own the source
 func TestRhcConnectionCreateTenantNotOwnsSource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 
 	requestBody := model.RhcConnectionCreateRequest{
@@ -435,6 +452,7 @@ func TestRhcConnectionCreateTenantNotOwnsSource(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+
 	err = notFoundRhcConnectionCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -465,6 +483,7 @@ func TestRhcConnectionCreateInvalidInput(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+
 	err = badRequestRhcConnectionCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -497,6 +516,7 @@ func TestRhcConnectionCreateNotExistingSource(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	sourceNotFoundRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+
 	err = sourceNotFoundRhcConnectionCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -529,6 +549,7 @@ func TestRhcConnectionCreateRelationExists(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestRhcConnectionCreate := ErrorHandlingContext(RhcConnectionCreate)
+
 	err = badRequestRhcConnectionCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -578,6 +599,7 @@ func TestRhcConnectionEdit(t *testing.T) {
 			if srcRhc.TenantId != tenantId {
 				t.Errorf("wrong tenant id, expected %d, got %d", tenantId, srcRhc.TenantId)
 			}
+
 			break
 		}
 	}
@@ -587,6 +609,7 @@ func TestRhcConnectionEdit(t *testing.T) {
 // edit existing not owned rhc connection
 func TestRhcConnectionEditInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	rhcId := fixtures.TestRhcConnectionData[2].ID
 	requestBody := model.RhcConnectionEditRequest{
@@ -613,6 +636,7 @@ func TestRhcConnectionEditInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", rhcId))
 
 	notFoundRhcConnectionEdit := ErrorHandlingContext(RhcConnectionEdit)
+
 	err = notFoundRhcConnectionEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -638,6 +662,7 @@ func TestRhcConnectionEditInvalidParam(t *testing.T) {
 	c.SetParamValues(invalidId)
 
 	badRequestRhcConnectionEdit := ErrorHandlingContext(RhcConnectionEdit)
+
 	err := badRequestRhcConnectionEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -672,8 +697,8 @@ func TestRhcConnectionEditNotFound(t *testing.T) {
 	c.SetParamValues(invalidId)
 
 	notFoundRhcConnectionEdit := ErrorHandlingContext(RhcConnectionEdit)
-	err = notFoundRhcConnectionEdit(c)
 
+	err = notFoundRhcConnectionEdit(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -726,6 +751,7 @@ func TestRhcConnectionDeleteInvalidParam(t *testing.T) {
 	c.SetParamValues(invalidId)
 
 	badRequestRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+
 	err := badRequestRhcConnectionDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -747,6 +773,7 @@ func TestRhcConnectionDeleteMissingParam(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+
 	err := badRequestRhcConnectionDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -759,6 +786,7 @@ func TestRhcConnectionDeleteMissingParam(t *testing.T) {
 // when tenant tries to delete not owned rhc connection
 func TestRhcConnectionDeleteInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	rhcId := fixtures.TestRhcConnectionData[2].ID
 
@@ -776,6 +804,7 @@ func TestRhcConnectionDeleteInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", rhcId))
 
 	notFoundRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+
 	err := notFoundRhcConnectionDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -788,6 +817,7 @@ func TestRhcConnectionDeleteInvalidTenant(t *testing.T) {
 // when tenant doesn't exist
 func TestRhcConnectionDeleteTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(98304983)
 	rhcId := fixtures.TestRhcConnectionData[2].ID
 
@@ -805,6 +835,7 @@ func TestRhcConnectionDeleteTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", rhcId))
 
 	notFoundRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+
 	err := notFoundRhcConnectionDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -830,6 +861,7 @@ func TestRhcConnectionDeleteNotFound(t *testing.T) {
 	c.SetParamValues(nonExistingId)
 
 	notFoundRhcConnectionDelete := ErrorHandlingContext(RhcConnectionDelete)
+
 	err := notFoundRhcConnectionDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -867,6 +899,7 @@ func TestRhcConnectionGetRelatedSources(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshalling output")
@@ -928,6 +961,7 @@ func TestRhcConnectionGetRelatedSourcesInvalidFilter(t *testing.T) {
 	c.SetParamValues(rhcConnectionId)
 
 	badRequestRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+
 	err := badRequestRhcConnectionSourcesList(c)
 	if err != nil {
 		t.Error(err)
@@ -955,6 +989,7 @@ func TestRhcConnectionGetRelatedSourcesInvalidParam(t *testing.T) {
 	c.SetParamValues(rhcConnectionId)
 
 	badRequestRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+
 	err := badRequestRhcConnectionSourcesList(c)
 	if err != nil {
 		t.Error(err)
@@ -982,6 +1017,7 @@ func TestRhcConnectionGetRelatedSourcesNotFound(t *testing.T) {
 	c.SetParamValues(rhcConnectionId)
 
 	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+
 	err := notFoundRhcConnectionSourcesList(c)
 	if err != nil {
 		t.Error(err)
@@ -994,6 +1030,7 @@ func TestRhcConnectionGetRelatedSourcesNotFound(t *testing.T) {
 // when tenant tries to list sources for not owned rhc connection
 func TestRhcConnectionGetRelatedSourcesInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 	rhcConnectionId := int64(1)
 
@@ -1013,6 +1050,7 @@ func TestRhcConnectionGetRelatedSourcesInvalidTenant(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", rhcConnectionId))
 
 	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+
 	err := notFoundRhcConnectionSourcesList(c)
 	if err != nil {
 		t.Error(err)
@@ -1025,6 +1063,7 @@ func TestRhcConnectionGetRelatedSourcesInvalidTenant(t *testing.T) {
 // when tenant doesn't exist
 func TestRhcConnectionGetRelatedSourcesTenantNotExists(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	rhcConnectionId := int64(1)
 
@@ -1044,6 +1083,7 @@ func TestRhcConnectionGetRelatedSourcesTenantNotExists(t *testing.T) {
 	c.SetParamValues(fmt.Sprintf("%d", rhcConnectionId))
 
 	notFoundRhcConnectionSourcesList := ErrorHandlingContext(RhcConnectionSourcesList)
+
 	err := notFoundRhcConnectionSourcesList(c)
 	if err != nil {
 		t.Error(err)

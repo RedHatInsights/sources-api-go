@@ -44,7 +44,6 @@ func (secret *secretDaoDbImpl) GetById(id *int64) (*m.Authentication, error) {
 		Where("id = ?", id).
 		First(&secretAuthentication).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("secret")
 	}
@@ -61,7 +60,6 @@ func (secret *secretDaoDbImpl) Create(authentication *m.Authentication) error {
 		Debug().
 		Create(authentication).
 		Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID}).Errorf("Unable to create secret: %s", err)
 
@@ -80,7 +78,6 @@ func (secret *secretDaoDbImpl) Delete(id *int64) error {
 		Where("id = ?", id).
 		First(&authentication).
 		Error
-
 	if err != nil {
 		return util.NewErrNotFound("secret")
 	}
@@ -88,7 +85,6 @@ func (secret *secretDaoDbImpl) Delete(id *int64) error {
 	err = secret.getDb().
 		Delete(&authentication).
 		Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID, "secret_id": *id}).Errorf("Unable to delete secret: %s", err)
 
@@ -121,12 +117,12 @@ func (secret *secretDaoDbImpl) List(limit, offset int, filters []util.Filter) ([
 	query.Count(&count)
 
 	secrets := make([]m.Authentication, 0, limit)
+
 	err = query.
 		Limit(limit).
 		Offset(offset).
 		Find(&secrets).
 		Error
-
 	if err != nil {
 		return nil, 0, util.NewErrBadRequest(err)
 	}
@@ -139,7 +135,6 @@ func (secret *secretDaoDbImpl) Update(authentication *m.Authentication) error {
 		Omit(clause.Associations).
 		Updates(authentication).
 		Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *secret.TenantID, "secret_id": authentication.ID}).Errorf("Unable to update secret: %s", err)
 

@@ -14,13 +14,11 @@ var getSourceTypeDao func(c echo.Context) (dao.SourceTypeDao, error)
 
 func getSourceTypeDaoWithoutTenant(_ echo.Context) (dao.SourceTypeDao, error) {
 	// we do not need tenancy for source type.
-
 	return dao.GetSourceTypeDao(), nil
 }
 
 func SourceTypeList(c echo.Context) error {
 	sourceTypeDB, err := getSourceTypeDao(c)
-
 	if err != nil {
 		return err
 	}
@@ -62,7 +60,6 @@ func SourceTypeGet(c echo.Context) error {
 	}
 
 	sourceType, err := SourceTypeDB.GetById(&id)
-
 	if err != nil {
 		return err
 	}

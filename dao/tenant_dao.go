@@ -10,7 +10,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/RedHatInsights/tenant-utils/pkg/tenantid"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -38,8 +38,10 @@ type tenantDaoImpl struct{}
 
 func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenant, error) {
 	// Try to find the tenant. Prefer fetching it by its OrgId first, since EBS account numbers are deprecated.
-	var tenant m.Tenant
-	var err error
+	var (
+		tenant m.Tenant
+		err    error
+	)
 
 	err = DB.
 		Debug().
@@ -63,7 +65,6 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 			Where("external_tenant = ? AND external_tenant != ''", identity.AccountNumber).
 			First(&tenant).
 			Error
-
 		if err == nil && tenant != (m.Tenant{}) {
 			logger.Log.WithFields(logrus.Fields{"account_number": identity.AccountNumber}).Warn("tenant found by its EBS account number")
 		}
@@ -85,7 +86,6 @@ func (t *tenantDaoImpl) GetOrCreateTenant(identity *identity.Identity) (*m.Tenan
 			Debug().
 			Create(&tenant).
 			Error
-
 		if err != nil {
 			logger.Log.WithFields(logrus.Fields{"org_id": identity.OrgID, "account_number": identity.AccountNumber}).Errorf("Unable to create tenant: %s", err)
 
@@ -110,7 +110,6 @@ func (t *tenantDaoImpl) TenantByIdentity(id *identity.Identity) (*m.Tenant, erro
 		Or("external_tenant = ? AND external_tenant != ''", id.AccountNumber).
 		First(&tenant).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("tenant")
 	}
@@ -126,7 +125,6 @@ func (t *tenantDaoImpl) GetUntranslatedTenants() ([]m.Tenant, error) {
 		Where(untranslatedTenantsWhereCondition).
 		Find(&tenants).
 		Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -151,15 +149,16 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 			Where(untranslatedTenantsWhereCondition).
 			Count(&translatableTenants).
 			Error
-
 		if err != nil {
 			return fmt.Errorf("unable to count untranslated tenants: %w", err)
 		}
 
 		translator := tenantid.NewTranslator(config.Get().TenantTranslatorUrl)
+
 		for i := int64(0); i < translatableTenants; i += 100 {
 			// Grab all the EBS account numbers to be processed.
 			var ebsAccountNumbers []string
+
 			err := tx.
 				Model(&m.Tenant{}).
 				Where(untranslatedTenantsWhereCondition).
@@ -168,7 +167,6 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 				Order(clause.OrderByColumn{Column: clause.Column{Name: "external_tenant"}, Desc: false}).
 				Limit(100).
 				Error
-
 			if err != nil {
 				return fmt.Errorf("unable to fetch the tenants to translate them: %w", err)
 			}
@@ -191,6 +189,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 					tenantTranslations = append(tenantTranslations, tenantTranslation)
 
 					untranslatedTenants++
+
 					continue
 				}
 
@@ -215,6 +214,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 					tenantTranslations = append(tenantTranslations, tenantTranslation)
 
 					untranslatedTenants++
+
 					continue
 				}
 
@@ -230,6 +230,7 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 					tenantTranslations = append(tenantTranslations, tenantTranslation)
 
 					untranslatedTenants++
+
 					continue
 				}
 
@@ -248,7 +249,6 @@ func (t *tenantDaoImpl) TranslateTenants() (int64, uint64, uint64, []m.TenantTra
 
 		return nil
 	})
-
 	if err != nil {
 		return 0, 0, 0, nil, err
 	}

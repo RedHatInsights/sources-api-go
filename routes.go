@@ -6,13 +6,14 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/RedHatInsights/sources-api-go/config"
+	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
-func setupRoutes(e *echo.Echo) {
+func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
@@ -29,13 +30,17 @@ func setupRoutes(e *echo.Echo) {
 	// Set up the middlewares.
 	permissionCheckMiddleware := middleware.PermissionCheck(config.Get().BypassRbac, config.Get().AuthorizedPsks, rbacClient)
 
-	var listMiddleware = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
-	var tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
+	var (
+		listMiddleware    = []echo.MiddlewareFunc{middleware.SortAndFilter, middleware.Pagination}
+		tenancyMiddleware = []echo.MiddlewareFunc{middleware.Tenancy, middleware.LoggerFields, middleware.UserCatcher}
+	)
 
-	var tenancyWithListMiddleware = append(tenancyMiddleware, listMiddleware...)
-	var permissionMiddlewareWithoutEvents = append(tenancyMiddleware, permissionCheckMiddleware)
-	var permissionMiddleware = append(permissionMiddlewareWithoutEvents, middleware.RaiseEvent)
-	var permissionWithListMiddleware = append(listMiddleware, permissionCheckMiddleware)
+	var (
+		tenancyWithListMiddleware         = append(tenancyMiddleware, listMiddleware...)
+		permissionMiddlewareWithoutEvents = append(tenancyMiddleware, permissionCheckMiddleware)
+		permissionMiddleware              = append(permissionMiddlewareWithoutEvents, middleware.RaiseEvent)
+		permissionWithListMiddleware      = append(listMiddleware, permissionCheckMiddleware)
+	)
 
 	apiVersions := []string{"v1.0", "v2.0", "v3.0", "v3.1", "v1", "v2", "v3"}
 	for _, version := range apiVersions {
@@ -59,7 +64,7 @@ func setupRoutes(e *echo.Echo) {
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
 		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
-		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability, middleware.Tenancy, middleware.LoggerFields)
+		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability(metricsService), middleware.Tenancy, middleware.LoggerFields)
 		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/endpoints", SourceListEndpoint, tenancyWithListMiddleware...)

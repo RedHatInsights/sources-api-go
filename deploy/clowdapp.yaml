@@ -66,6 +66,8 @@ objects:
           value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
@@ -124,6 +126,8 @@ objects:
           value: ${SECRET_STORE}
         - name: LOG_LEVEL
           value: ${LOG_LEVEL}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         - name: ENCRYPTION_KEY
           valueFrom:
             secretKeyRef:
@@ -192,12 +196,12 @@ objects:
           value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_BASE_PATH}
         - name: CLOUD_CONNECTOR_STATUS_PATH
           value: ${CLOUD_CONNECTOR_STATUS_PATH}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         - name: PROVISIONING_AVAILABILITY_CHECK_URL
           value: ${PROVISIONING_SCHEME}://${PROVISIONING_HOST}:${PROVISIONING_PORT}${PROVISIONING_CHECK_PATH}
         - name: SOURCES_ENV
           value: ${SOURCES_ENV}
-        - name: MARKETPLACE_HOST
-          value: ${MARKETPLACE_HOST}
         - name: SOURCES_PSKS
           valueFrom:
             secretKeyRef:
@@ -265,6 +269,8 @@ objects:
               optional: true
         - name: HANDLE_TENANT_REFRESH
           value: ${HANDLE_TENANT_REFRESH}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
         readinessProbe:
           tcpSocket:
             port: 8000
@@ -280,6 +286,14 @@ objects:
           requests:
             cpu: ${CPU_REQUEST}
             memory: ${MEMORY_REQUEST}
+        volumeMounts:
+          - name: sources-app-metadata
+            mountPath: /mnt/sources
+            readOnly: true
+        volumes:
+          - name: sources-app-metadata
+            configMap:
+              name: sources-app-metadata
     database:
       name: sources
       version: 12
@@ -300,6 +314,15 @@ objects:
     featureFlags: true
     dependencies:
     - rbac
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: sources-api
+    name: sources-app-metadata
+  data:
+    app_metadata.yml: |
+      ${APP_METADATA}
 parameters:
 - description: Scheme of the Cloud Meter API
   displayName: Cloud Meter API Scheme
@@ -392,11 +415,6 @@ parameters:
   displayName: Bypass RBAC option enabled
   name: BYPASS_RBAC
   value: "false"
-- description: Host to use for the marketplace URL.
-  displayName: Marketplace host URL
-  name: MARKETPLACE_HOST
-  required: true
-  value: 'https://sandbox.marketplace.redhat.com'
 - description: Env name for seed
   name: SOURCES_ENV
   required: true
@@ -457,3 +475,9 @@ parameters:
 - description: Whether to handle conflicts on user_ids during a tenant refresh
   name: HANDLE_TENANT_REFRESH
   value: "false"
+- description: A comma-separated list of application types that are disabled in Sources
+  name: DISABLED_APPLICATION_TYPES
+  value: ""
+- description: A YAML file containing app_metadata for the supported applications in Sources.
+  name: APP_METADATA
+  value: ""

@@ -14,6 +14,7 @@ func UpdateSourceFromApplicationAvailabilityStatus(application *m.Application, p
 	if previousStatus != application.AvailabilityStatus {
 		source := &m.Source{}
 		source.ID = application.SourceID
+
 		source.AvailabilityStatus = application.AvailabilityStatus
 		if application.LastCheckedAt != nil && !application.LastCheckedAt.IsZero() {
 			source.LastCheckedAt = application.LastCheckedAt
@@ -24,6 +25,7 @@ func UpdateSourceFromApplicationAvailabilityStatus(application *m.Application, p
 		}
 
 		sourceDao := dao.GetSourceDao(&dao.RequestParams{TenantID: &application.TenantID})
+
 		err := sourceDao.Update(source)
 		if err != nil {
 			l.Log.Errorf("unable to load source: %v", err.Error())

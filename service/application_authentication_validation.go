@@ -10,12 +10,14 @@ func ValidateApplicationAuthenticationCreateRequest(appAuth *m.ApplicationAuthen
 	if err != nil {
 		return err
 	}
+
 	appAuth.ApplicationID = appId
 
 	authId, err := util.InterfaceToInt64(appAuth.AuthenticationIDRaw)
 	if err != nil {
 		return err
 	}
+
 	appAuth.AuthenticationID = authId
 
 	return nil

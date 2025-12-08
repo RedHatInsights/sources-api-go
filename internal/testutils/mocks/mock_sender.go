@@ -12,5 +12,6 @@ func (m *MockSender) RaiseEvent(_ string, b []byte, headers []kafka.Header) erro
 	m.Headers = headers
 	m.Body = string(b)
 	m.Hit++
+
 	return nil
 }

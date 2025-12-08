@@ -18,6 +18,7 @@ func TestOpenApiReturn(t *testing.T) {
 	}
 
 	rawFile := make(map[string]interface{})
+
 	err = json.Unmarshal(raw, &rawFile)
 	if err != nil {
 		t.Errorf("Failed to marshal json: %v", err)
@@ -45,6 +46,7 @@ func TestOpenApiReturn(t *testing.T) {
 	}
 
 	out := make(map[string]interface{})
+
 	err = json.Unmarshal(output, &out)
 	if err != nil {
 		t.Error(err)

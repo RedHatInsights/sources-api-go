@@ -6,7 +6,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/dao"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
@@ -33,7 +33,9 @@ func UserCatcher(next echo.HandlerFunc) echo.HandlerFunc {
 				return fmt.Errorf("failed to fetch the identity header")
 			}
 
-			userIDFromContext = xRhIdentity.Identity.User.UserID
+			if xRhIdentity.Identity.User != nil {
+				userIDFromContext = xRhIdentity.Identity.User.UserID
+			}
 		}
 
 		if userIDFromContext != "" {

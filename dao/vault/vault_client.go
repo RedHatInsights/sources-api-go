@@ -19,6 +19,7 @@ func NewClient() VaultClient {
 	if cfg == nil {
 		panic("Failed to parse Vault Config")
 	}
+
 	err := cfg.ReadEnvironment()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to read Vault Environment: %v", err))

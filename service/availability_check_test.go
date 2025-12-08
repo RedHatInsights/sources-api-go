@@ -73,6 +73,7 @@ func TestRhcConnectionAvailability(t *testing.T) {
 
 func TestAllAvailability(t *testing.T) {
 	var acr = &dummyChecker{}
+
 	src := &m.Source{
 		// 2 applications on this source.
 		Applications: []m.Application{{}, {}, {}},

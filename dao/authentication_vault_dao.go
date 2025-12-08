@@ -62,6 +62,7 @@ func (a *authenticationDaoVaultImpl) List(limit int, offset int, filters []util.
 
 		out = append(out, *secret)
 	}
+
 	count := int64(len(keys))
 
 	return out, count, nil
@@ -195,6 +196,7 @@ func (a *authenticationDaoVaultImpl) GetById(uid string) (*m.Authentication, err
 	}
 
 	var fullKey string
+
 	for _, key := range keys {
 		if strings.HasSuffix(key, uid) {
 			fullKey = key
@@ -215,6 +217,7 @@ func (a *authenticationDaoVaultImpl) Create(auth *m.Authentication) error {
 	switch strings.ToLower(auth.ResourceType) {
 	case "application":
 		app := m.Application{ID: auth.ResourceID}
+
 		result := query.Model(&app).First(&app)
 		if result.Error != nil {
 			return fmt.Errorf("resource not found with type [%v], id [%v]", auth.ResourceType, auth.ResourceID)
@@ -223,6 +226,7 @@ func (a *authenticationDaoVaultImpl) Create(auth *m.Authentication) error {
 		auth.SourceID = app.SourceID
 	case "endpoint":
 		endpoint := m.Endpoint{ID: auth.ResourceID}
+
 		result := query.Model(&endpoint).First(&endpoint)
 		if result.Error != nil {
 			return fmt.Errorf("resource not found with type [%v], id [%v]", auth.ResourceType, auth.ResourceID)
@@ -253,6 +257,7 @@ func (a *authenticationDaoVaultImpl) Create(auth *m.Authentication) error {
 	if !ok {
 		return errors.New("failed to cast vault version number to string")
 	}
+
 	auth.Version = number.String()
 
 	return nil
@@ -275,10 +280,12 @@ func (a *authenticationDaoVaultImpl) BulkCreate(auth *m.Authentication) error {
 	if err != nil {
 		return err
 	}
+
 	number, ok := out.Data["version"].(json.Number)
 	if !ok {
 		return fmt.Errorf("failed to get version number from string")
 	}
+
 	auth.Version = number.String()
 
 	return nil
@@ -296,10 +303,12 @@ func (a *authenticationDaoVaultImpl) Update(auth *m.Authentication) error {
 	if err != nil {
 		return err
 	}
+
 	number, ok := out.Data["version"].(json.Number)
 	if !ok {
 		return errors.New("failed to cast vault version number to string")
 	}
+
 	auth.Version = number.String()
 
 	return nil
@@ -335,6 +344,7 @@ a k/v store. (almost like the `vault kv get` and `vault kv put`)
 func (a *authenticationDaoVaultImpl) listKeys() ([]string, error) {
 	// List all the keys
 	path := fmt.Sprintf("secret/metadata/%d/", *a.TenantID)
+
 	list, err := Vault.List(path)
 	if err != nil || list == nil {
 		return nil, err
@@ -342,8 +352,11 @@ func (a *authenticationDaoVaultImpl) listKeys() ([]string, error) {
 
 	// data["keys"] is where the objects are returned. it's an array of
 	// interfaces but we know they are strings
-	var data []interface{}
-	var ok bool
+	var (
+		data []interface{}
+		ok   bool
+	)
+
 	if data, ok = list.Data["keys"].([]interface{}); !ok {
 		return nil, fmt.Errorf("bad data came back from vault")
 	}
@@ -381,6 +394,7 @@ func (a *authenticationDaoVaultImpl) getKey(path string) (*m.Authentication, err
 
 	// set tenant id
 	auth.TenantID = *a.TenantID
+
 	return auth, nil
 }
 
@@ -396,11 +410,15 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	// just map[string]interface{} but the response data type is very generic so
 	// we need to infer it ourselves. which is good because we get a lot of type
 	// checking this way.
-	var data, metadata, extra map[string]interface{}
-	var ok bool
+	var (
+		data, metadata, extra map[string]interface{}
+		ok                    bool
+	)
+
 	if data, ok = secret.Data["data"].(map[string]interface{}); !ok {
 		return nil
 	}
+
 	if metadata, ok = secret.Data["metadata"].(map[string]interface{}); !ok {
 		return nil
 	}
@@ -429,10 +447,12 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 	// than a panic happening at runtime.
 	auth := &m.Authentication{}
 	auth.CreatedAt = createdAt
+
 	number, ok := metadata["version"].(json.Number)
 	if !ok {
 		return nil
 	}
+
 	auth.Version = number.String()
 
 	if extra != nil {
@@ -444,32 +464,40 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		if name, ok = data["name"].(string); !ok {
 			return nil
 		}
+
 		auth.Name = &name
 	}
+
 	if data["authtype"] != nil {
 		if auth.AuthType, ok = data["authtype"].(string); !ok {
 			return nil
 		}
 	}
+
 	if data["username"] != nil {
 		var username string
 		if username, ok = data["username"].(string); !ok {
 			return nil
 		}
+
 		auth.Username = &username
 	}
+
 	if data["password"] != nil {
 		password, ok := data["password"].(string)
 		if !ok {
 			return nil
 		}
+
 		auth.Password = util.StringRef(password)
 	}
+
 	if data["resource_type"] != nil {
 		if auth.ResourceType, ok = data["resource_type"].(string); !ok {
 			return nil
 		}
 	}
+
 	if data["resource_id"] != nil {
 		resourceId, ok := data["resource_id"].(string)
 		if !ok {
@@ -480,8 +508,10 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		if err != nil {
 			return nil
 		}
+
 		auth.ResourceID = id
 	}
+
 	if data["source_id"] != nil {
 		sourceId, ok := data["source_id"].(string)
 		if !ok {
@@ -492,6 +522,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		if err != nil {
 			return nil
 		}
+
 		auth.SourceID = id
 	}
 
@@ -500,6 +531,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		if availabilityStatus, ok = data["availability_status"].(string); !ok {
 			return nil
 		}
+
 		auth.AvailabilityStatus = &availabilityStatus
 	}
 
@@ -513,6 +545,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		if err != nil {
 			return nil
 		}
+
 		auth.LastAvailableAt = &parsedLastAvailableAt
 	}
 
@@ -526,6 +559,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 		if err != nil {
 			return nil
 		}
+
 		auth.LastCheckedAt = &parsedLastCheckedAt
 	}
 
@@ -534,6 +568,7 @@ func authFromVault(secret *api.Secret) *m.Authentication {
 
 func (a *authenticationDaoVaultImpl) BulkMessage(resource util.Resource) (map[string]interface{}, error) {
 	a.TenantID = &resource.TenantID
+
 	authentication, err := a.GetById(resource.ResourceUID)
 	if err != nil {
 		return nil, err
@@ -552,16 +587,19 @@ func (a *authenticationDaoVaultImpl) FetchAndUpdateBy(resource util.Resource, up
 	if err != nil {
 		return nil, err
 	}
+
 	err = a.Update(authentication)
 	if err != nil {
 		return nil, err
 	}
 
 	sourceDao := GetSourceDao(&RequestParams{TenantID: a.TenantID})
+
 	source, err := sourceDao.GetById(&authentication.SourceID)
 	if err != nil {
 		return nil, err
 	}
+
 	authentication.Source = *source
 
 	return authentication, nil
@@ -569,6 +607,7 @@ func (a *authenticationDaoVaultImpl) FetchAndUpdateBy(resource util.Resource, up
 
 func (a *authenticationDaoVaultImpl) ToEventJSON(resource util.Resource) ([]byte, error) {
 	a.TenantID = &resource.TenantID
+
 	auth, err := a.GetById(resource.ResourceUID)
 	if err != nil {
 		return nil, err
@@ -577,6 +616,7 @@ func (a *authenticationDaoVaultImpl) ToEventJSON(resource util.Resource) ([]byte
 	auth.TenantID = resource.TenantID
 	auth.Tenant = m.Tenant{ExternalTenant: resource.AccountNumber}
 	authEvent := auth.ToEvent()
+
 	data, err := json.Marshal(authEvent)
 	if err != nil {
 		return nil, err
@@ -586,8 +626,10 @@ func (a *authenticationDaoVaultImpl) ToEventJSON(resource util.Resource) ([]byte
 }
 
 func (a *authenticationDaoVaultImpl) AuthenticationsByResource(authentication *m.Authentication) ([]m.Authentication, error) {
-	var err error
-	var resourceAuthentications []m.Authentication
+	var (
+		err                     error
+		resourceAuthentications []m.Authentication
+	)
 
 	switch authentication.ResourceType {
 	case "Source":
@@ -634,6 +676,7 @@ func (a *authenticationDaoVaultImpl) ListIdsForResource(resourceType string, res
 
 func (a *authenticationDaoVaultImpl) BulkDelete(authentications []m.Authentication) ([]m.Authentication, error) {
 	var deletedAuthentications []m.Authentication
+
 	for _, auth := range authentications {
 		path := fmt.Sprintf("%s_%d_%s", auth.ResourceType, auth.ResourceID, auth.ID)
 
@@ -658,6 +701,7 @@ func (a *authenticationDaoVaultImpl) findKeysByResourceTypeAndId(keys []string, 
 		// Try to find "<ResourceType>_<ResourceId>_". The final underscore is important since otherwise if we were
 		// looking for a string that contains "Source_1" we could also match "Source_11".
 		targetRegex := fmt.Sprintf("%s_%d_", resourceType, id)
+
 		regex, err := regexp.Compile(targetRegex)
 		if err != nil {
 			return nil, err

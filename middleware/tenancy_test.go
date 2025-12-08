@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 // mockTenantDao is a mock which will help us mocking the "GetOrCreateTenant" function.
@@ -71,6 +71,7 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 
 		// Prepare the middlewares and execute them.
 		handlers := ParseHeaders(Tenancy(func(context echo.Context) error { return nil }))
+
 		err := handlers(c)
 		if err != nil {
 			t.Errorf(`unexpected error when running the "ParseHeaders" and "Tenancy" middlewares: %s`, err)
@@ -84,6 +85,7 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 
 			{
 				want := orgId
+
 				got := id.Identity.OrgID
 				if want != got {
 					t.Errorf(`the identity struct does not have the OrgId value from the database. Want "%s", got "%s"`, want, got)
@@ -92,6 +94,7 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 
 			{
 				want := accountNumber
+
 				got := id.Identity.AccountNumber
 				if want != got {
 					t.Errorf(`the identity struct does not have the AccountNUmber value from the database. Want "%s", got "%s"`, want, got)

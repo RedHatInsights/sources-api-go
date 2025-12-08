@@ -6,7 +6,7 @@ import (
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 /*
@@ -55,6 +55,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 		// received, generate an identity struct from the given "OrgId" and "EBS account number". If the "x-rh-identity"
 		// header is present, simply decode it and use the decided identity.
 		var id *identity.XRHID
+
 		xRhIdentityRaw := c.Request().Header.Get(h.XRHID)
 		if xRhIdentityRaw == "" {
 			generatedIdentity := util.GeneratedXRhIdentity(c.Request().Header.Get(h.AccountNumber), c.Request().Header.Get(h.OrgID))
@@ -79,7 +80,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			c.Set(h.XRHID, xRhIdentityRaw)
 
 			// Store whether this a cert-auth based request.
-			if xRhIdentity.Identity.System.CommonName != "" {
+			if xRhIdentity.Identity.System != nil && xRhIdentity.Identity.System.CommonName != "" {
 				c.Set("cert-auth", true)
 			}
 

@@ -25,7 +25,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/go-cmp/cmp"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 func TestAuthenticationList(t *testing.T) {
@@ -53,6 +53,7 @@ func TestAuthenticationList(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -67,6 +68,7 @@ func TestAuthenticationList(t *testing.T) {
 	}
 
 	var wantCount int
+
 	for _, a := range fixtures.TestAuthenticationData {
 		if a.TenantID == tenantId {
 			wantCount++
@@ -118,6 +120,7 @@ func TestAuthenticationList(t *testing.T) {
 // for not existing tenant
 func TestAuthenticationTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 
 	c, rec := request.CreateTestContext(
@@ -144,6 +147,7 @@ func TestAuthenticationTenantNotExist(t *testing.T) {
 // for a tenant without authentications
 func TestAuthenticationTenantWithoutAuthentications(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(3)
 
 	c, rec := request.CreateTestContext(
@@ -168,6 +172,7 @@ func TestAuthenticationTenantWithoutAuthentications(t *testing.T) {
 
 func TestAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 
 	c, rec := request.CreateTestContext(
@@ -185,6 +190,7 @@ func TestAuthenticationListBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestAuthenticationList := ErrorHandlingContext(AuthenticationList)
+
 	err := badRequestAuthenticationList(c)
 	if err != nil {
 		t.Error(err)
@@ -202,6 +208,7 @@ func TestAuthenticationGet(t *testing.T) {
 		conf.SecretStore = s
 
 		var id string
+
 		if config.IsVaultOn() {
 			conf.SecretStore = "vault"
 			id = fixtures.TestAuthenticationData[0].ID
@@ -231,6 +238,7 @@ func TestAuthenticationGet(t *testing.T) {
 		}
 
 		var outAuthentication m.AuthenticationResponse
+
 		err = json.Unmarshal(rec.Body.Bytes(), &outAuthentication)
 		if err != nil {
 			t.Error("Failed unmarshaling output")
@@ -253,6 +261,7 @@ func TestAuthenticationGet(t *testing.T) {
 				if a.TenantID != tenantId {
 					t.Error("ghosts infected the return")
 				}
+
 				break
 			}
 		}
@@ -263,6 +272,7 @@ func TestAuthenticationGet(t *testing.T) {
 
 func TestAuthenticationGetTenantNotExist(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := fixtures.NotExistingTenantId
 	uid := strconv.FormatInt(fixtures.TestAuthenticationData[0].DbID, 10)
 
@@ -279,6 +289,7 @@ func TestAuthenticationGetTenantNotExist(t *testing.T) {
 	c.SetParamValues(uid)
 
 	notFoundAuthenticationGet := ErrorHandlingContext(AuthenticationGet)
+
 	err := notFoundAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -303,6 +314,7 @@ func TestAuthenticationGetNotFound(t *testing.T) {
 	c.SetParamValues(uid)
 
 	notFoundAuthenticationGet := ErrorHandlingContext(AuthenticationGet)
+
 	err := notFoundAuthenticationGet(c)
 	if err != nil {
 		t.Error(err)
@@ -355,6 +367,7 @@ func TestAuthenticationCreate(t *testing.T) {
 
 		auth := m.AuthenticationResponse{}
 		raw, _ := io.ReadAll(rec.Body)
+
 		err = json.Unmarshal(raw, &auth)
 		if err != nil {
 			t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -379,10 +392,12 @@ func TestAuthenticationCreate(t *testing.T) {
 		if parser.RunningIntegrationTests {
 			requestParams := dao.RequestParams{TenantID: &tenantId}
 			authenticationDao := dao.GetAuthenticationDao(&requestParams)
+
 			authOut, err := authenticationDao.GetById(auth.ID)
 			if err != nil {
 				t.Error(err)
 			}
+
 			if authOut.TenantID != tenantId {
 				t.Errorf("authentication's tenant id = %d, expected %d", authOut.TenantID, tenantId)
 			}
@@ -419,6 +434,7 @@ func TestAuthenticationCreateBadRequestInvalidResourceType(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestAuthenticationCreate := ErrorHandlingContext(AuthenticationCreate)
+
 	err = badRequestAuthenticationCreate(c)
 	if err != nil {
 		t.Error(err)
@@ -431,10 +447,10 @@ func TestAuthenticationCreateBadRequestInvalidResourceType(t *testing.T) {
 // you try to create authentication for not existing resource
 func TestAuthenticationCreateResourceNotFound(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
 
 	for _, resourceType := range []string{"Application", "Endpoint", "Source"} {
-
 		requestBody := m.AuthenticationCreateRequest{
 			Username:      util.StringRef("testUser"),
 			Password:      util.StringRef("123456"),
@@ -458,6 +474,7 @@ func TestAuthenticationCreateResourceNotFound(t *testing.T) {
 		c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 		badRequestAuthenticationCreate := ErrorHandlingContext(AuthenticationCreate)
+
 		err = badRequestAuthenticationCreate(c)
 		if err != nil {
 			t.Error(err)
@@ -469,7 +486,9 @@ func TestAuthenticationCreateResourceNotFound(t *testing.T) {
 
 func TestAuthenticationEdit(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(1)
+
 	var uid string
 	if config.IsVaultOn() {
 		uid = fixtures.TestAuthenticationData[0].ID
@@ -506,6 +525,7 @@ func TestAuthenticationEdit(t *testing.T) {
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
 	authEditHandlerWithNotifier := middleware.Notifier(AuthenticationEdit)
+
 	err = authEditHandlerWithNotifier(c)
 	if err != nil {
 		t.Error(err)
@@ -517,6 +537,7 @@ func TestAuthenticationEdit(t *testing.T) {
 
 	auth := m.AuthenticationResponse{}
 	raw, _ := io.ReadAll(rec.Body)
+
 	err = json.Unmarshal(raw, &auth)
 	if err != nil {
 		t.Errorf("Failed to unmarshal application from response: %v", err)
@@ -547,6 +568,7 @@ func TestAuthenticationEdit(t *testing.T) {
 	// Check the tenancy of edited authentication
 	requestParams := dao.RequestParams{TenantID: &tenantId}
 	authDao := dao.GetAuthenticationDao(&requestParams)
+
 	authOut, err := authDao.GetById(uid)
 	if err != nil {
 		t.Error(err)
@@ -563,6 +585,7 @@ func TestAuthenticationEdit(t *testing.T) {
 // edit existing not owned authentication
 func TestAuthenticationEditInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
 	uid := "1"
 
@@ -589,6 +612,7 @@ func TestAuthenticationEditInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundAuthenticationEdit := ErrorHandlingContext(AuthenticationEdit)
+
 	err = notFoundAuthenticationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -623,6 +647,7 @@ func TestAuthenticationEditNotFound(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundAuthenticationEdit := ErrorHandlingContext(AuthenticationEdit)
+
 	err = notFoundAuthenticationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -656,6 +681,7 @@ func TestAuthenticationEditBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	badRequestAuthenticationEdit := ErrorHandlingContext(AuthenticationEdit)
+
 	err = badRequestAuthenticationEdit(c)
 	if err != nil {
 		t.Error(err)
@@ -667,6 +693,7 @@ func TestAuthenticationEditBadRequest(t *testing.T) {
 func TestAuthenticationDelete(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	tenantId := int64(1)
 
 	// Create new test data (source + authentication) for the test
@@ -751,7 +778,9 @@ func TestAuthenticationDelete(t *testing.T) {
 // for tenant who doesn't own the authentication
 func TestAuthenticationDeleteInvalidTenant(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
+
 	tenantId := int64(2)
+
 	var uid string
 	if config.IsVaultOn() {
 		uid = fixtures.TestAuthenticationData[0].ID
@@ -773,6 +802,7 @@ func TestAuthenticationDeleteInvalidTenant(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundAuthenticationDelete := ErrorHandlingContext(AuthenticationDelete)
+
 	err := notFoundAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -796,6 +826,7 @@ func TestAuthenticationDeleteNotFound(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
 	notFoundAuthenticationDelete := ErrorHandlingContext(AuthenticationDelete)
+
 	err := notFoundAuthenticationDelete(c)
 	if err != nil {
 		t.Error(err)
@@ -819,5 +850,6 @@ func checkAllAuthenticationsBelongToTenant(tenantId int64, authentications []int
 			}
 		}
 	}
+
 	return nil
 }

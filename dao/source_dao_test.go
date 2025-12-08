@@ -34,6 +34,7 @@ func TestSourcesListForRhcConnections(t *testing.T) {
 	// with different types.
 	{
 		want := 2
+
 		got := len(sources)
 		if want != got {
 			t.Errorf(`incorrect amount of related sources fetched. Want "%d", got "%d"`, want, got)
@@ -42,6 +43,7 @@ func TestSourcesListForRhcConnections(t *testing.T) {
 
 	{
 		want := fixtures.TestSourceRhcConnectionData[0].SourceId
+
 		got := sources[0].ID
 		if want != got {
 			t.Errorf(`incorrect related source fetched. Want "%d", got "%d"`, want, got)
@@ -50,11 +52,11 @@ func TestSourcesListForRhcConnections(t *testing.T) {
 
 	{
 		want := fixtures.TestSourceRhcConnectionData[2].SourceId
+
 		got := sources[1].ID
 		if want != got {
 			t.Errorf(`incorrect related source fetched. Want "%d", got "%d"`, want, got)
 		}
-
 	}
 
 	DropSchema(RhcConnectionSchema)
@@ -70,6 +72,7 @@ func TestPausingSource(t *testing.T) {
 	SwitchSchema("pause_unpause")
 
 	sourceDao := GetSourceDao(&RequestParams{TenantID: &testSource.TenantID})
+
 	err := sourceDao.Pause(testSource.ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -103,6 +106,7 @@ func TestPausingSourceWithOwnership(t *testing.T) {
 		 Test 1 - UserA tries to pause source for userA - expected result: success
 		*/
 		sourceDao := GetSourceDao(suiteData.GetRequestParamsUserA())
+
 		err := sourceDao.Pause(suiteData.SourceUserA().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -128,6 +132,7 @@ func TestPausingSourceWithOwnership(t *testing.T) {
 		 Test 2 - UserA tries to pause source without user - expected result: success
 		*/
 		sourceDao = GetSourceDao(suiteData.GetRequestParamsUserA())
+
 		err = sourceDao.Pause(suiteData.SourceNoUser().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -177,7 +182,6 @@ func TestPausingSourceWithOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -194,6 +198,7 @@ func TestUnpauseSourceWithOwnership(t *testing.T) {
 		 Test 1 - UserA tries to unpause source for userA - expected result: success
 		*/
 		sourceDao := GetSourceDao(suiteData.GetRequestParamsUserA())
+
 		err := sourceDao.Pause(suiteData.SourceUserA().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -223,6 +228,7 @@ func TestUnpauseSourceWithOwnership(t *testing.T) {
 		 Test 2 - UserA tries to unpause source without user - expected result: success
 		*/
 		sourceDao = GetSourceDao(suiteData.GetRequestParamsUserA())
+
 		err = sourceDao.Pause(suiteData.SourceNoUser().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -255,6 +261,7 @@ func TestUnpauseSourceWithOwnership(t *testing.T) {
 		sourceDaoWithUser := GetSourceDao(requestParams)
 
 		sourceDaoUserB := GetSourceDao(suiteData.GetRequestParamsUserB())
+
 		err = sourceDaoUserB.Pause(suiteData.SourceUserB().ID)
 		if err != nil {
 			t.Errorf(`want nil error, got "%s"`, err)
@@ -282,7 +289,6 @@ func TestUnpauseSourceWithOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -296,6 +302,7 @@ func TestResumingSource(t *testing.T) {
 	SwitchSchema("pause_unpause")
 
 	sourceDao := GetSourceDao(&RequestParams{TenantID: &testSource.TenantID})
+
 	err := sourceDao.Unpause(fixtures.TestSourceData[0].ID)
 	if err != nil {
 		t.Errorf(`want nil error, got "%s"`, err)
@@ -375,8 +382,8 @@ func TestDeleteSourceNotExists(t *testing.T) {
 	sourceDao := GetSourceDao(&RequestParams{TenantID: &fixtures.TestSourceData[0].TenantID})
 
 	nonExistentId := int64(12345)
-	_, err := sourceDao.Delete(&nonExistentId)
 
+	_, err := sourceDao.Delete(&nonExistentId)
 	if !errors.As(err, &util.ErrNotFound{}) {
 		t.Errorf(`incorrect error returned. Want "%s", got "%s"`, util.ErrNotFound{}, reflect.TypeOf(err))
 	}
@@ -392,6 +399,7 @@ func TestDeleteSourceNotExists(t *testing.T) {
 func TestDeleteCascade(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
+
 	tenantId := int64(1)
 
 	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
@@ -405,6 +413,7 @@ func TestDeleteCascade(t *testing.T) {
 	// Try inserting the source in the database.
 	sourceDaoParams := RequestParams{TenantID: &tenantId}
 	sourceDao := GetSourceDao(&sourceDaoParams)
+
 	err := sourceDao.Create(&fixtureSource)
 	if err != nil {
 		t.Errorf(`error creating a fixture source: %s`, err)
@@ -490,7 +499,9 @@ func TestDeleteCascade(t *testing.T) {
 		if len(deletedApplicationAuthentications) != 1 {
 			t.Errorf("different count of app auths deleted, want %d, deleted %d", 1, len(deletedApplicationAuthentications))
 		}
+
 		id := deletedApplicationAuthentications[0].ID
+
 		_, err = applicationAuthenticationDao.GetById(&id)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
@@ -502,7 +513,9 @@ func TestDeleteCascade(t *testing.T) {
 		if len(deletedApplications) != 1 {
 			t.Errorf("different count of apps deleted, want %d, deleted %d", 1, len(deletedApplications))
 		}
+
 		id := deletedApplications[0].ID
+
 		_, err = applicationsDao.GetById(&id)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
@@ -514,7 +527,9 @@ func TestDeleteCascade(t *testing.T) {
 		if len(deletedEndpoints) != 1 {
 			t.Errorf("different count of apps deleted, want %d, deleted %d", 1, len(deletedEndpoints))
 		}
+
 		id := deletedEndpoints[0].ID
+
 		_, err = endpointDao.GetById(&id)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
@@ -526,7 +541,9 @@ func TestDeleteCascade(t *testing.T) {
 		if len(deletedRhcConnections) != 1 {
 			t.Errorf("different count of apps deleted, want %d, deleted %d", 1, len(deletedRhcConnections))
 		}
+
 		id := deletedRhcConnections[0].ID
+
 		_, err = rhcConnectionsDao.GetById(&id)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
@@ -536,6 +553,7 @@ func TestDeleteCascade(t *testing.T) {
 	// Check that deleted source is not in the database
 	{
 		id := deletedSource.ID
+
 		_, err = sourceDao.GetById(&id)
 		if !errors.As(err, &util.ErrNotFound{}) {
 			t.Errorf("Expected not found error, got %s", err)
@@ -544,19 +562,24 @@ func TestDeleteCascade(t *testing.T) {
 
 	// Check that created authentication was not deleted
 	id := fmt.Sprintf("%d", authentication.DbID)
+
 	authOut, err := authenticationDao.GetById(id)
 	if err != nil {
 		t.Error(err)
 	}
+
 	if authOut.DbID != authentication.DbID {
 		t.Errorf("ghost infected the return")
 	}
+
 	if authOut.ResourceType != authentication.ResourceType {
 		t.Errorf("ghost infected the return")
 	}
+
 	if authOut.ResourceID != authentication.ResourceID {
 		t.Errorf("ghost infected the return")
 	}
+
 	if authOut.SourceID != authentication.SourceID {
 		t.Errorf("ghost infected the return")
 	}
@@ -580,6 +603,7 @@ func TestDeleteCascade(t *testing.T) {
 func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("delete")
+
 	tenantId := int64(1)
 
 	// Create a new source fixture to avoid mixing the applications with the ones that already exist.
@@ -593,6 +617,7 @@ func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
 	// Try inserting the source in the database.
 	sourceDaoParams := RequestParams{TenantID: &tenantId}
 	sourceDao := GetSourceDao(&sourceDaoParams)
+
 	err := sourceDao.Create(&fixtureSource)
 	if err != nil {
 		t.Errorf(`error creating a fixture source: %s`, err)
@@ -607,6 +632,7 @@ func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
 	// Double-check the "deleted" resources and the source itself.
 	{
 		want := 0
+
 		got := len(applicationAuthentications)
 		if want != got {
 			t.Errorf(`unexpected application authentications deleted. Want "%d", got "%d"`, want, got)
@@ -615,6 +641,7 @@ func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
 
 	{
 		want := 0
+
 		got := len(applications)
 		if want != got {
 			t.Errorf(`unexpected applications deleted. Want "%d", got "%d"`, want, got)
@@ -623,6 +650,7 @@ func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
 
 	{
 		want := 0
+
 		got := len(endpoints)
 		if len(endpoints) != 0 {
 			t.Errorf(`unexpected endpoints deleted. Want "%d", got "%d"`, want, got)
@@ -631,6 +659,7 @@ func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
 
 	{
 		want := 0
+
 		got := len(rhcConnections)
 		if len(rhcConnections) != 0 {
 			t.Errorf(`unexpected rhcConnections deleted. Want "%d", got "%d"`, want, got)
@@ -639,6 +668,7 @@ func TestDeleteCascadeSourceWithoutSubresources(t *testing.T) {
 
 	{
 		want := fixtureSource.ID
+
 		got := deletedSource.ID
 		if want != got {
 			t.Errorf(`wrong source deleted. Want source with ID "%d", got ID "%d"`, want, got)
@@ -695,6 +725,7 @@ func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 	sourceTypeId := fixtures.TestSourceTypeData[0].Id
 
 	var wantCount int64
+
 	for _, i := range fixtures.TestSourceData {
 		if i.SourceTypeID == sourceTypeId {
 			wantCount++
@@ -712,6 +743,7 @@ func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(sources)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -720,10 +752,12 @@ func TestSourceSubcollectionListWithOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -746,6 +780,7 @@ func TestSourceListOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(sources)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -754,10 +789,12 @@ func TestSourceListOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -780,6 +817,7 @@ func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(sources)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -788,10 +826,12 @@ func TestSourceListInternalOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
@@ -825,7 +865,9 @@ func TestSourceListInternalSkipCostManagementSources(t *testing.T) {
 	}
 
 	applicationDao := GetApplicationDao(&RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	if err := applicationDao.Create(application); err != nil {
+
+	err = applicationDao.Create(application)
+	if err != nil {
 		t.Errorf("unable to create Cost Management application: %s", err)
 	}
 
@@ -849,7 +891,8 @@ func TestSourceListInternalSkipCostManagementSources(t *testing.T) {
 		AvailabilityStatus: "available",
 	}
 
-	if _, err := rhcConnectionDao.Create(rhcConnection); err != nil {
+	_, err = rhcConnectionDao.Create(rhcConnection)
+	if err != nil {
 		t.Errorf("unable to create the RHC Connection: %s", err)
 	}
 
@@ -878,6 +921,7 @@ func TestSourceListForRhcConnectionWithOffsetAndLimit(t *testing.T) {
 	rhcConnectionId := fixtures.TestRhcConnectionData[0].ID
 
 	var wantCount int64
+
 	for _, i := range fixtures.TestSourceRhcConnectionData {
 		if i.RhcConnectionId == rhcConnectionId {
 			wantCount++
@@ -895,6 +939,7 @@ func TestSourceListForRhcConnectionWithOffsetAndLimit(t *testing.T) {
 		}
 
 		got := len(sources)
+
 		want := int(wantCount) - d.Offset
 		if want < 0 {
 			want = 0
@@ -903,16 +948,19 @@ func TestSourceListForRhcConnectionWithOffsetAndLimit(t *testing.T) {
 		if want > d.Limit {
 			want = d.Limit
 		}
+
 		if got != want {
 			t.Errorf(`objects passed back from DB: want "%v", got "%v"`, want, got)
 		}
 	}
+
 	DropSchema("offset_limit")
 }
 
 func TestSourceListUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -923,6 +971,7 @@ func TestSourceListUserOwnership(t *testing.T) {
 
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	recordsWithUserID, user, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDWithOwnRecords)
 	if err != nil {
 		t.Errorf("unable to create source: %v", err)
@@ -997,6 +1046,7 @@ func TestSourceListUserOwnership(t *testing.T) {
 func TestSourceGetUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -1005,6 +1055,7 @@ func TestSourceGetUserOwnership(t *testing.T) {
 		 Test 1 - UserA tries to GET userA's source - expected result: success
 		*/
 		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
+
 		sourceUserA, err := sourceDaoUserA.GetById(&suiteData.SourceUserA().ID)
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -1043,7 +1094,6 @@ func TestSourceGetUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -1054,6 +1104,7 @@ func TestSourceGetUserOwnership(t *testing.T) {
 func TestSourceEditUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -1065,6 +1116,7 @@ func TestSourceEditUserOwnership(t *testing.T) {
 
 		newNameSource := "new name"
 		newSourceUserA := &m.Source{ID: suiteData.SourceUserA().ID, Name: newNameSource}
+
 		err := sourceDaoUserA.Update(newSourceUserA)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
@@ -1083,6 +1135,7 @@ func TestSourceEditUserOwnership(t *testing.T) {
 		 Test 2 - UserA tries to update source without user - expected result: success
 		*/
 		newSourceNoUser := &m.Source{ID: suiteData.SourceNoUser().ID, Name: newNameSource}
+
 		err = sourceDaoUserA.Update(newSourceNoUser)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
@@ -1105,6 +1158,7 @@ func TestSourceEditUserOwnership(t *testing.T) {
 
 		newNameSource = "amazon"
 		newSourceUserB := &m.Source{ID: suiteData.SourceUserA().ID, Name: newNameSource}
+
 		err = sourceDaoWithUser.Update(newSourceUserB)
 		if err != nil {
 			t.Errorf(`unexpected error after calling Update: %v`, err)
@@ -1121,7 +1175,6 @@ func TestSourceEditUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}
@@ -1132,6 +1185,7 @@ func TestSourceEditUserOwnership(t *testing.T) {
 func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	testutils.SkipIfNotSecretStoreDatabase(t)
+
 	schema := "user_ownership"
 	SwitchSchema(schema)
 
@@ -1141,6 +1195,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 		*/
 		sourceDaoUserA := GetSourceDao(suiteData.GetRequestParamsUserA())
 		applicationType := m.ApplicationType{Id: fixtures.TestApplicationTypeData[3].Id}
+
 		sources, _, err := sourceDaoUserA.SubCollectionList(applicationType, 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -1162,6 +1217,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 		requestParams := &RequestParams{TenantID: suiteData.TenantID(), UserID: &suiteData.userWithoutOwnershipRecords.Id}
 		sourceDaoWithUser := GetSourceDao(requestParams)
 		applicationType = m.ApplicationType{Id: fixtures.TestApplicationTypeData[3].Id}
+
 		sources, _, err = sourceDaoWithUser.SubCollectionList(applicationType, 1000, 0, []util.Filter{})
 		if err != nil {
 			t.Errorf(`unexpected error after calling GetById for the source: %s`, err)
@@ -1177,6 +1233,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 		}
 
 		rhcDAO := GetRhcConnectionDao(requestParams)
+
 		rhcSourceUserA, errRhc := rhcDAO.Create(&m.RhcConnection{Sources: suiteData.resourcesUserA.Sources})
 		if errRhc != nil {
 			t.Errorf(`unexpected error after calling Create for rhc connection: %v`, errRhc)
@@ -1210,7 +1267,6 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 
 		return nil
 	})
-
 	if err != nil {
 		t.Errorf("test run was not successful %v", err)
 	}

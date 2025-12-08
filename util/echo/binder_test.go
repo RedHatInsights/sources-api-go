@@ -22,6 +22,7 @@ func TestGoodPayload(t *testing.T) {
 		bytes.NewBufferString(`{"good_field": true}`),
 		nil,
 	)
+
 	err := c.Bind(&TestStruct{})
 	if err != nil {
 		t.Error(err)
@@ -40,7 +41,6 @@ func TestBadPayload(t *testing.T) {
 	if err == nil {
 		t.Error("No error was found when there should have been an extra field error")
 	}
-
 }
 
 func TestNilBody(t *testing.T) {
@@ -59,7 +59,6 @@ func TestNilBody(t *testing.T) {
 	} else if !strings.Contains(err.Error(), "no body") {
 		t.Errorf("Expected that err message contains 'no body' but got '%s'", err)
 	}
-
 }
 
 func TestNoBody(t *testing.T) {
@@ -77,7 +76,6 @@ func TestNoBody(t *testing.T) {
 	} else if !strings.Contains(err.Error(), "no body") {
 		t.Errorf("Expected that err message contains 'no body' but got '%s'", err)
 	}
-
 }
 
 // TestEmptyJsonBody tests that when a valid, empty JSON object is given, a "bad request" error is returned.

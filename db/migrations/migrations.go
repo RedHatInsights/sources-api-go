@@ -28,6 +28,8 @@ var MigrationsCollection = []*gormigrate.Migration{
 	RenameForeignKeysIndexes(),
 	RemoveProcessedDuplicatedTenants(),
 	AvailabilityStatusColumnsNotNullConstraintDefaultValue(),
+	MigrateAwsProvisioningToImageBuilder(),
+	CleanupProvisioningAuthentications(),
 }
 
 var ctx = context.Background()
@@ -78,6 +80,7 @@ func Migrate(db *gorm.DB) {
 
 	// Perform the migrations and store the error for a proper return.
 	migrateTool := gormigrate.New(db, gormigrate.DefaultOptions, MigrationsCollection)
+
 	err = migrateTool.Migrate()
 	if err != nil {
 		logging.Log.Fatalf(`error when performing the database migrations: %s. The Redis lock is going to try to be released...`, err)

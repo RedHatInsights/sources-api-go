@@ -39,6 +39,7 @@ func TestSourceListInternal(t *testing.T) {
 	}
 
 	var out util.Collection
+
 	err = json.Unmarshal(rec.Body.Bytes(), &out)
 	if err != nil {
 		t.Error("Failed unmarshalling output")
@@ -84,19 +85,24 @@ func TestSourceListInternal(t *testing.T) {
 		}
 
 		sourceInFixtures := false
+
 		for _, source := range fixtures.TestSourceData {
 			if source.ID == responseSourceId {
 				if source.AvailabilityStatus != responseAvailabilityStatus {
 					t.Errorf("Availability statuses don't match. Want %s, got %s", source.AvailabilityStatus, responseAvailabilityStatus)
 				}
+
 				sourceInFixtures = true
+
 				break
 			}
 		}
+
 		if !sourceInFixtures {
 			t.Errorf("Source ID %d not found in fixtures", responseSourceId)
 		}
 	}
+
 	testutils.AssertLinks(t, c.Request().RequestURI, out.Links, 100, 0)
 }
 
@@ -126,6 +132,7 @@ func TestSourceListInternalSkipEmptySources(t *testing.T) {
 		}
 
 		var out util.Collection
+
 		err = json.Unmarshal(recorder.Body.Bytes(), &out)
 		if err != nil {
 			t.Error("Failed unmarshalling output")
@@ -138,6 +145,7 @@ func TestSourceListInternalSkipEmptySources(t *testing.T) {
 
 		// Assert that the source with the Cost Management applications is or isn't present in the results.
 		var found = false
+
 		for _, src := range out.Data {
 			s, ok := src.(map[string]interface{})
 			if !ok {
@@ -176,7 +184,9 @@ func TestSourceListInternalSkipEmptySources(t *testing.T) {
 	}
 
 	applicationDao := dao.GetApplicationDao(&dao.RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	if err := applicationDao.Create(application); err != nil {
+
+	err := applicationDao.Create(application)
+	if err != nil {
 		t.Errorf("unable to create Cost Management application: %s", err)
 	}
 
@@ -199,7 +209,9 @@ func TestSourceListInternalSkipEmptySources(t *testing.T) {
 	}
 
 	rhcConnectionDao := dao.GetRhcConnectionDao(&dao.RequestParams{TenantID: &fixtures.TestTenantData[0].Id})
-	if _, err := rhcConnectionDao.Create(rhcConnection); err != nil {
+
+	_, err = rhcConnectionDao.Create(rhcConnection)
+	if err != nil {
 		t.Errorf("unable to create the RHC Connection: %s", err)
 	}
 
@@ -231,6 +243,7 @@ func TestSourceListInternalBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestInternalSourceList := ErrorHandlingContext(InternalSourceList)
+
 	err := badRequestInternalSourceList(c)
 	if err != nil {
 		t.Error(err)
@@ -248,6 +261,7 @@ func TestInternalSecretGet(t *testing.T) {
 	testUserId := "testUser"
 
 	userDao := dao.GetUserDao(&tenantIDForSecret)
+
 	user, err := userDao.FindOrCreate(testUserId)
 	if err != nil {
 		t.Error(err)
@@ -259,6 +273,7 @@ func TestInternalSecretGet(t *testing.T) {
 	}
 
 	var userID *int64
+
 	for _, userScoped := range []bool{false, true} {
 		if userScoped {
 			userID = &user.Id
@@ -300,6 +315,7 @@ func TestInternalSecretGet(t *testing.T) {
 		}
 
 		var outSecret m.SecretResponse
+
 		err = json.Unmarshal(rec.Body.Bytes(), &outSecret)
 		if err != nil {
 			t.Error("Failed unmarshaling output")
@@ -310,6 +326,7 @@ func TestInternalSecretGet(t *testing.T) {
 		}
 
 		secretDao := dao.GetSecretDao(&dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
+
 		secret, err = secretDao.GetById(&secret.DbID)
 		if err != nil {
 			t.Error("secret not found")

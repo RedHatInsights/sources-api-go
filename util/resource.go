@@ -22,6 +22,7 @@ func ParseStatusMessageToResource(resource *Resource, statusMessage types.Status
 
 	resourceID, err := InterfaceToInt64(statusMessage.ResourceID)
 	isErr := err != nil
+
 	resourceTypeWithStringID := SliceContainsString(resourceTypeWithStringIDs, statusMessage.ResourceType)
 	if isErr && !resourceTypeWithStringID {
 		return nil, fmt.Errorf("error in parsing resource: %v, error: %w", resource, err)
@@ -32,6 +33,7 @@ func ParseStatusMessageToResource(resource *Resource, statusMessage types.Status
 	}
 
 	resource.ResourceID = resourceID
+
 	return resource, nil
 }
 

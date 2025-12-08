@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 func TestCreateIdentityHeader(t *testing.T) {
@@ -17,6 +17,7 @@ func TestCreateIdentityHeader(t *testing.T) {
 	}
 
 	var identity identity.XRHID
+
 	err = json.Unmarshal(bytes, &identity)
 	if err != nil {
 		t.Errorf("failed to unmarshal generated x-rh-identity")

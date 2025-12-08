@@ -18,7 +18,6 @@ var validWorkflowStatuses = []string{model.AccountAuth, model.ManualConfig}
 // values. In the specific case of the UUID, if an empty or nil one is provided, a new random UUID is generated and
 // appended to the request.
 func ValidateSourceCreationRequest(sourceDao dao.SourceDao, req *model.SourceCreateRequest) error {
-
 	if req.Name == nil || *req.Name == "" {
 		return fmt.Errorf("name cannot be empty")
 	}
@@ -89,5 +88,6 @@ func ValidateSourceEditRequest(dao dao.SourceDao, editRequest *model.SourceEditR
 			return errors.New(`availability status invalid. Must be one of "available", "in_progress", "partially_available" or "unavailable"`)
 		}
 	}
+
 	return nil
 }

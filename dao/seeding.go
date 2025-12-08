@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -19,18 +20,21 @@ var seedsFS embed.FS
 
 func seedDatabase() error {
 	l.Log.Infof("Seeding SourceType Table")
+
 	err := seedSourceTypes()
 	if err != nil {
 		return err
 	}
 
 	l.Log.Infof("Seeding ApplicationType Table")
+
 	err = seedApplicationTypes()
 	if err != nil {
 		return err
 	}
 
 	l.Log.Infof("Seeding MetaData Table")
+
 	err = seedMetaData()
 	if err != nil {
 		return err
@@ -79,6 +83,7 @@ func seedSourceTypes() error {
 		// if the source type was not found - we are creating it
 		if st == nil {
 			l.Log.Debugf("New SourceType found %v", name)
+
 			st = &m.SourceType{}
 		}
 
@@ -112,6 +117,7 @@ func seedSourceTypes() error {
 	// and need deleted
 	for name := range sourceTypes {
 		l.Log.Infof("Deleting SourceType %v", name)
+
 		result := DB.Delete(sourceTypes[name])
 		if result.Error != nil {
 			return result.Error
@@ -156,6 +162,7 @@ func seedApplicationTypes() error {
 		// if the app type was not found - we are creating it
 		if at == nil {
 			l.Log.Debugf("New ApplicationType found %v", name)
+
 			at = &m.ApplicationType{}
 		}
 
@@ -198,6 +205,7 @@ func seedApplicationTypes() error {
 	// and need deleted
 	for name := range appTypes {
 		l.Log.Infof("Deleting ApplicationType %v", name)
+
 		result := DB.Delete(appTypes[name])
 		if result.Error != nil {
 			return result.Error
@@ -221,6 +229,7 @@ func seedMetaData() error {
 	if err != nil {
 		return err
 	}
+
 	err = seedAppMetadata(appTypes)
 	if err != nil {
 		return err
@@ -255,6 +264,7 @@ func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 			if err != nil {
 				return err
 			}
+
 			substitutions, err := json.Marshal(values.Substitutions)
 			if err != nil {
 				return err
@@ -280,9 +290,19 @@ func seedSuperkeyMetadata(appTypes map[string]*m.ApplicationType) error {
 }
 
 func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
-	seeds := make(appMetadataSeedMap)
+	seeds := make(appMetaDataSeed)
 	// reading from the embedded fs for the seeds directory
-	data, err := seedsFS.ReadFile("seeds/app_metadata.yml")
+	env := config.Get().Env
+
+	var data []byte
+
+	var err error
+	if strings.ToLower(env) == "stage" || strings.ToLower(env) == "prod" {
+		data, err = os.ReadFile("/mnt/sources/app_metadata.yml")
+	} else {
+		data, err = seedsFS.ReadFile("seeds/app_metadata.yml")
+	}
+
 	if err != nil {
 		return err
 	}
@@ -292,14 +312,7 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 		return err
 	}
 
-	// defaulting to "eph" if no var is set.
-	env, ok := os.LookupEnv("SOURCES_ENV")
-	if !ok {
-		l.Log.Infof("Defaulting SOURCES_ENV to eph")
-		env = "eph"
-	}
-
-	for name, values := range seeds[env] {
+	for name, values := range seeds {
 		appType, ok := appTypes[name]
 		if !ok {
 			return fmt.Errorf("failed find application type %v", name)
@@ -332,6 +345,7 @@ func seedAppMetadata(appTypes map[string]*m.ApplicationType) error {
 // pointer to the record
 func loadSourceTypeSeeds() map[string]*m.SourceType {
 	sourceTypes := make([]m.SourceType, 0)
+
 	result := DB.Model(&m.SourceType{}).Scan(&sourceTypes)
 	if result.Error != nil {
 		return nil
@@ -351,6 +365,7 @@ func loadSourceTypeSeeds() map[string]*m.SourceType {
 func loadApplicationTypeSeeds() map[string]*m.ApplicationType {
 	// load all the seeds from the db
 	appTypes := make([]m.ApplicationType, 0)
+
 	result := DB.Model(&m.ApplicationType{}).Scan(&appTypes)
 	if result.Error != nil {
 		return nil

@@ -34,9 +34,24 @@ var TestApplicationTypeData = []m.ApplicationType{
 		SupportedSourceTypes: []byte(`["bitbucket", "dockerhub", "github", "gitlab", "quay"]`),
 	},
 	{
-		Id:                   4,
-		DisplayName:          "Cost Management",
-		Name:                 "/insights/platform/cost-management",
-		SupportedSourceTypes: []byte(`["amazon", "azure", "google", "openshift", "ibm"]`),
+		Id:                           4,
+		DisplayName:                  "Cost Management",
+		Name:                         "/insights/platform/cost-management",
+		SupportedSourceTypes:         []byte(`["amazon", "azure", "google", "openshift", "ibm"]`),
+		SupportedAuthenticationTypes: []byte(`{"amazon": ["arn", "arn-2", "arn-3"], "azure": ["azure-auth", "azure-auth-2"]}`),
+	},
+	{
+		Id:                           6,
+		DisplayName:                  "Cloud Meter",
+		Name:                         "/insights/platform/cloud-meter",
+		SupportedSourceTypes:         []byte(`["amazon", "azure", "google", "openshift", "ibm"]`),
+		SupportedAuthenticationTypes: []byte(`{"amazon": ["arn", "arn-2", "arn-3"], "azure": ["azure-auth", "azure-auth-2"]}`),
+	},
+	{
+		Id:                           7,
+		DisplayName:                  "Image Builder",
+		Name:                         "/insights/platform/image-builder",
+		SupportedSourceTypes:         []byte(`["amazon", "azure", "google", "openshift", "ibm"]`),
+		SupportedAuthenticationTypes: []byte(`{"amazon": ["arn", "arn-2", "arn-3"], "azure": ["azure-auth", "azure-auth-2"]}`),
 	},
 }

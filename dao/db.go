@@ -45,6 +45,7 @@ func Init() {
 
 		// Terminate any other connections to the database, since otherwise Postgres will not allow deleting a database.
 		disconnectSql := fmt.Sprintf(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '%s'`, conf.DatabaseName)
+
 		err := DB.Exec(disconnectSql).Error
 		if err != nil {
 			log.Fatalln(err)
@@ -52,6 +53,7 @@ func Init() {
 
 		// Perform the database deletion.
 		dropDbSql := fmt.Sprintf(`DROP DATABASE %s`, conf.DatabaseName)
+
 		err = DB.Exec(dropDbSql).Error
 		if err != nil {
 			log.Fatalln(err)
@@ -59,6 +61,7 @@ func Init() {
 
 		// Recreate the database.
 		createDb := fmt.Sprintf(`CREATE DATABASE %s`, conf.DatabaseName)
+
 		err = DB.Exec(createDb).Error
 		if err != nil {
 			log.Fatalln(err)
@@ -92,11 +95,14 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+
 	DB = db
+
 	rawDB, err := db.DB()
 	if err != nil {
 		panic(err)
 	}
+
 	rawDB.SetMaxOpenConns(20)
 
 	// Perform database migrations.

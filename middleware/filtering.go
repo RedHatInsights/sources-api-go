@@ -22,6 +22,7 @@ func SortAndFilter(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		c.Set("filters", filters)
+
 		return next(c)
 	}
 }
@@ -32,6 +33,7 @@ func parseFilter(c echo.Context) ([]util.Filter, error) {
 		if strings.HasPrefix(key, "filter") {
 			matches := util.FilterRegex.FindAllStringSubmatch(key, -1)
 			filter := util.Filter{}
+
 			if len(matches) < 2 {
 				return nil, fmt.Errorf("filter")
 			}

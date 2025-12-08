@@ -73,6 +73,7 @@ func TestParsePaginationBadRequestInvalidLimit(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	badRequestParsePaginationIntoContext := HandleErrors(parsePaginationIntoContext)
+
 	err := badRequestParsePaginationIntoContext(c)
 	if err != nil {
 		t.Error("something went very wrong - error parsing pagination.")
@@ -81,6 +82,7 @@ func TestParsePaginationBadRequestInvalidLimit(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 
 	var resp util.ErrorDocument
+
 	err = json.Unmarshal(rec.Body.Bytes(), &resp)
 	if err != nil {
 		t.Error("Error unmarshaling response, malformed error document")
@@ -97,6 +99,7 @@ func TestParsePaginationBadRequestInvalidOffset(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	badRequestParsePaginationIntoContext := HandleErrors(parsePaginationIntoContext)
+
 	err := badRequestParsePaginationIntoContext(c)
 	if err != nil {
 		t.Error("something went very wrong - error parsing pagination.")
@@ -105,6 +108,7 @@ func TestParsePaginationBadRequestInvalidOffset(t *testing.T) {
 	templates.BadRequestTest(t, rec)
 
 	var resp util.ErrorDocument
+
 	err = json.Unmarshal(rec.Body.Bytes(), &resp)
 	if err != nil {
 		t.Error("Error unmarshaling response, malformed error document")

@@ -3,7 +3,9 @@ package mocks
 import (
 	"errors"
 	"fmt"
+	"slices"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -15,14 +17,21 @@ type MockApplicationTypeDao struct {
 }
 
 func (mockAppTypeDao *MockApplicationTypeDao) List(_ int, _ int, _ []util.Filter) ([]m.ApplicationType, int64, error) {
-	count := int64(len(mockAppTypeDao.ApplicationTypes))
-	return mockAppTypeDao.ApplicationTypes, count, nil
+	appTypes := []m.ApplicationType{}
+
+	for _, appType := range mockAppTypeDao.ApplicationTypes {
+		if mockAppTypeDao.isAppTypeEnabled(appType) {
+			appTypes = append(appTypes, appType)
+		}
+	}
+
+	return appTypes, int64(len(appTypes)), nil
 }
 
 func (mockAppTypeDao *MockApplicationTypeDao) GetById(id *int64) (*m.ApplicationType, error) {
-	for _, i := range mockAppTypeDao.ApplicationTypes {
-		if i.Id == *id {
-			return &i, nil
+	for _, appType := range mockAppTypeDao.ApplicationTypes {
+		if mockAppTypeDao.isAppTypeEnabled(appType) && appType.Id == *id {
+			return &appType, nil
 		}
 	}
 
@@ -47,16 +56,19 @@ func (mockAppTypeDao *MockApplicationTypeDao) SubCollectionList(primaryCollectio
 	switch object := primaryCollection.(type) {
 	case m.Source:
 		var sourceExists bool
+
 		for _, src := range fixtures.TestSourceData {
 			if src.ID == object.ID {
 				sourceExists = true
 			}
 		}
+
 		if !sourceExists {
 			return nil, 0, util.NewErrNotFound("source")
 		}
 
 		appTypes := make(map[int64]int)
+
 		for _, app := range fixtures.TestApplicationData {
 			if app.SourceID == object.ID {
 				appTypes[app.ApplicationTypeID]++
@@ -65,7 +77,7 @@ func (mockAppTypeDao *MockApplicationTypeDao) SubCollectionList(primaryCollectio
 
 		for _, appType := range mockAppTypeDao.ApplicationTypes {
 			for id := range appTypes {
-				if appType.Id == id {
+				if mockAppTypeDao.isAppTypeEnabled(appType) && appType.Id == id {
 					appTypesOut = append(appTypesOut, appType)
 					break
 				}
@@ -76,6 +88,7 @@ func (mockAppTypeDao *MockApplicationTypeDao) SubCollectionList(primaryCollectio
 	}
 
 	count := int64(len(appTypesOut))
+
 	return appTypesOut, count, nil
 }
 
@@ -101,4 +114,13 @@ func (mockAppTypeDao *MockApplicationTypeDao) ApplicationTypeCompatibleWithSourc
 
 func (mockAppTypeDao *MockApplicationTypeDao) GetByName(_ string) (*m.ApplicationType, error) {
 	return nil, nil
+}
+
+// isAppTypeEnabled returns true when the given application type is enabled.
+func (mockAppTypeDao *MockApplicationTypeDao) isAppTypeEnabled(appType m.ApplicationType) bool {
+	idx := slices.IndexFunc(config.Get().DisabledApplicationTypes, func(disabledAppTypeName string) bool {
+		return disabledAppTypeName == appType.Name
+	})
+
+	return idx == -1
 }

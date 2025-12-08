@@ -85,6 +85,7 @@ func (mockAppDao *MockApplicationDao) Delete(id *int64) (*m.Application, error) 
 			return &app, nil
 		}
 	}
+
 	return nil, util.NewErrNotFound("application")
 }
 
@@ -100,6 +101,7 @@ func (mockAppDao *MockApplicationDao) User() *int64 {
 
 func (mockAppDao *MockApplicationDao) DeleteCascade(applicationId int64) ([]m.ApplicationAuthentication, *m.Application, error) {
 	var application *m.Application
+
 	for _, app := range fixtures.TestApplicationData {
 		if app.ID == applicationId {
 			application = &app

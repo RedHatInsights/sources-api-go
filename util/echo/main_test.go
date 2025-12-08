@@ -20,6 +20,7 @@ func CreateTestContext(method string, path string, body io.Reader, context map[s
 	echoInstance.Binder = &NoUnknownFieldsBinder{}
 	request := httptest.NewRequest(method, path, body)
 	recorder := httptest.NewRecorder()
+
 	echoContext := echoInstance.NewContext(request, recorder)
 	for k, v := range context {
 		echoContext.Set(k, v)

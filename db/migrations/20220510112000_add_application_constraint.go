@@ -9,6 +9,7 @@ import (
 func AddApplicationConstraint() *gormigrate.Migration {
 	type Application struct {
 		gorm.Model
+
 		SourceID          int64 `gorm:"uniqueIndex:applications_app_type_id_source_id_tenant_id_idx"`
 		ApplicationTypeID int64 `gorm:"uniqueIndex:applications_app_type_id_source_id_tenant_id_idx"`
 		TenantID          int64 `gorm:"uniqueIndex:applications_app_type_id_source_id_tenant_id_idx"`

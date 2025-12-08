@@ -26,7 +26,6 @@ func TestSourceTypeList(t *testing.T) {
 	)
 
 	err := SourceTypeList(c)
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -59,6 +58,7 @@ func TestSourceTypeList(t *testing.T) {
 		if !ok {
 			t.Error("model did not deserialize as a application type response")
 		}
+
 		if s["id"] == 1 && s["name"] != "amazon" {
 			t.Error("ghosts infected the return")
 		}
@@ -84,6 +84,7 @@ func TestSourceTypeListBadRequestInvalidFilter(t *testing.T) {
 	)
 
 	badRequestSourceTypeList := ErrorHandlingContext(SourceTypeList)
+
 	err := badRequestSourceTypeList(c)
 	if err != nil {
 		t.Error(err)
@@ -113,6 +114,7 @@ func TestSourceTypeGet(t *testing.T) {
 	}
 
 	var outSrc m.SourceResponse
+
 	err = json.Unmarshal(rec.Body.Bytes(), &outSrc)
 	if err != nil {
 		t.Error("Failed unmarshaling output")
@@ -135,6 +137,7 @@ func TestSourceTypeGetNotFound(t *testing.T) {
 	c.SetParamValues("3098539345")
 
 	notFoundSourceTypeGet := ErrorHandlingContext(SourceTypeGet)
+
 	err := notFoundSourceTypeGet(c)
 	if err != nil {
 		t.Error(err)
@@ -155,6 +158,7 @@ func TestSourceTypeGetBadRequest(t *testing.T) {
 	c.SetParamValues("xxx")
 
 	notFoundSourceTypeGet := ErrorHandlingContext(SourceTypeGet)
+
 	err := notFoundSourceTypeGet(c)
 	if err != nil {
 		t.Error(err)

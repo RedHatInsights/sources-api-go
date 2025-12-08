@@ -38,7 +38,9 @@ func TestGraphQL(t *testing.T) {
 	}
 
 	bytes, _ := io.ReadAll(rec.Body)
+
 	var body map[string]interface{}
+
 	err = json.Unmarshal(bytes, &body)
 	if err != nil {
 		t.Error(err)

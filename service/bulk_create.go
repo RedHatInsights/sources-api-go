@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -51,7 +52,8 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		if err != nil {
 			return err
 		}
-		err = tx.Omit(clause.Associations).Create(&output.Sources[0]).Error
+
+		err = tx.Omit(clause.Associations).Create(&output.Sources).Error
 		if err != nil {
 			return err
 		}
@@ -60,6 +62,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		if err != nil {
 			return err
 		}
+
 		err = tx.Omit(clause.Associations).Create(&output.Applications).Error
 		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
 			return err
@@ -69,6 +72,7 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 		if err != nil {
 			return err
 		}
+
 		err = tx.Create(&output.Endpoints).Error
 		if err != nil && !errors.Is(err, gorm.ErrEmptySlice) {
 			return err
@@ -115,6 +119,11 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 			return err
 		}
 
+		err = setCorrespondingResourcesAsAvailable(tx, output.Sources, output.Applications, output.Authentications)
+		if err != nil {
+			return fmt.Errorf(`unable to override the sources' or applications' availability status to "available": %w`, err)
+		}
+
 		return nil
 	})
 
@@ -159,8 +168,11 @@ func parseSources(reqSources []m.BulkCreateSource, tenant *m.Tenant, userResourc
 
 	for i, source := range reqSources {
 		s := m.Source{}
-		var sourceType *m.SourceType
-		var err error
+
+		var (
+			sourceType *m.SourceType
+			err        error
+		)
 
 		switch {
 		case source.SourceTypeIDRaw != nil:
@@ -327,6 +339,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		if err != nil {
 			return nil, err
 		}
+
 		err = a.SetExtra(auth.Extra)
 		if err != nil {
 			return nil, err
@@ -341,6 +354,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		id, err := strconv.ParseInt(auth.ResourceName, 10, 64)
 		if err == nil {
 			var err error
+
 			switch strings.ToLower(auth.ResourceType) {
 			case "source":
 				_, err = dao.GetSourceDao(&dao.RequestParams{TenantID: &tenant.Id, UserID: &userResource.User.Id}).GetById(&id)
@@ -348,6 +362,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					l.Log.Debugf("Found existing Source with id %v, adding to list and continuing", id)
 					a.ResourceID = id
 					authentications = append(authentications, a)
+
 					continue
 				}
 			case "application":
@@ -356,6 +371,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					l.Log.Debugf("Found existing Application with id %v, adding to list and continuing", id)
 					a.ResourceID = id
 					authentications = append(authentications, a)
+
 					continue
 				}
 			case "endpoint":
@@ -364,6 +380,7 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 					l.Log.Debugf("Found existing Endpoint with id %v, adding to list and continuing", id)
 					a.ResourceID = id
 					authentications = append(authentications, a)
+
 					continue
 				}
 			}
@@ -410,7 +427,8 @@ func linkUpAuthentications(req m.BulkCreateRequest, current *m.BulkCreateOutput,
 		auth.ResourceIDRaw = a.ResourceID
 		auth.ResourceType = a.ResourceType
 
-		if err := ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest); err != nil {
+		err = ValidateAuthenticationCreationRequest(&auth.AuthenticationCreateRequest)
+		if err != nil {
 			return nil, fmt.Errorf("validation failed for authentication: %w", err)
 		}
 
@@ -463,6 +481,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 	go func() {
 		for i := range out.Sources {
 			src := out.Sources[i]
+
 			err := RaiseEvent("Source.create", &src, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)
@@ -471,6 +490,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 
 		for i := range out.Endpoints {
 			endpt := out.Endpoints[i]
+
 			err := RaiseEvent("Endpoint.create", &endpt, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)
@@ -495,6 +515,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 
 		for i := range out.ApplicationAuthentications {
 			appAuth := out.ApplicationAuthentications[i]
+
 			err := RaiseEvent("ApplicationAuthentication.create", &appAuth, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)
@@ -503,6 +524,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 
 		for i := range out.Authentications {
 			auth := out.Authentications[i]
+
 			err := RaiseEvent("Authentication.create", &auth, headers)
 			if err != nil {
 				l.Log.Warnf("Failed to raise event: %v", err)
@@ -569,4 +591,108 @@ func userResourceFromBulkCreateApplications(user *m.User, applications []m.BulkC
 	}
 
 	return userResource, nil
+}
+
+// setCorrespondingResourcesAsAvailable overrides the sources', applications'
+// and authentications' availability status and sets them to "available", for
+// those source and application combinations that do not have or cannot perform
+// availability checks.
+func setCorrespondingResourcesAsAvailable(tx *gorm.DB, sources []m.Source, applications []m.Application, authentications []m.Authentication) error {
+	sourcesToUpdate := []int64{}
+	applicationsToUpdate := []int64{}
+
+	// Identify which sources and applications need their availability status
+	// to be overridden.
+	for i, source := range sources {
+		shouldSourceBeUpdated := false
+
+		for j, application := range applications {
+			if application.SourceID == source.ID && shouldSourceApplicationSetAvailable(source, application) {
+				// We need to update the collection's element's availability
+				// status directly, as the "application" variable holds a copy
+				// of the struct.
+				applications[j].AvailabilityStatus = m.Available
+
+				applicationsToUpdate = append(applicationsToUpdate, applications[j].ID)
+
+				shouldSourceBeUpdated = true
+			}
+		}
+
+		if shouldSourceBeUpdated {
+			// We need to update the collection's element's availability
+			// status directly, as the "source" variable holds a copy of the
+			// struct.
+			sources[i].AvailabilityStatus = m.Available
+
+			sourcesToUpdate = append(sourcesToUpdate, sources[i].ID)
+		}
+	}
+
+	// Identify which authentications need their availability status to be
+	// overridden.
+	authenticationsToUpdate := []int64{}
+	for i, authentication := range authentications {
+		idx := slices.IndexFunc(sourcesToUpdate, func(sourceId int64) bool {
+			return authentication.ResourceType == "Source" && sourceId == authentication.ResourceID
+		})
+
+		if idx != -1 {
+			// We need to update the collection's element's availability
+			// status directly, as the "authentication" variable holds a copy
+			// of the struct.
+			authentications[i].AvailabilityStatus = util.StringRef(m.Available)
+
+			authenticationsToUpdate = append(authenticationsToUpdate, authentications[i].DbID)
+
+			continue
+		}
+
+		idx = slices.IndexFunc(applicationsToUpdate, func(applicationId int64) bool {
+			return authentication.ResourceType == "Application" && applicationId == authentication.ResourceID
+		})
+
+		if idx != -1 {
+			// We need to update the collection's element's availability
+			// status directly, as the "authentication" variable holds a copy
+			// of the struct.
+			authentications[i].AvailabilityStatus = util.StringRef(m.Available)
+
+			authenticationsToUpdate = append(authenticationsToUpdate, authentications[i].DbID)
+		}
+	}
+
+	// Update the sources' availability status.
+	if len(sourcesToUpdate) > 0 {
+		err := tx.Model(m.Source{}).Where("id IN ?", sourcesToUpdate).UpdateColumn("availability_status", m.Available).Error
+		if err != nil {
+			return fmt.Errorf(`unable to override the sources' availability status to "available": %w`, err)
+		}
+	}
+
+	// Update the applications' availability status.
+	if len(applicationsToUpdate) > 0 {
+		err := tx.Model(m.Application{}).Where("id IN ?", applicationsToUpdate).UpdateColumn("availability_status", m.Available).Error
+		if err != nil {
+			return fmt.Errorf(`unable to override the applications' availability status to "available": %w`, err)
+		}
+	}
+
+	// Update the authentications' availability status.
+	if len(authenticationsToUpdate) > 0 {
+		err := tx.Model(m.Authentication{}).Where("id IN ?", authenticationsToUpdate).UpdateColumn("availability_status", m.Available).Error
+		if err != nil {
+			return fmt.Errorf(`unable to override the authentications' availability status to "available": %w`, err)
+		}
+	}
+
+	return nil
+}
+
+// shouldSourceApplicationSetAvailable returns true if the given source and
+// application pairs should have their availability status set to
+// "available".
+func shouldSourceApplicationSetAvailable(source m.Source, application m.Application) bool {
+	return source.SourceType.Name == "amazon" && application.ApplicationType.Name == "/insights/platform/image-builder" ||
+		source.SourceType.Name == "google" && application.ApplicationType.Name == "/insights/platform/cloud-meter"
 }

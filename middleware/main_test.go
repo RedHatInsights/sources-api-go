@@ -9,7 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/parser"
 	"github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/labstack/echo/v4"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 var (
@@ -25,6 +25,7 @@ func TestMain(t *testing.M) {
 	xrhid = string(base64.StdEncoding.EncodeToString(rawId))
 
 	logger.InitLogger(conf)
+
 	e = echo.New()
 	code := t.Run()
 	os.Exit(code)

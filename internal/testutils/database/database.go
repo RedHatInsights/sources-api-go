@@ -26,7 +26,6 @@ func ConnectToTestDB(dbSchema string) {
 			TablePrefix: dbSchema + ".",
 		},
 	})
-
 	if err != nil {
 		log.Fatalf("db does not exist - create the database '%s' first with '-createdb'. Error: %s", testDbName, err)
 	}
@@ -39,6 +38,7 @@ func ConnectToTestDB(dbSchema string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	rawDB.SetMaxOpenConns(20)
 
 	// Set the dao.DB in case any tests want to use it
@@ -74,6 +74,7 @@ func CreateFixtures(schema string) {
 // successful.
 func CreateTestDB() {
 	fmt.Printf("Creating database '%s'...", testDbName)
+
 	db, err := gorm.Open(postgres.Open(testDbString("postgres")), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error opening the database connection: %s", err)
@@ -99,15 +100,14 @@ func DropSchema(dbSchema string) {
 	if result.Error != nil {
 		log.Fatalf("Error in drop schema %s %s: ", dbSchema, result.Error.Error())
 	}
-
 }
 
 // MigrateSchema migrates all the models.
 func MigrateSchema() {
 	// Perform the migrations and store the error for a proper return.
 	migrateTool := gormigrate.New(dao.DB, gormigrate.DefaultOptions, migrations.MigrationsCollection)
-	err := migrateTool.Migrate()
 
+	err := migrateTool.Migrate()
 	if err != nil {
 		log.Fatalf(`error migrating the schema: %s`, err)
 	}
@@ -165,4 +165,45 @@ func ConnectAndMigrateDB(packageName string) {
 	if out := dao.DB.Exec(`SET search_path TO "$user", ` + packageName); out.Error != nil {
 		log.Fatalf("error in setting schema" + out.Error.Error())
 	}
+}
+
+// CloseConnection closes the connection to the database. Useful to avoid the "max connections reached" error due to
+// the many database tests we have.
+func CloseConnection() {
+	connection, err := dao.DB.DB()
+	if err != nil {
+		log.Fatalf(`could not get the database connection: %s`, err)
+	}
+
+	err = connection.Close()
+	if err != nil {
+		log.Fatalf(`could not close the connection to the database: %s`, err)
+	}
+}
+
+// SwitchSchema switches the schema to the specified one, migrates the schema and creates the fixtures for it.
+func SwitchSchema(schema string) {
+	CloseConnection()
+	ConnectToTestDB(schema)
+
+	err := dao.DB.
+		Debug().
+		Exec(fmt.Sprintf(`CREATE SCHEMA IF NOT EXISTS %s`, schema)).
+		Error
+	if err != nil {
+		log.Fatalf(`could not create schema "%s": %s`, schema, err)
+	}
+
+	// Set the database's search path to the schema, so that no prefix needs to be added by default to the tables in
+	// the queries.
+	err = dao.DB.
+		Debug().
+		Exec(fmt.Sprintf(`SET search_path TO %s`, schema)).
+		Error
+	if err != nil {
+		log.Fatalf(`could not switch schema to "%s": %s`, schema, err)
+	}
+
+	MigrateSchema()
+	CreateFixtures(schema)
 }

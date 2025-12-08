@@ -7,7 +7,7 @@ import (
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/google/uuid"
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
 func CreateTenantForAccountNumber(accountNumber string) (*int64, error) {
@@ -16,6 +16,7 @@ func CreateTenantForAccountNumber(accountNumber string) (*int64, error) {
 	}
 
 	tenantDao := GetTenantDao()
+
 	tenant, err := tenantDao.GetOrCreateTenant(&identityStruct)
 	if err != nil {
 		return nil, fmt.Errorf("error getting or creating the tenant")
@@ -26,6 +27,7 @@ func CreateTenantForAccountNumber(accountNumber string) (*int64, error) {
 
 func CreateUserForUserID(userIDFromHeader string, tenantID int64) (*m.User, error) {
 	userDao := GetUserDao(&tenantID)
+
 	user, err := userDao.FindOrCreate(userIDFromHeader)
 	if err != nil {
 		return nil, fmt.Errorf("error getting or creating the user")
@@ -40,6 +42,7 @@ func CreateSource(sourceTypeID int64, tenantID int64, userID *int64) (*m.Source,
 	source := &m.Source{Name: name, UserID: userID, SourceTypeID: sourceTypeID, Uid: &uid}
 	requestParamsForCreate := &RequestParams{TenantID: &tenantID, UserID: userID}
 	sourceDaoForCreate := GetSourceDao(requestParamsForCreate)
+
 	err := sourceDaoForCreate.Create(source)
 	if err != nil {
 		return nil, fmt.Errorf("error creating the source")
@@ -52,6 +55,7 @@ func CreateApplication(sourceID int64, applicationTypeID int64, tenantID int64, 
 	app := &m.Application{UserID: userID, ApplicationTypeID: applicationTypeID, SourceID: sourceID}
 	requestParamsForCreate := &RequestParams{TenantID: &tenantID, UserID: userID}
 	appDaoForCreate := GetApplicationDao(requestParamsForCreate)
+
 	err := appDaoForCreate.Create(app)
 	if err != nil {
 		return nil, fmt.Errorf("error creating the application")
@@ -65,6 +69,7 @@ func CreateAuthenticationFromApplication(appID int64, tenantID int64, userID *in
 	auth := &m.Authentication{Name: &name, UserID: userID, ResourceType: "Application", ResourceID: appID}
 	requestParamsForCreate := &RequestParams{TenantID: &tenantID, UserID: userID}
 	authDaoForCreate := GetAuthenticationDao(requestParamsForCreate)
+
 	err := authDaoForCreate.Create(auth)
 	if err != nil {
 		return nil, fmt.Errorf("error creating the application")
@@ -77,6 +82,7 @@ func CreateApplicationAuthentication(authID int64, appID int64, hello int64, use
 	aa := &m.ApplicationAuthentication{UserID: userID, ApplicationID: appID, AuthenticationID: authID}
 	requestParamsForCreate := &RequestParams{TenantID: &hello, UserID: userID}
 	appAuthDaoForCreate := GetApplicationAuthenticationDao(requestParamsForCreate)
+
 	err := appAuthDaoForCreate.Create(aa)
 	if err != nil {
 		return nil, fmt.Errorf("error creating the application")
@@ -93,14 +99,17 @@ func CreateSourceWithSubResources(sourceTypeID int64, applicationTypeID int64, a
 		return nil, nil, err
 	}
 
-	var userID *int64
-	var user *m.User
+	var (
+		userID *int64
+		user   *m.User
+	)
 
 	if userIDFromHeader != nil {
 		user, err = CreateUserForUserID(*userIDFromHeader, *tenantID)
 		if err != nil {
 			return nil, nil, err
 		}
+
 		userID = &user.Id
 	}
 
@@ -243,6 +252,7 @@ func TestSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnership
 
 	applicationTypeID := fixtures.TestApplicationTypeData[3].Id
 	sourceTypeID := fixtures.TestSourceTypeData[2].Id
+
 	resourcesUserA, userA, err := CreateSourceWithSubResources(sourceTypeID, applicationTypeID, accountNumber, &userIDA)
 	if err != nil {
 		return fmt.Errorf("unable to create source with subresources: %v for user %v", err, userIDA)
@@ -301,5 +311,6 @@ func CreateSecretByName(name string, tenantID *int64, userID *int64) (*m.Authent
 	}
 
 	err := secretDao.Create(secret)
+
 	return secret, err
 }

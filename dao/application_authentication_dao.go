@@ -65,7 +65,6 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByApplicati
 		Where("tenant_id = ?", a.TenantID).
 		Find(&applicationAuthentications).
 		Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +104,6 @@ func (a *applicationAuthenticationDaoImpl) ApplicationAuthenticationsByAuthentic
 		Where("tenant_id = ?", a.TenantID).
 		Find(&applicationAuthentications).
 		Error
-
 	if err != nil {
 		return nil, err
 	}
@@ -137,6 +135,7 @@ func (a *applicationAuthenticationDaoImpl) List(limit int, offset int, filters [
 	if result.Error != nil {
 		return nil, 0, util.NewErrBadRequest(result.Error)
 	}
+
 	return appAuths, count, nil
 }
 
@@ -147,7 +146,6 @@ func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAut
 		Where("id = ?", *id).
 		First(&appAuth).
 		Error
-
 	if err != nil {
 		return nil, util.NewErrNotFound("application authentication")
 	}
@@ -157,6 +155,7 @@ func (a *applicationAuthenticationDaoImpl) GetById(id *int64) (*m.ApplicationAut
 
 func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthentication) error {
 	appAuth.TenantID = *a.TenantID
+
 	err := DB.Debug().Create(appAuth).Error
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID}).Errorf(`Unable to create application authentication: %s`, err)
@@ -170,7 +169,6 @@ func (a *applicationAuthenticationDaoImpl) Create(appAuth *m.ApplicationAuthenti
 
 func (a *applicationAuthenticationDaoImpl) Update(appAuth *m.ApplicationAuthentication) error {
 	err := a.getDb().Updates(appAuth).Error
-
 	if err != nil {
 		logger.Log.WithFields(logrus.Fields{"tenant_id": *a.TenantID, "application_authentication_id": appAuth.ID}).Errorf(`Unable to update application authentication: %s`, err)
 

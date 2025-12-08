@@ -46,7 +46,7 @@ amazon:
       - name: authentication.extra.external_id
         component: text-field
         hideField: true
-        initializeOnMount: true   
+        initializeOnMount: true
       - name: authentication.username
         stepKey: arn
         component: text-field
@@ -62,7 +62,7 @@ amazon:
         name: application.extra.metered
         label: Metered Product
         simpleValue: true
-        options: 
+        options:
           - label: None
             value: ""
           - label: Red Hat Enterprise Linux
@@ -90,25 +90,27 @@ amazon:
       - name: authentication.extra.external_id
         component: text-field
         hideField: true
-        initializeOnMount: true       
-    - type: provisioning-arn
-      name: Provisioning's ARN
+        initializeOnMount: true
+    - type: image-builder-aws-account-id
+      name: Image Builder AWS Account ID
       fields:
-        - component: text-field
-          name: authentication.authtype
+        - name: authentication.authtype
+          component: text-field
           hideField: true
           initializeOnMount: true
-          initialValue: provisioning-arn
+          initialValue: image-builder-aws-account-id
         - name: authentication.username
           component: text-field
-          label: ARN
+          label: Account ID
           isRequired: true
           validate:
-            - type: required
-            - type: pattern
-              pattern: "^arn:aws:.*"
-            - type: min-length
-              threshold: 10
+          - type: required
+          - type: pattern
+            pattern: "^\\d{12}$"
+          - type: max-length
+            threshold: 12
+          - type: min-length
+            threshold: 12
   vendor: Amazon
   icon_url: "/apps/frontend-assets/partners-icons/aws-long.svg"
 google:
@@ -146,17 +148,6 @@ google:
           pattern: "^[a-z0-9_.-]+$"
         - type: min-length
           threshold: 3
-    - type: provisioning_project_id
-      name: Provisioning — project ID
-      fields:
-        - component: text-field
-          name: authentication.authtype
-          hideField: true
-          initializeOnMount: true
-          initialValue: provisioning_project_id
-        - component: text-field
-          name: authentication.username
-          label: Project ID
 azure:
   product_name: Microsoft Azure
   category: Cloud
@@ -178,20 +169,6 @@ azure:
         isRequired: true
         validate:
         - type: required
-    - type: provisioning_lighthouse_subscription_id
-      name: Provisioning — Subscription ID
-      fields:
-        - component: text-field
-          name: authentication.authtype
-          hideField: true
-          initializeOnMount: true
-          initialValue: provisioning_lighthouse_subscription_id
-        - component: text-field
-          name: authentication.username
-          label: Subscription ID
-          isRequired: true
-          validate:
-            - type: required
     - type: tenant_id_client_id_client_secret
       name: Tenant ID, Client ID, Client Secret
       fields:
@@ -234,7 +211,7 @@ azure:
         name: application.extra.metered
         label: Metered Product
         simpleValue: true
-        options: 
+        options:
           - label: None
             value: ""
           - label: Red Hat Enterprise Linux
@@ -389,27 +366,7 @@ quay:
           - component: text-field
             name: authentication.password
             label: Quay account's encrypted password
-rh-marketplace:
-  product_name: Red Hat Marketplace
-  category: Red Hat
-  vendor: Red Hat
-  icon_url: "/apps/frontend-assets/red-hat-logos/stacked.svg"
-  schema:
-    authentication:
-    - type: marketplace-token
-      name: API Token
-      fields:
-      - component: text-field
-        name: authentication.authtype
-        hideField: true
-        initializeOnMount: true
-        initialValue: token
-      - component: text-field
-        name: authentication.password
-        label: API Token
-        isRequired: true
-        validate:
-        - type: required
+
 satellite:
   product_name: Red Hat Satellite
   category: Red Hat

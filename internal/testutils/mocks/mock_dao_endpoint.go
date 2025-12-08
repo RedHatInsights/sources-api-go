@@ -14,14 +14,18 @@ type MockEndpointDao struct {
 
 func (mockEndpointDao *MockEndpointDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.Endpoint, int64, error) {
 	// Return not found err when the source doesn't exist
-	var sourceExist bool
-	var sourceId int64
+	var (
+		sourceExist bool
+		sourceId    int64
+	)
+
 	switch object := primaryCollection.(type) {
 	case m.Source:
 		for _, source := range fixtures.TestSourceData {
 			if object.ID == source.ID {
 				sourceExist = true
 				sourceId = object.ID
+
 				break
 			}
 		}
@@ -35,6 +39,7 @@ func (mockEndpointDao *MockEndpointDao) SubCollectionList(primaryCollection inte
 
 	// Get list of endpoints for existing source
 	var endpointsOut []m.Endpoint
+
 	for _, e := range mockEndpointDao.Endpoints {
 		if e.SourceID == sourceId {
 			endpointsOut = append(endpointsOut, e)
@@ -79,6 +84,7 @@ func (mockEndpointDao *MockEndpointDao) Delete(id *int64) (*m.Endpoint, error) {
 			return &e, nil
 		}
 	}
+
 	return nil, util.NewErrNotFound("endpoint")
 }
 

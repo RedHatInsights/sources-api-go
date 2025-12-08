@@ -36,6 +36,7 @@ func TestMain(t *testing.M) {
 		sourceDao = dao.GetSourceDao(requestParams)
 
 		database.CreateFixtures("service")
+
 		err := dao.PopulateStaticTypeCache()
 		if err != nil {
 			panic("failed to populate static type cache")
