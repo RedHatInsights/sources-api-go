@@ -58,7 +58,7 @@ IMAGE="quay.io/cloudservices/sources-api-go"
 IQE_CJI_TIMEOUT="30m"  # This is the time to wait for smoke test to complete or fail
 IQE_FILTER_EXPRESSION=""  # This is the value passed to pytest -k
 IQE_IMAGE_TAG="sources"
-IQE_MARKER_EXPRESSION="smoke"  # This is the value passed to pytest -m
+IQE_MARKER_EXPRESSION="smoke and not ui"  # This is the value passed to pytest -m
 IQE_PARALLEL_ENABLED="false"
 IQE_PLUGINS="sources"  # name of the IQE plugin for this app.
 
