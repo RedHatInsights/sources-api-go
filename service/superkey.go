@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
+	kg "github.com/segmentio/kafka-go"
+
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
@@ -132,6 +134,8 @@ func produceSuperkeyRequest(m *kafka.Message) error {
 	if err != nil {
 		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
 	}
+
+	writer.Balancer = &kg.RoundRobin{}
 
 	defer kafka.CloseWriter(writer, "produce superkey request")
 
