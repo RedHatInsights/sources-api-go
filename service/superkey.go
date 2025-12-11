@@ -1,10 +1,10 @@
 package service
 
 import (
-//	"fmt"
+	//	"fmt"
 	"strconv"
 
-//	kg "github.com/segmentio/kafka-go"
+	//	kg "github.com/segmentio/kafka-go"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -19,7 +19,6 @@ const superkeyRequestedTopic = "platform.sources.superkey-requests"
 var superkeyTopic = config.Get().KafkaTopic(superkeyRequestedTopic)
 
 var kafkaWriter *kafka.Writer
-
 
 func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
@@ -129,7 +128,7 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 }
 
 func init() {
-    var err error
+	var err error
 	kafkaWriter, err = kafka.GetWriter(&kafka.Options{
 		BrokerConfig: conf.KafkaBrokerConfig,
 		Topic:        superkeyTopic,
@@ -142,22 +141,22 @@ func init() {
 }
 
 func produceSuperkeyRequest(m *kafka.Message) error {
-    /*
-	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: conf.KafkaBrokerConfig,
-		Topic:        superkeyTopic,
-		Logger:       l.Log,
-	})
-	if err != nil {
-		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
-	}
+	/*
+		writer, err := kafka.GetWriter(&kafka.Options{
+			BrokerConfig: conf.KafkaBrokerConfig,
+			Topic:        superkeyTopic,
+			Logger:       l.Log,
+		})
+		if err != nil {
+			return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
+		}
 
-	writer.Balancer = &kg.RoundRobin{}
+		writer.Balancer = &kg.RoundRobin{}
 
-	defer kafka.CloseWriter(writer, "produce superkey request")
-    */
+		defer kafka.CloseWriter(writer, "produce superkey request")
+	*/
 
-    err := kafka.Produce(kafkaWriter, m)
+	err := kafka.Produce(kafkaWriter, m)
 	if err != nil {
 		return err
 	}
