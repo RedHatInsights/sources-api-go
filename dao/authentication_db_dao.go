@@ -22,7 +22,7 @@ func (add *authenticationDaoDbImpl) getDb() *gorm.DB {
 		panic("nil tenant found in sourceDaoImpl DAO")
 	}
 
-	query := DB.Debug().WithContext(add.ctx)
+	query := getDBForSensitiveOperation().WithContext(add.ctx)
 	query = query.Where("tenant_id = ?", add.TenantID)
 
 	if add.UserID != nil {
@@ -83,7 +83,7 @@ func (add *authenticationDaoDbImpl) ListForSource(sourceID int64, limit, offset 
 	// Check that the source exists before continuing.
 	var sourceExists bool
 
-	err := DB.Debug().
+	err := getDBForSensitiveOperation().
 		Model(&m.Source{}).
 		Select(`1`).
 		Where(`id = ?`, sourceID).
@@ -131,7 +131,7 @@ func (add *authenticationDaoDbImpl) ListForApplication(applicationID int64, limi
 	// Check that the application exists before continuing.
 	var applicationExists bool
 
-	err := DB.Debug().
+	err := getDBForSensitiveOperation().
 		Model(&m.Application{}).
 		Select(`1`).
 		Where(`id = ?`, applicationID).
@@ -205,7 +205,7 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 	// Check that the endpoint exists before continuing.
 	var endpointExists bool
 
-	err := DB.Debug().
+	err := getDBForSensitiveOperation().
 		Model(&m.Endpoint{}).
 		Select(`1`).
 		Where(`id = ?`, endpointID).
@@ -253,7 +253,7 @@ func (add *authenticationDaoDbImpl) ListForEndpoint(endpointID int64, limit, off
 }
 
 func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) error {
-	query := DB.Debug().
+	query := getDBForSensitiveOperation().
 		Where("tenant_id = ?", *add.TenantID)
 
 	switch strings.ToLower(authentication.ResourceType) {
@@ -302,8 +302,7 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 
 	authentication.TenantID = *add.TenantID // the TenantID gets injected in the middleware
 
-	err := DB.
-		Debug().
+	err := getDBForSensitiveOperation().
 		Create(authentication).
 		Error
 	if err != nil {
@@ -321,7 +320,7 @@ func (add *authenticationDaoDbImpl) Create(authentication *m.Authentication) err
 // resource doesn't exist yet and we know the source ID is set beforehand.
 func (add *authenticationDaoDbImpl) BulkCreate(auth *m.Authentication) error {
 	auth.TenantID = *add.TenantID // the TenantID gets injected in the middleware
-	return DB.Debug().Create(auth).Error
+	return getDBForSensitiveOperation().Create(auth).Error
 }
 
 func (add *authenticationDaoDbImpl) Update(authentication *m.Authentication) error {
@@ -455,8 +454,7 @@ func (add *authenticationDaoDbImpl) ToEventJSON(resource util.Resource) ([]byte,
 func (add *authenticationDaoDbImpl) ListIdsForResource(resourceType string, resourceIds []int64) ([]m.Authentication, error) {
 	var authentications []m.Authentication
 
-	err := DB.
-		Debug().
+	err := getDBForSensitiveOperation().
 		Model(m.Authentication{}).
 		Where("resource_type = ?", resourceType).
 		Where("resource_id IN ?", resourceIds).
@@ -485,8 +483,7 @@ func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authenticatio
 	// be called with a "len(authentications) != 0" slice, but just to be safe...
 	var dbAuths []m.Authentication
 
-	err := DB.
-		Debug().
+	err := getDBForSensitiveOperation().
 		Preload("Tenant").
 		Where("id IN ?", authIds).
 		Where("tenant_id = ?", add.TenantID).
@@ -497,8 +494,7 @@ func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authenticatio
 	}
 
 	if len(dbAuths) != 0 {
-		err = DB.
-			Debug().
+		err = getDBForSensitiveOperation().
 			Where("tenant_id = ?", add.TenantID).
 			Delete(&dbAuths).
 			Error

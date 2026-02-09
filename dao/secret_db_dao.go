@@ -20,7 +20,7 @@ func (secret *secretDaoDbImpl) getDb() *gorm.DB {
 		panic("nil tenant found in sourceDaoImpl DAO")
 	}
 
-	query := DB.Debug().WithContext(secret.ctx)
+	query := getDBForSensitiveOperation().WithContext(secret.ctx)
 	query = query.Where("tenant_id = ?", secret.TenantID)
 	query = query.Where("resource_type = ?", secretResourceType)
 
@@ -56,8 +56,7 @@ func (secret *secretDaoDbImpl) Create(authentication *m.Authentication) error {
 	authentication.ResourceType = secretResourceType
 	authentication.ResourceID = *secret.TenantID
 
-	err := DB.
-		Debug().
+	err := getDBForSensitiveOperation().
 		Create(authentication).
 		Error
 	if err != nil {

@@ -4,14 +4,26 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/RedHatInsights/sources-api-go/config"
 	m "github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
+	"gorm.io/gorm"
 )
 
 const (
 	DefaultLimit  = 100
 	DefaultOffset = 0
 )
+
+// getDBForSensitiveOperation returns a DB instance for sensitive operations
+// (authentication/secrets). SQL logging is only enabled when LOG_LEVEL=DEBUG.
+// This prevents sensitive data from appearing in logs at INFO level and above.
+func getDBForSensitiveOperation() *gorm.DB {
+	if strings.ToUpper(config.Get().LogLevel) == "DEBUG" {
+		return DB.Debug()
+	}
+	return DB
+}
 
 func GetFromResourceType(resourceType string, tenantID int64) (m.EventModelDao, error) {
 	var resource m.EventModelDao

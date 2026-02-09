@@ -234,5 +234,12 @@ func InitLogger(config *appconf.SourcesApiConfig) {
 		ReportCaller: true,
 	}
 
+	// Log a warning if using database secret store in production
+	if config.SecretStore == appconf.DatabaseStore && (config.Env == "prod" || config.Env == "stage") {
+		Log.Warn("SECURITY WARNING: Using database secret store in production. " +
+			"Consider using 'secrets-manager' or 'vault' for enhanced security. " +
+			"Set SECRET_STORE environment variable to change.")
+	}
+
 	AddHooksTo(Log, config)
 }
