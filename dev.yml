@@ -1,0 +1,17 @@
+# This docker-compose file spins up containers for kafka, zookeeper, and the receptor controller
+
+version: "3"
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+        POSTGRES_PASSWORD: insights
+        POSTGRES_USER: insights
+        POSTGRES_DB: sources-db
+    ports:
+        - "5442:5432"
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
