@@ -5,8 +5,8 @@ Here lies the source code for the Sources API re-write, based on the [original R
 
 ### Quick Info
 - Written in Go, using [echo](https://echo.labstack.com/) to handle HTTP routing layer + middleware
-- using [GORM](gorm.io) for the DAO layer and interacting with the database
-- clowder enabled
+- Using [GORM](gorm.io) for the DAO layer and interacting with the database
+- Clowder enabled
 
 ### Repo Layout
 |Folder/File   | Contents  |
