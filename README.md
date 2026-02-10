@@ -28,7 +28,26 @@ Here lies the source code for the Sources API re-write, based on the [original R
     - `make debug` to run `dlv debug`, allowing setting of breakpoints etc
     - `make tidy` to check go files for new imports and add them to `go.sum`
     - `make lint` to run the same linters as the PR action, and print errors.
-- Tests are currently in the same package adjacent to the source file. ex: `source_handlers.go` -> `source_handlers_test.go`, just using the standard library testing library. May change in the future. 
+- Tests are currently in the same package adjacent to the source file. ex: `source_handlers.go` -> `source_handlers_test.go`, just using the standard library testing library. May change in the future.
+
+### Logging
+
+The application uses the `LOG_LEVEL` environment variable to control log verbosity:
+
+| LOG_LEVEL | Description |
+|-----------|-------------|
+| `TRACE` | Most verbose. Includes SQL queries (including sensitive authentication data). **Use only for local debugging.** |
+| `DEBUG` | Debug logging without SQL queries. Safe for production. |
+| `INFO` | Standard logging (default). |
+| `WARN` | Warnings and errors only. |
+| `ERROR` | Errors only. |
+
+To enable SQL logging for debugging:
+```bash
+LOG_LEVEL=TRACE ./sources-api-go
+```
+
+> **⚠️ Warning:** Never use `LOG_LEVEL=TRACE` in production as it may expose sensitive data (passwords, secrets) in logs. 
 
 ### Launch the integration tests
 
