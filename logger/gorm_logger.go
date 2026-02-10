@@ -46,7 +46,9 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql 
 	case elapsed > l.SlowThreshold && l.SlowThreshold != 0:
 		entry.WithFields(sqlFields).Warn("SLOW SQL: " + sql)
 	default:
-		entry.WithFields(sqlFields).Debug(sql)
+		// Use Trace level for SQL logging so it's only shown when LOG_LEVEL=TRACE.
+		// This prevents sensitive data from appearing in logs at DEBUG level and above.
+		entry.WithFields(sqlFields).Trace(sql)
 	}
 }
 

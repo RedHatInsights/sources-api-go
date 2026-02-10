@@ -16,10 +16,10 @@ const (
 )
 
 // getDBForSensitiveOperation returns a DB instance for sensitive operations
-// (authentication/secrets). SQL logging is only enabled when LOG_LEVEL=DEBUG.
-// This prevents sensitive data from appearing in logs at INFO level and above.
+// (authentication/secrets). SQL logging is only enabled when LOG_LEVEL=TRACE.
+// This prevents sensitive data from appearing in logs at DEBUG level and above.
 func getDBForSensitiveOperation() *gorm.DB {
-	if strings.ToUpper(config.Get().LogLevel) == "DEBUG" {
+	if strings.ToUpper(config.Get().LogLevel) == "TRACE" {
 		return DB.Debug()
 	}
 	return DB

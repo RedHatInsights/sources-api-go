@@ -86,6 +86,8 @@ func parseLogLevel(configLogLevel string) logrus.Level {
 	var logLevel logrus.Level
 
 	switch strings.ToUpper(configLogLevel) {
+	case "TRACE":
+		logLevel = logrus.TraceLevel
 	case "DEBUG":
 		logLevel = logrus.DebugLevel
 	case "ERROR":
