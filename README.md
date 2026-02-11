@@ -37,6 +37,8 @@ In order to launch the integration tests just do the following:
 - Launch a test database with the following command: `podman run --rm --name sources_test -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=sources_api_test_go -p 5432:5432 --rm docker.io/postgres:13 postgres -c log_statement=all`
 - Launch the tests themselves: `DATABASE_HOST=localhost DATABASE_PORT=5432 DATABASE_USER=postgres DATABASE_PASSWORD=postgres make alltest`
 
+## Test
+
 ## License
 
 This project is available as open source under the terms of the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
