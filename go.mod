@@ -31,7 +31,7 @@ require (
 	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/redhatinsights/platform-go-middlewares v1.0.0
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0
-	github.com/redhatinsights/sources-superkey-worker v0.0.0-20251029212439-422f89554aae
+	github.com/redhatinsights/sources-superkey-worker v0.0.0-20260212142623-9cd58dd9fff5
 	github.com/segmentio/kafka-go v0.4.49
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.21.0
