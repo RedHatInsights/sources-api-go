@@ -15,7 +15,7 @@ require (
 	github.com/aws/smithy-go v1.24.0
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/go-gormigrate/gormigrate/v2 v2.1.5
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redis/redis/v9 v9.18.0
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
