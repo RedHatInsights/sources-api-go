@@ -2,6 +2,7 @@ package statuslistener
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"sort"
 	"strings"
@@ -84,6 +85,12 @@ func (avs *AvailabilityStatusListener) subscribeToAvailabilityStatus(shutdown ch
 }
 
 func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Message) {
+	l.Log.WithFields(logrus.Fields{
+		"kafka_headers":     message.Headers,
+		"kafka_message":     message.Value,
+		"kafka_message_key": message.Key,
+	}).Tracef("Kafka message received")
+
 	// if it's a healthcheck message it isn't really an invalid type, but we
 	// don't need to do anything with it
 	if message.GetHeader("event_type") == eventHealthcheck {
@@ -111,13 +118,19 @@ func (avs *AvailabilityStatusListener) ConsumeStatusMessage(message kafka.Messag
 
 	statusMessage.ResourceID = id
 
-	l.Log.Infof("Kafka message %s, %s received with payload: %s", message.Headers, message.Key, message.Value)
-
 	headers := message.TranslateHeaders()
 	avs.processEvent(statusMessage, headers)
 }
 
 func (avs *AvailabilityStatusListener) processEvent(statusMessage types.StatusMessage, headers []kafka.Header) {
+	l.Log.WithFields(logrus.Fields{
+		"headers":       headers,
+		"resource_type": statusMessage.ResourceType,
+		"resource_id":   statusMessage.ResourceIDRaw,
+		"status":        statusMessage.Status,
+		"error":         statusMessage.Error,
+	}).Debugf("Status message received")
+
 	resource := &util.Resource{}
 
 	resource, err := util.ParseStatusMessageToResource(resource, statusMessage)

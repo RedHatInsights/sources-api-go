@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"slices"
 	"strconv"
 	"strings"
@@ -125,6 +126,29 @@ func BulkAssembly(req m.BulkCreateRequest, tenant *m.Tenant, user *m.User) (*m.B
 
 		return nil
 	})
+
+	// Log all the created resources when the transaction did not get rolled back.
+	if err != nil {
+		for _, createdSource := range output.Sources {
+			l.Log.WithFields(logrus.Fields{"tenant_id": createdSource.Tenant.Id, "source_id": createdSource.ID, "source_type_id": createdSource.SourceTypeID}).Infof("Source created")
+		}
+
+		for _, createdApplication := range output.Applications {
+			l.Log.WithFields(logrus.Fields{"tenant_id": createdApplication.Tenant.Id, "source_id": createdApplication.SourceID, "application_id": createdApplication.ID, "application_type_id": createdApplication.ApplicationTypeID}).Infof("Application created")
+		}
+
+		for _, createdEndpoint := range output.Endpoints {
+			l.Log.WithFields(logrus.Fields{"tenant_id": createdEndpoint.Tenant.Id, "source_id": createdEndpoint.SourceID, "endpoint_id": createdEndpoint.ID}).Infof("Endpoint created")
+		}
+
+		for _, createdAuthentication := range output.Authentications {
+			l.Log.WithFields(logrus.Fields{"tenant_id": createdAuthentication.Tenant.Id, "resource_id": createdAuthentication.ResourceID, "resource_type": createdAuthentication.ResourceType, "authentication_id": createdAuthentication.ID}).Infof("Authentication created")
+		}
+
+		for _, createdAppAuth := range output.ApplicationAuthentications {
+			l.Log.WithFields(logrus.Fields{"tenant_id": createdAppAuth.Tenant.Id, "application_id": createdAppAuth.ApplicationID, "authentication_id": createdAppAuth.ApplicationID}).Infof("Authentication created")
+		}
+	}
 
 	return &output, err
 }
