@@ -1,8 +1,6 @@
 module github.com/RedHatInsights/sources-api-go
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25.0
 
 require (
 	github.com/99designs/gqlgen v0.17.80
@@ -23,8 +21,8 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/jackc/pgx/v5 v5.7.6
-	github.com/labstack/echo-contrib v0.17.4
-	github.com/labstack/echo/v4 v4.13.4
+	github.com/labstack/echo-contrib v0.50.1
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/labstack/gommon v0.4.2
 	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9
 	github.com/prometheus/client_golang v1.23.2
@@ -115,8 +113,8 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.66.1 // indirect
-	github.com/prometheus/procfs v0.17.0 // indirect
+	github.com/prometheus/common v0.67.5 // indirect
+	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -127,12 +125,12 @@ require (
 	github.com/twmb/murmur3 v1.1.8 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/mod v0.30.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/text v0.31.0
+	golang.org/x/crypto v0.47.0 // indirect
+	golang.org/x/mod v0.31.0 // indirect
+	golang.org/x/net v0.49.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/text v0.33.0
 	golang.org/x/time v0.14.0 // indirect
-	golang.org/x/tools v0.39.0 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
+	golang.org/x/tools v0.40.0 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )
