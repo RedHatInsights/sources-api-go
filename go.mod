@@ -29,7 +29,7 @@ require (
 	github.com/lindgrenj6/logrus_zinc v0.0.0-20220822152658-d8a0b604f3f9
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redhatinsights/app-common-go v1.6.8
-	github.com/redhatinsights/platform-go-middlewares v1.0.0
+	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0
 	github.com/redhatinsights/sources-superkey-worker v0.0.0-20251029212439-422f89554aae
 	github.com/segmentio/kafka-go v0.4.49
