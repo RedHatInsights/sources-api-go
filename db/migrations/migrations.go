@@ -50,13 +50,13 @@ func Migrate(db *gorm.DB) {
 	// Using UUID as the lock value since it's a safe way of obtaining a unique string among all the clients.
 	uuid, err := uuidpkg.NewUUID()
 	if err != nil {
-		logging.Log.Fatalf(`could not generate a UUID for the Redis lock: %s`, err)
+		logging.Log.Fatalf(`could not generate a UUID for the Valkey lock: %s`, err)
 	}
 
 	// Before doing anything, check for the existence of the lock.
-	exists, err := redis.Client.Exists(ctx, redisLockKey).Result()
+	exists, err := redis.Client.Do(ctx, redis.Client.B().Exists().Key(redisLockKey).Build()).AsInt64()
 	if err != nil {
-		logging.Log.Fatalf(`error when fetching the Redis lock: %s`, err)
+		logging.Log.Fatalf(`error when fetching the Valkey lock: %s`, err)
 	}
 
 	// If the lock is present, we must wait in order to be able to obtain it ourselves.
@@ -64,18 +64,18 @@ func Migrate(db *gorm.DB) {
 	for lockExists {
 		time.Sleep(redisSleepTime)
 
-		exists, err = redis.Client.Exists(ctx, redisLockKey).Result()
+		exists, err = redis.Client.Do(ctx, redis.Client.B().Exists().Key(redisLockKey).Build()).AsInt64()
 		if err != nil {
-			logging.Log.Fatalf(`error when checking if the Redis lock exists: %s`, err)
+			logging.Log.Fatalf(`error when checking if the Valkey lock exists: %s`, err)
 		}
 
 		lockExists = exists != 0
 	}
 
-	// Set the migrations lock.
-	err = redis.Client.Set(ctx, redisLockKey, uuid.String(), redisLockExpirationTime).Err()
+	// Set the migrations lock with expiration.
+	err = redis.Client.Do(ctx, redis.Client.B().Set().Key(redisLockKey).Value(uuid.String()).Px(redisLockExpirationTime).Build()).Error()
 	if err != nil {
-		logging.Log.Fatalf(`error when setting the Redis lock: %s`, err)
+		logging.Log.Fatalf(`error when setting the Valkey lock: %s`, err)
 	}
 
 	// Perform the migrations and store the error for a proper return.
@@ -83,20 +83,20 @@ func Migrate(db *gorm.DB) {
 
 	err = migrateTool.Migrate()
 	if err != nil {
-		logging.Log.Fatalf(`error when performing the database migrations: %s. The Redis lock is going to try to be released...`, err)
+		logging.Log.Fatalf(`error when performing the database migrations: %s. The Valkey lock is going to try to be released...`, err)
 	}
 
 	// Once the migrations have finished, get the lock's value to attempt to release it.
-	value, err := redis.Client.Get(ctx, redisLockKey).Result()
+	value, err := redis.Client.Do(ctx, redis.Client.B().Get().Key(redisLockKey).Build()).ToString()
 	if err != nil {
-		logging.Log.Fatalf(`error when getting the Redis lock after the migrations have run: %s`, err)
+		logging.Log.Fatalf(`error when getting the Valkey lock after the migrations have run: %s`, err)
 	}
 
 	// The lock's value should coincide with the one we set above. If it doesn't something very wrong happened.
 	if value == uuid.String() {
-		err = redis.Client.Del(ctx, redisLockKey).Err()
+		err = redis.Client.Do(ctx, redis.Client.B().Del().Key(redisLockKey).Build()).Error()
 		if err != nil {
-			logging.Log.Fatalf(`error when deleting the Redis lock after the migrations have run: %s`, err)
+			logging.Log.Fatalf(`error when deleting the Valkey lock after the migrations have run: %s`, err)
 		}
 	} else {
 		logging.Log.Fatalf(`migrations lock release failed. Expecting lock with value "%s", got "%s"`, uuid.String(), value)

@@ -4,18 +4,26 @@ import (
 	"fmt"
 
 	"github.com/RedHatInsights/sources-api-go/config"
-	"github.com/go-redis/redis/v8"
+	"github.com/valkey-io/valkey-go"
 )
 
-var Client *redis.Client
+var Client valkey.Client
 
-// error used for checking if the error coming back from redis is nil or not
-const Nil = redis.Nil
+// IsNil checks if the error is a Valkey nil error (key does not exist)
+func IsNil(err error) bool {
+	return valkey.IsValkeyNil(err)
+}
 
 func Init() {
 	cfg := config.Get()
-	Client = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", cfg.CacheHost, cfg.CachePort),
-		Password: cfg.CachePassword,
+
+	var err error
+	Client, err = valkey.NewClient(valkey.ClientOption{
+		InitAddress: []string{fmt.Sprintf("%s:%d", cfg.CacheHost, cfg.CachePort)},
+		Password:    cfg.CachePassword,
+		DisableCache: true,
 	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialize Valkey client: %v", err))
+	}
 }

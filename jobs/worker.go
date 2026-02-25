@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -11,12 +10,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// the queue on redis we'll be sending the jobs to
+// the queue on valkey we'll be sending the jobs to
 const workQueue = "sources_api_jobs"
 
-// Runs the worker just consuming off of a redis list
+// Runs the worker just consuming off of a valkey list
 func Run(shutdown chan struct{}) {
-	l.Log.Infof("Starting up Background worker listening to redis queue [%v]", workQueue)
+	l.Log.Infof("Starting up Background worker listening to valkey queue [%v]", workQueue)
 
 	go func() {
 		runScheduledJobs()
@@ -26,10 +25,11 @@ func Run(shutdown chan struct{}) {
 			// something gets queued.
 			//
 			// Once it does succeed - we check to see if the error is just
-			// `redis.Nil`, in which case things are fine and we continue.
-			val, err := redis.Client.BLPop(context.Background(), 0, workQueue).Result()
+			// a nil value, in which case things are fine and we continue.
+			// Timeout 0 means block indefinitely.
+			result, err := redis.Client.Do(context.Background(), redis.Client.B().Blpop().Key(workQueue).Timeout(0).Build()).AsStrSlice()
 			if err != nil {
-				if !errors.Is(err, redis.Nil) {
+				if !redis.IsNil(err) {
 					l.Log.Warnf("Failed to pop job from queue: %v", err)
 				}
 
@@ -37,13 +37,13 @@ func Run(shutdown chan struct{}) {
 			}
 
 			jr := JobRequest{}
-			// the val that is returned is a slice in the form [listname, value]
-			// where val[0] is the name of the list (e.g. workQueue above) and
-			// val[1] is the string value, e.g. the output from
+			// the result that is returned is a slice in the form [listname, value]
+			// where result[0] is the name of the list (e.g. workQueue above) and
+			// result[1] is the string value, e.g. the output from
 			// jobRequest.MarshalBinary. So we need to unmarshal it.
-			err = jr.UnmarshalBinary([]byte(val[1]))
+			err = jr.UnmarshalBinary([]byte(result[1]))
 			if err != nil {
-				l.Log.Warnf("Failed to unmarshal job from redis: %v", err)
+				l.Log.Warnf("Failed to unmarshal job from valkey: %v", err)
 				continue
 			}
 
@@ -51,7 +51,7 @@ func Run(shutdown chan struct{}) {
 			// figures out what kind of job to unmarshal
 			err = jr.Parse()
 			if err != nil {
-				l.Log.Warnf("Failed to unmarshal job from redis: %v", err)
+				l.Log.Warnf("Failed to unmarshal job from valkey: %v", err)
 				continue
 			}
 
@@ -117,9 +117,9 @@ func (hc *BackgroundWorkerHealthChecker) healthChecker() {
 	e.HideBanner = true
 	e.HidePort = true
 	e.GET("/health", func(c echo.Context) error {
-		//health should return a 500 if there hasn't been a response from ping request within 30 seconds
+		// health should return a 500 if there hasn't been a response from ping request within 30 seconds
 		if hc.timeStamp.Before(time.Now().Add(-30 * time.Second)) {
-			return c.String(http.StatusInternalServerError, "Failed to hit redis for more than 30 seconds.")
+			return c.String(http.StatusInternalServerError, "Failed to hit valkey for more than 30 seconds.")
 		}
 
 		return c.String(http.StatusOK, "OK")
@@ -136,13 +136,13 @@ func (hc *BackgroundWorkerHealthChecker) healthCheckConsumer() {
 }
 
 func (hc *BackgroundWorkerHealthChecker) healthcheckLoop() {
-	//every 30 seconds, send a ping request to redis server. If ping request returns a <nil> error, then update the time
+	// every 30 seconds, send a ping request to valkey server. If ping request returns a <nil> error, then update the time
 	for range time.NewTicker(30 * time.Second).C {
-		err := redis.Client.Ping(context.Background()).Err()
+		err := redis.Client.Do(context.Background(), redis.Client.B().Ping().Build()).Error()
 		if err == nil {
 			hc.timeChannel <- time.Now()
 		} else {
-			l.Log.Warnf("Failed to hit redis: %v", err)
+			l.Log.Warnf("Failed to hit valkey: %v", err)
 		}
 	}
 }
