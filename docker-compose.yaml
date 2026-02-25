@@ -112,7 +112,7 @@ services:
 
   sources-redis:
     container_name: sources-redis
-    image: redis:5.0.4
+    image: valkey/valkey:8
     ports:
       - 6378:6379
 

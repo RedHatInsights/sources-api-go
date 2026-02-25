@@ -15,7 +15,7 @@ type JobRequest struct {
 	Job     Job
 }
 
-// implementing binary mashaler/unmarshaler interfaces for redis encoding/decoding.
+// implementing binary mashaler/unmarshaler interfaces for valkey encoding/decoding.
 func (jr JobRequest) MarshalBinary() (data []byte, err error) {
 	return json.Marshal(&jr)
 }
@@ -53,16 +53,23 @@ func (jr *JobRequest) Parse() error {
 	return nil
 }
 
-// Throws a `job` on the redis list to be picked up by the worker
+// Throws a `job` on the valkey list to be picked up by the worker
 func Enqueue(j Job) {
-	l.Log.Infof("Submitting job %v to redis with %v", j.Name(), j.Arguments())
+	l.Log.Infof("Submitting job %v to valkey with %v", j.Name(), j.Arguments())
 
 	req := JobRequest{
 		JobName: j.Name(),
 		JobRaw:  j.ToJSON(),
 	}
 
-	err := redis.Client.RPush(context.Background(), workQueue, req).Err()
+	// Marshal the job request to JSON for storage in valkey
+	data, err := req.MarshalBinary()
+	if err != nil {
+		l.Log.Warnf("Failed to marshal job: %v", err)
+		return
+	}
+
+	err = redis.Client.Do(context.Background(), redis.Client.B().Rpush().Key(workQueue).Element(string(data)).Build()).Error()
 	if err != nil {
 		l.Log.Warnf("Failed to submit job: %v", err)
 	}
