@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // struct containing our custom "bind" logic

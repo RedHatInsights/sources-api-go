@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 var sleepyFunc echo.HandlerFunc = func(c echo.Context) error {

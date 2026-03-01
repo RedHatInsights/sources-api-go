@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 var BadQueryParams = []string{"limit", "offset", "sort_by"}

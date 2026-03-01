@@ -10,7 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {

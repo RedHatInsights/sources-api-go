@@ -7,7 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 func EmptySubcollectionListTest(t *testing.T, c echo.Context, rec *httptest.ResponseRecorder) {

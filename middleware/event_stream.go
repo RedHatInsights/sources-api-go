@@ -3,7 +3,7 @@ package middleware
 import (
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/service"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // RaiseEvent calls the "RaiseEvent" function once the previous handler has succeeded. It grabs the resource and the
