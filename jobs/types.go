@@ -15,7 +15,7 @@ Interface to codify jobs against, mostly consisting of a few methods:
 
 4. Run, what do we do?
 
-5. ToJSON, serialize the job into a byte array for sending off to redis
+5. ToJSON, serialize the job into a byte array for sending off to valkey
 */
 type Job interface {
 	// how long to wait until performing (just do a sleep)
