@@ -18,9 +18,10 @@ func Init() {
 	cfg := config.Get()
 
 	var err error
+
 	Client, err = valkey.NewClient(valkey.ClientOption{
-		InitAddress: []string{fmt.Sprintf("%s:%d", cfg.CacheHost, cfg.CachePort)},
-		Password:    cfg.CachePassword,
+		InitAddress:  []string{fmt.Sprintf("%s:%d", cfg.CacheHost, cfg.CachePort)},
+		Password:     cfg.CachePassword,
 		DisableCache: true,
 	})
 	if err != nil {

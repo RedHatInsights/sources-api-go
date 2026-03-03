@@ -13,7 +13,7 @@ import (
 // the queue on valkey we'll be sending the jobs to
 const workQueue = "sources_api_jobs"
 
-// Runs the worker just consuming off of a valkey list
+// Run starts the worker consuming jobs off a valkey list.
 func Run(shutdown chan struct{}) {
 	l.Log.Infof("Starting up Background worker listening to valkey queue [%v]", workQueue)
 

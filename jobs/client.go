@@ -15,7 +15,7 @@ type JobRequest struct {
 	Job     Job
 }
 
-// implementing binary mashaler/unmarshaler interfaces for valkey encoding/decoding.
+// MarshalBinary implements the encoding.BinaryMarshaler interface for valkey encoding.
 func (jr JobRequest) MarshalBinary() (data []byte, err error) {
 	return json.Marshal(&jr)
 }
@@ -53,7 +53,7 @@ func (jr *JobRequest) Parse() error {
 	return nil
 }
 
-// Throws a `job` on the valkey list to be picked up by the worker
+// Enqueue adds a job to the valkey list to be picked up by the worker.
 func Enqueue(j Job) {
 	l.Log.Infof("Submitting job %v to valkey with %v", j.Name(), j.Arguments())
 
