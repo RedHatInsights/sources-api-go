@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 )
@@ -11,6 +12,11 @@ import (
 func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		begin := time.Now()
+
+		requestID := c.Request().Header.Get(h.InsightsRequestID)
+		if requestID == "" {
+			requestID = c.Request().Header.Get(h.EdgeRequestID)
+		}
 
 		// write the header before the response is written because we can't
 		// write a header in middleware on the way out.
@@ -24,10 +30,15 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 
 		// log the total latency of the request on the way out
 		if entry, ok := c.Get("logger").(*logrus.Entry); ok {
-			entry.WithFields(logrus.Fields{
+			fields := logrus.Fields{
 				"latency":       time.Since(begin),
 				"latency_human": time.Since(begin).String(),
-			}).Info()
+			}
+			if requestID != "" {
+				fields["request_id"] = requestID
+			}
+
+			entry.WithFields(fields).Info()
 		}
 
 		return err
