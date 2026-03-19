@@ -18,6 +18,12 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		orgid := c.Get(h.OrgID)
 		uuid := c.Get(h.InsightsRequestID)
 		edgeId := c.Get(h.EdgeRequestID)
+		sourceID := c.Param("source_id")
+		applicationID := c.Param("application_id")
+		authenticationID := c.Param("uid")
+		if authenticationID == "" {
+			authenticationID = c.Param("application_authentication_id")
+		}
 
 		baseFields := logrus.Fields{
 			"uri":            uri,
@@ -27,6 +33,15 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 			"user_agent":     agent,
 			"request_id":     uuid,
 			"edge_id":        edgeId,
+		}
+		if sourceID != "" {
+			baseFields["source_id"] = sourceID
+		}
+		if applicationID != "" {
+			baseFields["application_id"] = applicationID
+		}
+		if authenticationID != "" {
+			baseFields["authentication_id"] = authenticationID
 		}
 
 		baseLoggerEntry := l.Log.WithFields(baseFields)
