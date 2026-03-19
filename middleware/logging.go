@@ -38,9 +38,11 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		if sourceID != "" {
 			baseFields["source_id"] = sourceID
 		}
+
 		if applicationID != "" {
 			baseFields["application_id"] = applicationID
 		}
+
 		if authenticationID != "" {
 			baseFields["authentication_id"] = authenticationID
 		}
