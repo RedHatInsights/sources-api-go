@@ -12,28 +12,35 @@ import (
 
 func logErrorWithContextFields(c echo.Context, err error) {
 	fields := logrus.Fields{"error": err}
+
 	if v := c.Get(h.InsightsRequestID); v != nil {
 		if s, ok := v.(string); ok && s != "" {
 			fields["request_id"] = s
 		}
 	}
+
 	if v := c.Request().Header.Get(h.InsightsRequestID); v != "" && fields["request_id"] == nil {
 		fields["request_id"] = v
 	}
+
 	if v := c.Request().Header.Get(h.EdgeRequestID); v != "" && fields["request_id"] == nil {
 		fields["request_id"] = v
 	}
+
 	if p := c.Param("source_id"); p != "" {
 		fields["source_id"] = p
 	}
+
 	if p := c.Param("application_id"); p != "" {
 		fields["application_id"] = p
 	}
+
 	if p := c.Param("uid"); p != "" {
 		fields["authentication_id"] = p
 	} else if p := c.Param("application_authentication_id"); p != "" {
 		fields["authentication_id"] = p
 	}
+
 	if entry, ok := c.Get("logger").(*logrus.Entry); ok {
 		entry.WithFields(fields).Error(err)
 	} else {

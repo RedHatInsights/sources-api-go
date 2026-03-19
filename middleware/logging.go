@@ -20,6 +20,7 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		edgeId := c.Get(h.EdgeRequestID)
 		sourceID := c.Param("source_id")
 		applicationID := c.Param("application_id")
+
 		authenticationID := c.Param("uid")
 		if authenticationID == "" {
 			authenticationID = c.Param("application_authentication_id")

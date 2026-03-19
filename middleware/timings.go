@@ -12,6 +12,7 @@ import (
 func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		begin := time.Now()
+
 		requestID := c.Request().Header.Get(h.InsightsRequestID)
 		if requestID == "" {
 			requestID = c.Request().Header.Get(h.EdgeRequestID)
@@ -36,6 +37,7 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 			if requestID != "" {
 				fields["request_id"] = requestID
 			}
+
 			entry.WithFields(fields).Info()
 		}
 
