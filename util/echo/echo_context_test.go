@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // (compile-time check to make sure our context behaves like an echo.Context)
