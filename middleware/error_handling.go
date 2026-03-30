@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
@@ -11,20 +10,34 @@ import (
 )
 
 func logErrorWithContextFields(c echo.Context, err error) {
-	fields := logrus.Fields{"error": err}
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.WithFields(logrus.Fields{"error": err, "panic": r}).Error("panic while logging error with context fields")
+		}
+	}()
 
+	fields := make(logrus.Fields, 5)
+	fields["error"] = err
+
+	hasRequestID := false
 	if v := c.Get(h.InsightsRequestID); v != nil {
 		if s, ok := v.(string); ok && s != "" {
 			fields["request_id"] = s
+			hasRequestID = true
 		}
 	}
 
-	if v := c.Request().Header.Get(h.InsightsRequestID); v != "" && fields["request_id"] == nil {
-		fields["request_id"] = v
+	if !hasRequestID {
+		if v := c.Request().Header.Get(h.InsightsRequestID); v != "" {
+			fields["request_id"] = v
+			hasRequestID = true
+		}
 	}
 
-	if v := c.Request().Header.Get(h.EdgeRequestID); v != "" && fields["request_id"] == nil {
-		fields["request_id"] = v
+	if !hasRequestID {
+		if v := c.Request().Header.Get(h.EdgeRequestID); v != "" {
+			fields["request_id"] = v
+		}
 	}
 
 	if p := c.Param("source_id"); p != "" {
@@ -71,10 +84,10 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 				}
 
 				statusCode = http.StatusInternalServerError
-				message = util.ErrorDocWithRequestId(fmt.Sprintf("Internal Server Error: %v", err.Error()), "500", uuid)
+				message = util.ErrorDocWithRequestId("Internal Server Error", "500", uuid)
+				logErrorWithContextFields(c, err)
 			}
 
-			logErrorWithContextFields(c, err)
 			return c.JSON(statusCode, message)
 		}
 

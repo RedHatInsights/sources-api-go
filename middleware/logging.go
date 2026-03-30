@@ -26,15 +26,14 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 			authenticationID = c.Param("application_authentication_id")
 		}
 
-		baseFields := logrus.Fields{
-			"uri":            uri,
-			"method":         method,
-			"account_number": acct,
-			"org_id":         orgid,
-			"user_agent":     agent,
-			"request_id":     uuid,
-			"edge_id":        edgeId,
-		}
+		baseFields := make(logrus.Fields, 10)
+		baseFields["uri"] = uri
+		baseFields["method"] = method
+		baseFields["account_number"] = acct
+		baseFields["org_id"] = orgid
+		baseFields["user_agent"] = agent
+		baseFields["request_id"] = uuid
+		baseFields["edge_id"] = edgeId
 		if sourceID != "" {
 			baseFields["source_id"] = sourceID
 		}

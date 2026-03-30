@@ -29,16 +29,18 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 		err := next(c)
 
 		// log the total latency of the request on the way out
-		if entry, ok := c.Get("logger").(*logrus.Entry); ok {
-			fields := logrus.Fields{
-				"latency":       time.Since(begin),
-				"latency_human": time.Since(begin).String(),
-			}
-			if requestID != "" {
-				fields["request_id"] = requestID
-			}
+		latency := time.Since(begin)
+		fields := make(logrus.Fields, 3)
+		fields["latency"] = latency
+		fields["latency_human"] = latency.String()
+		if requestID != "" {
+			fields["request_id"] = requestID
+		}
 
+		if entry, ok := c.Get("logger").(*logrus.Entry); ok {
 			entry.WithFields(fields).Info()
+		} else {
+			logrus.WithFields(fields).Info()
 		}
 
 		return err
