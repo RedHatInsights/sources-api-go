@@ -34,6 +34,7 @@ func LoggerFields(next echo.HandlerFunc) echo.HandlerFunc {
 		baseFields["user_agent"] = agent
 		baseFields["request_id"] = uuid
 		baseFields["edge_id"] = edgeId
+
 		if sourceID != "" {
 			baseFields["source_id"] = sourceID
 		}

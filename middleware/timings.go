@@ -33,6 +33,7 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 		fields := make(logrus.Fields, 3)
 		fields["latency"] = latency
 		fields["latency_human"] = latency.String()
+
 		if requestID != "" {
 			fields["request_id"] = requestID
 		}

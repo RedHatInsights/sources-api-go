@@ -20,6 +20,7 @@ func logErrorWithContextFields(c echo.Context, err error) {
 	fields["error"] = err
 
 	hasRequestID := false
+
 	if v := c.Get(h.InsightsRequestID); v != nil {
 		if s, ok := v.(string); ok && s != "" {
 			fields["request_id"] = s
@@ -85,6 +86,7 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 
 				statusCode = http.StatusInternalServerError
 				message = util.ErrorDocWithRequestId("Internal Server Error", "500", uuid)
+
 				logErrorWithContextFields(c, err)
 			}
 
