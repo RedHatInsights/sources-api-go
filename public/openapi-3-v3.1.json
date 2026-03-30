@@ -2819,7 +2819,8 @@
               "Application",
               "Authentication",
               "Endpoint",
-              "Source"
+              "Source",
+              "Tenant"
             ],
             "example": "Endpoint",
             "type": "string"
@@ -2868,7 +2869,8 @@
               "Application",
               "Authentication",
               "Endpoint",
-              "Source"
+              "Source",
+              "Tenant"
             ],
             "example": "Endpoint",
             "type": "string"
