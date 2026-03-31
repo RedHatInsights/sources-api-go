@@ -24,6 +24,7 @@ func logErrorWithContextFields(c echo.Context, err error) {
 			fields["request_id"] = s
 		}
 	}
+
 	if _, ok := fields["request_id"]; !ok {
 		if v := c.Request().Header.Get(h.InsightsRequestID); v != "" {
 			fields["request_id"] = v
@@ -36,6 +37,7 @@ func logErrorWithContextFields(c echo.Context, err error) {
 			fields["edge_id"] = s
 		}
 	}
+
 	if _, ok := fields["edge_id"]; !ok {
 		if v := c.Request().Header.Get(h.EdgeRequestID); v != "" {
 			fields["edge_id"] = v
