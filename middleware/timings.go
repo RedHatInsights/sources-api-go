@@ -13,11 +13,6 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		begin := time.Now()
 
-		requestID := c.Request().Header.Get(h.InsightsRequestID)
-		if requestID == "" {
-			requestID = c.Request().Header.Get(h.EdgeRequestID)
-		}
-
 		// write the header before the response is written because we can't
 		// write a header in middleware on the way out.
 		c.Response().Before(func() {
@@ -30,12 +25,30 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 
 		// log the total latency of the request on the way out
 		latency := time.Since(begin)
-		fields := make(logrus.Fields, 3)
+		fields := make(logrus.Fields, 5)
 		fields["latency"] = latency
 		fields["latency_human"] = latency.String()
 
-		if requestID != "" {
-			fields["request_id"] = requestID
+		if v := c.Get(h.InsightsRequestID); v != nil {
+			if s, ok := v.(string); ok && s != "" {
+				fields["request_id"] = s
+			}
+		}
+		if _, ok := fields["request_id"]; !ok {
+			if v := c.Request().Header.Get(h.InsightsRequestID); v != "" {
+				fields["request_id"] = v
+			}
+		}
+
+		if v := c.Get(h.EdgeRequestID); v != nil {
+			if s, ok := v.(string); ok && s != "" {
+				fields["edge_id"] = s
+			}
+		}
+		if _, ok := fields["edge_id"]; !ok {
+			if v := c.Request().Header.Get(h.EdgeRequestID); v != "" {
+				fields["edge_id"] = v
+			}
 		}
 
 		if entry, ok := c.Get("logger").(*logrus.Entry); ok {

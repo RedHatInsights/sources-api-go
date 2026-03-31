@@ -105,6 +105,8 @@ func AuthenticationCreate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	c.Logger().Infof("created authentication: id=%s source_id=%d resource_type=%s resource_id=%d", auth.ID, auth.SourceID, auth.ResourceType, auth.ResourceID)
+
 	accountNumber, err := getAccountNumberFromEchoContext(c)
 	if err != nil {
 		c.Logger().Warn(err)
@@ -154,6 +156,8 @@ func AuthenticationEdit(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	c.Logger().Infof("updated authentication: id=%s source_id=%d", auth.ID, auth.SourceID)
+
 	sourceDao, err := getSourceDao(c)
 	if err != nil {
 		return err
@@ -182,6 +186,8 @@ func AuthenticationDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	c.Logger().Infof("deleted authentication: id=%s source_id=%d", auth.ID, auth.SourceID)
 
 	setEventStreamResource(c, auth)
 

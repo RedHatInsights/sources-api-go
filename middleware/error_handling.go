@@ -16,28 +16,29 @@ func logErrorWithContextFields(c echo.Context, err error) {
 		}
 	}()
 
-	fields := make(logrus.Fields, 5)
+	fields := make(logrus.Fields, 6)
 	fields["error"] = err
-
-	hasRequestID := false
 
 	if v := c.Get(h.InsightsRequestID); v != nil {
 		if s, ok := v.(string); ok && s != "" {
 			fields["request_id"] = s
-			hasRequestID = true
 		}
 	}
-
-	if !hasRequestID {
+	if _, ok := fields["request_id"]; !ok {
 		if v := c.Request().Header.Get(h.InsightsRequestID); v != "" {
 			fields["request_id"] = v
-			hasRequestID = true
 		}
 	}
 
-	if !hasRequestID {
+	// x-rh-edge-request-id is not the Insights request correlation id; log it as edge_id (see LoggerFields).
+	if v := c.Get(h.EdgeRequestID); v != nil {
+		if s, ok := v.(string); ok && s != "" {
+			fields["edge_id"] = s
+		}
+	}
+	if _, ok := fields["edge_id"]; !ok {
 		if v := c.Request().Header.Get(h.EdgeRequestID); v != "" {
-			fields["request_id"] = v
+			fields["edge_id"] = v
 		}
 	}
 

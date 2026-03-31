@@ -115,6 +115,8 @@ func ApplicationCreate(c echo.Context) error {
 		return err
 	}
 
+	c.Logger().Infof("created application: id=%d source_id=%d application_type_id=%d", application.ID, application.SourceID, application.ApplicationTypeID)
+
 	accountNumber, err := getAccountNumberFromEchoContext(c)
 	if err != nil {
 		c.Logger().Warn(err)
@@ -202,6 +204,8 @@ func ApplicationEdit(c echo.Context) error {
 		return err
 	}
 
+	c.Logger().Infof("updated application: id=%d", id)
+
 	setNotificationForAvailabilityStatus(c, previousStatus, app)
 	setEventStreamResource(c, app)
 
@@ -244,8 +248,6 @@ func ApplicationDelete(c echo.Context) error {
 		return util.NewErrNotFound("application")
 	}
 
-	c.Logger().Infof("Deleting Application Id %v", id)
-
 	// Cascade delete the application.
 	forwardableHeaders, err := service.ForwadableHeaders(c)
 	if err != nil {
@@ -256,6 +258,8 @@ func ApplicationDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	c.Logger().Infof("deleted application: id=%d", id)
 
 	return c.NoContent(http.StatusNoContent)
 }

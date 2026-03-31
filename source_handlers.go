@@ -127,6 +127,8 @@ func SourceCreate(c echo.Context) error {
 		return err
 	}
 
+	c.Logger().Infof("created source: id=%d name=%q source_type_id=%d", source.ID, source.Name, source.SourceTypeID)
+
 	setEventStreamResource(c, source)
 
 	return c.JSON(http.StatusCreated, source.ToResponse())
@@ -185,6 +187,8 @@ func SourceEdit(c echo.Context) error {
 		return err
 	}
 
+	c.Logger().Infof("updated source: id=%d", id)
+
 	setNotificationForAvailabilityStatus(c, previousStatus, s)
 	setEventStreamResource(c, s)
 
@@ -215,8 +219,6 @@ func SourceDelete(c echo.Context) (err error) {
 		}
 	}
 
-	c.Logger().Infof("Deleting Source Id %v", id)
-
 	// Cascade delete the source.
 	forwardableHeaders, err := service.ForwadableHeaders(c)
 	if err != nil {
@@ -227,6 +229,8 @@ func SourceDelete(c echo.Context) (err error) {
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
+
+	c.Logger().Infof("deleted source: id=%d", id)
 
 	return c.NoContent(http.StatusNoContent)
 }

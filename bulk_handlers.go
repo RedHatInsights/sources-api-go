@@ -59,5 +59,8 @@ func BulkCreate(c echo.Context) error {
 
 	service.SendBulkMessages(output, forwardableHeaders, xrhid)
 
+	c.Logger().Infof("bulk create completed: sources=%d applications=%d endpoints=%d authentications=%d application_authentications=%d",
+		len(output.Sources), len(output.Applications), len(output.Endpoints), len(output.Authentications), len(output.ApplicationAuthentications))
+
 	return c.JSON(http.StatusCreated, output.ToResponse())
 }
