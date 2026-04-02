@@ -32,10 +32,10 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 		if v := c.Get(h.InsightsRequestID); v != nil {
 			if s, ok := v.(string); ok && s != "" {
 				fields["request_id"] = s
+			}
 		}
-	}
 
-	if _, ok := fields["request_id"]; !ok {
+		if _, ok := fields["request_id"]; !ok {
 			if v := c.Request().Header.Get(h.InsightsRequestID); v != "" {
 				fields["request_id"] = v
 			}
@@ -44,10 +44,10 @@ func Timing(next echo.HandlerFunc) echo.HandlerFunc {
 		if v := c.Get(h.EdgeRequestID); v != nil {
 			if s, ok := v.(string); ok && s != "" {
 				fields["edge_id"] = s
+			}
 		}
-	}
 
-	if _, ok := fields["edge_id"]; !ok {
+		if _, ok := fields["edge_id"]; !ok {
 			if v := c.Request().Header.Get(h.EdgeRequestID); v != "" {
 				fields["edge_id"] = v
 			}

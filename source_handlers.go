@@ -15,6 +15,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
 
 // function that defines how we get the dao - default implementation below.
@@ -127,7 +128,12 @@ func SourceCreate(c echo.Context) error {
 		return err
 	}
 
-	c.Logger().Infof("created source: id=%d name=%q source_type_id=%d", source.ID, source.Name, source.SourceTypeID)
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":      *sourcesDB.Tenant(),
+		"source_id":      source.ID,
+		"source_type_id": source.SourceTypeID,
+		"name":           source.Name,
+	}).Infof("created source")
 
 	setEventStreamResource(c, source)
 
@@ -187,7 +193,10 @@ func SourceEdit(c echo.Context) error {
 		return err
 	}
 
-	c.Logger().Infof("updated source: id=%d", id)
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id": *sourcesDB.Tenant(),
+		"source_id": id,
+	}).Infof("updated source")
 
 	setNotificationForAvailabilityStatus(c, previousStatus, s)
 	setEventStreamResource(c, s)
@@ -230,7 +239,10 @@ func SourceDelete(c echo.Context) (err error) {
 		return util.NewErrBadRequest(err)
 	}
 
-	c.Logger().Infof("deleted source: id=%d", id)
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id": *sourcesDB.Tenant(),
+		"source_id": id,
+	}).Infof("deleted source")
 
 	return c.NoContent(http.StatusNoContent)
 }
