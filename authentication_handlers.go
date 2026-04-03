@@ -8,6 +8,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
 
 var getAuthenticationDao func(c echo.Context) (dao.AuthenticationDao, error)
@@ -105,6 +106,14 @@ func AuthenticationCreate(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":         auth.TenantID,
+		"authentication_id": auth.ID,
+		"source_id":         auth.SourceID,
+		"resource_type":     auth.ResourceType,
+		"resource_id":       auth.ResourceID,
+	}).Infof("created authentication")
+
 	accountNumber, err := getAccountNumberFromEchoContext(c)
 	if err != nil {
 		c.Logger().Warn(err)
@@ -154,6 +163,12 @@ func AuthenticationEdit(c echo.Context) error {
 		return util.NewErrBadRequest(err)
 	}
 
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":         *authDao.Tenant(),
+		"authentication_id": auth.ID,
+		"source_id":         auth.SourceID,
+	}).Infof("updated authentication")
+
 	sourceDao, err := getSourceDao(c)
 	if err != nil {
 		return err
@@ -182,6 +197,12 @@ func AuthenticationDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":         auth.TenantID,
+		"authentication_id": auth.ID,
+		"source_id":         auth.SourceID,
+	}).Infof("deleted authentication")
 
 	setEventStreamResource(c, auth)
 

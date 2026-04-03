@@ -32,7 +32,7 @@ func TestError(t *testing.T) {
 
 	body, _ := io.ReadAll(rec.Body)
 
-	if !strings.Contains(string(body), "Internal Server Error:") {
+	if !strings.Contains(string(body), "Internal Server Error") {
 		t.Errorf("malformed body: %s", body)
 	}
 }

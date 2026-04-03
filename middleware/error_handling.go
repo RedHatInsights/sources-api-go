@@ -1,13 +1,69 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
+
+func logErrorWithContextFields(c echo.Context, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			logrus.WithFields(logrus.Fields{"error": err, "panic": r}).Error("panic while logging error with context fields")
+		}
+	}()
+
+	fields := make(logrus.Fields, 6)
+	fields["error"] = err
+
+	if v := c.Get(h.InsightsRequestID); v != nil {
+		if s, ok := v.(string); ok && s != "" {
+			fields["request_id"] = s
+		}
+	}
+
+	if _, ok := fields["request_id"]; !ok {
+		if v := c.Request().Header.Get(h.InsightsRequestID); v != "" {
+			fields["request_id"] = v
+		}
+	}
+
+	// x-rh-edge-request-id is not the Insights request correlation id; log it as edge_id (see LoggerFields).
+	if v := c.Get(h.EdgeRequestID); v != nil {
+		if s, ok := v.(string); ok && s != "" {
+			fields["edge_id"] = s
+		}
+	}
+
+	if _, ok := fields["edge_id"]; !ok {
+		if v := c.Request().Header.Get(h.EdgeRequestID); v != "" {
+			fields["edge_id"] = v
+		}
+	}
+
+	if p := c.Param("source_id"); p != "" {
+		fields["source_id"] = p
+	}
+
+	if p := c.Param("application_id"); p != "" {
+		fields["application_id"] = p
+	}
+
+	if p := c.Param("uid"); p != "" {
+		fields["authentication_id"] = p
+	} else if p := c.Param("application_authentication_id"); p != "" {
+		fields["authentication_id"] = p
+	}
+
+	if entry, ok := c.Get("logger").(*logrus.Entry); ok {
+		entry.WithFields(fields).Error(err)
+	} else {
+		logrus.WithFields(fields).Error(err)
+	}
+}
 
 func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -26,15 +82,15 @@ func HandleErrors(next echo.HandlerFunc) echo.HandlerFunc {
 				statusCode = http.StatusBadRequest
 				message = util.NewErrorDoc(err.Error(), "400")
 			default:
-				c.Logger().Error(err)
-
 				uuid, ok := c.Get(h.InsightsRequestID).(string)
 				if !ok {
 					uuid = ""
 				}
 
 				statusCode = http.StatusInternalServerError
-				message = util.ErrorDocWithRequestId(fmt.Sprintf("Internal Server Error: %v", err.Error()), "500", uuid)
+				message = util.ErrorDocWithRequestId("Internal Server Error", "500", uuid)
+
+				logErrorWithContextFields(c, err)
 			}
 
 			return c.JSON(statusCode, message)

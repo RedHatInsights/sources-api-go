@@ -9,6 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
+	"github.com/sirupsen/logrus"
 )
 
 func BulkCreate(c echo.Context) error {
@@ -58,6 +59,15 @@ func BulkCreate(c echo.Context) error {
 	}
 
 	service.SendBulkMessages(output, forwardableHeaders, xrhid)
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":                         tenantID,
+		"sources_count":                     len(output.Sources),
+		"applications_count":                len(output.Applications),
+		"endpoints_count":                   len(output.Endpoints),
+		"authentications_count":             len(output.Authentications),
+		"application_authentications_count": len(output.ApplicationAuthentications),
+	}).Infof("bulk create completed")
 
 	return c.JSON(http.StatusCreated, output.ToResponse())
 }

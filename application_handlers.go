@@ -10,6 +10,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
 )
 
 // function that defines how we get the dao - default implementation below.
@@ -115,6 +116,13 @@ func ApplicationCreate(c echo.Context) error {
 		return err
 	}
 
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":           *applicationDB.Tenant(),
+		"application_id":      application.ID,
+		"source_id":           application.SourceID,
+		"application_type_id": application.ApplicationTypeID,
+	}).Infof("created application")
+
 	accountNumber, err := getAccountNumberFromEchoContext(c)
 	if err != nil {
 		c.Logger().Warn(err)
@@ -202,6 +210,12 @@ func ApplicationEdit(c echo.Context) error {
 		return err
 	}
 
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":      *applicationDB.Tenant(),
+		"application_id": id,
+		"source_id":      app.SourceID,
+	}).Infof("updated application")
+
 	setNotificationForAvailabilityStatus(c, previousStatus, app)
 	setEventStreamResource(c, app)
 
@@ -244,8 +258,6 @@ func ApplicationDelete(c echo.Context) error {
 		return util.NewErrNotFound("application")
 	}
 
-	c.Logger().Infof("Deleting Application Id %v", id)
-
 	// Cascade delete the application.
 	forwardableHeaders, err := service.ForwadableHeaders(c)
 	if err != nil {
@@ -256,6 +268,11 @@ func ApplicationDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":      *applicationDB.Tenant(),
+		"application_id": id,
+	}).Infof("deleted application")
 
 	return c.NoContent(http.StatusNoContent)
 }
