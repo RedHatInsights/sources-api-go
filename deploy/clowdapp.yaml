@@ -360,7 +360,7 @@ parameters:
   generate: expression
 - description: Image
   name: IMAGE
-  value: quay.io/cloudservices/sources-api-go
+  value: quay.io/redhat-user-workloads/hcc-integrations-tenant/sources/sources-api
 - description: Image tag
   name: IMAGE_TAG
   required: true
