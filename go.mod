@@ -29,10 +29,10 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/redhatinsights/app-common-go v1.6.8
 	github.com/redhatinsights/platform-go-middlewares v1.0.0
-	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0
+	github.com/redhatinsights/platform-go-middlewares/v2 v2.1.0
 	github.com/redhatinsights/sources-superkey-worker v0.0.0-20251029212439-422f89554aae
 	github.com/segmentio/kafka-go v0.4.49
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/viper v1.21.0
 	github.com/valkey-io/valkey-go v1.0.51
 	github.com/vektah/gqlparser/v2 v2.5.31
