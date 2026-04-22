@@ -1574,7 +1574,8 @@
             "type": "string"
           },
           "dependent_applications": {
-            "type": "object"
+            "type": "array",
+            "items": {}
           },
           "display_name": {
             "type": "string"
