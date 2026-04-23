@@ -37,6 +37,7 @@ func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {
 	if len(a.DependentApplications) > 0 {
 		_ = json.Unmarshal(a.DependentApplications, &depApps)
 	}
+
 	if depApps == nil {
 		depApps = []string{}
 	}
