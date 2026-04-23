@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"net/url"
 	"os"
 	"strconv"
@@ -32,6 +33,14 @@ type ApplicationType struct {
 func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {
 	id := strconv.Itoa(int(a.Id))
 
+	var depApps []string
+	if len(a.DependentApplications) > 0 {
+		_ = json.Unmarshal(a.DependentApplications, &depApps)
+	}
+	if depApps == nil {
+		depApps = []string{}
+	}
+
 	// returning the address of the new struct.
 	return &ApplicationTypeResponse{
 		Id:                           id,
@@ -39,7 +48,7 @@ func (a *ApplicationType) ToResponse() *ApplicationTypeResponse {
 		UpdatedAt:                    util.DateTimeToRFC3339(a.UpdatedAt),
 		Name:                         a.Name,
 		DisplayName:                  a.DisplayName,
-		DependentApplications:        a.DependentApplications,
+		DependentApplications:        depApps,
 		SupportedSourceTypes:         a.SupportedSourceTypes,
 		SupportedAuthenticationTypes: a.SupportedAuthenticationTypes,
 	}

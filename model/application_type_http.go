@@ -12,7 +12,7 @@ type ApplicationTypeResponse struct {
 
 	Name                         string         `json:"name"`
 	DisplayName                  string         `json:"display_name"`
-	DependentApplications        datatypes.JSON `json:"dependent_applications"`
+	DependentApplications        []string       `json:"dependent_applications"`
 	SupportedSourceTypes         datatypes.JSON `json:"supported_source_types"`
 	SupportedAuthenticationTypes datatypes.JSON `json:"supported_authentication_types"`
 }
