@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -15,6 +16,34 @@ import (
 const superkeyRequestedTopic = "platform.sources.superkey-requests"
 
 var superkeyTopic = config.Get().KafkaTopic(superkeyRequestedTopic)
+
+var (
+	superkeyWriter     *kafka.Writer
+	superkeyWriterOnce sync.Once
+	superkeyWriterErr  error
+)
+
+// getSuperkeyWriter lazily initializes and returns the shared Kafka writer for
+// superkey requests. Using a long-lived writer ensures the internal round-robin
+// partitioner distributes messages across all partitions instead of always
+// hitting the same one (which happens when a new writer is created per message).
+func getSuperkeyWriter() (*kafka.Writer, error) {
+	superkeyWriterOnce.Do(func() {
+		superkeyWriter, superkeyWriterErr = kafka.GetWriter(&kafka.Options{
+			BrokerConfig: conf.KafkaBrokerConfig,
+			Topic:        superkeyTopic,
+			Logger:       l.Log,
+		})
+	})
+
+	return superkeyWriter, superkeyWriterErr
+}
+
+// CloseSuperkeyProducer closes the shared Kafka writer for superkey requests.
+// Call during graceful shutdown.
+func CloseSuperkeyProducer() {
+	kafka.CloseWriter(superkeyWriter, "superkey producer shutdown")
+}
 
 func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
@@ -124,21 +153,10 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 }
 
 func produceSuperkeyRequest(m *kafka.Message) error {
-	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: conf.KafkaBrokerConfig,
-		Topic:        superkeyTopic,
-		Logger:       l.Log,
-	})
+	writer, err := getSuperkeyWriter()
 	if err != nil {
-		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
+		return fmt.Errorf(`unable to get the Kafka writer to produce a superkey request: %w`, err)
 	}
 
-	defer kafka.CloseWriter(writer, "produce superkey request")
-
-	err = kafka.Produce(writer, m)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return kafka.Produce(writer, m)
 }

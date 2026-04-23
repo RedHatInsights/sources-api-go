@@ -14,6 +14,7 @@ import (
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	"github.com/RedHatInsights/sources-api-go/util"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
@@ -78,6 +79,9 @@ func main() {
 	shutdown <- struct{}{}
 
 	<-shutdown
+
+	// Close the shared superkey Kafka producer before exiting.
+	service.CloseSuperkeyProducer()
 
 	os.Exit(0)
 }
