@@ -26,9 +26,11 @@ func TestToResponseWithDependentApplications(t *testing.T) {
 	if resp.Id != "1" {
 		t.Errorf("expected id '1', got '%s'", resp.Id)
 	}
+
 	if resp.Name != "/insights/platform/cost-management" {
 		t.Errorf("expected name '/insights/platform/cost-management', got '%s'", resp.Name)
 	}
+
 	if resp.DisplayName != "Cost Management" {
 		t.Errorf("expected display name 'Cost Management', got '%s'", resp.DisplayName)
 	}
@@ -72,6 +74,7 @@ func TestToResponseWithNilDependentApplications(t *testing.T) {
 	if resp.DependentApplications == nil {
 		t.Error("expected non-nil empty slice for dependent_applications when input is nil, got nil")
 	}
+
 	if len(resp.DependentApplications) != 0 {
 		t.Errorf("expected empty dependent_applications when input is nil, got %v", resp.DependentApplications)
 	}
