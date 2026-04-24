@@ -2594,7 +2594,9 @@
           "dependent_applications": {
             "description": "The dependent applications of this application type",
             "type": "array",
-            "items": {}
+            "items": {
+              "type": "string"
+            }
           },
           "supported_source_types": {
             "description": "The supported source types the applications of this type support",
