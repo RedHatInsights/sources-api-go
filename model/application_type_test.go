@@ -94,6 +94,7 @@ func TestToResponseWithInvalidDependentApplications(t *testing.T) {
 	if resp.DependentApplications == nil {
 		t.Error("expected non-nil empty slice for dependent_applications with invalid JSON, got nil")
 	}
+
 	if len(resp.DependentApplications) != 0 {
 		t.Errorf("expected empty dependent_applications with invalid JSON, got %v", resp.DependentApplications)
 	}
