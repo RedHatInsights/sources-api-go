@@ -1574,7 +1574,10 @@
             "type": "string"
           },
           "dependent_applications": {
-            "type": "object"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "display_name": {
             "type": "string"
