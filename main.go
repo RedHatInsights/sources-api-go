@@ -11,6 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/redis"
@@ -43,6 +44,24 @@ func main() {
 	// a time can run the migrations.
 	redis.Init()
 	dao.Init()
+
+	// Initialize the shared superkey Kafka producer and inject it into the
+	// service package. Using a long-lived writer ensures the internal round-robin
+	// partitioner distributes messages across all partitions instead of always
+	// hitting the same one (which happens when a new writer is created per message).
+	superkeyTopic := conf.KafkaTopic("platform.sources.superkey-requests")
+	superkeyWriter, err := kafka.GetWriter(&kafka.Options{
+		BrokerConfig: conf.KafkaBrokerConfig,
+		Topic:        superkeyTopic,
+		Logger:       l.Log,
+	})
+	if err != nil {
+		l.Log.Warnf("unable to create superkey Kafka writer: %v", err)
+	}
+
+	service.ProduceSuperkeyMessage = func(m *kafka.Message) error {
+		return kafka.Produce(superkeyWriter, m)
+	}
 
 	// Initialize our custom metrics.
 	metricsService, err := metrics.NewPrometheusMetricsService()
@@ -81,7 +100,7 @@ func main() {
 	<-shutdown
 
 	// Close the shared superkey Kafka producer before exiting.
-	service.CloseSuperkeyProducer()
+	kafka.CloseWriter(superkeyWriter, "superkey producer shutdown")
 
 	os.Exit(0)
 }
