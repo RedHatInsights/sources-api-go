@@ -50,6 +50,7 @@ func main() {
 	// partitioner distributes messages across all partitions instead of always
 	// hitting the same one (which happens when a new writer is created per message).
 	superkeyTopic := conf.KafkaTopic("platform.sources.superkey-requests")
+
 	superkeyWriter, err := kafka.GetWriter(&kafka.Options{
 		BrokerConfig: conf.KafkaBrokerConfig,
 		Topic:        superkeyTopic,
