@@ -1,11 +1,8 @@
 package service
 
 import (
-	"fmt"
 	"strconv"
-	"sync"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
@@ -13,37 +10,11 @@ import (
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 )
 
-const superkeyRequestedTopic = "platform.sources.superkey-requests"
-
-var superkeyTopic = config.Get().KafkaTopic(superkeyRequestedTopic)
-
-var (
-	superkeyWriter     *kafka.Writer
-	superkeyWriterOnce sync.Once
-	superkeyWriterErr  error
-)
-
-// getSuperkeyWriter lazily initializes and returns the shared Kafka writer for
-// superkey requests. Using a long-lived writer ensures the internal round-robin
-// partitioner distributes messages across all partitions instead of always
-// hitting the same one (which happens when a new writer is created per message).
-func getSuperkeyWriter() (*kafka.Writer, error) {
-	superkeyWriterOnce.Do(func() {
-		superkeyWriter, superkeyWriterErr = kafka.GetWriter(&kafka.Options{
-			BrokerConfig: conf.KafkaBrokerConfig,
-			Topic:        superkeyTopic,
-			Logger:       l.Log,
-		})
-	})
-
-	return superkeyWriter, superkeyWriterErr
-}
-
-// CloseSuperkeyProducer closes the shared Kafka writer for superkey requests.
-// Call during graceful shutdown.
-func CloseSuperkeyProducer() {
-	kafka.CloseWriter(superkeyWriter, "superkey producer shutdown")
-}
+// ProduceSuperkeyMessage is a function variable for producing superkey Kafka
+// messages. It must be set during initialization (e.g. in main.go) before any
+// superkey requests are made. Injecting the producer as a function variable
+// avoids a package-level writer and makes automated testing straightforward.
+var ProduceSuperkeyMessage func(m *kafka.Message) error
 
 func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
@@ -95,7 +66,7 @@ func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Heade
 
 	m.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("create_application")}))
 
-	return produceSuperkeyRequest(&m)
+	return ProduceSuperkeyMessage(&m)
 }
 
 func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Header) error {
@@ -149,14 +120,5 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 
 	m.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("destroy_application")}))
 
-	return produceSuperkeyRequest(&m)
-}
-
-func produceSuperkeyRequest(m *kafka.Message) error {
-	writer, err := getSuperkeyWriter()
-	if err != nil {
-		return fmt.Errorf(`unable to get the Kafka writer to produce a superkey request: %w`, err)
-	}
-
-	return kafka.Produce(writer, m)
+	return ProduceSuperkeyMessage(&m)
 }
