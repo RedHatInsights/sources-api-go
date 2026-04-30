@@ -476,7 +476,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 		for i := range out.Applications {
 			app := out.Applications[i]
 			if out.Sources[0].AppCreationWorkflow == m.AccountAuth {
-				err := SendSuperKeyCreateRequest(&app, headers)
+				err := SuperKey.SendCreateRequest(&app, headers)
 				if err != nil {
 					l.Log.Warnf("Error sending superkey create request: %v", err)
 				}
