@@ -143,7 +143,7 @@ func ApplicationCreate(c echo.Context) error {
 
 		// do the rest async. Don't want to be tied to kafka.
 		go func() {
-			err := service.SendSuperKeyCreateRequest(application, forwardableHeaders)
+			err := service.SuperKey.SendCreateRequest(application, forwardableHeaders)
 			if err != nil {
 				c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
 			}

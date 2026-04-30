@@ -46,7 +46,7 @@ func main() {
 	dao.Init()
 
 	// Initialize the shared superkey Kafka producer and inject it into the
-	// service package. Using a long-lived writer ensures the internal round-robin
+	// SuperKeyService. Using a long-lived writer ensures the internal round-robin
 	// partitioner distributes messages across all partitions instead of always
 	// hitting the same one (which happens when a new writer is created per message).
 	superkeyTopic := conf.KafkaTopic("platform.sources.superkey-requests")
@@ -60,9 +60,7 @@ func main() {
 		l.Log.Warnf("unable to create superkey Kafka writer: %v", err)
 	}
 
-	service.ProduceSuperkeyMessage = func(m *kafka.Message) error {
-		return kafka.Produce(superkeyWriter, m)
-	}
+	service.SuperKey = service.NewSuperKeyService(superkeyWriter)
 
 	// Initialize our custom metrics.
 	metricsService, err := metrics.NewPrometheusMetricsService()
