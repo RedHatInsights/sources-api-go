@@ -1,10 +1,8 @@
 package service
 
 import (
-	"fmt"
 	"strconv"
 
-	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
@@ -12,11 +10,24 @@ import (
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 )
 
-const superkeyRequestedTopic = "platform.sources.superkey-requests"
+// SuperKeyService handles superkey Kafka message production. The Kafka
+// producer is injected at construction time, keeping the service free of
+// package-level state and making automated testing straightforward.
+type SuperKeyService struct {
+	producer *kafka.Writer
+}
 
-var superkeyTopic = config.Get().KafkaTopic(superkeyRequestedTopic)
+// NewSuperKeyService creates a SuperKeyService with the given Kafka producer.
+// The producer should be a long-lived writer so the internal round-robin
+// partitioner distributes messages across all partitions.
+func NewSuperKeyService(producer *kafka.Writer) *SuperKeyService {
+	return &SuperKeyService{producer: producer}
+}
 
-func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Header) error {
+// SuperKey is the shared instance, initialised in main.go during startup.
+var SuperKey *SuperKeyService
+
+func (s *SuperKeyService) SendCreateRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
 	application, err := loadApplication(application)
 	if err != nil {
@@ -57,19 +68,19 @@ func SendSuperKeyCreateRequest(application *m.Application, headers []kafka.Heade
 		SuperKeySteps:   steps,
 	}
 
-	m := kafka.Message{}
+	msg := kafka.Message{}
 
-	err = m.AddValueAsJSON(&req)
+	err = msg.AddValueAsJSON(&req)
 	if err != nil {
 		return err
 	}
 
-	m.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("create_application")}))
+	msg.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("create_application")}))
 
-	return produceSuperkeyRequest(&m)
+	return kafka.Produce(s.producer, &msg)
 }
 
-func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Header) error {
+func (s *SuperKeyService) SendDeleteRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
 	application, err := loadApplication(application)
 	if err != nil {
@@ -111,34 +122,14 @@ func SendSuperKeyDeleteRequest(application *m.Application, headers []kafka.Heade
 		SuperKeySteps:  steps,
 	}
 
-	m := kafka.Message{}
+	msg := kafka.Message{}
 
-	err = m.AddValueAsJSON(&req)
+	err = msg.AddValueAsJSON(&req)
 	if err != nil {
 		return err
 	}
 
-	m.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("destroy_application")}))
+	msg.AddHeaders(append(headers, kafka.Header{Key: "event_type", Value: []byte("destroy_application")}))
 
-	return produceSuperkeyRequest(&m)
-}
-
-func produceSuperkeyRequest(m *kafka.Message) error {
-	writer, err := kafka.GetWriter(&kafka.Options{
-		BrokerConfig: conf.KafkaBrokerConfig,
-		Topic:        superkeyTopic,
-		Logger:       l.Log,
-	})
-	if err != nil {
-		return fmt.Errorf(`unable to create a Kafka writer to produce a superkey request: %w`, err)
-	}
-
-	defer kafka.CloseWriter(writer, "produce superkey request")
-
-	err = kafka.Produce(writer, m)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return kafka.Produce(s.producer, &msg)
 }
