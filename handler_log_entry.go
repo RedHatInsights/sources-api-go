@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/sirupsen/logrus"
 )
 
