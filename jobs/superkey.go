@@ -9,7 +9,6 @@ import (
 	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	m "github.com/RedHatInsights/sources-api-go/model"
-	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 )
 
@@ -93,7 +92,7 @@ func (sk SuperkeyDestroyJob) sendForSource(id int64) error {
 func (sk SuperkeyDestroyJob) sendForApplication(id int64) error {
 	l.Log.Infof("Sending SuperKey Delete request for application %v", sk.Id)
 
-	err := service.SuperKey.SendDeleteRequest(&m.Application{ID: id, TenantID: sk.Tenant}, sk.Headers)
+	err := superKeySvc.SendDeleteRequest(&m.Application{ID: id, TenantID: sk.Tenant}, sk.Headers)
 	if err != nil {
 		return err
 	}

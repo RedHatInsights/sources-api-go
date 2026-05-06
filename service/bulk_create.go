@@ -452,7 +452,7 @@ func linkupEndpoint(name string, endpoints []m.Endpoint) (int64, error) {
 
 // send all the messages on the event-stream for what we created. this involves
 // doing some checks for superkey related things etc.
-func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity string) {
+func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity string, sk *SuperKeyService) {
 	// do this async, since it could potentially take a while.
 	go func() {
 		for i := range out.Sources {
@@ -476,7 +476,7 @@ func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity 
 		for i := range out.Applications {
 			app := out.Applications[i]
 			if out.Sources[0].AppCreationWorkflow == m.AccountAuth {
-				err := SuperKey.SendCreateRequest(&app, headers)
+				err := sk.SendCreateRequest(&app, headers)
 				if err != nil {
 					l.Log.Warnf("Error sending superkey create request: %v", err)
 				}

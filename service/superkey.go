@@ -24,9 +24,6 @@ func NewSuperKeyService(producer *kafka.Writer) *SuperKeyService {
 	return &SuperKeyService{producer: producer}
 }
 
-// SuperKey is the shared instance, initialised in main.go during startup.
-var SuperKey *SuperKeyService
-
 func (s *SuperKeyService) SendCreateRequest(application *m.Application, headers []kafka.Header) error {
 	// load up the app + associations from the db+vault
 	application, err := loadApplication(application)

@@ -13,6 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// superKeySvc holds the SuperKeyService instance, injected from main during
+// server startup. Used by handlers that need to produce superkey Kafka messages.
+var superKeySvc *service.SuperKeyService
+
 // function that defines how we get the dao - default implementation below.
 var getApplicationDao func(c echo.Context) (dao.ApplicationDao, error)
 
@@ -143,7 +147,7 @@ func ApplicationCreate(c echo.Context) error {
 
 		// do the rest async. Don't want to be tied to kafka.
 		go func() {
-			err := service.SuperKey.SendCreateRequest(application, forwardableHeaders)
+			err := superKeySvc.SendCreateRequest(application, forwardableHeaders)
 			if err != nil {
 				c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
 			}

@@ -60,7 +60,7 @@ func main() {
 		l.Log.Warnf("unable to create superkey Kafka writer: %v", err)
 	}
 
-	service.SuperKey = service.NewSuperKeyService(superkeyWriter)
+	superKeySvc := service.NewSuperKeyService(superkeyWriter)
 
 	// Initialize our custom metrics.
 	metricsService, err := metrics.NewPrometheusMetricsService()
@@ -83,9 +83,9 @@ func main() {
 	case conf.StatusListener:
 		go statuslistener.Run(shutdown)
 	case conf.BackgroundWorker:
-		go jobs.Run(shutdown)
+		go jobs.Run(shutdown, superKeySvc)
 	default:
-		go runServer(shutdown, metricsService)
+		go runServer(shutdown, metricsService, superKeySvc)
 	}
 
 	l.Log.Info(conf)
@@ -104,7 +104,7 @@ func main() {
 	os.Exit(0)
 }
 
-func runServer(shutdown chan struct{}, metricsService metrics.MetricsService) {
+func runServer(shutdown chan struct{}, metricsService metrics.MetricsService, sks *service.SuperKeyService) {
 	e := echo.New()
 
 	// set the logger to the wrapper of our main logrus logger, with no fields on it.
@@ -122,6 +122,10 @@ func runServer(shutdown chan struct{}, metricsService metrics.MetricsService) {
 	e.Use(echoprometheus.NewMiddleware("sources"))
 
 	setupRoutes(e, metricsService)
+
+	// Inject the SuperKeyService so handlers can use it without a global in
+	// the service package. Follows the same wiring pattern as the DAO functions.
+	superKeySvc = sks
 
 	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant

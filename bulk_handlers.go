@@ -58,7 +58,7 @@ func BulkCreate(c echo.Context) error {
 		return err
 	}
 
-	service.SendBulkMessages(output, forwardableHeaders, xrhid)
+	service.SendBulkMessages(output, forwardableHeaders, xrhid, superKeySvc)
 
 	handlerLogEntry(c).WithFields(logrus.Fields{
 		"tenant_id":                         tenantID,
