@@ -10,6 +10,14 @@ import (
 	"github.com/redhatinsights/sources-superkey-worker/superkey"
 )
 
+// SuperKeyProducer is the interface for sending superkey messages to Kafka.
+// This interface allows for easy mocking in tests and follows the dependency
+// inversion principle.
+type SuperKeyProducer interface {
+	SendCreateRequest(application *m.Application, headers []kafka.Header) error
+	SendDeleteRequest(application *m.Application, headers []kafka.Header) error
+}
+
 // SuperKeyService handles superkey Kafka message production. The Kafka
 // producer is injected at construction time, keeping the service free of
 // package-level state and making automated testing straightforward.

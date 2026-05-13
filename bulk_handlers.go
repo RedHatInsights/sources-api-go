@@ -12,62 +12,64 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func BulkCreate(c echo.Context) error {
-	req := m.BulkCreateRequest{}
+func BulkCreate(superKeySvc service.SuperKeyProducer) func(echo.Context) error {
+	return func(c echo.Context) error {
+		req := m.BulkCreateRequest{}
 
-	err := c.Bind(&req)
-	if err != nil {
-		return err
-	}
-
-	tenantID, ok := c.Get(h.TenantID).(int64)
-	if !ok {
-		return fmt.Errorf("failed to pull tenant from request")
-	}
-
-	xrhid, ok := c.Get(h.XRHID).(string)
-	if !ok {
-		c.Logger().Warnf("bad xrhid %v", c.Get(h.XRHID))
-	}
-
-	id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
-	if !ok {
-		c.Logger().Warnf("failed to pull identity from request")
-		return fmt.Errorf("failed to pull identity from request")
-	}
-
-	user := &m.User{TenantID: tenantID}
-	userID, ok := c.Get(h.UserID).(int64)
-
-	if ok {
-		if id.Identity.User != nil {
-			user.UserID = id.Identity.User.UserID
+		err := c.Bind(&req)
+		if err != nil {
+			return err
 		}
 
-		user.Id = userID
+		tenantID, ok := c.Get(h.TenantID).(int64)
+		if !ok {
+			return fmt.Errorf("failed to pull tenant from request")
+		}
+
+		xrhid, ok := c.Get(h.XRHID).(string)
+		if !ok {
+			c.Logger().Warnf("bad xrhid %v", c.Get(h.XRHID))
+		}
+
+		id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
+		if !ok {
+			c.Logger().Warnf("failed to pull identity from request")
+			return fmt.Errorf("failed to pull identity from request")
+		}
+
+		user := &m.User{TenantID: tenantID}
+		userID, ok := c.Get(h.UserID).(int64)
+
+		if ok {
+			if id.Identity.User != nil {
+				user.UserID = id.Identity.User.UserID
+			}
+
+			user.Id = userID
+		}
+
+		// TODO: Pull the identity from the context after the org_id changes are merged.
+		output, err := service.BulkAssembly(req, &m.Tenant{Id: tenantID, ExternalTenant: id.Identity.AccountNumber}, user)
+		if err != nil {
+			return err
+		}
+
+		forwardableHeaders, err := service.ForwadableHeaders(c)
+		if err != nil {
+			return err
+		}
+
+		service.SendBulkMessages(output, forwardableHeaders, xrhid, superKeySvc)
+
+		handlerLogEntry(c).WithFields(logrus.Fields{
+			"tenant_id":                         tenantID,
+			"sources_count":                     len(output.Sources),
+			"applications_count":                len(output.Applications),
+			"endpoints_count":                   len(output.Endpoints),
+			"authentications_count":             len(output.Authentications),
+			"application_authentications_count": len(output.ApplicationAuthentications),
+		}).Infof("bulk create completed")
+
+		return c.JSON(http.StatusCreated, output.ToResponse())
 	}
-
-	// TODO: Pull the identity from the context after the org_id changes are merged.
-	output, err := service.BulkAssembly(req, &m.Tenant{Id: tenantID, ExternalTenant: id.Identity.AccountNumber}, user)
-	if err != nil {
-		return err
-	}
-
-	forwardableHeaders, err := service.ForwadableHeaders(c)
-	if err != nil {
-		return err
-	}
-
-	service.SendBulkMessages(output, forwardableHeaders, xrhid, superKeySvc)
-
-	handlerLogEntry(c).WithFields(logrus.Fields{
-		"tenant_id":                         tenantID,
-		"sources_count":                     len(output.Sources),
-		"applications_count":                len(output.Applications),
-		"endpoints_count":                   len(output.Endpoints),
-		"authentications_count":             len(output.Authentications),
-		"application_authentications_count": len(output.ApplicationAuthentications),
-	}).Infof("bulk create completed")
-
-	return c.JSON(http.StatusCreated, output.ToResponse())
 }

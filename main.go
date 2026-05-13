@@ -121,11 +121,7 @@ func runServer(shutdown chan struct{}, metricsService metrics.MetricsService, sk
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
 	e.Use(echoprometheus.NewMiddleware("sources"))
 
-	setupRoutes(e, metricsService)
-
-	// Inject the SuperKeyService so handlers can use it without a global in
-	// the service package. Follows the same wiring pattern as the DAO functions.
-	superKeySvc = sks
+	setupRoutes(e, sks, metricsService)
 
 	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant

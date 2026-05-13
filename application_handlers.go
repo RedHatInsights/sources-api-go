@@ -13,10 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// superKeySvc holds the SuperKeyService instance, injected from main during
-// server startup. Used by handlers that need to produce superkey Kafka messages.
-var superKeySvc *service.SuperKeyService
-
 // function that defines how we get the dao - default implementation below.
 var getApplicationDao func(c echo.Context) (dao.ApplicationDao, error)
 
@@ -86,75 +82,77 @@ func ApplicationGet(c echo.Context) error {
 	return c.JSON(http.StatusOK, app.ToResponse())
 }
 
-func ApplicationCreate(c echo.Context) error {
-	applicationDB, err := getApplicationDao(c)
-	if err != nil {
-		return err
-	}
-
-	requestParams, err := dao.NewRequestParamsFromContext(c)
-	if err != nil {
-		return err
-	}
-
-	input := &m.ApplicationCreateRequest{}
-
-	err = c.Bind(input)
-	if err != nil {
-		return err
-	}
-
-	err = service.ValidateApplicationCreateRequest(requestParams, input)
-	if err != nil {
-		return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
-	}
-
-	application := &m.Application{
-		Extra:             input.Extra,
-		ApplicationTypeID: input.ApplicationTypeID,
-		SourceID:          input.SourceID,
-	}
-
-	err = applicationDB.Create(application)
-	if err != nil {
-		return err
-	}
-
-	handlerLogEntry(c).WithFields(logrus.Fields{
-		"tenant_id":           *applicationDB.Tenant(),
-		"application_id":      application.ID,
-		"source_id":           application.SourceID,
-		"application_type_id": application.ApplicationTypeID,
-	}).Infof("created application")
-
-	accountNumber, err := getAccountNumberFromEchoContext(c)
-	if err != nil {
-		c.Logger().Warn(err)
-	}
-
-	application.Tenant = m.Tenant{Id: application.TenantID, ExternalTenant: accountNumber}
-	setEventStreamResource(c, application)
-
-	// do not raise if it is a superkey application. The worker will post back
-	// with the resources and then we raise the create event.
-	if applicationDB.IsSuperkey(application.ID) {
-		c.Set("skip_raise", true)
-
-		forwardableHeaders, err := service.ForwadableHeaders(c)
+func ApplicationCreate(superKeySvc service.SuperKeyProducer) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		applicationDB, err := getApplicationDao(c)
 		if err != nil {
 			return err
 		}
 
-		// do the rest async. Don't want to be tied to kafka.
-		go func() {
-			err := superKeySvc.SendCreateRequest(application, forwardableHeaders)
-			if err != nil {
-				c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
-			}
-		}()
-	}
+		requestParams, err := dao.NewRequestParamsFromContext(c)
+		if err != nil {
+			return err
+		}
 
-	return c.JSON(http.StatusCreated, application.ToResponse())
+		input := &m.ApplicationCreateRequest{}
+
+		err = c.Bind(input)
+		if err != nil {
+			return err
+		}
+
+		err = service.ValidateApplicationCreateRequest(requestParams, input)
+		if err != nil {
+			return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
+		}
+
+		application := &m.Application{
+			Extra:             input.Extra,
+			ApplicationTypeID: input.ApplicationTypeID,
+			SourceID:          input.SourceID,
+		}
+
+		err = applicationDB.Create(application)
+		if err != nil {
+			return err
+		}
+
+		handlerLogEntry(c).WithFields(logrus.Fields{
+			"tenant_id":           *applicationDB.Tenant(),
+			"application_id":      application.ID,
+			"source_id":           application.SourceID,
+			"application_type_id": application.ApplicationTypeID,
+		}).Infof("created application")
+
+		accountNumber, err := getAccountNumberFromEchoContext(c)
+		if err != nil {
+			c.Logger().Warn(err)
+		}
+
+		application.Tenant = m.Tenant{Id: application.TenantID, ExternalTenant: accountNumber}
+		setEventStreamResource(c, application)
+
+		// do not raise if it is a superkey application. The worker will post back
+		// with the resources and then we raise the create event.
+		if applicationDB.IsSuperkey(application.ID) {
+			c.Set("skip_raise", true)
+
+			forwardableHeaders, err := service.ForwadableHeaders(c)
+			if err != nil {
+				return err
+			}
+
+			// do the rest async. Don't want to be tied to kafka.
+			go func() {
+				err := superKeySvc.SendCreateRequest(application, forwardableHeaders)
+				if err != nil {
+					c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
+				}
+			}()
+		}
+
+		return c.JSON(http.StatusCreated, application.ToResponse())
+	}
 }
 
 func ApplicationEdit(c echo.Context) error {

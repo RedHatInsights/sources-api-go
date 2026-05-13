@@ -9,11 +9,12 @@ import (
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/rbac"
+	"github.com/RedHatInsights/sources-api-go/service"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
-func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
+func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsService metrics.MetricsService) {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
@@ -56,7 +57,7 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 		r.GET("/openapi.json", PublicOpenApi(version))
 
 		// Bulk Create
-		r.POST("/bulk_create", BulkCreate, permissionMiddleware...)
+		r.POST("/bulk_create", BulkCreate(superKeySvc), permissionMiddleware...)
 
 		// Sources
 		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
@@ -76,7 +77,7 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 		// Applications
 		r.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
 		r.GET("/applications/:id", ApplicationGet, tenancyMiddleware...)
-		r.POST("/applications", ApplicationCreate, permissionMiddleware...)
+		r.POST("/applications", ApplicationCreate(superKeySvc), permissionMiddleware...)
 		r.PATCH("/applications/:id", ApplicationEdit, append(permissionMiddleware, middleware.Notifier)...)
 		r.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.SuperKeyDestroyApplication)...)
 		r.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)

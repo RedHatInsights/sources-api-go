@@ -452,7 +452,7 @@ func linkupEndpoint(name string, endpoints []m.Endpoint) (int64, error) {
 
 // send all the messages on the event-stream for what we created. this involves
 // doing some checks for superkey related things etc.
-func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity string, sk *SuperKeyService) {
+func SendBulkMessages(out *m.BulkCreateOutput, headers []kafka.Header, identity string, sk SuperKeyProducer) {
 	// do this async, since it could potentially take a while.
 	go func() {
 		for i := range out.Sources {
