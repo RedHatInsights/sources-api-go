@@ -16,6 +16,7 @@ func (m *MockSuperKeyProducer) SendCreateRequest(application *m.Application, hea
 	m.CreateRequestCallCount++
 	m.LastApplication = application
 	m.LastHeaders = headers
+
 	return nil
 }
 
@@ -23,5 +24,6 @@ func (m *MockSuperKeyProducer) SendDeleteRequest(application *m.Application, hea
 	m.DeleteRequestCallCount++
 	m.LastApplication = application
 	m.LastHeaders = headers
+
 	return nil
 }
