@@ -100,7 +100,7 @@ func TestSuperKeyDeleteApplicationReturns202(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/applications/"+id,
 		nil,
-		map[string]interface{}{
+		map[string]any{
 			h.TenantID: tenantId,
 			h.XRHID:    buildXRHIdentity(),
 			// ForwadableHeaders reads these from context
@@ -157,9 +157,9 @@ func TestSuperKeyDeleteSourceReturns202(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/sources/"+id,
 		nil,
-		map[string]interface{}{
-			h.TenantID: tenantId,
-			h.XRHID:    buildXRHIdentity(),
+		map[string]any{
+			h.TenantID:                    tenantId,
+			h.XRHID:                       buildXRHIdentity(),
 			"x-rh-sources-account-number": "12345",
 			"x-rh-sources-org-id":         "23456",
 		},
@@ -210,7 +210,7 @@ func TestNonSuperKeyApplicationDeleteReturns204(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/applications/"+id,
 		nil,
-		map[string]interface{}{
+		map[string]any{
 			h.TenantID: tenantId,
 		},
 	)
@@ -246,7 +246,7 @@ func TestNonSuperKeySourceDeleteReturns204(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/sources/"+id,
 		nil,
-		map[string]interface{}{
+		map[string]any{
 			h.TenantID: tenantId,
 		},
 	)
@@ -283,9 +283,9 @@ func TestSuperKeyDeleteApplicationJobContents(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/applications/"+id,
 		nil,
-		map[string]interface{}{
-			h.TenantID: tenantId,
-			h.XRHID:    xrhid,
+		map[string]any{
+			h.TenantID:                    tenantId,
+			h.XRHID:                       xrhid,
 			"x-rh-sources-account-number": "12345",
 			"x-rh-sources-org-id":         "23456",
 		},
@@ -326,7 +326,7 @@ func TestSuperKeyDeleteApplicationBadId(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/applications/notanumber",
 		nil,
-		map[string]interface{}{
+		map[string]any{
 			h.TenantID: tenantId,
 		},
 	)
@@ -336,6 +336,7 @@ func TestSuperKeyDeleteApplicationBadId(t *testing.T) {
 
 	handler := ErrorHandlingContext(ApplicationDelete)
 	err := handler(c)
+
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -357,7 +358,7 @@ func TestSuperKeyDeleteApplicationNotFound(t *testing.T) {
 		http.MethodDelete,
 		"/api/sources/v3.1/applications/999999",
 		nil,
-		map[string]interface{}{
+		map[string]any{
 			h.TenantID: tenantId,
 		},
 	)
@@ -367,6 +368,7 @@ func TestSuperKeyDeleteApplicationNotFound(t *testing.T) {
 
 	handler := ErrorHandlingContext(ApplicationDelete)
 	err := handler(c)
+
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
