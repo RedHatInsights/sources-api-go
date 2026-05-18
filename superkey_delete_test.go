@@ -336,7 +336,6 @@ func TestSuperKeyDeleteApplicationBadId(t *testing.T) {
 
 	handler := ErrorHandlingContext(ApplicationDelete)
 	err := handler(c)
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -368,7 +367,6 @@ func TestSuperKeyDeleteApplicationNotFound(t *testing.T) {
 
 	handler := ErrorHandlingContext(ApplicationDelete)
 	err := handler(c)
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
