@@ -9,7 +9,8 @@ import (
 )
 
 type MockApplicationDao struct {
-	Applications []m.Application
+	Applications    []m.Application
+	SuperKeyEnabled bool
 }
 
 func (mockAppDao *MockApplicationDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.Application, int64, error) {
@@ -146,5 +147,5 @@ func (mockAppDao *MockApplicationDao) Unpause(_ int64) error {
 }
 
 func (mockAppDao *MockApplicationDao) IsSuperkey(_ int64) bool {
-	return false
+	return mockAppDao.SuperKeyEnabled
 }

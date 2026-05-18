@@ -54,7 +54,11 @@ func (jr *JobRequest) Parse() error {
 }
 
 // Enqueue adds a job to the valkey list to be picked up by the worker.
-func Enqueue(j Job) {
+// It is a function variable so that tests can swap it with a mock
+// implementation without requiring a running valkey instance.
+var Enqueue = enqueue
+
+func enqueue(j Job) {
 	l.Log.Infof("Submitting job %v to valkey with %v", j.Name(), j.Arguments())
 
 	req := JobRequest{
