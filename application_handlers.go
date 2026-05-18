@@ -260,7 +260,14 @@ func ApplicationDelete(c echo.Context) error {
 		return util.NewErrNotFound("application")
 	}
 
-	// Cascade delete the application.
+	// Superkey applications are deleted asynchronously: we enqueue a job
+	// that sends the destroy request to the superkey worker, which cleans
+	// up the cloud resources before the actual DB cascade delete runs.
+	if applicationDB.IsSuperkey(id) {
+		return enqueueSuperKeyDelete(c, "application", id)
+	}
+
+	// Non-superkey: cascade delete immediately.
 	forwardableHeaders, err := service.ForwadableHeaders(c)
 	if err != nil {
 		return err

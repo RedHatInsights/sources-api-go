@@ -12,8 +12,8 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/jobs"
-	"github.com/RedHatInsights/sources-api-go/middleware"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
+	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
 
@@ -26,37 +26,53 @@ func mockEnqueue(j jobs.Job) {
 	mockEnqueuedJobs = append(mockEnqueuedJobs, j)
 }
 
-// setupSuperKeyTest swaps the DAO factory and Enqueue function for testing.
-// It returns a cleanup function that restores the original values.
+// setupSuperKeyTest swaps handler-level DAO getters, the global DAO factories,
+// and the Enqueue function for testing. Returns a cleanup function that
+// restores all original values.
 func setupSuperKeyTest(superKeyEnabled bool) func() {
-	// Save originals
-	origGetSourceDao := dao.GetSourceDao
-	origGetApplicationDao := dao.GetApplicationDao
+	// Save originals — handler-level getters (package-private in main)
+	origGetSourceDao := getSourceDao
+	origGetApplicationDao := getApplicationDao
+
+	// Save originals — global DAO factories (used by service.DeleteCascade)
+	origGlobalGetSourceDao := dao.GetSourceDao
+	origGlobalGetApplicationDao := dao.GetApplicationDao
+	origGlobalGetAuthDao := dao.GetAuthenticationDao
 	origEnqueue := jobs.Enqueue
 
-	// Set up mock DAOs with configurable IsSuperkey
-	dao.GetSourceDao = func(_ *dao.RequestParams) dao.SourceDao {
-		return &mocks.MockSourceDao{
-			Sources:         fixtures.TestSourceData,
-			RelatedSources:  fixtures.TestSourceData,
-			SuperKeyEnabled: superKeyEnabled,
-		}
+	// Build mock DAOs
+	mockSrcDao := &mocks.MockSourceDao{
+		Sources:         fixtures.TestSourceData,
+		RelatedSources:  fixtures.TestSourceData,
+		SuperKeyEnabled: superKeyEnabled,
 	}
 
-	dao.GetApplicationDao = func(_ *dao.RequestParams) dao.ApplicationDao {
-		return &mocks.MockApplicationDao{
-			Applications:    fixtures.TestApplicationData,
-			SuperKeyEnabled: superKeyEnabled,
-		}
+	mockAppDao := &mocks.MockApplicationDao{
+		Applications:    fixtures.TestApplicationData,
+		SuperKeyEnabled: superKeyEnabled,
 	}
+
+	// Swap handler-level getters
+	getSourceDao = func(_ echo.Context) (dao.SourceDao, error) { return mockSrcDao, nil }
+	getApplicationDao = func(_ echo.Context) (dao.ApplicationDao, error) { return mockAppDao, nil }
+
+	mockAuthDao := mocks.MockAuthenticationDao{Authentications: fixtures.TestAuthenticationData}
+
+	// Swap global DAO factories (for service.DeleteCascade path)
+	dao.GetSourceDao = func(_ *dao.RequestParams) dao.SourceDao { return mockSrcDao }
+	dao.GetApplicationDao = func(_ *dao.RequestParams) dao.ApplicationDao { return mockAppDao }
+	dao.GetAuthenticationDao = func(_ *dao.RequestParams) dao.AuthenticationDao { return mockAuthDao }
 
 	// Mock Enqueue
 	mockEnqueuedJobs = nil
 	jobs.Enqueue = mockEnqueue
 
 	return func() {
-		dao.GetSourceDao = origGetSourceDao
-		dao.GetApplicationDao = origGetApplicationDao
+		getSourceDao = origGetSourceDao
+		getApplicationDao = origGetApplicationDao
+		dao.GetSourceDao = origGlobalGetSourceDao
+		dao.GetApplicationDao = origGlobalGetApplicationDao
+		dao.GetAuthenticationDao = origGlobalGetAuthDao
 		jobs.Enqueue = origEnqueue
 	}
 }
@@ -69,10 +85,10 @@ func buildXRHIdentity() string {
 	return string(base64.StdEncoding.EncodeToString(raw))
 }
 
-// TestSuperKeyDestroyApplicationReturns202 verifies that a DELETE request
-// for a superkey application is intercepted by the middleware and returns
-// 202 Accepted (async delete) instead of the immediate 204 No Content.
-func TestSuperKeyDestroyApplicationReturns202(t *testing.T) {
+// TestSuperKeyDeleteApplicationReturns202 verifies that a DELETE request
+// for a superkey application returns 202 Accepted (async delete via job)
+// instead of the immediate 204 No Content.
+func TestSuperKeyDeleteApplicationReturns202(t *testing.T) {
 	cleanup := setupSuperKeyTest(true)
 	defer cleanup()
 
@@ -96,9 +112,7 @@ func TestSuperKeyDestroyApplicationReturns202(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	// Wrap the handler with the superkey destroy middleware, just like routes.go does
-	handler := middleware.SuperKeyDestroyApplication(ApplicationDelete)
-	err := handler(c)
+	err := ApplicationDelete(c)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -129,9 +143,9 @@ func TestSuperKeyDestroyApplicationReturns202(t *testing.T) {
 	}
 }
 
-// TestSuperKeyDestroySourceReturns202 verifies that a DELETE request for a
-// superkey source is intercepted and returns 202 Accepted.
-func TestSuperKeyDestroySourceReturns202(t *testing.T) {
+// TestSuperKeyDeleteSourceReturns202 verifies that a DELETE request for a
+// superkey source returns 202 Accepted.
+func TestSuperKeyDeleteSourceReturns202(t *testing.T) {
 	cleanup := setupSuperKeyTest(true)
 	defer cleanup()
 
@@ -154,8 +168,7 @@ func TestSuperKeyDestroySourceReturns202(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	handler := middleware.SuperKeyDestroySource(SourceDelete)
-	err := handler(c)
+	err := SourceDelete(c)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -183,8 +196,8 @@ func TestSuperKeyDestroySourceReturns202(t *testing.T) {
 }
 
 // TestNonSuperKeyApplicationDeleteReturns204 verifies that a DELETE request
-// for a non-superkey application passes through the middleware and reaches
-// the handler, which returns 204 No Content.
+// for a non-superkey application goes through the normal cascade delete
+// path and returns 204 No Content.
 func TestNonSuperKeyApplicationDeleteReturns204(t *testing.T) {
 	cleanup := setupSuperKeyTest(false)
 	defer cleanup()
@@ -205,8 +218,7 @@ func TestNonSuperKeyApplicationDeleteReturns204(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	handler := middleware.SuperKeyDestroyApplication(ApplicationDelete)
-	err := handler(c)
+	err := ApplicationDelete(c)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -221,7 +233,7 @@ func TestNonSuperKeyApplicationDeleteReturns204(t *testing.T) {
 }
 
 // TestNonSuperKeySourceDeleteReturns204 verifies that a DELETE request for a
-// non-superkey source passes through the middleware to the handler (204).
+// non-superkey source goes through the cascade delete and returns 204.
 func TestNonSuperKeySourceDeleteReturns204(t *testing.T) {
 	cleanup := setupSuperKeyTest(false)
 	defer cleanup()
@@ -242,8 +254,7 @@ func TestNonSuperKeySourceDeleteReturns204(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	handler := middleware.SuperKeyDestroySource(SourceDelete)
-	err := handler(c)
+	err := SourceDelete(c)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -257,9 +268,9 @@ func TestNonSuperKeySourceDeleteReturns204(t *testing.T) {
 	}
 }
 
-// TestSuperKeyDestroyApplicationJobContents verifies that the enqueued
+// TestSuperKeyDeleteApplicationJobContents verifies that the enqueued
 // SuperkeyDestroyJob contains the correct identity and forwarded headers.
-func TestSuperKeyDestroyApplicationJobContents(t *testing.T) {
+func TestSuperKeyDeleteApplicationJobContents(t *testing.T) {
 	cleanup := setupSuperKeyTest(true)
 	defer cleanup()
 
@@ -283,8 +294,7 @@ func TestSuperKeyDestroyApplicationJobContents(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 
-	handler := middleware.SuperKeyDestroyApplication(ApplicationDelete)
-	err := handler(c)
+	err := ApplicationDelete(c)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -304,9 +314,9 @@ func TestSuperKeyDestroyApplicationJobContents(t *testing.T) {
 	}
 }
 
-// TestSuperKeyDestroyApplicationBadId verifies that a non-numeric id
-// returns an error from the middleware.
-func TestSuperKeyDestroyApplicationBadId(t *testing.T) {
+// TestSuperKeyDeleteApplicationBadId verifies that a non-numeric id
+// returns a bad request error.
+func TestSuperKeyDeleteApplicationBadId(t *testing.T) {
 	cleanup := setupSuperKeyTest(true)
 	defer cleanup()
 
@@ -324,7 +334,7 @@ func TestSuperKeyDestroyApplicationBadId(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues("notanumber")
 
-	handler := ErrorHandlingContext(middleware.SuperKeyDestroyApplication(ApplicationDelete))
+	handler := ErrorHandlingContext(ApplicationDelete)
 	err := handler(c)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -332,5 +342,36 @@ func TestSuperKeyDestroyApplicationBadId(t *testing.T) {
 
 	if rec.Code != http.StatusBadRequest {
 		t.Errorf("expected status %d (BadRequest), got %d", http.StatusBadRequest, rec.Code)
+	}
+}
+
+// TestSuperKeyDeleteApplicationNotFound verifies that deleting a non-existent
+// superkey application returns not found.
+func TestSuperKeyDeleteApplicationNotFound(t *testing.T) {
+	cleanup := setupSuperKeyTest(true)
+	defer cleanup()
+
+	tenantId := int64(1)
+
+	c, rec := request.CreateTestContext(
+		http.MethodDelete,
+		"/api/sources/v3.1/applications/999999",
+		nil,
+		map[string]interface{}{
+			h.TenantID: tenantId,
+		},
+	)
+
+	c.SetParamNames("id")
+	c.SetParamValues("999999")
+
+	handler := ErrorHandlingContext(ApplicationDelete)
+	err := handler(c)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("expected status %d (NotFound), got %d", http.StatusNotFound, rec.Code)
 	}
 }
