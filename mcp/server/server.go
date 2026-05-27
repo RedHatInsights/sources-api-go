@@ -14,10 +14,10 @@ import (
 )
 
 type MCPServer struct {
-	mcpServer         *server.MCPServer
-	streamableServer  *server.StreamableHTTPServer
-	sourcesClient     *client.SourcesClient
-	log               *logrus.Logger
+	mcpServer        *server.MCPServer
+	streamableServer *server.StreamableHTTPServer
+	sourcesClient    *client.SourcesClient
+	log              *logrus.Logger
 }
 
 // NewMCPServer creates and configures a new MCP server instance
