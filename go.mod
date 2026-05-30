@@ -1,6 +1,8 @@
 module github.com/RedHatInsights/sources-api-go
 
-go 1.25.0
+go 1.24.0
+
+toolchain go1.24.4
 
 require (
 	github.com/99designs/gqlgen v0.17.80
@@ -18,7 +20,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.7.6
 	github.com/labstack/echo-contrib v0.17.4
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
