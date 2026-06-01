@@ -3,3 +3,5 @@
 .scannerwork/
 sources-api-go
 tmp/
+test_logs/
+test_downloads/
