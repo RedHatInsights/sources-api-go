@@ -142,7 +142,7 @@ func TestIdListToRhcConnection(t *testing.T) {
 
 		got := len(rhcConnection.Sources)
 		if want != got {
-			t.Errorf(`want "%d" soruces, got "%d"`, want, got)
+			t.Errorf(`want "%d" sources, got "%d"`, want, got)
 		}
 	}
 
