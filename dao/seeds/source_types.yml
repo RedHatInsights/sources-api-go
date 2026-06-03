@@ -257,7 +257,7 @@ dockerhub:
             label: Username of the Docker Hub account
           - component: text-field
             name: authentication.password
-            label: Acces Token for the Docker Hub account
+            label: Access Token for the Docker Hub account
 github:
   product_name: GitHub
   category: Developer sources
@@ -277,7 +277,7 @@ github:
             label: Username of the GitHub account
           - component: text-field
             name: authentication.password
-            label: Personal Acces Token (PAT) for the GitHub account
+            label: Personal Access Token (PAT) for the GitHub account
 gitlab:
   product_name: GitLab
   category: Developer sources
@@ -297,7 +297,7 @@ gitlab:
             label: Username of the GitLab account
           - component: text-field
             name: authentication.password
-            label: Personal Acces Token for the GitLab account
+            label: Personal Access Token for the GitLab account
 openshift:
   product_name: Red Hat OpenShift Container Platform
   category: Red Hat
