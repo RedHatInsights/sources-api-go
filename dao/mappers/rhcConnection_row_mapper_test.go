@@ -102,7 +102,7 @@ func TestMapRowToRhcConnection(t *testing.T) {
 	{
 		got := *result.LastCheckedAt
 		if now != got {
-			t.Errorf(`Unexpected different last cheked at times found. Want "%s", got "%s"`, now, got)
+			t.Errorf(`Unexpected different last checked at times found. Want "%s", got "%s"`, now, got)
 		}
 	}
 
