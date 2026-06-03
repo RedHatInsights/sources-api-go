@@ -62,7 +62,7 @@ IQE_MARKER_EXPRESSION="smoke and not ui"  # This is the value passed to pytest -
 IQE_PARALLEL_ENABLED="false"
 IQE_PLUGINS="sources"  # name of the IQE plugin for this app.
 
-# Install and configur Bonfire to be able to build, deploy and run the tests
+# Install and configure Bonfire to be able to build, deploy and run the tests
 # in the ephemeral environment.
 
 curl -s "https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/bootstrap.sh" > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
