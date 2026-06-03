@@ -71,7 +71,7 @@ func Run(shutdown chan struct{}) {
 // Run a Job with a delay but in the background so it does _not_ block the
 // calling routine.
 func RunJobAsync(j Job) {
-	l.Log.Infof("Running job asyncronously %v, %v", j.Name(), j.Arguments())
+	l.Log.Infof("Running job asynchronously %v, %v", j.Name(), j.Arguments())
 
 	go func() {
 		RunJob(j)
