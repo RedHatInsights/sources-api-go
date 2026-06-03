@@ -120,7 +120,7 @@ func TestAuthFromVault(t *testing.T) {
 
 			got := resultingAuth.ResourceType
 			if want != got {
-				t.Errorf(`authentication resoource types are different. Want "%s", got "%s"`, want, got)
+				t.Errorf(`authentication resource types are different. Want "%s", got "%s"`, want, got)
 			}
 		}
 
