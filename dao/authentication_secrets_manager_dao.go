@@ -186,7 +186,7 @@ func (a *authenticationSecretsManagerDaoImpl) BulkDelete(authentications []m.Aut
 		return nil, err
 	}
 
-	// go through and clean up the aws resoures, logging if there is a failure.
+	// go through and clean up the aws resources, logging if there is a failure.
 	for i := range authentications {
 		if authentications[i].Password != nil {
 			err := sm.DeleteSecret(*authentications[i].Password)
