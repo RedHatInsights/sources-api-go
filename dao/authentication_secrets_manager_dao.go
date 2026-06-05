@@ -13,7 +13,7 @@ type authenticationSecretsManagerDaoImpl struct {
 	// tenant ID + User ID + context information
 	*RequestParams
 
-	// embedded isntance of the db - since we use it for all fields except the
+	// embedded instance of the db - since we use it for all fields except the
 	// password. the only glaring difference is that we will store an
 	// unencrypted ARN as the password field, so we can just fetch it directly
 	// from amazon when we need to decrypt it.
