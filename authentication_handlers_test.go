@@ -328,7 +328,7 @@ func TestAuthenticationCreate(t *testing.T) {
 	// Set the encryption key
 	util.OverrideEncryptionKey(strings.Repeat("test", 8))
 
-	// Test the creation of authentication for an application, fpr an endpoint
+	// Test the creation of authentication for an application, for an endpoint
 	// and for a source
 
 	for _, resourceType := range []string{"Application", "Endpoint", "Source"} {

@@ -26,7 +26,7 @@ and creates the resources in this order:
 2. Endpoints/Applications
 
 It dynamically looks up both the SourceType as well as ApplicationType if
-given the *_type_name paremeters.
+given the *_type_name parameters.
 
 3. Saving the Authentications
 4. Saving the ApplicationAuthentications if necessary

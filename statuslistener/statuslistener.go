@@ -268,7 +268,7 @@ func (avs *AvailabilityStatusListener) healthCheckConsumer() {
 	for range avs.healthcheck {
 		now := time.Now()
 		avs.lastMsg = now
-		l.Log.Debugf("Got Healthcheck Messsage %v", now.Format(time.Kitchen))
+		l.Log.Debugf("Got Healthcheck Message %v", now.Format(time.Kitchen))
 	}
 }
 

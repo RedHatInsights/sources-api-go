@@ -76,6 +76,6 @@ func getEntryFromContext(ctx context.Context) *logrus.Entry {
 		}
 	}
 
-	// falling back to a default logger if the asserion fails
+	// falling back to a default logger if the assertion fails
 	return Log.WithFields(logrus.Fields{})
 }

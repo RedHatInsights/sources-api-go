@@ -223,7 +223,7 @@ func TestTenantByIdentityNotFound(t *testing.T) {
 		AccountNumber: "invalid",
 	})
 	if !errors.As(err, &util.ErrNotFound{}) {
-		t.Errorf(`unexpected error recevied. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	// Call the function under test by providing it an invalid orgId.
@@ -231,7 +231,7 @@ func TestTenantByIdentityNotFound(t *testing.T) {
 		OrgID: "invalid",
 	})
 	if !errors.As(err, &util.ErrNotFound{}) {
-		t.Errorf(`unexpected error recevied. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
+		t.Errorf(`unexpected error received. Want "%s", got "%s"`, reflect.TypeOf(util.ErrNotFound{}), reflect.TypeOf(err))
 	}
 
 	DropSchema("tenant_tests")
