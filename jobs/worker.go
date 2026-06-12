@@ -7,14 +7,23 @@ import (
 
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
 )
+
+// superKeySvc is the SuperKeyService instance injected from main at startup.
+// Used by SuperkeyDestroyJob to send delete requests without relying on a
+// global in the service package.
+var superKeySvc *service.SuperKeyService
 
 // the queue on valkey we'll be sending the jobs to
 const workQueue = "sources_api_jobs"
 
-// Run starts the worker consuming jobs off a valkey list.
-func Run(shutdown chan struct{}) {
+// Run starts the worker consuming jobs off a valkey list. The SuperKeyService
+// is injected from main so that SuperkeyDestroyJob can send delete requests
+// without relying on a global in the service package.
+func Run(shutdown chan struct{}, sks *service.SuperKeyService) {
+	superKeySvc = sks
 	l.Log.Infof("Starting up Background worker listening to valkey queue [%v]", workQueue)
 
 	go func() {

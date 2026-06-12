@@ -11,9 +11,11 @@ import (
 	"github.com/RedHatInsights/sources-api-go/config"
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/jobs"
+	"github.com/RedHatInsights/sources-api-go/kafka"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	"github.com/RedHatInsights/sources-api-go/util"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
@@ -43,6 +45,23 @@ func main() {
 	redis.Init()
 	dao.Init()
 
+	// Initialize the shared superkey Kafka producer and inject it into the
+	// SuperKeyService. Using a long-lived writer ensures the internal round-robin
+	// partitioner distributes messages across all partitions instead of always
+	// hitting the same one (which happens when a new writer is created per message).
+	superkeyTopic := conf.KafkaTopic("platform.sources.superkey-requests")
+
+	superkeyWriter, err := kafka.GetWriter(&kafka.Options{
+		BrokerConfig: conf.KafkaBrokerConfig,
+		Topic:        superkeyTopic,
+		Logger:       l.Log,
+	})
+	if err != nil {
+		l.Log.Warnf("unable to create superkey Kafka writer: %v", err)
+	}
+
+	superKeySvc := service.NewSuperKeyService(superkeyWriter)
+
 	// Initialize our custom metrics.
 	metricsService, err := metrics.NewPrometheusMetricsService()
 	if err != nil {
@@ -64,9 +83,9 @@ func main() {
 	case conf.StatusListener:
 		go statuslistener.Run(shutdown)
 	case conf.BackgroundWorker:
-		go jobs.Run(shutdown)
+		go jobs.Run(shutdown, superKeySvc)
 	default:
-		go runServer(shutdown, metricsService)
+		go runServer(shutdown, metricsService, superKeySvc)
 	}
 
 	l.Log.Info(conf)
@@ -79,10 +98,13 @@ func main() {
 
 	<-shutdown
 
+	// Close the shared superkey Kafka producer before exiting.
+	kafka.CloseWriter(superkeyWriter, "superkey producer shutdown")
+
 	os.Exit(0)
 }
 
-func runServer(shutdown chan struct{}, metricsService metrics.MetricsService) {
+func runServer(shutdown chan struct{}, metricsService metrics.MetricsService, sks *service.SuperKeyService) {
 	e := echo.New()
 
 	// set the logger to the wrapper of our main logrus logger, with no fields on it.
@@ -99,7 +121,7 @@ func runServer(shutdown chan struct{}, metricsService metrics.MetricsService) {
 	// use the echo prometheus middleware - without having it mount the route on the main listener.
 	e.Use(echoprometheus.NewMiddleware("sources"))
 
-	setupRoutes(e, metricsService)
+	setupRoutes(e, sks, metricsService)
 
 	// setting up the DAO functions
 	getSourceDao = getSourceDaoWithTenant

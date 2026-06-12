@@ -228,7 +228,13 @@ func SourceDelete(c echo.Context) (err error) {
 		}
 	}
 
-	// Cascade delete the source.
+	// Superkey sources are deleted asynchronously: enqueue a job that
+	// tells the superkey worker to clean up cloud resources first.
+	if sourcesDB.IsSuperkey(id) {
+		return enqueueSuperKeyDelete(c, "source", id)
+	}
+
+	// Non-superkey: cascade delete immediately.
 	forwardableHeaders, err := service.ForwadableHeaders(c)
 	if err != nil {
 		return err

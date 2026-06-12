@@ -9,11 +9,12 @@ import (
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware"
 	"github.com/RedHatInsights/sources-api-go/rbac"
+	"github.com/RedHatInsights/sources-api-go/service"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
 	"github.com/labstack/echo/v4"
 )
 
-func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
+func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsService metrics.MetricsService) {
 	e.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
@@ -56,14 +57,14 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 		r.GET("/openapi.json", PublicOpenApi(version))
 
 		// Bulk Create
-		r.POST("/bulk_create", BulkCreate, permissionMiddleware...)
+		r.POST("/bulk_create", BulkCreate(superKeySvc), permissionMiddleware...)
 
 		// Sources
 		r.GET("/sources", SourceList, tenancyWithListMiddleware...)
 		r.GET("/sources/:id", SourceGet, tenancyMiddleware...)
 		r.POST("/sources", SourceCreate, permissionMiddleware...)
 		r.PATCH("/sources/:id", SourceEdit, append(permissionMiddleware, middleware.Notifier)...)
-		r.DELETE("/sources/:id", SourceDelete, append(permissionMiddleware, middleware.SuperKeyDestroySource)...)
+		r.DELETE("/sources/:id", SourceDelete, permissionMiddleware...)
 		r.POST("/sources/:source_id/check_availability", SourceCheckAvailability(metricsService), middleware.Tenancy, middleware.LoggerFields)
 		r.GET("/sources/:source_id/application_types", SourceListApplicationTypes, tenancyWithListMiddleware...)
 		r.GET("/sources/:source_id/applications", SourceListApplications, tenancyWithListMiddleware...)
@@ -76,9 +77,9 @@ func setupRoutes(e *echo.Echo, metricsService metrics.MetricsService) {
 		// Applications
 		r.GET("/applications", ApplicationList, tenancyWithListMiddleware...)
 		r.GET("/applications/:id", ApplicationGet, tenancyMiddleware...)
-		r.POST("/applications", ApplicationCreate, permissionMiddleware...)
+		r.POST("/applications", ApplicationCreate(superKeySvc), permissionMiddleware...)
 		r.PATCH("/applications/:id", ApplicationEdit, append(permissionMiddleware, middleware.Notifier)...)
-		r.DELETE("/applications/:id", ApplicationDelete, append(permissionMiddleware, middleware.SuperKeyDestroyApplication)...)
+		r.DELETE("/applications/:id", ApplicationDelete, permissionMiddleware...)
 		r.GET("/applications/:application_id/authentications", ApplicationListAuthentications, tenancyWithListMiddleware...)
 		r.POST("/applications/:id/pause", ApplicationPause, tenancyMiddleware...)
 		r.POST("/applications/:id/unpause", ApplicationUnpause, tenancyMiddleware...)

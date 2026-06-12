@@ -1,12 +1,10 @@
 package jobs
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
 	l "github.com/RedHatInsights/sources-api-go/logger"
-	"github.com/RedHatInsights/sources-api-go/redis"
 )
 
 type JobRequest struct {
@@ -45,6 +43,7 @@ func (jr *JobRequest) Parse() error {
 		jr.Job = &adj
 	default:
 		l.Log.Warnf("Unsupported job: %v", jr.JobName)
+
 		return fmt.Errorf("unsupported job %v", jr.JobName)
 	}
 
@@ -53,24 +52,9 @@ func (jr *JobRequest) Parse() error {
 	return nil
 }
 
-// Enqueue adds a job to the valkey list to be picked up by the worker.
-func Enqueue(j Job) {
-	l.Log.Infof("Submitting job %v to valkey with %v", j.Name(), j.Arguments())
-
-	req := JobRequest{
-		JobName: j.Name(),
-		JobRaw:  j.ToJSON(),
-	}
-
-	// Marshal the job request to JSON for storage in valkey
-	data, err := req.MarshalBinary()
-	if err != nil {
-		l.Log.Warnf("Failed to marshal job: %v", err)
-		return
-	}
-
-	err = redis.Client.Do(context.Background(), redis.Client.B().Rpush().Key(workQueue).Element(string(data)).Build()).Error()
-	if err != nil {
-		l.Log.Warnf("Failed to submit job: %v", err)
-	}
+// Enqueue adds a job to the worker queue. It is a function variable so
+// that tests can swap it with a mock and production code can delegate to
+// a ValkeyJobRunner. The default uses ValkeyJobRunner.
+var Enqueue func(j Job) = func(j Job) {
+	NewValkeyJobRunner().Enqueue(j)
 }
