@@ -157,13 +157,13 @@ func ConnectAndMigrateDB(packageName string) {
 	ConnectToTestDB(packageName)
 
 	if out := dao.DB.Exec("CREATE SCHEMA IF NOT EXISTS " + packageName); out.Error != nil {
-		log.Fatalf("error in creating schema " + out.Error.Error())
+		log.Fatalf("error in creating schema %s", out.Error.Error())
 	}
 
 	MigrateSchema()
 
 	if out := dao.DB.Exec(`SET search_path TO "$user", ` + packageName); out.Error != nil {
-		log.Fatalf("error in setting schema" + out.Error.Error())
+		log.Fatalf("error in setting schema %s", out.Error.Error())
 	}
 }
 
