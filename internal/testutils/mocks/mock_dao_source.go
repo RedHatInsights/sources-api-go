@@ -10,8 +10,9 @@ import (
 )
 
 type MockSourceDao struct {
-	Sources        []m.Source
-	RelatedSources []m.Source
+	Sources         []m.Source
+	RelatedSources  []m.Source
+	SuperKeyEnabled bool
 }
 
 func (mockSourceDao *MockSourceDao) SubCollectionList(primaryCollection interface{}, _, _ int, _ []util.Filter) ([]m.Source, int64, error) {
@@ -133,7 +134,7 @@ func (mockSourceDao *MockSourceDao) NameExistsInCurrentTenant(_ string) bool {
 }
 
 func (mockSourceDao *MockSourceDao) IsSuperkey(_ int64) bool {
-	return false
+	return mockSourceDao.SuperKeyEnabled
 }
 
 func (mockSourceDao *MockSourceDao) GetByIdWithPreload(id *int64, _ ...string) (*m.Source, error) {

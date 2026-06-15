@@ -12,6 +12,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/internal/testutils"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/database"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/fixtures"
+	"github.com/RedHatInsights/sources-api-go/internal/testutils/mocks"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
 	"github.com/RedHatInsights/sources-api-go/kafka"
@@ -53,7 +54,7 @@ func TestBulkCreateMissingSourceType(t *testing.T) {
 
 	c.Set(h.UserID, user.Id)
 
-	err = BulkCreate(c)
+	err = BulkCreate(&mocks.MockSuperKeyProducer{})(c)
 	if !strings.Contains(err.Error(), "no source type present, need either [source_type_name] or [source_type_id]") {
 		t.Error(err)
 	}
@@ -101,7 +102,7 @@ func TestBulkCreateWithUserCreation(t *testing.T) {
 		t.Error(err)
 	}
 
-	bulkCreate := middleware.UserCatcher(BulkCreate)
+	bulkCreate := middleware.UserCatcher(BulkCreate(&mocks.MockSuperKeyProducer{}))
 
 	err = bulkCreate(c)
 	if err != nil {
@@ -211,7 +212,7 @@ func TestBulkCreate(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set(h.ParsedIdentity, identityHeader)
 
-	err = BulkCreate(c)
+	err = BulkCreate(&mocks.MockSuperKeyProducer{})(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,7 +300,7 @@ func TestBulkCreateSourceValidationBadRequest(t *testing.T) {
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 	c.Set(h.ParsedIdentity, &identity.XRHID{Identity: identity.Identity{AccountNumber: fixtures.TestTenantData[0].ExternalTenant}})
 
-	badRequestBulkCreate := ErrorHandlingContext(BulkCreate)
+	badRequestBulkCreate := ErrorHandlingContext(BulkCreate(&mocks.MockSuperKeyProducer{}))
 
 	err = badRequestBulkCreate(c)
 	if err != nil {
@@ -409,7 +410,7 @@ func TestBulkCreateAvailableByDefault(t *testing.T) {
 		c.Set(h.ParsedIdentity, testutils.IdentityHeaderForUser("testUser"))
 
 		// Call the handler under test.
-		err = BulkCreate(c)
+		err = BulkCreate(&mocks.MockSuperKeyProducer{})(c)
 		if err != nil {
 			t.Errorf(`unexpected error when calling the "bulk create" handler: %s`, err)
 		}

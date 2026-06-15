@@ -638,7 +638,7 @@ func TestApplicationCreateGood(t *testing.T) {
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	err := ApplicationCreate(c)
+	err := ApplicationCreate(&mocks.MockSuperKeyProducer{})(c)
 	if err != nil {
 		t.Error(err)
 	}
@@ -685,7 +685,7 @@ func TestApplicationCreateMissingSourceId(t *testing.T) {
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate(&mocks.MockSuperKeyProducer{}))
 
 	err := badRequestApplicationCreate(c)
 	if err != nil {
@@ -716,7 +716,7 @@ func TestApplicationCreateMissingApplicationTypeId(t *testing.T) {
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate(&mocks.MockSuperKeyProducer{}))
 
 	err := badRequestApplicationCreate(c)
 	if err != nil {
@@ -750,7 +750,7 @@ func TestApplicationCreateIncompatible(t *testing.T) {
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate(&mocks.MockSuperKeyProducer{}))
 
 	err := badRequestApplicationCreate(c)
 	if err != nil {
@@ -786,7 +786,7 @@ func TestApplicationCreateInvalidSource(t *testing.T) {
 
 	c.Request().Header.Add("Content-Type", "application/json;charset=utf-8")
 
-	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate)
+	badRequestApplicationCreate := ErrorHandlingContext(ApplicationCreate(&mocks.MockSuperKeyProducer{}))
 
 	err := badRequestApplicationCreate(c)
 	if err != nil {
