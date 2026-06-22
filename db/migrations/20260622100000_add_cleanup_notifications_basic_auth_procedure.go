@@ -13,9 +13,6 @@ import (
 // To run the cleanup, manually execute via gabi API:
 //
 //	{"query": "SELECT cleanup_notifications_basic_auth()"}
-//
-// Background: After BasicAuthentication was removed from Notifications, the credentials
-// were not removed from Sources. This procedure provides a safe way to clean them up.
 func AddCleanupNotificationsBasicAuthProcedure() *gormigrate.Migration {
 	return &gormigrate.Migration{
 		ID: "20260622100000",
