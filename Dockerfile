@@ -3,10 +3,6 @@ WORKDIR /build
 
 RUN dnf --assumeyes --disableplugin=subscription-manager install go
 
-#This was added to use never patch 1.26.4 required by mitigations,
-#it is safe to remove if go-toolset has correct version for our build
-ENV GOTOOLCHAIN=go1.26.4+auto
-
 COPY . .
 RUN go mod download \
     && go build -o sources-api-go . \
