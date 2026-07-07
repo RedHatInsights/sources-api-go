@@ -91,47 +91,60 @@ func Init() {
 	}
 
 	// Open up the conn to postgres
+	logging.Log.Infof("Connecting to database at %s:%d (database: %s)...", conf.DatabaseHost, conf.DatabasePort, conf.DatabaseName)
 	db, err := gorm.Open(postgres.Open(dbString()), &gorm.Config{Logger: l})
 	if err != nil {
+		logging.Log.Errorf("Failed to connect to database at %s:%d: %v", conf.DatabaseHost, conf.DatabasePort, err)
 		panic(err)
 	}
 
+	logging.Log.Info("Database connection established")
 	DB = db
 
 	rawDB, err := db.DB()
 	if err != nil {
+		logging.Log.Errorf("Failed to get raw database connection: %v", err)
 		panic(err)
 	}
 
 	rawDB.SetMaxOpenConns(20)
 
 	// Perform database migrations.
+	logging.Log.Info("Running database migrations...")
 	migrations.Migrate(DB)
+	logging.Log.Info("Database migrations completed successfully")
 
 	// per secret-store setup
+	logging.Log.Infof("Initializing secret store (type: %s)...", config.Get().SecretStore)
 	switch config.Get().SecretStore {
 	case config.VaultStore:
 		Vault = vault.NewClient()
+		logging.Log.Info("Vault secret store initialized")
 	case config.SecretsManagerStore:
 		SecretsManager, err = amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			logging.Log.Fatal(err)
 		}
+		logging.Log.Info("AWS Secrets Manager initialized")
 	}
 
 	// we only want to seed the database when running the api pod - not the status listener
 	if !conf.StatusListener && !conf.BackgroundWorker {
+		logging.Log.Info("Seeding database...")
 		err = seedDatabase()
 		if err != nil {
 			logging.Log.Fatalf("Failed to seed db: %v", err)
 		}
+		logging.Log.Info("Database seeding completed")
 	}
 
 	// Set up the TypeCache
+	logging.Log.Info("Populating static type cache...")
 	err = PopulateStaticTypeCache()
 	if err != nil {
 		logging.Log.Fatalf("Failed to populate static type cache: %v", err)
 	}
+	logging.Log.Info("Static type cache populated successfully")
 }
 
 func dbString() string {
