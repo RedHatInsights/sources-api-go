@@ -119,12 +119,14 @@ func Init() {
 	switch config.Get().SecretStore {
 	case config.VaultStore:
 		Vault = vault.NewClient()
+
 		logging.Log.Info("Vault secret store initialized")
 	case config.SecretsManagerStore:
 		SecretsManager, err = amazon.NewSecretsManagerClient(conf.LocalStackURL, conf.SecretsManagerAccessKey, conf.SecretsManagerSecretKey)
 		if err != nil {
 			logging.Log.Fatal(err)
 		}
+
 		logging.Log.Info("AWS Secrets Manager initialized")
 	}
 
@@ -135,6 +137,7 @@ func Init() {
 		if err != nil {
 			logging.Log.Fatalf("Failed to seed db: %v", err)
 		}
+
 		logging.Log.Info("Database seeding completed")
 	}
 
@@ -144,6 +147,7 @@ func Init() {
 	if err != nil {
 		logging.Log.Fatalf("Failed to populate static type cache: %v", err)
 	}
+
 	logging.Log.Info("Static type cache populated successfully")
 }
 

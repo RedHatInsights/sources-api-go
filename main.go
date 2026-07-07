@@ -76,6 +76,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to initialize the metrics service: %f", err)
 	}
+
 	l.Log.Info("Prometheus metrics service initialized")
 
 	shutdown := make(chan struct{})
