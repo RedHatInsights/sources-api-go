@@ -39,10 +39,15 @@ func main() {
 	util.InitializeEncryption()
 
 	l.InitLogger(conf)
+	l.Log.Info("Starting Sources API application...")
+	l.Log.Infof("Initializing encryption and logger (log level: %s)", conf.LogLevel)
 
 	// Redis needs to be initialized first since the database uses a Redis lock to ensure that only one application at
 	// a time can run the migrations.
+	l.Log.Info("Initializing Redis cache...")
 	redis.Init()
+
+	l.Log.Info("Initializing database connection and running migrations...")
 	dao.Init()
 
 	// Initialize the shared superkey Kafka producer and inject it into the
@@ -51,6 +56,7 @@ func main() {
 	// hitting the same one (which happens when a new writer is created per message).
 	superkeyTopic := conf.KafkaTopic("platform.sources.superkey-requests")
 
+	l.Log.Infof("Initializing Kafka producer for topic: %s...", superkeyTopic)
 	superkeyWriter, err := kafka.GetWriter(&kafka.Options{
 		BrokerConfig: conf.KafkaBrokerConfig,
 		Topic:        superkeyTopic,
@@ -58,15 +64,20 @@ func main() {
 	})
 	if err != nil {
 		l.Log.Warnf("unable to create superkey Kafka writer: %v", err)
+	} else {
+		l.Log.Info("Kafka producer initialized successfully")
 	}
 
 	superKeySvc := service.NewSuperKeyService(superkeyWriter)
 
 	// Initialize our custom metrics.
+	l.Log.Info("Initializing Prometheus metrics service...")
 	metricsService, err := metrics.NewPrometheusMetricsService()
 	if err != nil {
 		log.Fatalf("unable to initialize the metrics service: %f", err)
 	}
+
+	l.Log.Info("Prometheus metrics service initialized")
 
 	shutdown := make(chan struct{})
 	interrupts := make(chan os.Signal, 1)
@@ -77,17 +88,22 @@ func main() {
 	// "up" metric. More information about it here:
 	//
 	// https://issues.redhat.com/browse/RHCLOUD-38530.
+	l.Log.Info("Starting metrics exporter...")
 	go runMetricExporter()
 
 	switch {
 	case conf.StatusListener:
+		l.Log.Info("Starting application in Status Listener mode...")
 		go statuslistener.Run(shutdown)
 	case conf.BackgroundWorker:
+		l.Log.Info("Starting application in Background Worker mode...")
 		go jobs.Run(shutdown, superKeySvc)
 	default:
+		l.Log.Info("Starting application in API Server mode...")
 		go runServer(shutdown, metricsService, superKeySvc)
 	}
 
+	l.Log.Info("Application initialization completed - ready to serve requests")
 	l.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
 	// if/when that comes in
