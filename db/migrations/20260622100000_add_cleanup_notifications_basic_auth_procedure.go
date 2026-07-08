@@ -32,19 +32,17 @@ DECLARE
     deleted_count INTEGER;
     result_json JSON;
 BEGIN
-    -- Collect IDs that will be deleted
-    SELECT ARRAY_AGG(id)
-    INTO deleted_ids_array
-    FROM authentications
-    WHERE authtype = 'notifications-basic-authentication';
-
-    -- Delete the authentications and get the count
+    -- Delete the authentications and collect the IDs and count in a single scan.
     -- Note: ON DELETE CASCADE will automatically handle any related
     -- application_authentications records if they exist
-    DELETE FROM authentications
-    WHERE authtype = 'notifications-basic-authentication';
-
-    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    WITH deleted AS (
+        DELETE FROM authentications
+        WHERE authtype = 'notifications-basic-authentication'
+        RETURNING id
+    )
+    SELECT ARRAY_AGG(id), COUNT(*)
+    INTO deleted_ids_array, deleted_count
+    FROM deleted;
 
     -- Handle case where nothing was deleted
     IF deleted_ids_array IS NULL THEN
@@ -76,6 +74,7 @@ COMMENT ON FUNCTION cleanup_notifications_basic_auth() IS
 
 				logging.Log.Info("Created cleanup_notifications_basic_auth() stored procedure")
 				logging.Log.Warn("MANUAL ACTION REQUIRED: To run the cleanup, execute via gabi: SELECT cleanup_notifications_basic_auth()")
+
 				return nil
 			})
 
@@ -89,6 +88,7 @@ COMMENT ON FUNCTION cleanup_notifications_basic_auth() IS
 				}
 
 				logging.Log.Info("Dropped cleanup_notifications_basic_auth() stored procedure")
+
 				return nil
 			})
 
