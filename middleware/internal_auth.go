@@ -31,6 +31,7 @@ func InternalPermissionCheck(bypassRbac bool, rbacClient rbac.Client) echo.Middl
 			switch {
 			case bypassRbac:
 				c.Logger().Debugf("Skipping authorization check -- disabled in ENV")
+				return next(c)
 
 			case c.Get(h.XRHID) != nil:
 				// Check if using certificate-based authentication
@@ -80,11 +81,12 @@ func InternalPermissionCheck(bypassRbac bool, rbacClient rbac.Client) echo.Middl
 					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
 				}
 
+				// RBAC check passed, proceed to handler
+				return next(c)
+
 			default:
 				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by [x-rh-identity] header", "401"))
 			}
-
-			return next(c)
 		}
 	}
 }
