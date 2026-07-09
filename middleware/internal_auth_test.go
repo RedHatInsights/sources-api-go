@@ -8,11 +8,23 @@ import (
 	"testing"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
-	"github.com/RedHatInsights/sources-api-go/rbac"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 )
+
+// mockRbacClient helps us mock RBAC responses for testing
+type mockRbacClient struct {
+	allowedResponse bool
+	errorResponse   error
+}
+
+func (m *mockRbacClient) Allowed(string) (bool, error) {
+	if m.errorResponse != nil {
+		return false, m.errorResponse
+	}
+	return m.allowedResponse, nil
+}
 
 // TestInternalPermissionCheck_BypassRbac tests that when bypassRbac is true, all requests are allowed
 func TestInternalPermissionCheck_BypassRbac(t *testing.T) {
@@ -42,7 +54,7 @@ func TestInternalPermissionCheck_NoPSK(t *testing.T) {
 	// Set PSK in context (should be ignored by InternalPermissionCheck)
 	c.Set(h.PSK, "test-psk")
 
-	mockRbacClient := &rbac.MockRbacClient{}
+	mockRbacClient := &mockRbacClient{}
 	middleware := InternalPermissionCheck(false, mockRbacClient)
 	handler := middleware(func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
@@ -87,7 +99,7 @@ func TestInternalPermissionCheck_WithCertificate(t *testing.T) {
 	c.Set(h.ParsedIdentity, &xrhid)
 	c.Set(h.XRHID, "encoded-identity")
 
-	mockRbacClient := &rbac.MockRbacClient{}
+	mockRbacClient := &mockRbacClient{}
 	middleware := InternalPermissionCheck(false, mockRbacClient)
 	handler := middleware(func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
@@ -123,10 +135,9 @@ func TestInternalPermissionCheck_WithUserIdentity(t *testing.T) {
 	c.Set(h.XRHID, encodedIdentity)
 
 	// Mock RBAC client that allows the request
-	mockRbacClient := &rbac.MockRbacClient{
-		AllowedFunc: func(xrhid string) (bool, error) {
-			return true, nil
-		},
+	mockRbacClient := &mockRbacClient{
+		allowedResponse: true,
+		errorResponse:   nil,
 	}
 
 	middleware := InternalPermissionCheck(false, mockRbacClient)
@@ -147,7 +158,7 @@ func TestInternalPermissionCheck_NoAuth(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	mockRbacClient := &rbac.MockRbacClient{}
+	mockRbacClient := &mockRbacClient{}
 	middleware := InternalPermissionCheck(false, mockRbacClient)
 	handler := middleware(func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
