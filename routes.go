@@ -192,6 +192,7 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 
 	// Set up internal permission check (no PSK required)
 	internalPermissionCheckMiddleware := middleware.InternalPermissionCheck(config.Get().BypassRbac, rbacClient)
+
 	var (
 		internalPermissionMiddleware         = append(tenancyMiddleware, internalPermissionCheckMiddleware)
 		internalPermissionWithListMiddleware = append(listMiddleware, internalPermissionCheckMiddleware)

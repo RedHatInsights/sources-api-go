@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 // TestInternalPermissionCheck_BypassRbac tests that when bypassRbac is true, all requests are allowed
 func TestInternalPermissionCheck_BypassRbac(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/internal/sources/v2/secrets/123", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/internal/sources/v2/secrets/123", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -35,7 +36,7 @@ func TestInternalPermissionCheck_BypassRbac(t *testing.T) {
 // TestInternalPermissionCheck_NoPSK tests that PSK authentication is NOT supported
 func TestInternalPermissionCheck_NoPSK(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/internal/sources/v2/secrets/123", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/internal/sources/v2/secrets/123", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -64,7 +65,7 @@ func TestInternalPermissionCheck_NoPSK(t *testing.T) {
 // TestInternalPermissionCheck_WithCertificate tests certificate-based authentication
 func TestInternalPermissionCheck_WithCertificate(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/internal/sources/v2/secrets/123", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/internal/sources/v2/secrets/123", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -100,7 +101,7 @@ func TestInternalPermissionCheck_WithCertificate(t *testing.T) {
 // TestInternalPermissionCheck_WithUserIdentity tests regular user-based authentication with RBAC
 func TestInternalPermissionCheck_WithUserIdentity(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/internal/sources/v2/secrets/123", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/internal/sources/v2/secrets/123", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -142,7 +143,7 @@ func TestInternalPermissionCheck_WithUserIdentity(t *testing.T) {
 // TestInternalPermissionCheck_NoAuth tests that requests without any authentication are rejected
 func TestInternalPermissionCheck_NoAuth(t *testing.T) {
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodGet, "/internal/sources/v2/secrets/123", nil)
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/internal/sources/v2/secrets/123", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
