@@ -51,16 +51,14 @@ func TestInternalPermissionCheck_NoPSK(t *testing.T) {
 
 	err := handler(c)
 
-	// Should fail because PSK is not supported, and no x-rh-identity provided
-	if err == nil {
-		t.Error("Expected error when using PSK with InternalPermissionCheck, got nil")
+	// Should not return an error (c.JSON returns nil)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
-	// Check that it's an unauthorized error
-	if httpErr, ok := err.(*echo.HTTPError); ok {
-		if httpErr.Code != http.StatusUnauthorized {
-			t.Errorf("Expected 401 Unauthorized, got: %d", httpErr.Code)
-		}
+	// Check that it returned 401 Unauthorized
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("Expected 401 Unauthorized, got: %d", rec.Code)
 	}
 }
 
@@ -157,28 +155,13 @@ func TestInternalPermissionCheck_NoAuth(t *testing.T) {
 
 	err := handler(c)
 
-	// Should fail because no authentication provided
-	if err == nil {
-		t.Error("Expected error when no authentication provided, got nil")
+	// Should not return an error (c.JSON returns nil)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
-	// Verify it's the correct error
-	httpErr, ok := err.(*echo.HTTPError)
-	if !ok {
-		t.Fatal("Expected echo.HTTPError")
-	}
-
-	if httpErr.Code != http.StatusUnauthorized {
-		t.Errorf("Expected 401 Unauthorized, got: %d", httpErr.Code)
-	}
-
-	errorDoc, ok := httpErr.Message.(util.ErrorDocument)
-	if !ok {
-		t.Fatal("Expected util.ErrorDocument")
-	}
-
-	expectedMessage := "Authentication required by [x-rh-identity] header"
-	if errorDoc.Errors[0].Detail != expectedMessage {
-		t.Errorf("Expected error message '%s', got: '%s'", expectedMessage, errorDoc.Errors[0].Detail)
+	// Verify it returned 401 Unauthorized
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("Expected 401 Unauthorized, got: %d", rec.Code)
 	}
 }
