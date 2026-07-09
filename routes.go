@@ -155,12 +155,21 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 		}
 	}
 
-	/**            **\
-	 * Internal API *
-	\**            **/
+	/**                              **\
+	 * Internal API (legacy format)   *
+	\**                              **/
+	// DEPRECATED: Legacy /internal/v{1.0,2.0} format
+	// These paths are maintained for backward compatibility during migration period
+	// Please use new platform standard: /internal/sources/v{1,2}
 	internalVersions := []string{"v1.0", "v2.0"}
 	for _, version := range internalVersions {
-		r := e.Group("/internal/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
+		deprecationPath := "/internal/sources/v" + string(version[0]) // v1.0 -> v1, v2.0 -> v2
+		r := e.Group("/internal/"+version,
+			middleware.HandleErrors,
+			middleware.ParseHeaders,
+			middleware.LoggerFields,
+			middleware.DeprecationWarning(deprecationPath),
+		)
 
 		// Authentications
 		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
@@ -169,6 +178,39 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 		// Sources
 		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
 		// Tenant translation endpoints.
+		r.GET("/untranslated-tenants", GetUntranslatedTenants)
+		r.POST("/translate-tenants", TranslateTenants)
+	}
+
+	/**                                        **\
+	 * Internal API (new platform standard)    *
+	\**                                        **/
+	// New platform standard: /internal/{APP}/{VERSION}
+	// Replaces legacy /internal/{VERSION} format
+	// Does NOT require PSK for cross-cluster communication (crc* -> hcc*)
+	newInternalVersions := []string{"v1", "v2"}
+
+	// Set up internal permission check (no PSK required)
+	internalPermissionCheckMiddleware := middleware.InternalPermissionCheck(config.Get().BypassRbac, rbacClient)
+	var (
+		internalPermissionMiddleware         = append(tenancyMiddleware, internalPermissionCheckMiddleware)
+		internalPermissionWithListMiddleware = append(listMiddleware, internalPermissionCheckMiddleware)
+	)
+
+	for _, version := range newInternalVersions {
+		r := e.Group("/internal/sources/"+version,
+			middleware.HandleErrors,
+			middleware.ParseHeaders,
+			middleware.LoggerFields,
+		)
+
+		// Authentications
+		r.GET("/authentications/:uuid", InternalAuthenticationGet, internalPermissionMiddleware...)
+		r.GET("/secrets/:id", InternalSecretGet, internalPermissionMiddleware...)
+
+		// Sources
+		r.GET("/sources", InternalSourceList, internalPermissionWithListMiddleware...)
+		// Tenant translation endpoints
 		r.GET("/untranslated-tenants", GetUntranslatedTenants)
 		r.POST("/translate-tenants", TranslateTenants)
 	}
