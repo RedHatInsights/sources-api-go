@@ -1,7 +1,10 @@
-FROM registry.access.redhat.com/ubi9/ubi:latest as build
+FROM registry.access.redhat.com/ubi9/ubi:latest AS build
 WORKDIR /build
 
-RUN dnf --assumeyes --disableplugin=subscription-manager install go
+ENV GOLANG_VERSION=1.26.5
+RUN curl -fsSL https://go.dev/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz \
+    | tar -C /usr/local -xz
+ENV PATH=/usr/local/go/bin:$PATH
 
 COPY . .
 RUN go mod download \
