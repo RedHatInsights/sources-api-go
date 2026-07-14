@@ -10,7 +10,7 @@ import (
 // event type from the context.
 func RaiseEvent(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// first call the handler function (or the next middlware)
+		// first call the handler function (or the next middleware)
 		err := next(c)
 		if err != nil {
 			return err

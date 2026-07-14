@@ -38,7 +38,7 @@ func TestFindOrCreateUser(t *testing.T) {
 	got := expectedUser.UserID
 
 	if want != got {
-		t.Errorf(`unexpected user fetched - exptected user :%v ,obtained user:" %v`, want, got)
+		t.Errorf(`unexpected user fetched - expected user :%v ,obtained user:" %v`, want, got)
 	}
 
 	DropSchema("user_tests")
