@@ -294,6 +294,48 @@ objects:
           - name: sources-app-metadata
             configMap:
               name: sources-app-metadata
+    jobs:
+    - name: cleanup-notifications-basic-auth
+      podSpec:
+        image: registry.redhat.io/rhel9/postgresql-16:9.7
+        imagePullPolicy: Always
+        restartPolicy: Never
+        volumes:
+          - name: sources-cleanup-notifications-basic-auth-volume
+            configMap:
+              name: sources-cleanup-notifications-basic-auth-config
+        volumeMounts:
+          - name: sources-cleanup-notifications-basic-auth-volume
+            mountPath: /sources-cleanup-notifications-basic-auth
+        command: ['sh', '/sources-cleanup-notifications-basic-auth/cleanup.sh']
+        env:
+          - name: PGHOST
+            valueFrom:
+              secretKeyRef:
+                name: sources-db-creds
+                key: ${DB_SECRET_HOSTNAME_KEY}
+          - name: PGDATABASE
+            valueFrom:
+              secretKeyRef:
+                name: sources-db-creds
+                key: ${DB_SECRET_DBNAME_KEY}
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: sources-db-creds
+                key: ${DB_SECRET_USERNAME_KEY}
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: sources-db-creds
+                key: ${DB_SECRET_PASSWORD_KEY}
+        resources:
+          limits:
+            cpu: ${CLEANUP_CPU_LIMIT}
+            memory: ${CLEANUP_MEMORY_LIMIT}
+          requests:
+            cpu: ${CLEANUP_CPU_REQUEST}
+            memory: ${CLEANUP_MEMORY_REQUEST}
     database:
       name: sources
       version: 12
@@ -323,6 +365,26 @@ objects:
   data:
     app_metadata.yml: |
       ${APP_METADATA}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: sources-api
+    name: sources-cleanup-notifications-basic-auth-config
+  data:
+    cleanup.sh: |
+      #!/bin/bash
+      set -e
+
+      echo "Deleting orphaned notifications-basic-authentication records"
+      psql -v ON_ERROR_STOP=1 -c "
+      WITH deleted AS (
+        DELETE FROM authentications
+        WHERE authtype = 'notifications-basic-authentication'
+        RETURNING id
+      )
+      SELECT COUNT(*) AS deleted_count, ARRAY_AGG(id) AS deleted_ids FROM deleted;
+      "
 parameters:
 - description: Scheme of the Cloud Meter API
   displayName: Cloud Meter API Scheme
@@ -481,3 +543,35 @@ parameters:
 - description: A YAML file containing app_metadata for the supported applications in Sources.
   name: APP_METADATA
   value: ""
+- description: Initial amount of cpu the cleanup-notifications-basic-auth job will request.
+  displayName: CPU Request
+  name: CLEANUP_CPU_REQUEST
+  required: true
+  value: 100m
+- description: Maximum amount of cpu the cleanup-notifications-basic-auth job can use.
+  displayName: CPU Limit
+  name: CLEANUP_CPU_LIMIT
+  required: true
+  value: 200m
+- description: Initial amount of memory the cleanup-notifications-basic-auth job will request.
+  displayName: Memory Request
+  name: CLEANUP_MEMORY_REQUEST
+  required: true
+  value: 64Mi
+- description: Maximum amount of memory for the cleanup-notifications-basic-auth job.
+  displayName: Memory Limit
+  name: CLEANUP_MEMORY_LIMIT
+  required: true
+  value: 128Mi
+- name: DB_SECRET_HOSTNAME_KEY
+  description: Key of the hostname field in the sources-db-creds secret
+  value: db.host
+- name: DB_SECRET_DBNAME_KEY
+  description: Key of the database name field in the sources-db-creds secret
+  value: db.name
+- name: DB_SECRET_USERNAME_KEY
+  description: Key of the username field in the sources-db-creds secret
+  value: db.user
+- name: DB_SECRET_PASSWORD_KEY
+  description: Key of the password field in the sources-db-creds secret
+  value: db.password
