@@ -60,7 +60,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/hashicorp/hcl v1.0.1-vault-7 // indirect
+	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
