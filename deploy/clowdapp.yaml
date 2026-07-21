@@ -296,6 +296,8 @@ objects:
               name: sources-app-metadata
     jobs:
     - name: cleanup-notifications-basic-auth
+      schedule: "0 0 1 1 *"
+      suspend: true
       podSpec:
         image: registry.redhat.io/rhel9/postgresql-16:9.7
         imagePullPolicy: Always
