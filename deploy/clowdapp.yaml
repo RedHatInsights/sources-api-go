@@ -314,22 +314,22 @@ objects:
           - name: PGHOST
             valueFrom:
               secretKeyRef:
-                name: sources-db-creds
+                name: sources-db
                 key: ${DB_SECRET_HOSTNAME_KEY}
           - name: PGDATABASE
             valueFrom:
               secretKeyRef:
-                name: sources-db-creds
+                name: sources-db
                 key: ${DB_SECRET_DBNAME_KEY}
           - name: PGUSER
             valueFrom:
               secretKeyRef:
-                name: sources-db-creds
+                name: sources-db
                 key: ${DB_SECRET_USERNAME_KEY}
           - name: PGPASSWORD
             valueFrom:
               secretKeyRef:
-                name: sources-db-creds
+                name: sources-db
                 key: ${DB_SECRET_PASSWORD_KEY}
         resources:
           limits:
@@ -566,14 +566,14 @@ parameters:
   required: true
   value: 128Mi
 - name: DB_SECRET_HOSTNAME_KEY
-  description: Key of the hostname field in the sources-db-creds secret
+  description: Key of the hostname field in the sources-db secret
   value: db.host
 - name: DB_SECRET_DBNAME_KEY
-  description: Key of the database name field in the sources-db-creds secret
+  description: Key of the database name field in the sources-db secret
   value: db.name
 - name: DB_SECRET_USERNAME_KEY
-  description: Key of the username field in the sources-db-creds secret
+  description: Key of the username field in the sources-db secret
   value: db.user
 - name: DB_SECRET_PASSWORD_KEY
-  description: Key of the password field in the sources-db-creds secret
+  description: Key of the password field in the sources-db secret
   value: db.password
