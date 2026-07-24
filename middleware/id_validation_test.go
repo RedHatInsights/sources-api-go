@@ -7,7 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/templates"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // idValidationFunc is a helper variable which makes the context to actually handle the errors produced by the

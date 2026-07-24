@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/RedHatInsights/sources-api-go/util"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 func Pagination(next echo.HandlerFunc) echo.HandlerFunc {

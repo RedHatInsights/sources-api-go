@@ -4,7 +4,7 @@ import (
 	"context"
 
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type RequestParams struct {
