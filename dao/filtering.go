@@ -35,7 +35,7 @@ var allowedFilterColumns = map[string]map[string]bool{
 		"id": true, "name": true, "authtype": true, "username": true,
 		"availability_status": true, "last_checked_at": true, "last_available_at": true,
 		"availability_status_error": true,
-		"source_id": true, "resource_type": true, "resource_id": true,
+		"source_id":                 true, "resource_type": true, "resource_id": true,
 	},
 	"endpoints": {
 		"id": true, "created_at": true, "updated_at": true, "paused_at": true,
@@ -73,15 +73,18 @@ var subresourceToTable = map[string]string{
 
 func isColumnAllowed(table, subresource, column string) bool {
 	lookupTable := table
+
 	if subresource != "" {
 		if t, ok := subresourceToTable[subresource]; ok {
 			lookupTable = t
 		}
 	}
+
 	allowed, ok := allowedFilterColumns[lookupTable]
 	if !ok {
 		return false
 	}
+
 	return allowed[column]
 }
 
@@ -101,10 +104,12 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 	for _, filter := range filters {
 		if filter.Operation == "sort_by" {
 			var err error
+
 			query, err = applySortBy(query, filter)
 			if err != nil {
 				return nil, err
 			}
+
 			continue
 		}
 
@@ -215,6 +220,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 
 func applySortBy(query *gorm.DB, filter util.Filter) (*gorm.DB, error) {
 	var orderClauses []string
+
 	for _, v := range filter.Value {
 		parts := strings.Fields(v)
 		if len(parts) == 0 || len(parts) > 2 {
@@ -231,11 +237,13 @@ func applySortBy(query *gorm.DB, filter util.Filter) (*gorm.DB, error) {
 		}
 
 		dir := "ASC"
+
 		if len(parts) == 2 {
 			d := strings.ToUpper(parts[1])
 			if d != "ASC" && d != "DESC" {
 				return nil, fmt.Errorf("invalid sort_by parameter")
 			}
+
 			dir = d
 		}
 
@@ -247,5 +255,6 @@ func applySortBy(query *gorm.DB, filter util.Filter) (*gorm.DB, error) {
 	}
 
 	query = query.Order(strings.Join(orderClauses, ", "))
+
 	return query, nil
 }
