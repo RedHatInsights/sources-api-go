@@ -16,6 +16,12 @@ import "regexp"
 // ["filter", "source_type", "name", "eq"]
 var FilterRegex = regexp.MustCompile(`\w+`)
 
+var columnNameRegex = regexp.MustCompile(`^[a-zA-Z_]\w*$`)
+
+func IsValidColumnName(name string) bool {
+	return columnNameRegex.MatchString(name)
+}
+
 type Filter struct {
 	Subresource string
 	Name        string
