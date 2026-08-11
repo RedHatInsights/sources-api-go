@@ -232,7 +232,7 @@ func applySortBy(query *gorm.DB, filter util.Filter) (*gorm.DB, error) {
 			return nil, fmt.Errorf("invalid sort_by parameter")
 		}
 
-		if !isColumnAllowed(query.Statement.Table, "", col) {
+		if !isColumnAllowed(query.Statement.Table, filter.Subresource, col) {
 			return nil, fmt.Errorf("invalid sort_by parameter")
 		}
 

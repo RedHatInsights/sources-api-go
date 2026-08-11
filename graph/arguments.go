@@ -17,16 +17,21 @@ func parseSortBy(sortBy []*generated_model.SortBy) []util.Filter {
 
 	// parse the sortBy struct - including using an enum for asc/desc
 	for i, sby := range sortBy {
-		var filter util.Filter
-		if strings.HasPrefix(sby.Name, "source_type.") {
-			filter = util.Filter{Operation: "sort_by", Subresource: "source_type", Value: []string{strings.TrimPrefix(sby.Name, "source_type.")}}
-		} else {
-			filter = util.Filter{Operation: "sort_by", Value: []string{sby.Name}}
+		col := sby.Name
+		if strings.HasPrefix(col, "source_type.") {
+			col = strings.TrimPrefix(col, "source_type.")
 		}
 
-		// ascending is default - so we only need to set it to desc if specified
+		dir := "ASC"
 		if sby.Direction != nil && sby.Direction.IsValid() && sby.Direction.String() == "desc" {
-			filter.Value = append(filter.Value, "desc")
+			dir = "DESC"
+		}
+
+		var filter util.Filter
+		if strings.HasPrefix(sby.Name, "source_type.") {
+			filter = util.Filter{Operation: "sort_by", Subresource: "source_type", Value: []string{col + " " + dir}}
+		} else {
+			filter = util.Filter{Operation: "sort_by", Value: []string{col + " " + dir}}
 		}
 
 		sorts[i] = filter
