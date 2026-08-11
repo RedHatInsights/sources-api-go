@@ -54,6 +54,7 @@ func TestSubresourceToAlias(t *testing.T) {
 			if ok != tt.wantOk {
 				t.Errorf("subresourceToAlias[%q]: ok = %v, want %v", tt.subresource, ok, tt.wantOk)
 			}
+
 			if alias != tt.wantAlias {
 				t.Errorf("subresourceToAlias[%q] = %q, want %q", tt.subresource, alias, tt.wantAlias)
 			}
@@ -67,6 +68,7 @@ func TestSubresourceToTableConsistency(t *testing.T) {
 			t.Errorf("subresourceToAlias has key %q but subresourceToTable does not", sub)
 		}
 	}
+
 	for sub := range subresourceToTable {
 		if _, ok := subresourceToAlias[sub]; !ok {
 			t.Errorf("subresourceToTable has key %q but subresourceToAlias does not", sub)
@@ -79,6 +81,7 @@ func TestAllowedFilterColumnsIntegrity(t *testing.T) {
 		if len(columns) == 0 {
 			t.Errorf("table %q has empty allowlist", table)
 		}
+
 		for col := range columns {
 			if !util.IsValidColumnName(col) {
 				t.Errorf("table %q has invalid column name %q in allowlist", table, col)

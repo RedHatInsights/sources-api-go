@@ -115,6 +115,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					if query.Statement.Table != "sources" {
 						return nil, fmt.Errorf("cannot sort by source_type subresource for table %q", query.Statement.Table)
 					}
+
 					if !alreadyJoined[filter.Subresource] {
 						query = query.Joins("SourceType")
 						alreadyJoined[filter.Subresource] = true
@@ -123,6 +124,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					if query.Statement.Table != "applications" {
 						return nil, fmt.Errorf("cannot sort by application_type subresource for table %q", query.Statement.Table)
 					}
+
 					if !alreadyJoined[filter.Subresource] {
 						query = query.Joins("ApplicationType")
 						alreadyJoined[filter.Subresource] = true
@@ -131,6 +133,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					if query.Statement.Table != "sources" {
 						return nil, fmt.Errorf("cannot sort by applications subresource for table %q", query.Statement.Table)
 					}
+
 					if !alreadyJoined[filter.Subresource] {
 						query = query.Joins("Applications")
 						alreadyJoined[filter.Subresource] = true
@@ -284,6 +287,7 @@ func applySortBy(query *gorm.DB, filter util.Filter) (*gorm.DB, error) {
 		}
 
 		tablePrefix := query.Statement.Table
+
 		if filter.Subresource != "" {
 			if alias, ok := subresourceToAlias[filter.Subresource]; ok {
 				tablePrefix = alias
