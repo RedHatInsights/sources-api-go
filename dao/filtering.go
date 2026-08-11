@@ -103,9 +103,9 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 	}
 
 	var (
-		filterName      string
-		alreadyJoined   = make(map[string]bool)
-		needsDistinct   bool
+		filterName    string
+		alreadyJoined = make(map[string]bool)
+		needsDistinct bool
 	)
 
 	for _, filter := range filters {
