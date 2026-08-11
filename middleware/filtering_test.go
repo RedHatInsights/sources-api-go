@@ -167,7 +167,7 @@ func TestParseSubresourceFilterWithoutOperation(t *testing.T) {
 }
 
 func TestParseApplicationSubresourceFilter(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[application][application_type_id][eq]=1", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/sources/v3.1/sources?filter[application][application_type_id][eq]=1", nil)
 	c := e.NewContext(req, nil)
 
 	filters, _ := parseFilter(c)
