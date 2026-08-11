@@ -17,16 +17,21 @@ func parseSortBy(sortBy []*generated_model.SortBy) []util.Filter {
 
 	// parse the sortBy struct - including using an enum for asc/desc
 	for i, sby := range sortBy {
-		var filter util.Filter
-		if strings.HasPrefix(sby.Name, "source_type.") {
-			filter = util.Filter{Operation: "sort_by", Subresource: "source_type", Value: []string{strings.TrimPrefix(sby.Name, "source_type.")}}
-		} else {
-			filter = util.Filter{Operation: "sort_by", Value: []string{sby.Name}}
+		col := sby.Name
+		if trimmed, ok := strings.CutPrefix(col, "source_type."); ok {
+			col = trimmed
 		}
 
-		// ascending is default - so we only need to set it to desc if specified
+		dir := "ASC"
 		if sby.Direction != nil && sby.Direction.IsValid() && sby.Direction.String() == "desc" {
-			filter.Value = append(filter.Value, "desc")
+			dir = "DESC"
+		}
+
+		var filter util.Filter
+		if _, ok := strings.CutPrefix(sby.Name, "source_type."); ok {
+			filter = util.Filter{Operation: "sort_by", Subresource: "source_type", Value: []string{col + " " + dir}}
+		} else {
+			filter = util.Filter{Operation: "sort_by", Value: []string{col + " " + dir}}
 		}
 
 		sorts[i] = filter
@@ -52,11 +57,11 @@ func parseFilters(filters []*generated_model.Filter) []util.Filter {
 		}
 
 		// handle subresource filtering
-		if strings.HasPrefix(f.Name, "source_type.") {
-			filter.Name = strings.TrimPrefix(f.Name, "source_type.")
+		if trimmed, ok := strings.CutPrefix(f.Name, "source_type."); ok {
+			filter.Name = trimmed
 			filter.Subresource = "source_type"
-		} else if strings.HasPrefix(f.Name, "applications.") {
-			filter.Name = strings.TrimPrefix(f.Name, "applications.")
+		} else if trimmed, ok := strings.CutPrefix(f.Name, "applications."); ok {
+			filter.Name = trimmed
 			filter.Subresource = "application"
 		} else {
 			filter.Name = f.Name

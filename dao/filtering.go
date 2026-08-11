@@ -71,6 +71,12 @@ var subresourceToTable = map[string]string{
 	"application":      "applications",
 }
 
+var subresourceToAlias = map[string]string{
+	"source_type":      `"SourceType"`,
+	"application_type": `"ApplicationType"`,
+	"application":      `"Applications"`,
+}
+
 func isColumnAllowed(table, subresource, column string) bool {
 	lookupTable := table
 
@@ -103,8 +109,41 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 
 	for _, filter := range filters {
 		if filter.Operation == "sort_by" {
-			var err error
+			if filter.Subresource != "" {
+				switch filter.Subresource {
+				case "source_type":
+					if query.Statement.Table != "sources" {
+						return nil, fmt.Errorf("cannot sort by source_type subresource for table %q", query.Statement.Table)
+					}
 
+					if !alreadyJoined[filter.Subresource] {
+						query = query.Joins("SourceType")
+						alreadyJoined[filter.Subresource] = true
+					}
+				case "application_type":
+					if query.Statement.Table != "applications" {
+						return nil, fmt.Errorf("cannot sort by application_type subresource for table %q", query.Statement.Table)
+					}
+
+					if !alreadyJoined[filter.Subresource] {
+						query = query.Joins("ApplicationType")
+						alreadyJoined[filter.Subresource] = true
+					}
+				case "application":
+					if query.Statement.Table != "sources" {
+						return nil, fmt.Errorf("cannot sort by applications subresource for table %q", query.Statement.Table)
+					}
+
+					if !alreadyJoined[filter.Subresource] {
+						query = query.Joins("Applications")
+						alreadyJoined[filter.Subresource] = true
+					}
+				default:
+					return nil, fmt.Errorf("invalid subresource type [%v]", filter.Subresource)
+				}
+			}
+
+			var err error
 			query, err = applySortBy(query, filter)
 			if err != nil {
 				return nil, err
@@ -232,7 +271,7 @@ func applySortBy(query *gorm.DB, filter util.Filter) (*gorm.DB, error) {
 			return nil, fmt.Errorf("invalid sort_by parameter")
 		}
 
-		if !isColumnAllowed(query.Statement.Table, "", col) {
+		if !isColumnAllowed(query.Statement.Table, filter.Subresource, col) {
 			return nil, fmt.Errorf("invalid sort_by parameter")
 		}
 
@@ -247,8 +286,16 @@ func applySortBy(query *gorm.DB, filter util.Filter) (*gorm.DB, error) {
 			dir = d
 		}
 
-		if query.Statement.Table != "" {
-			orderClauses = append(orderClauses, fmt.Sprintf("%s.%s %s", query.Statement.Table, col, dir))
+		tablePrefix := query.Statement.Table
+
+		if filter.Subresource != "" {
+			if alias, ok := subresourceToAlias[filter.Subresource]; ok {
+				tablePrefix = alias
+			}
+		}
+
+		if tablePrefix != "" {
+			orderClauses = append(orderClauses, fmt.Sprintf("%s.%s %s", tablePrefix, col, dir))
 		} else {
 			orderClauses = append(orderClauses, fmt.Sprintf("%s %s", col, dir))
 		}
