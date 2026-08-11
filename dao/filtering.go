@@ -103,8 +103,9 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 	}
 
 	var (
-		filterName    string
-		alreadyJoined = make(map[string]bool)
+		filterName      string
+		alreadyJoined   = make(map[string]bool)
+		needsDistinct   bool
 	)
 
 	for _, filter := range filters {
@@ -137,6 +138,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 					if !alreadyJoined[filter.Subresource] {
 						query = query.Joins("Applications")
 						alreadyJoined[filter.Subresource] = true
+						needsDistinct = true
 					}
 				default:
 					return nil, fmt.Errorf("invalid subresource type [%v]", filter.Subresource)
@@ -193,6 +195,7 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 				if !alreadyJoined[filter.Subresource] {
 					query = query.Joins(`Applications`)
 					alreadyJoined[filter.Subresource] = true
+					needsDistinct = true
 				}
 
 				filterName = fmt.Sprintf("%v.%v", `"Applications"`, filter.Name)
@@ -252,6 +255,10 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 		default:
 			return nil, fmt.Errorf("unsupported operation %v", filter.Operation)
 		}
+	}
+
+	if needsDistinct {
+		query = query.Distinct()
 	}
 
 	return query, nil
