@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -228,7 +229,7 @@ func TestParseBareParamRejectsInvalidColumnName(t *testing.T) {
 	}
 
 	for _, tt := range invalidKeys {
-		req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+		req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, tt.url, nil)
 		c := e.NewContext(req, nil)
 
 		_, err := parseFilter(c)
@@ -239,7 +240,7 @@ func TestParseBareParamRejectsInvalidColumnName(t *testing.T) {
 }
 
 func TestParseBareParamAcceptsValidColumnName(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?name=test", nil)
+	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, "/api/sources/v3.1/sources?name=test", nil)
 	c := e.NewContext(req, nil)
 
 	filters, err := parseFilter(c)
@@ -257,7 +258,7 @@ func TestParseBareParamAcceptsValidColumnName(t *testing.T) {
 }
 
 func TestParseBareParamWithUnderscore(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?source_type_id=1", nil)
+	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, "/api/sources/v3.1/sources?source_type_id=1", nil)
 	c := e.NewContext(req, nil)
 
 	filters, err := parseFilter(c)
