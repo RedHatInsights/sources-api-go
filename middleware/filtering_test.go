@@ -166,6 +166,35 @@ func TestParseSubresourceFilterWithoutOperation(t *testing.T) {
 	}
 }
 
+func TestParseApplicationSubresourceFilter(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?filter[application][application_type_id][eq]=1", nil)
+	c := e.NewContext(req, nil)
+
+	filters, _ := parseFilter(c)
+
+	if len(filters) != 1 {
+		t.Error("wrong number of filters")
+	}
+
+	f := filters[0]
+
+	if f.Subresource != "application" {
+		t.Errorf("expected subresource %q, got %q", "application", f.Subresource)
+	}
+
+	if f.Name != "application_type_id" {
+		t.Errorf("expected name %q, got %q", "application_type_id", f.Name)
+	}
+
+	if f.Operation != "eq" {
+		t.Errorf("expected operation %q, got %q", "eq", f.Operation)
+	}
+
+	if f.Value[0] != "1" {
+		t.Errorf("expected value %q, got %q", "1", f.Value[0])
+	}
+}
+
 func TestParseFilteringWithoutFilterArg(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/sources/v3.1/sources?name=test", nil)
 	c := e.NewContext(req, nil)
