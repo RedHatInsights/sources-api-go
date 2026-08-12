@@ -18,7 +18,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/jackc/pgx/v5 v5.9.2
+	github.com/jackc/pgx/v5 v5.10.0
 	github.com/labstack/echo-contrib v0.17.4
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
@@ -34,8 +34,8 @@ require (
 	github.com/valkey-io/valkey-go v1.0.51
 	github.com/vektah/gqlparser/v2 v2.5.31
 	gorm.io/datatypes v1.2.6
-	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.31.1
+	gorm.io/driver/postgres v1.6.2
+	gorm.io/gorm v1.31.2
 	sigs.k8s.io/yaml v1.6.0
 )
 
