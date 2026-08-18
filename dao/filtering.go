@@ -152,11 +152,11 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 				}
 
 				if !alreadyJoined[filter.Subresource] {
-					query = query.Joins(`Applications`)
+					query = query.Joins("INNER JOIN applications ON applications.source_id = sources.id").Distinct()
 					alreadyJoined[filter.Subresource] = true
 				}
 
-				filterName = fmt.Sprintf("%v.%v", `"Applications"`, filter.Name)
+				filterName = fmt.Sprintf("%v.%v", "applications", filter.Name)
 			default:
 				return nil, fmt.Errorf("invalid subresource type [%v]", filter.Subresource)
 			}
