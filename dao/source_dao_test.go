@@ -1396,6 +1396,7 @@ func TestSourceListFilterByApplicationSubresource(t *testing.T) {
 			if seen[s.ID] {
 				t.Errorf("duplicate source ID %d in results", s.ID)
 			}
+
 			seen[s.ID] = true
 		}
 
