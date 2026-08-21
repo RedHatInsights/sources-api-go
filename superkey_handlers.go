@@ -7,7 +7,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/jobs"
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/service"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // enqueueSuperKeyDelete is the shared logic for async superkey deletes.

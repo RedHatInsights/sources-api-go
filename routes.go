@@ -11,7 +11,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/rbac"
 	"github.com/RedHatInsights/sources-api-go/service"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsService metrics.MetricsService) {
