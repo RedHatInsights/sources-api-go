@@ -29,7 +29,7 @@ require (
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0
 	github.com/redhatinsights/sources-superkey-worker v0.0.0-20260608175312-0ea1ba121e0b
 	github.com/segmentio/kafka-go v0.4.49
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.10.0
 	github.com/spf13/viper v1.21.0
 	github.com/valkey-io/valkey-go v1.0.51
 	github.com/vektah/gqlparser/v2 v2.5.31
