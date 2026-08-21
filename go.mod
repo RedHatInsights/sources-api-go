@@ -34,8 +34,8 @@ require (
 	github.com/valkey-io/valkey-go v1.0.51
 	github.com/vektah/gqlparser/v2 v2.5.31
 	gorm.io/datatypes v1.2.6
-	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.31.1
+	gorm.io/driver/postgres v1.6.2
+	gorm.io/gorm v1.31.2
 	sigs.k8s.io/yaml v1.6.0
 )
 
