@@ -29,7 +29,7 @@ require (
 	github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0
 	github.com/redhatinsights/sources-superkey-worker v0.0.0-20260608175312-0ea1ba121e0b
 	github.com/segmentio/kafka-go v0.4.49
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.10.1
 	github.com/spf13/viper v1.21.0
 	github.com/valkey-io/valkey-go v1.0.51
 	github.com/vektah/gqlparser/v2 v2.5.31
@@ -68,7 +68,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/stretchr/testify v1.12.0 // indirect
 	github.com/urfave/cli/v2 v2.27.7 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
