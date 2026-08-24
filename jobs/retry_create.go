@@ -9,6 +9,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const (
@@ -25,12 +26,21 @@ func (r *RetryCreateJob) Arguments() map[string]interface{} { return map[string]
 func (r *RetryCreateJob) Name() string                      { return "RetryCreateJob" }
 func (r *RetryCreateJob) ToJSON() []byte                    { panic("not implemented") }
 
-// run the job, using any args on the struct
+// Run the job, using any args on the struct.
+//
+// Uses FOR UPDATE SKIP LOCKED when selecting retryable applications so that
+// multiple pods running the same scheduled job concurrently each claim a
+// disjoint set of rows, preventing duplicate Kafka messages.
+//
+// Message sending happens after the transaction commits so that events are
+// only produced for rows whose retry_counter was successfully incremented.
 func (r *RetryCreateJob) Run() error {
-	// running all of this as a transaction so it is idempotent if something goes wrong.
-	return dao.DB.Transaction(func(tx *gorm.DB) error {
-		// find all applications with retry counter > 5 and available, update
-		// retry counter to 5 so they don't get picked up again.
+	apps := make([]m.Application, 0)
+
+	// Phase 1: transaction to claim records with row-level locking.
+	err := dao.DB.Transaction(func(tx *gorm.DB) error {
+		// find all applications with retry counter < max and available, update
+		// retry counter to max so they don't get picked up again.
 		result := tx.Debug().
 			Model(&m.Application{}).
 			Where("availability_status = ? AND retry_counter < ?", m.Available, RetryMax).
@@ -43,13 +53,14 @@ func (r *RetryCreateJob) Run() error {
 		l.Log.Infof("Updated %v applications that became available since last run but had less retry counters", result.RowsAffected)
 
 		// find all applications that are unavailable/null/empty
-		// AND
-		// created_at less than 30m ago
-		// AND
-		// retry counter less than configured amount
-		apps := make([]m.Application, 0)
-
+		// AND created_at less than 30m ago
+		// AND retry counter less than configured amount
+		//
+		// FOR UPDATE SKIP LOCKED ensures each pod locks a disjoint set of
+		// rows — other pods running concurrently will skip already-locked
+		// rows instead of blocking or processing them a second time.
 		result = tx.Debug().
+			Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).
 			Select("id", "tenant_id", "application_type_id").
 			Model(&m.Application{}).
 			Where("availability_status IS DISTINCT FROM ? ", m.Available).
@@ -61,19 +72,15 @@ func (r *RetryCreateJob) Run() error {
 			return result.Error
 		}
 
-		if result.RowsAffected == 0 {
+		if len(apps) == 0 {
 			l.Log.Info("No retryable applications found - returning.")
 			return nil
 		}
 
-		l.Log.Infof("Found %v Applications that need to be retried", result.RowsAffected)
+		l.Log.Infof("Found %v Applications that need to be retried", len(apps))
 
-		// resend messages
-		for i := range apps {
-			go resendCreateMessages(apps[i].ID, apps[i].ApplicationTypeID, apps[i].TenantID)
-		}
-
-		// increment retry counter on the apps we sent create messages for
+		// increment retry counter before sending messages — once the
+		// transaction commits these rows won't be selected by other pods.
 		result = tx.Debug().
 			Model(&apps).
 			Update("retry_counter", gorm.Expr("retry_counter+1"))
@@ -84,6 +91,17 @@ func (r *RetryCreateJob) Run() error {
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// Phase 2: send messages only after the transaction committed
+	// successfully, so we never produce events for rows we failed to claim.
+	for i := range apps {
+		go resendCreateMessages(apps[i].ID, apps[i].ApplicationTypeID, apps[i].TenantID)
+	}
+
+	return nil
 }
 
 // resend the messages that would have been sent out for the application.
