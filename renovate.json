@@ -2,7 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "packageRules": [
     {
-      "matchManagers": ["gomod"],
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "enabled": false
     }
