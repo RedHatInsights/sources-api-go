@@ -389,8 +389,8 @@ github.com/redhatinsights/platform-go-middlewares v1.0.0 h1:OxyiYt+VmNo+UucK/ey0
 github.com/redhatinsights/platform-go-middlewares v1.0.0/go.mod h1:dRH6XOjiZDbw8STvk6NNC7mMwqhTaV7X+1tn1oXOs24=
 github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0 h1:h/Dj/puWcGxaevSmuFW7IhF0fInlvWjCrxDoS9i3EY4=
 github.com/redhatinsights/platform-go-middlewares/v2 v2.0.0/go.mod h1:W5XsWVaMd+bIjULyCrls2dH4FFPnfxySY1PTzTZl1Dg=
-github.com/redhatinsights/sources-superkey-worker v0.0.0-20260608175312-0ea1ba121e0b h1:evQ/+mVJYMPNqu6gFnmINvZVWi73SqVM2+LB9buj6/I=
-github.com/redhatinsights/sources-superkey-worker v0.0.0-20260608175312-0ea1ba121e0b/go.mod h1:APaZLwjFyVnNa8B2MHduQJCLU2/KkIdOP8ub/v+Sk5Q=
+github.com/redhatinsights/sources-superkey-worker v0.0.0-20260820164421-969272e229bf h1:Mw4f32EvTXAAcWik2+HHBL21UnF1CtCwVWDS7Xfhuvs=
+github.com/redhatinsights/sources-superkey-worker v0.0.0-20260820164421-969272e229bf/go.mod h1:cOvF1N8/djUcRDD6u3MexVT+0z01YqSW97U824/bA6Q=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
