@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -124,6 +125,8 @@ func ApplicationCreate(superKeySvc service.SuperKeyProducer) echo.HandlerFunc {
 			"application_type_id": application.ApplicationTypeID,
 		}).Infof("created application")
 
+		securitylog.LogCrud(c, "CREATE", "application", securitylog.FormatID(application.ID), "success")
+
 		accountNumber, err := getAccountNumberFromEchoContext(c)
 		if err != nil {
 			c.Logger().Warn(err)
@@ -218,6 +221,8 @@ func ApplicationEdit(c echo.Context) error {
 		"source_id":      app.SourceID,
 	}).Infof("updated application")
 
+	securitylog.LogCrud(c, "UPDATE", "application", securitylog.FormatID(id), "success")
+
 	setNotificationForAvailabilityStatus(c, previousStatus, app)
 	setEventStreamResource(c, app)
 
@@ -282,6 +287,8 @@ func ApplicationDelete(c echo.Context) error {
 		"tenant_id":      *applicationDB.Tenant(),
 		"application_id": id,
 	}).Infof("deleted application")
+
+	securitylog.LogCrud(c, "DELETE", "application", securitylog.FormatID(id), "success")
 
 	return c.NoContent(http.StatusNoContent)
 }
@@ -396,6 +403,8 @@ func ApplicationPause(c echo.Context) error {
 		return err
 	}
 
+	securitylog.LogCrud(c, "UPDATE", "application", securitylog.FormatID(applicationId), "success")
+
 	return c.JSON(http.StatusNoContent, nil)
 }
 
@@ -443,6 +452,8 @@ func ApplicationUnpause(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	securitylog.LogCrud(c, "UPDATE", "application", securitylog.FormatID(applicationId), "success")
 
 	return c.JSON(http.StatusNoContent, nil)
 }

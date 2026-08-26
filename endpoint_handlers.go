@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	echoUtils "github.com/RedHatInsights/sources-api-go/util/echo"
@@ -180,6 +181,8 @@ func EndpointCreate(c echo.Context) error {
 		return err
 	}
 
+	securitylog.LogCrud(c, "CREATE", "endpoint", securitylog.FormatID(endpoint.ID), "success")
+
 	setEventStreamResource(c, endpoint)
 
 	return c.JSON(http.StatusCreated, endpoint.ToResponse())
@@ -238,6 +241,8 @@ func EndpointEdit(c echo.Context) error {
 		return err
 	}
 
+	securitylog.LogCrud(c, "UPDATE", "endpoint", securitylog.FormatID(id), "success")
+
 	setNotificationForAvailabilityStatus(c, previousStatus, endpoint)
 	setEventStreamResource(c, endpoint)
 
@@ -277,6 +282,8 @@ func EndpointDelete(c echo.Context) error {
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
+
+	securitylog.LogCrud(c, "DELETE", "endpoint", securitylog.FormatID(id), "success")
 
 	return c.NoContent(http.StatusNoContent)
 }

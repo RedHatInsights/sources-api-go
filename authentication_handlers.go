@@ -5,6 +5,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -114,6 +115,8 @@ func AuthenticationCreate(c echo.Context) error {
 		"resource_id":       auth.ResourceID,
 	}).Infof("created authentication")
 
+	securitylog.LogCrud(c, "CREATE", "authentication", auth.ID, "success")
+
 	accountNumber, err := getAccountNumberFromEchoContext(c)
 	if err != nil {
 		c.Logger().Warn(err)
@@ -169,6 +172,8 @@ func AuthenticationEdit(c echo.Context) error {
 		"source_id":         auth.SourceID,
 	}).Infof("updated authentication")
 
+	securitylog.LogCrud(c, "UPDATE", "authentication", c.Param("uid"), "success")
+
 	sourceDao, err := getSourceDao(c)
 	if err != nil {
 		return err
@@ -203,6 +208,8 @@ func AuthenticationDelete(c echo.Context) error {
 		"authentication_id": auth.ID,
 		"source_id":         auth.SourceID,
 	}).Infof("deleted authentication")
+
+	securitylog.LogCrud(c, "DELETE", "authentication", c.Param("uid"), "success")
 
 	setEventStreamResource(c, auth)
 

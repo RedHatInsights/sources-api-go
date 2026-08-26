@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
@@ -66,6 +67,9 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 			// Generate the identity which we will store in the context.
 			genId, err := util.ParseXRHIDHeader(generatedIdentity)
 			if err != nil {
+				if securitylog.IsMutatingMethod(c.Request().Method) {
+					securitylog.LogAuthFailure("could not generate x-rh-identity", c.RealIP())
+				}
 				return fmt.Errorf("could not generate the x-rh-identity structure: %w", err)
 			}
 
@@ -73,6 +77,9 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 		} else {
 			xRhIdentity, err := util.ParseXRHIDHeader(xRhIdentityRaw)
 			if err != nil {
+				if securitylog.IsMutatingMethod(c.Request().Method) {
+					securitylog.LogAuthFailure("could not extract identity from header", c.RealIP())
+				}
 				return fmt.Errorf("could not extract identity from header: %w", err)
 			}
 
