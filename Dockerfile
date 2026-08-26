@@ -3,7 +3,7 @@ WORKDIR /build
 
 COPY . .
 RUN go mod download \
-    && go build -o sources-api-go . \
+    && go build -buildvcs=false -o sources-api-go . \
     && strip sources-api-go
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
