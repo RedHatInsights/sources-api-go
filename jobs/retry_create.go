@@ -60,7 +60,7 @@ func (r *RetryCreateJob) Run() error {
 		// rows — other pods running concurrently will skip already-locked
 		// rows instead of blocking or processing them a second time.
 		result = tx.Debug().
-			Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).
+			Clauses(clause.Locking{Strength: "UPDATE", Table: clause.Table{Name: "", Alias: "", Raw: false}, Options: "SKIP LOCKED"}).
 			Select("id", "tenant_id", "application_type_id").
 			Model(&m.Application{}).
 			Where("availability_status IS DISTINCT FROM ? ", m.Available).
