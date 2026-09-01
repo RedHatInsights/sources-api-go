@@ -111,7 +111,6 @@ func main() {
 	// if/when that comes in
 	s := <-interrupts
 	l.Log.Infof("Received %v, exiting", s)
-	securitylog.LogShutdown("success", "")
 
 	shutdown <- struct{}{}
 
@@ -120,6 +119,8 @@ func main() {
 	// Close the shared superkey Kafka producer before exiting.
 	kafka.CloseWriter(superkeyWriter, "superkey producer shutdown")
 
+	// Log shutdown after graceful termination completes.
+	securitylog.LogShutdown("success", "")
 	os.Exit(0)
 }
 

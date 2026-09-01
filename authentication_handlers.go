@@ -172,7 +172,8 @@ func AuthenticationEdit(c echo.Context) error {
 		"source_id":         auth.SourceID,
 	}).Infof("updated authentication")
 
-	securitylog.LogCrud(c, "UPDATE", "authentication", c.Param("uid"), "success")
+	// Authentication.ID is already a string — FormatID() not needed.
+	securitylog.LogCrud(c, "UPDATE", "authentication", auth.ID, "success")
 
 	sourceDao, err := getSourceDao(c)
 	if err != nil {
@@ -209,7 +210,8 @@ func AuthenticationDelete(c echo.Context) error {
 		"source_id":         auth.SourceID,
 	}).Infof("deleted authentication")
 
-	securitylog.LogCrud(c, "DELETE", "authentication", c.Param("uid"), "success")
+	// Authentication.ID is already a string — FormatID() not needed.
+	securitylog.LogCrud(c, "DELETE", "authentication", auth.ID, "success")
 
 	setEventStreamResource(c, auth)
 
