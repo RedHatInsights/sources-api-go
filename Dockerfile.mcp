@@ -1,0 +1,26 @@
+FROM registry.access.redhat.com/ubi9/ubi:latest as build
+WORKDIR /build
+
+RUN dnf --assumeyes --disableplugin=subscription-manager install go
+
+COPY mcp/ ./mcp/
+WORKDIR /build/mcp
+
+RUN go mod download \
+    && go build -o sources-mcp . \
+    && strip sources-mcp
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+
+WORKDIR /app
+RUN chmod 777 /app
+
+COPY --from=build /build/mcp/sources-mcp /app/sources-mcp
+COPY licenses/LICENSE /app/licenses/LICENSE
+
+USER 1001
+
+EXPOSE 8080
+EXPOSE 9000
+
+ENTRYPOINT ["/app/sources-mcp"]
