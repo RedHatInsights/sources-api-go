@@ -1273,3 +1273,137 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+func TestSourceListFilterByApplicationSubresource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("app_subresource_filter")
+
+	t.Run("filter by application_type_id returns only sources with matching applications", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"2"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 2 {
+			t.Errorf("expected count 2, got %d", count)
+		}
+
+		ids := make(map[int64]bool)
+		for _, s := range sources {
+			ids[s.ID] = true
+		}
+
+		if !ids[1] || !ids[4] {
+			t.Errorf("expected source IDs 1 and 4, got %v", ids)
+		}
+	})
+
+	t.Run("filter by application_type_id with implicit eq", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Value: []string{"2"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 2 {
+			t.Errorf("expected count 2, got %d", count)
+		}
+
+		if len(sources) != 2 {
+			t.Errorf("expected 2 sources, got %d", len(sources))
+		}
+	})
+
+	t.Run("filter by non-matching application_type_id returns empty", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"999999"}},
+		}
+
+		_, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 0 {
+			t.Errorf("expected count 0, got %d", count)
+		}
+	})
+
+	t.Run("filter by application source_id", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "source_id", Operation: "eq", Value: []string{"1"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 1 {
+			t.Errorf("expected count 1, got %d", count)
+		}
+
+		if len(sources) != 1 || sources[0].ID != 1 {
+			t.Errorf("expected source ID 1, got %v", sources)
+		}
+	})
+
+	t.Run("application subresource rejects non-sources table", func(t *testing.T) {
+		appDao := applicationDaoImpl{
+			RequestParams: &RequestParams{TenantID: &fixtures.TestTenantData[0].Id},
+		}
+
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"1"}},
+		}
+
+		_, _, err := appDao.List(100, 0, filters)
+		if err == nil {
+			t.Fatal("expected error for application subresource on non-sources table")
+		}
+	})
+
+	t.Run("application subresource rejects invalid column", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "bogus_column", Operation: "eq", Value: []string{"1"}},
+		}
+
+		_, _, err := sourceDao.List(100, 0, filters)
+		if err == nil {
+			t.Fatal("expected error for invalid column on application subresource")
+		}
+	})
+
+	t.Run("no duplicate sources when source has multiple applications", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "not_eq", Value: []string{"999999"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		seen := make(map[int64]bool)
+		for _, s := range sources {
+			if seen[s.ID] {
+				t.Errorf("duplicate source ID %d in results", s.ID)
+			}
+
+			seen[s.ID] = true
+		}
+
+		if count != int64(len(sources)) {
+			t.Errorf("count (%d) does not match result length (%d)", count, len(sources))
+		}
+	})
+
+	DropSchema("app_subresource_filter")
+}
