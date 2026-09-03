@@ -15,6 +15,7 @@ import (
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/redis"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/statuslistener"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -104,6 +105,7 @@ func main() {
 	}
 
 	l.Log.Info("Application initialization completed - ready to serve requests")
+	securitylog.LogStartup("success")
 	l.Log.Info(conf)
 	// wait for a signal from the OS, gracefully terminating the echo servers
 	// if/when that comes in
@@ -117,6 +119,8 @@ func main() {
 	// Close the shared superkey Kafka producer before exiting.
 	kafka.CloseWriter(superkeyWriter, "superkey producer shutdown")
 
+	// Log shutdown after graceful termination completes.
+	securitylog.LogShutdown("success", "")
 	os.Exit(0)
 }
 
@@ -165,6 +169,7 @@ func runServer(shutdown chan struct{}, metricsService metrics.MetricsService, sk
 
 		err := e.Start(":" + port)
 		if err != nil && err != http.ErrServerClosed {
+			securitylog.LogShutdown("failure", err.Error())
 			l.Log.Warn(err)
 		}
 	}()

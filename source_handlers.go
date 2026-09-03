@@ -12,6 +12,7 @@ import (
 	"github.com/RedHatInsights/sources-api-go/metrics"
 	"github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -135,6 +136,8 @@ func SourceCreate(c echo.Context) error {
 		"name":           source.Name,
 	}).Infof("created source")
 
+	securitylog.LogCrud(c, "CREATE", "source", securitylog.FormatID(source.ID), "success")
+
 	setEventStreamResource(c, source)
 
 	return c.JSON(http.StatusCreated, source.ToResponse())
@@ -198,6 +201,8 @@ func SourceEdit(c echo.Context) error {
 		"source_id": id,
 	}).Infof("updated source")
 
+	securitylog.LogCrud(c, "UPDATE", "source", securitylog.FormatID(id), "success")
+
 	setNotificationForAvailabilityStatus(c, previousStatus, s)
 	setEventStreamResource(c, s)
 
@@ -249,6 +254,8 @@ func SourceDelete(c echo.Context) (err error) {
 		"tenant_id": *sourcesDB.Tenant(),
 		"source_id": id,
 	}).Infof("deleted source")
+
+	securitylog.LogCrud(c, "DELETE", "source", securitylog.FormatID(id), "success")
 
 	return c.NoContent(http.StatusNoContent)
 }
@@ -530,6 +537,8 @@ func SourcePause(c echo.Context) error {
 		}
 	}
 
+	securitylog.LogCrud(c, "UPDATE", "source", securitylog.FormatID(sourceId), "success")
+
 	return c.JSON(http.StatusNoContent, nil)
 }
 
@@ -587,6 +596,8 @@ func SourceUnpause(c echo.Context) error {
 			return err
 		}
 	}
+
+	securitylog.LogCrud(c, "UPDATE", "source", securitylog.FormatID(sourceId), "success")
 
 	return c.JSON(http.StatusNoContent, nil)
 }

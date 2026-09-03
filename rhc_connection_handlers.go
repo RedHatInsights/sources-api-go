@@ -7,6 +7,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	"github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -102,6 +103,8 @@ func RhcConnectionCreate(c echo.Context) error {
 		return err
 	}
 
+	securitylog.LogCrud(c, "CREATE", "rhc_connection", securitylog.FormatID(connection.ID), "success")
+
 	setEventStreamResource(c, connection)
 
 	return c.JSON(http.StatusCreated, connection.ToResponse())
@@ -139,6 +142,8 @@ func RhcConnectionEdit(c echo.Context) error {
 		return err
 	}
 
+	securitylog.LogCrud(c, "UPDATE", "rhc_connection", securitylog.FormatID(rhcConnectionId), "success")
+
 	setEventStreamResource(c, dbRhcConnection)
 
 	return c.JSON(http.StatusOK, dbRhcConnection.ToResponse())
@@ -161,6 +166,8 @@ func RhcConnectionDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	securitylog.LogCrud(c, "DELETE", "rhc_connection", securitylog.FormatID(rhcConnectionId), "success")
 
 	setEventStreamResource(c, rhcConnection)
 

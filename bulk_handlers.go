@@ -6,6 +6,7 @@ import (
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
@@ -69,6 +70,8 @@ func BulkCreate(superKeySvc service.SuperKeyProducer) func(echo.Context) error {
 			"authentications_count":             len(output.Authentications),
 			"application_authentications_count": len(output.ApplicationAuthentications),
 		}).Infof("bulk create completed")
+
+		securitylog.LogCrud(c, "CREATE", "bulk", "bulk_create", "success")
 
 		return c.JSON(http.StatusCreated, output.ToResponse())
 	}

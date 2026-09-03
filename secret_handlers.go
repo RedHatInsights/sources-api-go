@@ -5,6 +5,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -68,6 +69,8 @@ func SecretCreate(c echo.Context) error {
 	if err != nil {
 		return util.NewErrBadRequest(err)
 	}
+
+	securitylog.LogCrud(c, "CREATE", "secret", secret.ID, "success")
 
 	return c.JSON(http.StatusCreated, secret.ToSecretResponse())
 }
@@ -153,6 +156,8 @@ func SecretEdit(c echo.Context) error {
 		return err
 	}
 
+	securitylog.LogCrud(c, "UPDATE", "secret", securitylog.FormatID(paramID), "success")
+
 	return c.JSON(http.StatusOK, secret.ToSecretResponse())
 }
 
@@ -171,6 +176,8 @@ func SecretDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	securitylog.LogCrud(c, "DELETE", "secret", securitylog.FormatID(secretID), "success")
 
 	return c.NoContent(http.StatusNoContent)
 }

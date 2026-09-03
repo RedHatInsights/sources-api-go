@@ -6,6 +6,7 @@ import (
 
 	"github.com/RedHatInsights/sources-api-go/dao"
 	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/service"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
@@ -108,6 +109,8 @@ func ApplicationAuthenticationCreate(c echo.Context) error {
 		c.Logger().Warn(err)
 	}
 
+	securitylog.LogCrud(c, "CREATE", "application_authentication", securitylog.FormatID(appAuth.ID), "success")
+
 	appAuth.Tenant = m.Tenant{Id: appAuth.TenantID, ExternalTenant: accountNumber}
 	setEventStreamResource(c, appAuth)
 
@@ -129,6 +132,8 @@ func ApplicationAuthenticationDelete(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	securitylog.LogCrud(c, "DELETE", "application_authentication", securitylog.FormatID(id), "success")
 
 	setEventStreamResource(c, appAuth)
 

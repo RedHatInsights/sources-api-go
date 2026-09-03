@@ -7,6 +7,7 @@ import (
 
 	h "github.com/RedHatInsights/sources-api-go/middleware/headers"
 	"github.com/RedHatInsights/sources-api-go/rbac"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
 	"github.com/RedHatInsights/sources-api-go/util"
 	"github.com/labstack/echo/v4"
 	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
@@ -37,6 +38,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				}
 
 				if !pskMatches(authorizedPsks, psk) {
+					securitylog.LogAuthzFailure(c, "Incorrect PSK")
 					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Incorrect PSK", "401"))
 				}
 
@@ -73,6 +75,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 					// The "Cluster ID" and the "Common name" fields of the
 					// certificate must have been specified in the header.
 					if id.Identity.System.ClusterId == "" && id.Identity.System.CommonName == "" {
+						securitylog.LogAuthzFailure(c, "system authorization missing cn/cluster_id")
 						return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: system authorization only supports cn/cluster_id authorization", "401"))
 					}
 
@@ -95,10 +98,12 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				}
 
 				if !allowed {
+					securitylog.LogAuthzFailure(c, "Missing RBAC permissions")
 					return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Unauthorized Action: Missing RBAC permissions", "401"))
 				}
 
 			default:
+				securitylog.LogAuthzFailure(c, "No authentication provided")
 				return c.JSON(http.StatusUnauthorized, util.NewErrorDoc("Authentication required by either [x-rh-identity] or [x-rh-sources-psk]", "401"))
 			}
 
