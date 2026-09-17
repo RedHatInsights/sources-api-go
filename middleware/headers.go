@@ -70,6 +70,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 				if securitylog.IsMutatingMethod(c.Request().Method) {
 					securitylog.LogAuthFailure("could not generate x-rh-identity", c.RealIP())
 				}
+
 				return util.NewErrBadRequest(fmt.Errorf("could not generate the x-rh-identity structure: %w", err))
 			}
 
@@ -80,6 +81,7 @@ func ParseHeaders(next echo.HandlerFunc) echo.HandlerFunc {
 				if securitylog.IsMutatingMethod(c.Request().Method) {
 					securitylog.LogAuthFailure("could not extract identity from header", c.RealIP())
 				}
+
 				return util.NewErrBadRequest(fmt.Errorf("could not extract identity from header: %w", err))
 			}
 
