@@ -101,7 +101,7 @@ example_graphql:
 	-H "x-rh-sources-account-number: 0000002" \
 	-H "x-rh-insights-request-id: 1238" \
 	-H "x-rh-sources-user-id: user-000101-2" \
-	http://localhost:8001/api/sources/v3/graphql | jq
+	http://localhost:8000/api/sources/v3/graphql | jq
 
 example_create_source:
 	curl -v \
@@ -113,11 +113,12 @@ example_create_source:
 
 example_list_source:
 	curl -v \
-	http://localhost:8001/api/sources/v3/sources | jq
+	-H "x-rh-identity: ${IDENTITY}" \
+	http://localhost:8000/api/sources/v3/sources | jq
 
 example_list_app_meta_data:
 	curl -v \
-	http://localhost:8001/api/sources/v3/app_meta_data | jq
+	http://localhost:8000/api/sources/v3/app_meta_data | jq
 
 example_list_source_with_psk:
 	curl -v \
@@ -127,6 +128,6 @@ example_list_source_with_psk:
 	-H "x-rh-sources-account-number: 0000002" \
 	-H "x-rh-insights-request-id: 1238" \
 	-H "x-rh-sources-user-id: user-000101-2" \
-	http://localhost:8001/api/sources/v3/sources/1
+	http://localhost:8000/api/sources/v3/sources/1
 
 .PHONY: setup tidy build clean run container remotedebug debug test lint gci vault listener alltest generate
