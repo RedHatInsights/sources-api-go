@@ -1,4 +1,4 @@
-# This docker-compose file spins up containers for kafka, zookeeper, and the receptor controller
+# This docker-compose file spins up containers for postgres and redis
 
 version: "3"
 services:
