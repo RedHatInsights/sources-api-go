@@ -31,20 +31,22 @@ func (sj *ScheduledJob) runForever() {
 	}()
 }
 
-// schedule is a slice of scheduled jobs that will then get ran forever, if we
-// are adding a new job that we want run on a schedule, add it here.
-//
-// example: var schedule = []ScheduledJob{{Interval: 5 * time.Second, Job: &AsyncDestroyJob{}}}
-var schedule = []ScheduledJob{
-	// scheduled job that runs every 10 minutes and re-sends any unavailable
-	// sources that haven't ever went available. The longer interval gives the
-	// source verification process (cloud provider API calls) enough time to
-	// complete before create events are resent.
-	{Interval: 10 * time.Minute, Job: &RetryCreateJob{}},
+// buildSchedule returns the list of scheduled jobs, reading configurable
+// intervals from the environment so that values like the retry-create interval
+// can be tuned via app-interface without a code change.
+func buildSchedule() []ScheduledJob {
+	return []ScheduledJob{
+		// Scheduled job that re-sends create events for unavailable sources.
+		// Interval is configurable via RETRY_CREATE_JOB_INTERVAL_MINUTES
+		// (default: 2 minutes).
+		{Interval: RetryCreateJobInterval(), Job: &RetryCreateJob{}},
+	}
 }
 
 // runScheduledJobs runs all of the jobs on a schedule forever.
 func runScheduledJobs() {
+	schedule := buildSchedule()
+
 	l.Log.Infof("Running [%v] Background Job goroutines", len(schedule))
 
 	for _, sj := range schedule {
