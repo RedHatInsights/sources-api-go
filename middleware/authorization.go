@@ -34,7 +34,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 			case c.Get(h.PSK) != nil:
 				psk, ok := c.Get(h.PSK).(string)
 				if !ok {
-					return fmt.Errorf("error casting psk to string: %v", c.Get(h.PSK))
+					return util.NewErrBadRequest(fmt.Errorf("error casting psk to string: %v", c.Get(h.PSK)))
 				}
 
 				if !pskMatches(authorizedPsks, psk) {
@@ -48,7 +48,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				// based on some internal rules (operator + satellite)
 				id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 				if !ok {
-					return fmt.Errorf("error casting identity to struct: %+v", c.Get(h.ParsedIdentity))
+					return util.NewErrBadRequest(fmt.Errorf("error casting identity to struct: %+v", c.Get(h.ParsedIdentity)))
 				}
 
 				// For system based authentications, we need to make sure that
@@ -89,7 +89,7 @@ func PermissionCheck(bypassRbac bool, authorizedPsks []string, rbacClient rbac.C
 				// is authorized to perform the call.
 				rhid, ok := c.Get(h.XRHID).(string)
 				if !ok {
-					return fmt.Errorf(`authorization failed. The given "x-rh-identity" header is not a string: %v`, c.Get(h.XRHID))
+					return util.NewErrBadRequest(fmt.Errorf(`authorization failed. The given "x-rh-identity" header is not a string: %v`, c.Get(h.XRHID)))
 				}
 
 				allowed, err := rbacClient.Allowed(rhid)

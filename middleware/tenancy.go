@@ -18,7 +18,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		id, ok := c.Get(h.ParsedIdentity).(*identity.XRHID)
 		if !ok {
-			return fmt.Errorf("invalid identity structure received: %#v", id)
+			return util.NewErrBadRequest(fmt.Errorf("invalid identity structure received: %#v", id))
 		}
 
 		// Check that we received at least an account number or an org ID.
