@@ -120,6 +120,8 @@ func main() {
 	// Close the shared superkey Kafka producer before exiting.
 	kafka.CloseWriter(superkeyWriter, "superkey producer shutdown")
 
+	// Log shutdown after graceful termination completes.
+	securitylog.LogShutdown("success", "")
 	os.Exit(0)
 }
 
