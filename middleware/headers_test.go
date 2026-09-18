@@ -234,3 +234,67 @@ func TestOnlyPskHeaders(t *testing.T) {
 		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "555555")
 	}
 }
+
+// TestInvalidXRHIDGeneration tests that when an invalid account number/org id is provided and x-rh-identity
+// generation fails, a generic error message is returned to the client.
+func TestInvalidXRHIDGeneration(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/",
+		nil,
+		map[string]interface{}{},
+	)
+
+	// Set invalid headers that will cause generation to fail (empty values)
+	c.Request().Header.Set(h.AccountNumber, "")
+	c.Request().Header.Set(h.OrgID, "")
+
+	err := parseOrElse204(c)
+
+	// Should return a 400 error with generic message
+	if err == nil {
+		t.Error("expected an error but got nil")
+	}
+
+	// Check that the response is 400
+	if rec.Code != http.StatusBadRequest && rec.Code != 0 {
+		t.Errorf("expected status 400 or 0, got %v", rec.Code)
+	}
+}
+
+// TestInvalidXRHIDParsing tests that when an invalid x-rh-identity header is provided,
+// a generic error message is returned to the client.
+func TestInvalidXRHIDParsing(t *testing.T) {
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/",
+		nil,
+		map[string]interface{}{},
+	)
+
+	// Set an invalid x-rh-identity header (not valid base64)
+	c.Request().Header.Set(h.XRHID, "invalid-base64-!@#$%")
+
+	err := parseOrElse204(c)
+
+	// Should return a 400 error with generic message
+	if err == nil {
+		t.Error("expected an error but got nil")
+	}
+
+	// The error message should be generic, not expose implementation details
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "base64") || strings.Contains(errMsg, "JSON") || strings.Contains(errMsg, "unmarshal") {
+		t.Errorf("error message should be generic, but got: %s", errMsg)
+	}
+
+	// Check that it contains the generic message
+	if !strings.Contains(errMsg, "authentication failed") {
+		t.Errorf("expected generic 'authentication failed' message, got: %s", errMsg)
+	}
+
+	// Check that the response is 400
+	if rec.Code != http.StatusBadRequest && rec.Code != 0 {
+		t.Errorf("expected status 400 or 0, got %v", rec.Code)
+	}
+}
