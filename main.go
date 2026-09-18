@@ -111,6 +111,7 @@ func main() {
 	// if/when that comes in
 	s := <-interrupts
 	l.Log.Infof("Received %v, exiting", s)
+	securitylog.LogShutdown("success", "")
 
 	shutdown <- struct{}{}
 
