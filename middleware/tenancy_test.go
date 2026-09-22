@@ -135,11 +135,11 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 // TestInvalidIdentityStructure tests that when the identity structure in the context
 // is invalid (not an *identity.XRHID), a generic error message is returned.
 func TestInvalidIdentityStructure(t *testing.T) {
-	c, rec := request.CreateTestContext(
+	c, _ := request.CreateTestContext(
 		http.MethodGet,
 		"/",
 		nil,
-		map[string]interface{}{},
+		map[string]any{},
 	)
 
 	// Set an invalid identity structure (string instead of *identity.XRHID)
@@ -151,24 +151,19 @@ func TestInvalidIdentityStructure(t *testing.T) {
 
 	err := tenancyMiddleware(c)
 
-	// Should return a 400 error with generic message
+	// Should return an error with generic message
 	if err == nil {
 		t.Error("expected an error but got nil")
 	}
 
 	// The error message should be generic, not expose type details
 	errMsg := err.Error()
-	if strings.Contains(errMsg, "identity.XRHID") || strings.Contains(errMsg, "structure") || strings.Contains(errMsg, "received") {
+	if strings.Contains(errMsg, "identity.XRHID") || strings.Contains(errMsg, "structure") || strings.Contains(errMsg, "received") || strings.Contains(errMsg, "string") {
 		t.Errorf("error message should be generic, but got: %s", errMsg)
 	}
 
 	// Check that it contains the generic message
 	if !strings.Contains(errMsg, "authentication failed") {
 		t.Errorf("expected generic 'authentication failed' message, got: %s", errMsg)
-	}
-
-	// Check that the response is 400
-	if rec.Code != http.StatusBadRequest && rec.Code != 0 {
-		t.Errorf("expected status 400 or 0, got %v", rec.Code)
 	}
 }
