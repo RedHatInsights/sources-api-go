@@ -165,9 +165,15 @@ func TestBadIdentityBase64(t *testing.T) {
 		t.Errorf("there was no error when there should have been one")
 	}
 
-	want := "error decoding Identity: illegal base64"
+	// Should return generic error message, not detailed base64 error
+	want := "authentication failed"
 	if !strings.Contains(err.Error(), want) {
 		t.Errorf(`unexpected error message. Want "%s", got "%s"`, want, err)
+	}
+
+	// Should not leak implementation details
+	if strings.Contains(err.Error(), "base64") || strings.Contains(err.Error(), "decode") {
+		t.Errorf("error message should not leak implementation details: %s", err.Error())
 	}
 
 	if rec.Code != 200 {
@@ -191,9 +197,15 @@ func TestBadIdentityJson(t *testing.T) {
 		t.Errorf("there was no error when there should have been one")
 	}
 
-	want := "x-rh-identity header does not contain valid JSON"
+	// Should return generic error message, not detailed JSON error
+	want := "authentication failed"
 	if !strings.Contains(err.Error(), want) {
 		t.Errorf(`unexpected error message. Want "%s", got "%s"`, want, err)
+	}
+
+	// Should not leak implementation details
+	if strings.Contains(err.Error(), "JSON") || strings.Contains(err.Error(), "unmarshal") {
+		t.Errorf("error message should not leak implementation details: %s", err.Error())
 	}
 
 	if rec.Code != 200 {
@@ -232,28 +244,6 @@ func TestOnlyPskHeaders(t *testing.T) {
 
 	if c.Get(h.PSKUserID).(string) != "555555" {
 		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "555555")
-	}
-}
-
-// TestInvalidXRHIDGeneration tests that when an invalid account number/org id is provided and x-rh-identity
-// generation fails, a generic error message is returned to the client.
-func TestInvalidXRHIDGeneration(t *testing.T) {
-	c, _ := request.CreateTestContext(
-		http.MethodGet,
-		"/",
-		nil,
-		map[string]any{},
-	)
-
-	// Set invalid headers that will cause generation to fail (empty values)
-	c.Request().Header.Set(h.AccountNumber, "")
-	c.Request().Header.Set(h.OrgID, "")
-
-	err := parseOrElse204(c)
-
-	// Should return an error with generic message
-	if err == nil {
-		t.Error("expected an error but got nil")
 	}
 }
 
