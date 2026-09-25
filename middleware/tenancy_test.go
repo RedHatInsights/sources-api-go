@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/dao"
@@ -128,5 +129,41 @@ func TestTenancySetsAllTenancyVariables(t *testing.T) {
 				t.Errorf(`"%s" header set with value "%s. Invalid tenant id set when going through the "ParseHeaders" and "Tenancy" middlewares. Want "%d", got "%v"`, key, value, want, got)
 			}
 		}
+	}
+}
+
+// TestInvalidIdentityStructure tests that when the identity structure in the context
+// is invalid (not an *identity.XRHID), a generic error message is returned.
+func TestInvalidIdentityStructure(t *testing.T) {
+	c, _ := request.CreateTestContext(
+		http.MethodGet,
+		"/",
+		nil,
+		map[string]any{},
+	)
+
+	// Set an invalid identity structure (string instead of *identity.XRHID)
+	c.Set(headers.ParsedIdentity, "invalid-identity-type")
+
+	tenancyMiddleware := Tenancy(func(c echo.Context) error {
+		return c.NoContent(http.StatusNoContent)
+	})
+
+	err := tenancyMiddleware(c)
+
+	// Should return an error with generic message
+	if err == nil {
+		t.Error("expected an error but got nil")
+	}
+
+	// The error message should be generic, not expose type details
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "identity.XRHID") || strings.Contains(errMsg, "structure") || strings.Contains(errMsg, "received") || strings.Contains(errMsg, "string") {
+		t.Errorf("error message should be generic, but got: %s", errMsg)
+	}
+
+	// Check that it contains the generic message
+	if !strings.Contains(errMsg, "authentication failed") {
+		t.Errorf("expected generic 'authentication failed' message, got: %s", errMsg)
 	}
 }

@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/RedHatInsights/sources-api-go/internal/testutils/request"
@@ -414,5 +415,137 @@ func TestIsUsingCertificateBasedAuthentication(t *testing.T) {
 		if !isUsingCertificateBasedAuthentication(cbas) {
 			t.Errorf(`the given identity struct was not correctly identified as a system based authentication: %#v`, cbas)
 		}
+	}
+}
+
+// TestInvalidPSKType tests that when the PSK in the context is not a string,
+// a generic error message is returned.
+func TestInvalidPSKType(t *testing.T) {
+	c, _ := request.CreateTestContext(
+		http.MethodPost,
+		"/",
+		nil,
+		map[string]any{},
+	)
+
+	// Set PSK as an invalid type (int instead of string)
+	c.Set(h.PSK, 12345)
+
+	middleware := setUpMiddleware(false, []string{"valid-psk"}, mockedRbacResponse{
+		AllowedResponse: false,
+		ErrorResponse:   nil,
+	})
+
+	err := middleware(c)
+
+	// Should return an error with generic message
+	if err == nil {
+		t.Error("expected an error but got nil")
+	}
+
+	// The error message should be generic, not expose type details
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "casting") || strings.Contains(errMsg, "type") || strings.Contains(errMsg, "int") {
+		t.Errorf("error message should be generic, but got: %s", errMsg)
+	}
+
+	// Check that it contains the generic message
+	if !strings.Contains(errMsg, "authentication failed") {
+		t.Errorf("expected generic 'authentication failed' message, got: %s", errMsg)
+	}
+}
+
+// TestInvalidParsedIdentityType tests that when the parsed identity in the context
+// is not an *identity.XRHID, a generic error message is returned.
+func TestInvalidParsedIdentityType(t *testing.T) {
+	c, _ := request.CreateTestContext(
+		http.MethodPost,
+		"/",
+		nil,
+		map[string]any{},
+	)
+
+	// Set x-rh-identity header and parsed identity with wrong type
+	c.Set(h.XRHID, "some-header-value")
+	c.Set(h.ParsedIdentity, "invalid-identity-type")
+
+	middleware := setUpMiddleware(false, []string{}, mockedRbacResponse{
+		AllowedResponse: false,
+		ErrorResponse:   nil,
+	})
+
+	err := middleware(c)
+
+	// Should return an error with generic message
+	if err == nil {
+		t.Error("expected an error but got nil")
+	}
+
+	// The error message should be generic, not expose type details
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "casting") || strings.Contains(errMsg, "struct") || strings.Contains(errMsg, "XRHID") || strings.Contains(errMsg, "string") {
+		t.Errorf("error message should be generic, but got: %s", errMsg)
+	}
+
+	// Check that it contains the generic message
+	if !strings.Contains(errMsg, "authentication failed") {
+		t.Errorf("expected generic 'authentication failed' message, got: %s", errMsg)
+	}
+}
+
+// TestInvalidXRHIDHeaderType tests that when the x-rh-identity header in the context
+// is not a string, a generic error message is returned.
+func TestInvalidXRHIDHeaderType(t *testing.T) {
+	c, _ := request.CreateTestContext(
+		http.MethodPost,
+		"/",
+		nil,
+		map[string]any{},
+	)
+
+	// Set x-rh-identity header with wrong type (int instead of string)
+	c.Set(h.XRHID, 12345)
+	c.Set(h.ParsedIdentity, &identity.XRHID{
+		Identity: identity.Identity{
+			AccountNumber:         "123",
+			OrgID:                 "456",
+			EmployeeAccountNumber: "",
+			Internal: identity.Internal{
+				OrgID:       "",
+				AuthTime:    0,
+				CrossAccess: false,
+			},
+			User:           nil,
+			System:         nil,
+			Associate:      nil,
+			X509:           nil,
+			ServiceAccount: nil,
+			Type:           "",
+			AuthType:       "",
+		},
+		Entitlements: nil,
+	})
+
+	middleware := setUpMiddleware(false, []string{}, mockedRbacResponse{
+		AllowedResponse: true,
+		ErrorResponse:   nil,
+	})
+
+	err := middleware(c)
+
+	// Should return an error with generic message
+	if err == nil {
+		t.Error("expected an error but got nil")
+	}
+
+	// The error message should be generic, not expose type details
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "string") || strings.Contains(errMsg, "casting") || strings.Contains(errMsg, "header") || strings.Contains(errMsg, "int") {
+		t.Errorf("error message should be generic, but got: %s", errMsg)
+	}
+
+	// Check that it contains the generic message
+	if !strings.Contains(errMsg, "authentication failed") {
+		t.Errorf("expected generic 'authentication failed' message, got: %s", errMsg)
 	}
 }

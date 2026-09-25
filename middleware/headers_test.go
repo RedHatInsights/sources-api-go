@@ -165,9 +165,15 @@ func TestBadIdentityBase64(t *testing.T) {
 		t.Errorf("there was no error when there should have been one")
 	}
 
-	want := "error decoding Identity: illegal base64"
+	// Should return generic error message, not detailed base64 error
+	want := "authentication failed"
 	if !strings.Contains(err.Error(), want) {
 		t.Errorf(`unexpected error message. Want "%s", got "%s"`, want, err)
+	}
+
+	// Should not leak implementation details
+	if strings.Contains(err.Error(), "base64") || strings.Contains(err.Error(), "decode") {
+		t.Errorf("error message should not leak implementation details: %s", err.Error())
 	}
 
 	if rec.Code != 200 {
@@ -191,9 +197,15 @@ func TestBadIdentityJson(t *testing.T) {
 		t.Errorf("there was no error when there should have been one")
 	}
 
-	want := "x-rh-identity header does not contain valid JSON"
+	// Should return generic error message, not detailed JSON error
+	want := "authentication failed"
 	if !strings.Contains(err.Error(), want) {
 		t.Errorf(`unexpected error message. Want "%s", got "%s"`, want, err)
+	}
+
+	// Should not leak implementation details
+	if strings.Contains(err.Error(), "JSON") || strings.Contains(err.Error(), "unmarshal") {
+		t.Errorf("error message should not leak implementation details: %s", err.Error())
 	}
 
 	if rec.Code != 200 {
@@ -232,5 +244,37 @@ func TestOnlyPskHeaders(t *testing.T) {
 
 	if c.Get(h.PSKUserID).(string) != "555555" {
 		t.Errorf("%v was set as x-rh-sources-user-id instead of %v", c.Get(h.PSKUserID).(string), "555555")
+	}
+}
+
+// TestInvalidXRHIDParsing tests that when an invalid x-rh-identity header is provided,
+// a generic error message is returned to the client.
+func TestInvalidXRHIDParsing(t *testing.T) {
+	c, _ := request.CreateTestContext(
+		http.MethodGet,
+		"/",
+		nil,
+		map[string]any{},
+	)
+
+	// Set an invalid x-rh-identity header (not valid base64)
+	c.Request().Header.Set(h.XRHID, "invalid-base64-!@#$%")
+
+	err := parseOrElse204(c)
+
+	// Should return an error with generic message
+	if err == nil {
+		t.Error("expected an error but got nil")
+	}
+
+	// The error message should be generic, not expose implementation details
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "base64") || strings.Contains(errMsg, "JSON") || strings.Contains(errMsg, "unmarshal") || strings.Contains(errMsg, "decode") {
+		t.Errorf("error message should be generic, but got: %s", errMsg)
+	}
+
+	// Check that it contains the generic message
+	if !strings.Contains(errMsg, "authentication failed") {
+		t.Errorf("expected generic 'authentication failed' message, got: %s", errMsg)
 	}
 }
