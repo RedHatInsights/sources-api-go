@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -213,5 +214,63 @@ func TestParseFilteringBadFilter(t *testing.T) {
 
 	if len(filters) != 0 {
 		t.Error("got a filter when there should not have been one")
+	}
+}
+
+func TestParseBareParamRejectsInvalidColumnName(t *testing.T) {
+	invalidKeys := []struct {
+		name string
+		url  string
+	}{
+		{"semicolon in key", "/api/sources/v3.1/sources?name%3B=test"},
+		{"space in key", "/api/sources/v3.1/sources?name%20OR%201%3D1=test"},
+		{"quote in key", "/api/sources/v3.1/sources?name%27=test"},
+		{"starts with digit", "/api/sources/v3.1/sources?1name=test"},
+	}
+
+	for _, tt := range invalidKeys {
+		req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, tt.url, nil)
+		c := e.NewContext(req, nil)
+
+		_, err := parseFilter(c)
+		if err == nil {
+			t.Errorf("[%s] expected error for invalid bare param key, got nil", tt.name)
+		}
+	}
+}
+
+func TestParseBareParamAcceptsValidColumnName(t *testing.T) {
+	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, "/api/sources/v3.1/sources?name=test", nil)
+	c := e.NewContext(req, nil)
+
+	filters, err := parseFilter(c)
+	if err != nil {
+		t.Fatalf("unexpected error for valid bare param: %v", err)
+	}
+
+	if len(filters) != 1 {
+		t.Fatalf("expected 1 filter, got %d", len(filters))
+	}
+
+	if filters[0].Name != "name" {
+		t.Errorf("expected filter name 'name', got %q", filters[0].Name)
+	}
+}
+
+func TestParseBareParamWithUnderscore(t *testing.T) {
+	req, _ := http.NewRequestWithContext(context.TODO(), http.MethodGet, "/api/sources/v3.1/sources?source_type_id=1", nil)
+	c := e.NewContext(req, nil)
+
+	filters, err := parseFilter(c)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(filters) != 1 {
+		t.Fatalf("expected 1 filter, got %d", len(filters))
+	}
+
+	if filters[0].Name != "source_type_id" {
+		t.Errorf("expected filter name 'source_type_id', got %q", filters[0].Name)
 	}
 }
