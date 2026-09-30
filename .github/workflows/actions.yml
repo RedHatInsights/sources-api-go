@@ -5,16 +5,6 @@ on:
       - main
   pull_request:
 jobs:
-  gofmt:
-    name: go fmt
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
-        with:
-          go-version-file: 'go.mod'
-      - uses: Jerome1337/gofmt-action@d5eabd189843f1d568286a54578159978b7c0fb1 # v1.0.5
-
   govet:
     name: go vet
     runs-on: ubuntu-latest
@@ -40,6 +30,8 @@ jobs:
           version: latest
           only-new-issues: true
           args: --timeout=5m
+      - name: golangci-lint-fmt
+        run: golangci-lint fmt --diff
 
   gotest:
     name: go test
