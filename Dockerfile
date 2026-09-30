@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:latest as build
+FROM registry.access.redhat.com/ubi9/ubi:latest@sha256:094ea2ecfd3225af8f93807b99daa9ff33710fc705ebdf6e8466f46ed605585c as build
 WORKDIR /build
 
 RUN dnf --assumeyes --disableplugin=subscription-manager install go
@@ -8,7 +8,7 @@ RUN go mod download \
     && go build -o sources-api-go . \
     && strip sources-api-go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:beeada7dd17903dfb69fd5f6916c054720bf28a52daaa2f7a1910a1394244bd2
 
 # The Sources API leaves the RDS CA in a file when the Clowder configuration
 # is loaded. In order to avoid permission errors when writing the file to
