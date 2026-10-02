@@ -158,6 +158,12 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 	/**            **\
 	 * Internal API *
 	\**            **/
+	// Two basepaths are registered to support both the legacy internal API
+	// format (/internal/v2.0/...) and the new standard format
+	// (/internal/sources/v2.0/...) required by the platform.  The legacy
+	// format will be removed once all callers have migrated; see
+	// RHCLOUD-51003 for the deprecation timeline.
+	//
 	// Both basepaths share the same route definitions so that new routes or
 	// versions only need to be added once (REQ-6).
 	internalVersions := []string{"v1.0", "v2.0"}
