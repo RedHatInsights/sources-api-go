@@ -172,4 +172,23 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 		r.GET("/untranslated-tenants", GetUntranslatedTenants)
 		r.POST("/translate-tenants", TranslateTenants)
 	}
+
+	/**                                     **\
+	 * Internal API (new platform standard) *
+	\**                                     **/
+	// New platform standard: /internal/sources/v{1,2}
+	newInternalVersions := []string{"v1", "v2"}
+	for _, version := range newInternalVersions {
+		r := e.Group("/internal/sources/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
+
+		// Authentications
+		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
+		r.GET("/secrets/:id", InternalSecretGet, permissionMiddleware...)
+
+		// Sources
+		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
+		// Tenant translation endpoints.
+		r.GET("/untranslated-tenants", GetUntranslatedTenants)
+		r.POST("/translate-tenants", TranslateTenants)
+	}
 }
