@@ -65,16 +65,6 @@
       "matchDepTypes": ["toolchain"],
       "automerge": false,
       "groupName": null
-    },
-
-    // Repository rule, not written by the plugin:
-    {
-      "minimumConfidence": "neutral",
-      "matchPackageNames": [
-        "/konflux-pipelines/"
-      ]
     }
-  ],
-  // Repository setting, not written by the plugin:
-  "minimumConfidence": "high"
+  ]
 }
