@@ -158,37 +158,23 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 	/**            **\
 	 * Internal API *
 	\**            **/
+	// Both basepaths share the same route definitions so that new routes or
+	// versions only need to be added once (REQ-6).
 	internalVersions := []string{"v1.0", "v2.0"}
-	for _, version := range internalVersions {
-		r := e.Group("/internal/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
+	internalBasepaths := []string{"/internal/", "/internal/sources/"}
+	for _, basepath := range internalBasepaths {
+		for _, version := range internalVersions {
+			r := e.Group(basepath+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
 
-		// Authentications
-		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
-		r.GET("/secrets/:id", InternalSecretGet, permissionMiddleware...)
+			// Authentications
+			r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
+			r.GET("/secrets/:id", InternalSecretGet, permissionMiddleware...)
 
-		// Sources
-		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
-		// Tenant translation endpoints.
-		r.GET("/untranslated-tenants", GetUntranslatedTenants)
-		r.POST("/translate-tenants", TranslateTenants)
-	}
-
-	/**                                     **\
-	 * Internal API (new platform standard) *
-	\**                                     **/
-	// New platform standard: /internal/sources/{version} mirrors /internal/{version}
-	// using the same version identifiers (v1.0, v2.0) per REQ-2/REQ-6.
-	for _, version := range internalVersions {
-		r := e.Group("/internal/sources/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
-
-		// Authentications
-		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
-		r.GET("/secrets/:id", InternalSecretGet, permissionMiddleware...)
-
-		// Sources
-		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
-		// Tenant translation endpoints.
-		r.GET("/untranslated-tenants", GetUntranslatedTenants)
-		r.POST("/translate-tenants", TranslateTenants)
+			// Sources
+			r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
+			// Tenant translation endpoints.
+			r.GET("/untranslated-tenants", GetUntranslatedTenants)
+			r.POST("/translate-tenants", TranslateTenants)
+		}
 	}
 }
