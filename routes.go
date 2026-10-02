@@ -176,9 +176,9 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 	/**                                     **\
 	 * Internal API (new platform standard) *
 	\**                                     **/
-	// New platform standard: /internal/sources/v{1,2}
-	newInternalVersions := []string{"v1", "v2"}
-	for _, version := range newInternalVersions {
+	// New platform standard: /internal/sources/{version} mirrors /internal/{version}
+	// using the same version identifiers (v1.0, v2.0) per REQ-2/REQ-6.
+	for _, version := range internalVersions {
 		r := e.Group("/internal/sources/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
 
 		// Authentications
