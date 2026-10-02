@@ -3,71 +3,134 @@ package util
 import (
 	"encoding/base64"
 	"os"
+	"strings"
 	"testing"
 )
 
-func TestEncrypt(t *testing.T) {
+func setTestKey32() {
+	// 32-byte key for AES-256
 	bin, _ := base64.RawStdEncoding.DecodeString("mD0I8u2luw52GIQpEteYWQu2UxsWP4kacSBhjgAh5C9")
 	key = string(bin)
 	keyPresent = true
+}
 
-	out, err := Encrypt("sources-api-tests")
-	if err != nil {
-		t.Error(err)
+func TestEncryptDecryptRoundTrip(t *testing.T) {
+	setTestKey32()
+
+	passwords := []string{
+		"sources-api-tests",
+		"short",
+		"a-very-long-password-that-exceeds-multiple-block-sizes-1234567890",
+		"",
+		"special chars: !@#$%^&*()",
+		strings.Repeat("x", 256),
 	}
 
-	if out != "f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU" {
-		t.Errorf("encryption failed, got %v expected %v", out, "f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU")
+	for _, pw := range passwords {
+		encrypted, err := Encrypt(pw)
+		if err != nil {
+			t.Fatalf("Encrypt(%q) failed: %v", pw, err)
+		}
+
+		decrypted, err := Decrypt(encrypted)
+		if err != nil {
+			t.Fatalf("Decrypt(%q) failed: %v", pw, err)
+		}
+
+		if decrypted != pw {
+			t.Errorf("round-trip failed for %q: got %q", pw, decrypted)
+		}
 	}
 }
 
-func TestDecrypt(t *testing.T) {
-	bin, _ := base64.RawStdEncoding.DecodeString("mD0I8u2luw52GIQpEteYWQu2UxsWP4kacSBhjgAh5C9")
-	key = string(bin)
-	keyPresent = true
+func TestEncryptProducesDifferentCiphertexts(t *testing.T) {
+	setTestKey32()
 
-	out, err := Decrypt("f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU")
+	enc1, err := Encrypt("same-password")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+
+	enc2, err := Encrypt("same-password")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if enc1 == enc2 {
+		t.Error("two encryptions of the same plaintext produced identical ciphertext — nonce is not random")
+	}
+}
+
+func TestEncryptOutputHasGCMScheme(t *testing.T) {
+	setTestKey32()
+
+	enc, err := Encrypt("test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	raw, err := base64.RawStdEncoding.DecodeString(enc)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(raw) == 0 || raw[0] != schemeGCM {
+		t.Errorf("encrypted output should start with GCM scheme byte 0x%02x, got 0x%02x", schemeGCM, raw[0])
+	}
+}
+
+func TestDecryptLegacyCBC(t *testing.T) {
+	setTestKey32()
+
+	// This ciphertext was produced by the old CBC zero-IV encoder with the
+	// same 32-byte test key for plaintext "sources-api-tests".
+	legacy := "f80zhczL8GTPqCdlU8WX7m+8BgCZgwXERNGYUF7J+lU"
+
+	out, err := Decrypt(legacy)
+	if err != nil {
+		t.Fatalf("legacy CBC Decrypt failed: %v", err)
 	}
 
 	if out != "sources-api-tests" {
-		t.Errorf("decryption failed, got %v expected %v", out, "sources-api-tests")
+		t.Errorf("legacy CBC decryption: got %q, want %q", out, "sources-api-tests")
 	}
 }
 
-func TestBadFormat(t *testing.T) {
-	bin, _ := base64.RawStdEncoding.DecodeString("mD0I8u2luw52GIQpEteYWQu2UxsWP4kacSBhjgAh5C9")
-	key = string(bin)
+func TestDecryptBadFormat(t *testing.T) {
+	setTestKey32()
 
 	_, err := Decrypt("a bad thing")
 	if err == nil {
-		t.Errorf("'a bad thing': expected an err but none was returned")
+		t.Error("expected an error for bad base64 input")
 	}
 
 	_, err = Decrypt("this is not a real string")
 	if err == nil {
-		t.Errorf("expected an err but none was returned")
+		t.Error("expected an error for invalid ciphertext")
 	}
 }
 
-func TestPadding(t *testing.T) {
-	out := padString("thing", 16)
+func TestDecryptTamperedGCM(t *testing.T) {
+	setTestKey32()
 
-	if len(out) != 16 {
-		t.Errorf("padding was not added properly to string")
+	enc, err := Encrypt("test-tamper")
+	if err != nil {
+		t.Fatal(err)
 	}
-}
 
-func TestPaddingNegativeBlockSize(t *testing.T) {
-	defer func() {
-		err := recover()
-		if err == nil {
-			t.Errorf("execution should have panicked but did not")
-		}
-	}()
+	raw, err := base64.RawStdEncoding.DecodeString(enc)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	padString("boom", -1)
+	// flip a byte in the ciphertext
+	raw[len(raw)-1] ^= 0xff
+	tampered := base64.RawStdEncoding.EncodeToString(raw)
+
+	_, err = Decrypt(tampered)
+	if err == nil {
+		t.Error("expected GCM decryption to fail on tampered ciphertext")
+	}
 }
 
 func TestNoKey(t *testing.T) {
@@ -76,11 +139,16 @@ func TestNoKey(t *testing.T) {
 
 	_, err := Decrypt("another thing")
 	if err == nil {
-		t.Errorf("expected an err but none was returned")
+		t.Error("expected an error with no key")
 	}
 
 	if err.Error() != "no encryption key present" {
 		t.Errorf("bad error message: %v", err.Error())
+	}
+
+	_, err = Encrypt("test")
+	if err == nil {
+		t.Error("expected an error with no key")
 	}
 }
 
@@ -95,5 +163,27 @@ func TestSetDefaultEncryptionKey(t *testing.T) {
 	encryptionKey := os.Getenv("ENCRYPTION_KEY")
 	if encryptionKey != "YWFhYWFhYWFhYWFhYWFhYQ" {
 		t.Errorf("Wrong encryption key! setDefaultEncryptionKey() did not work properly")
+	}
+}
+
+func TestEncryptDecryptWithShortKey(t *testing.T) {
+	// 16-byte key (AES-128) — matches the dev encryption key
+	key = "aaaaaaaaaaaaaaaa"
+	keyPresent = true
+
+	pw := "test-with-short-key"
+
+	enc, err := Encrypt(pw)
+	if err != nil {
+		t.Fatalf("Encrypt with 16-byte key failed: %v", err)
+	}
+
+	dec, err := Decrypt(enc)
+	if err != nil {
+		t.Fatalf("Decrypt with 16-byte key failed: %v", err)
+	}
+
+	if dec != pw {
+		t.Errorf("round-trip with 16-byte key: got %q, want %q", dec, pw)
 	}
 }
