@@ -162,6 +162,7 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 	// versions only need to be added once (REQ-6).
 	internalVersions := []string{"v1.0", "v2.0"}
 	internalBasepaths := []string{"/internal/", "/internal/sources/"}
+
 	for _, basepath := range internalBasepaths {
 		for _, version := range internalVersions {
 			r := e.Group(basepath+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
