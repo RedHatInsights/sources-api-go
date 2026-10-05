@@ -37,16 +37,28 @@ const (
 // Prometheus metrics for observability into the retry pipeline.
 var (
 	retryCreateProcessed = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "sources_retry_create_processed_total",
-		Help: "Total number of applications processed for retry create",
+		Namespace:   "",
+		Subsystem:   "",
+		Name:        "sources_retry_create_processed_total",
+		Help:        "Total number of applications processed for retry create",
+		Unit:        "",
+		ConstLabels: nil,
 	})
 	retryCreateMessagesSent = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "sources_retry_create_messages_sent_total",
-		Help: "Total number of retry create Kafka messages sent successfully",
+		Namespace:   "",
+		Subsystem:   "",
+		Name:        "sources_retry_create_messages_sent_total",
+		Help:        "Total number of retry create Kafka messages sent successfully",
+		Unit:        "",
+		ConstLabels: nil,
 	})
 	retryCreateErrors = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "sources_retry_create_errors_total",
-		Help: "Total number of errors encountered during retry create processing",
+		Namespace:   "",
+		Subsystem:   "",
+		Name:        "sources_retry_create_errors_total",
+		Help:        "Total number of errors encountered during retry create processing",
+		Unit:        "",
+		ConstLabels: nil,
 	})
 )
 
@@ -55,10 +67,12 @@ var (
 // DefaultRetryIntervalMinutes.
 func RetryCreateJobInterval() time.Duration {
 	if v := os.Getenv("RETRY_CREATE_JOB_INTERVAL_MINUTES"); v != "" {
-		if mins, err := strconv.Atoi(v); err == nil && mins > 0 {
+		mins, err := strconv.Atoi(v)
+		if err == nil && mins > 0 {
 			return time.Duration(mins) * time.Minute
 		}
 	}
+
 	return time.Duration(DefaultRetryIntervalMinutes) * time.Minute
 }
 
@@ -86,7 +100,8 @@ func (r *RetryCreateJob) ToJSON() []byte                    { panic("not impleme
 func (r *RetryCreateJob) Run() error {
 	// Reset retry counters for applications that became available since the
 	// last run — marks them as "done" so they won't be retried again.
-	if err := resetAvailableRetryCounters(); err != nil {
+	err := resetAvailableRetryCounters()
+	if err != nil {
 		retryCreateErrors.Inc()
 		return err
 	}
@@ -94,12 +109,14 @@ func (r *RetryCreateJob) Run() error {
 	// Process retryable applications in chunks to avoid locking too many
 	// rows at once.
 	var totalProcessed int64
+
 	for {
 		apps, err := claimRetryBatch()
 		if err != nil {
 			retryCreateErrors.Inc()
 			return err
 		}
+
 		if len(apps) == 0 {
 			break
 		}
@@ -121,7 +138,7 @@ func (r *RetryCreateJob) Run() error {
 // applications that became available, ensuring they are not retried again.
 func resetAvailableRetryCounters() error {
 	result := dao.DB.Debug().
-		Model(&m.Application{}).
+		Model((*m.Application)(nil)).
 		Where("availability_status = ? AND retry_counter < ?", m.Available, RetryMax).
 		Update("retry_counter", RetryMax)
 	if result.Error != nil {
@@ -149,7 +166,7 @@ func claimRetryBatch() ([]m.Application, error) {
 		result := tx.Debug().
 			Clauses(clause.Locking{Strength: "UPDATE", Table: clause.Table{Name: "", Alias: "", Raw: false}, Options: "SKIP LOCKED"}).
 			Select("id", "tenant_id", "application_type_id").
-			Model(&m.Application{}).
+			Model((*m.Application)(nil)).
 			Where("availability_status IS DISTINCT FROM ? ", m.Available).
 			Where("created_at > ?", time.Now().Add(RecordAgeLimit)).
 			Where("retry_counter < ?", RetryMax).
@@ -175,7 +192,7 @@ func claimRetryBatch() ([]m.Application, error) {
 		}
 
 		result = tx.Debug().
-			Model(&m.Application{}).
+			Model((*m.Application)(nil)).
 			Where("id IN ?", ids).
 			Update("retry_counter", gorm.Expr("retry_counter + 1"))
 		if result.Error != nil {
@@ -193,10 +210,12 @@ func claimRetryBatch() ([]m.Application, error) {
 // applications, capping concurrency at maxRetryConcurrency.
 func sendRetryMessages(apps []m.Application) {
 	var wg sync.WaitGroup
+
 	sem := make(chan struct{}, maxRetryConcurrency)
 
 	for i := range apps {
 		wg.Add(1)
+
 		sem <- struct{}{} // acquire semaphore slot
 
 		go func(app m.Application) {
