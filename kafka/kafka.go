@@ -125,8 +125,9 @@ func GetWriter(conf *Options) (*Writer, error) {
 	}
 
 	kafkaWriter := &kafka.Writer{
-		Addr:  kafka.TCP(brokers...),
-		Topic: conf.Topic,
+		Addr:     kafka.TCP(brokers...),
+		Topic:    conf.Topic,
+		Balancer: &kafka.Hash{}, // Use hash-based partitioning to respect message keys
 	}
 
 	if conf.Logger != nil {
