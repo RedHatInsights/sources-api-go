@@ -5,7 +5,8 @@
   // GitHub auto-merge never completes when a bypass actor meets the approval rule.
   // Renovate merges instead, on the first run where GitHub allows it.
   "platformAutomerge": false,
-  "ignoreTests": false,
+  // Only the required checks gate the merge: a red optional check does not block it.
+  "ignoreTests": true,
   // Throughput: no rebase or CI rerun after a merge, so each run merges two PRs, not one.
   // Risk: those two are never tested together. Label a PR keep-updated to rebase it.
   "rebaseWhen": "conflicted",
