@@ -157,7 +157,7 @@ func resetAvailableRetryCounters() error {
 // transaction with FOR UPDATE SKIP LOCKED, increments their retry_counter, and
 // returns the claimed rows.  Returns an empty slice when no more rows qualify.
 func claimRetryBatch() ([]m.Application, error) {
-	var apps []m.Application
+	apps := make([]m.Application, 0)
 
 	err := dao.DB.Transaction(func(tx *gorm.DB) error {
 		// FOR UPDATE SKIP LOCKED ensures each pod locks a disjoint set of
