@@ -17,8 +17,8 @@ func TestInternalBasepathsRegistered(t *testing.T) {
 	setupRoutes(e, nil, nil)
 
 	// Collect all registered internal routes keyed by basepath style.
-	legacyRoutes := make(map[string]bool)  // "/internal/v2.0/sources" → true
-	newFmtRoutes := make(map[string]bool)  // "/internal/sources/v2.0/sources" → true
+	legacyRoutes := make(map[string]bool) // "/internal/v2.0/sources" → true
+	newFmtRoutes := make(map[string]bool) // "/internal/sources/v2.0/sources" → true
 
 	for _, route := range e.Routes() {
 		if strings.HasPrefix(route.Path, "/internal/sources/") {
