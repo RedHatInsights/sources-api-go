@@ -125,9 +125,11 @@ func GetWriter(conf *Options) (*Writer, error) {
 	}
 
 	kafkaWriter := &kafka.Writer{
-		Addr:     kafka.TCP(brokers...),
-		Topic:    conf.Topic,
-		Balancer: &kafka.Hash{}, // Use hash-based partitioning to respect message keys
+		Addr:  kafka.TCP(brokers...),
+		Topic: conf.Topic,
+		// Use hash-based partitioning to respect message keys (OrgID/AccountNumber/XRHID).
+		// Hasher is nil by default, which uses FNV-1a hash algorithm.
+		Balancer: &kafka.Hash{Hasher: nil},
 	}
 
 	if conf.Logger != nil {
