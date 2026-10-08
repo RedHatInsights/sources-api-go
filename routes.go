@@ -158,18 +158,30 @@ func setupRoutes(e *echo.Echo, superKeySvc *service.SuperKeyService, metricsServ
 	/**            **\
 	 * Internal API *
 	\**            **/
+	// Two basepaths are registered to support both the legacy internal API
+	// format (/internal/v2.0/...) and the new standard format
+	// (/internal/sources/v2.0/...) required by the platform.  The legacy
+	// format will be removed once all callers have migrated; see
+	// RHCLOUD-51003 for the deprecation timeline.
+	//
+	// Both basepaths share the same route definitions so that new routes or
+	// versions only need to be added once (REQ-6).
 	internalVersions := []string{"v1.0", "v2.0"}
-	for _, version := range internalVersions {
-		r := e.Group("/internal/"+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
+	internalBasepaths := []string{"/internal/", "/internal/sources/"}
 
-		// Authentications
-		r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
-		r.GET("/secrets/:id", InternalSecretGet, permissionMiddleware...)
+	for _, basepath := range internalBasepaths {
+		for _, version := range internalVersions {
+			r := e.Group(basepath+version, middleware.HandleErrors, middleware.ParseHeaders, middleware.LoggerFields)
 
-		// Sources
-		r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
-		// Tenant translation endpoints.
-		r.GET("/untranslated-tenants", GetUntranslatedTenants)
-		r.POST("/translate-tenants", TranslateTenants)
+			// Authentications
+			r.GET("/authentications/:uuid", InternalAuthenticationGet, permissionMiddleware...)
+			r.GET("/secrets/:id", InternalSecretGet, permissionMiddleware...)
+
+			// Sources
+			r.GET("/sources", InternalSourceList, permissionWithListMiddleware...)
+			// Tenant translation endpoints.
+			r.GET("/untranslated-tenants", GetUntranslatedTenants)
+			r.POST("/translate-tenants", TranslateTenants)
+		}
 	}
 }
