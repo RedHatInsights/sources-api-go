@@ -32,6 +32,15 @@
       "automerge": true,
       "groupName": "GitHub Actions"
     },
+    {
+      // Repository rule, not written by the plugin:
+      // Pinned to @main, so every update is digest-only; named here to bypass
+      // the digest-stays-manual rule above.
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest"],
+      "matchDepNames": ["konflux-ci/renovate-config-validator-action"],
+      "automerge": true
+    },
 
     {
       // The Konflux PR build builds and tests the image. A digest update rebuilds the same
