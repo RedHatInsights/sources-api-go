@@ -112,7 +112,14 @@ func Decrypt(str string) (string, error) {
 	}
 
 	if len(rawPass) > 0 && rawPass[0] == schemeGCM {
-		return decodeGCM(rawPass)
+		plaintext, gcmErr := decodeGCM(rawPass)
+		if gcmErr == nil {
+			return plaintext, nil
+		}
+
+		// GCM decryption failed — the legacy CBC ciphertext may happen to
+		// start with the same byte value as the GCM scheme marker (0x01).
+		// Fall through to the CBC decoder so those rows are not broken.
 	}
 
 	// Legacy CBC path — existing rows encrypted with the old zero-IV scheme.
