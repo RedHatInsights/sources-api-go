@@ -96,6 +96,39 @@ func TestDecryptLegacyCBC(t *testing.T) {
 	}
 }
 
+// TestDecryptCBCCollisionWithSchemeByte verifies that a legacy CBC-encrypted
+// password whose raw ciphertext happens to start with byte 0x01 (the GCM
+// scheme marker) is still decryptable. Decrypt must try GCM first and, on
+// authentication failure, fall back to the CBC decoder.
+func TestDecryptCBCCollisionWithSchemeByte(t *testing.T) {
+	setTestKey32()
+
+	// "000428-cbc-test" encrypted with the old CBC zero-IV scheme and the
+	// 32-byte test key produces a ciphertext whose first decoded byte is
+	// 0x01 — the same value as schemeGCM.  Without the GCM-fallback logic
+	// this would be misrouted to decodeGCM and fail.
+	legacy := "AUPz0DZXAcXSOu0/R8DqtA"
+
+	raw, err := base64.RawStdEncoding.DecodeString(legacy)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if raw[0] != schemeGCM {
+		t.Fatalf("test vector first byte is 0x%02x, expected 0x%02x", raw[0], schemeGCM)
+	}
+
+	decrypted, err := Decrypt(legacy)
+	if err != nil {
+		t.Fatalf("Decrypt of CBC ciphertext starting with scheme byte 0x01 should succeed via fallback, got: %v", err)
+	}
+
+	want := "000428-cbc-test"
+	if decrypted != want {
+		t.Errorf("expected %q, got %q", want, decrypted)
+	}
+}
+
 func TestDecryptBadFormat(t *testing.T) {
 	setTestKey32()
 
