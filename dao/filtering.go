@@ -191,7 +191,8 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 				}
 
 				if !alreadyJoined[filter.Subresource] {
-					query = query.Joins(`Applications`)
+					// For has-many: select only source columns to avoid GORM scan panic, use Distinct to avoid duplicates
+					query = query.Joins(`Applications`).Select(`"sources".*`).Distinct()
 					alreadyJoined[filter.Subresource] = true
 				}
 
