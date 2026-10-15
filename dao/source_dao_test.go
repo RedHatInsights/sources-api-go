@@ -1358,7 +1358,8 @@ func TestSourceListFilterByApplicationSubresource(t *testing.T) {
 	t.Run("application subresource rejects non-sources table", func(t *testing.T) {
 		//nolint:exhaustruct // Test code - only setting required fields
 		appDao := applicationDaoImpl{
-			RequestParams: &RequestParams{TenantID: &fixtures.TestTenantData[0].Id}, //nolint:exhaustruct // Test code
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &fixtures.TestTenantData[0].Id},
 		}
 
 		filters := []util.Filter{
@@ -1416,7 +1417,6 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 	// Create two tenants
 	tenant1ID := int64(100)
 	tenant2ID := int64(200)
-
 	//nolint:exhaustruct // Test fixture - timestamps not needed
 	tenant1 := m.Tenant{Id: tenant1ID, ExternalTenant: "tenant-100", OrgID: "org-100"}
 	//nolint:exhaustruct // Test fixture - timestamps not needed
@@ -1484,7 +1484,8 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 	t.Run("tenant 1 only sees their own sources", func(t *testing.T) {
 		//nolint:exhaustruct // Test code - only setting required fields
 		sourceDao := sourceDaoImpl{
-			RequestParams: &RequestParams{TenantID: &tenant1ID}, //nolint:exhaustruct // Test code
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &tenant1ID},
 		}
 
 		filters := []util.Filter{
@@ -1518,7 +1519,8 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 	t.Run("tenant 2 only sees their own sources", func(t *testing.T) {
 		//nolint:exhaustruct // Test code - only setting required fields
 		sourceDao := sourceDaoImpl{
-			RequestParams: &RequestParams{TenantID: &tenant2ID}, //nolint:exhaustruct // Test code
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &tenant2ID},
 		}
 
 		filters := []util.Filter{
@@ -1576,7 +1578,8 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 		// Tenant 1 queries - should NOT see source 3 because JOIN requires matching tenant_id
 		//nolint:exhaustruct // Test code - only setting required fields
 		sourceDao1 := sourceDaoImpl{
-			RequestParams: &RequestParams{TenantID: &tenant1ID}, //nolint:exhaustruct // Test code
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &tenant1ID},
 		}
 
 		filters := []util.Filter{
