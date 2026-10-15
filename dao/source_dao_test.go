@@ -1274,6 +1274,7 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 	DropSchema(schema)
 }
 
+//nolint:exhaustruct // Test code - intentionally not initializing all struct fields
 func TestSourceListFilterByApplicationSubresource(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("app_subresource_filter")
@@ -1410,6 +1411,7 @@ func TestSourceListFilterByApplicationSubresource(t *testing.T) {
 	DropSchema("app_subresource_filter")
 }
 
+//nolint:exhaustruct // Test code - intentionally not initializing all struct fields
 func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) {
 	testutils.SkipIfNotRunningIntegrationTests(t)
 	SwitchSchema("app_filter_tenant_isolation")
