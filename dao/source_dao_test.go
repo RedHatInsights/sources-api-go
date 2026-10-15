@@ -1304,7 +1304,7 @@ func TestSourceListFilterByApplicationSubresource(t *testing.T) {
 
 	t.Run("filter by application_type_id with implicit eq", func(t *testing.T) {
 		filters := []util.Filter{
-			{Subresource: "application", Name: "application_type_id", Value: []string{"2"}},
+			{Subresource: "application", Name: "application_type_id", Operation: "", Value: []string{"2"}},
 		}
 
 		sources, count, err := sourceDao.List(100, 0, filters)
@@ -1356,8 +1356,9 @@ func TestSourceListFilterByApplicationSubresource(t *testing.T) {
 	})
 
 	t.Run("application subresource rejects non-sources table", func(t *testing.T) {
+		//nolint:exhaustruct // Test code - only setting required fields
 		appDao := applicationDaoImpl{
-			RequestParams: &RequestParams{TenantID: &fixtures.TestTenantData[0].Id},
+			RequestParams: &RequestParams{TenantID: &fixtures.TestTenantData[0].Id}, //nolint:exhaustruct // Test code
 		}
 
 		filters := []util.Filter{
@@ -1415,21 +1416,28 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 	// Create two tenants
 	tenant1ID := int64(100)
 	tenant2ID := int64(200)
+
+	//nolint:exhaustruct // Test fixture - timestamps not needed
 	tenant1 := m.Tenant{Id: tenant1ID, ExternalTenant: "tenant-100", OrgID: "org-100"}
+	//nolint:exhaustruct // Test fixture - timestamps not needed
 	tenant2 := m.Tenant{Id: tenant2ID, ExternalTenant: "tenant-200", OrgID: "org-200"}
+
 	DB.Create(&tenant1)
 	DB.Create(&tenant2)
 
 	// Create application type
+	//nolint:exhaustruct // Test fixture - only setting required fields
 	appType := m.ApplicationType{Id: 1, Name: "/insights/platform/cost-management", DisplayName: "Cost Management"}
 	DB.Create(&appType)
 
 	// Create source type
+	//nolint:exhaustruct // Test fixture - only setting required fields
 	sourceType := m.SourceType{Id: 1, Name: "openshift", ProductName: "OpenShift", Vendor: "Red Hat"}
 	DB.Create(&sourceType)
 
 	// Tenant 1: Create source and application
 	uid1 := "source-tenant1-uid"
+	//nolint:exhaustruct // Test fixture - only setting required fields
 	source1 := m.Source{
 		ID:           1,
 		Name:         "Tenant1 Source",
@@ -1439,6 +1447,7 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 	}
 	DB.Create(&source1)
 
+	//nolint:exhaustruct // Test fixture - only setting required fields
 	app1 := m.Application{
 		ID:                1,
 		SourceID:          1,
@@ -1449,6 +1458,7 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 
 	// Tenant 2: Create source and application with SAME application_type_id
 	uid2 := "source-tenant2-uid"
+	//nolint:exhaustruct // Test fixture - only setting required fields
 	source2 := m.Source{
 		ID:           2,
 		Name:         "Tenant2 Source",
@@ -1458,6 +1468,7 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 	}
 	DB.Create(&source2)
 
+	//nolint:exhaustruct // Test fixture - only setting required fields
 	app2 := m.Application{
 		ID:                2,
 		SourceID:          2,
@@ -1471,8 +1482,9 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 
 	// Test: Tenant 1 queries for application_type_id=1
 	t.Run("tenant 1 only sees their own sources", func(t *testing.T) {
+		//nolint:exhaustruct // Test code - only setting required fields
 		sourceDao := sourceDaoImpl{
-			RequestParams: &RequestParams{TenantID: &tenant1ID},
+			RequestParams: &RequestParams{TenantID: &tenant1ID}, //nolint:exhaustruct // Test code
 		}
 
 		filters := []util.Filter{
@@ -1504,8 +1516,9 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 
 	// Test: Tenant 2 queries for application_type_id=1
 	t.Run("tenant 2 only sees their own sources", func(t *testing.T) {
+		//nolint:exhaustruct // Test code - only setting required fields
 		sourceDao := sourceDaoImpl{
-			RequestParams: &RequestParams{TenantID: &tenant2ID},
+			RequestParams: &RequestParams{TenantID: &tenant2ID}, //nolint:exhaustruct // Test code
 		}
 
 		filters := []util.Filter{
@@ -1539,6 +1552,7 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 	t.Run("data integrity violation - application with mismatched tenant_id should not leak", func(t *testing.T) {
 		// Create a source for tenant 1
 		uid3 := "source-tenant1-second"
+		//nolint:exhaustruct // Test fixture - only setting required fields
 		source3 := m.Source{
 			ID:           3,
 			Name:         "Tenant1 Second Source",
@@ -1550,6 +1564,7 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 
 		// Create an application with MISMATCHED tenant_id (data integrity violation)
 		// This simulates a bug where application.tenant_id != source.tenant_id
+		//nolint:exhaustruct // Test fixture - only setting required fields
 		app3 := m.Application{
 			ID:                3,
 			SourceID:          3,         // Points to tenant 1's source
@@ -1559,8 +1574,9 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 		DB.Create(&app3)
 
 		// Tenant 1 queries - should NOT see source 3 because JOIN requires matching tenant_id
+		//nolint:exhaustruct // Test code - only setting required fields
 		sourceDao1 := sourceDaoImpl{
-			RequestParams: &RequestParams{TenantID: &tenant1ID},
+			RequestParams: &RequestParams{TenantID: &tenant1ID}, //nolint:exhaustruct // Test code
 		}
 
 		filters := []util.Filter{
