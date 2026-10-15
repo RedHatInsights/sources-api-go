@@ -1273,3 +1273,343 @@ func TestSourceSubcollectionWithUserOwnership(t *testing.T) {
 
 	DropSchema(schema)
 }
+
+//nolint:exhaustruct // Test code - intentionally not initializing all struct fields
+func TestSourceListFilterByApplicationSubresource(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("app_subresource_filter")
+
+	t.Run("filter by application_type_id returns only sources with matching applications", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"2"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 2 {
+			t.Errorf("expected count 2, got %d", count)
+		}
+
+		ids := make(map[int64]bool)
+		for _, s := range sources {
+			ids[s.ID] = true
+		}
+
+		if !ids[1] || !ids[4] {
+			t.Errorf("expected source IDs 1 and 4, got %v", ids)
+		}
+	})
+
+	t.Run("filter by application_type_id with implicit eq", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "", Value: []string{"2"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 2 {
+			t.Errorf("expected count 2, got %d", count)
+		}
+
+		if len(sources) != 2 {
+			t.Errorf("expected 2 sources, got %d", len(sources))
+		}
+	})
+
+	t.Run("filter by non-matching application_type_id returns empty", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"999999"}},
+		}
+
+		_, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 0 {
+			t.Errorf("expected count 0, got %d", count)
+		}
+	})
+
+	t.Run("filter by application source_id", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "source_id", Operation: "eq", Value: []string{"1"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		if count != 1 {
+			t.Errorf("expected count 1, got %d", count)
+		}
+
+		if len(sources) != 1 || sources[0].ID != 1 {
+			t.Errorf("expected source ID 1, got %v", sources)
+		}
+	})
+
+	t.Run("application subresource rejects non-sources table", func(t *testing.T) {
+		//nolint:exhaustruct // Test code - only setting required fields
+		appDao := applicationDaoImpl{
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &fixtures.TestTenantData[0].Id},
+		}
+
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"1"}},
+		}
+
+		_, _, err := appDao.List(100, 0, filters)
+		if err == nil {
+			t.Fatal("expected error for application subresource on non-sources table")
+		}
+	})
+
+	t.Run("application subresource rejects invalid column", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "bogus_column", Operation: "eq", Value: []string{"1"}},
+		}
+
+		_, _, err := sourceDao.List(100, 0, filters)
+		if err == nil {
+			t.Fatal("expected error for invalid column on application subresource")
+		}
+	})
+
+	t.Run("no duplicate sources when source has multiple applications", func(t *testing.T) {
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "not_eq", Value: []string{"999999"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		seen := make(map[int64]bool)
+		for _, s := range sources {
+			if seen[s.ID] {
+				t.Errorf("duplicate source ID %d in results", s.ID)
+			}
+
+			seen[s.ID] = true
+		}
+
+		if count != int64(len(sources)) {
+			t.Errorf("count (%d) does not match result length (%d)", count, len(sources))
+		}
+	})
+
+	DropSchema("app_subresource_filter")
+}
+
+//nolint:exhaustruct // Test code - intentionally not initializing all struct fields
+func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	SwitchSchema("app_filter_tenant_isolation")
+
+	// Create two tenants
+	tenant1ID := int64(100)
+	tenant2ID := int64(200)
+	//nolint:exhaustruct // Test fixture - timestamps not needed
+	tenant1 := m.Tenant{Id: tenant1ID, ExternalTenant: "tenant-100", OrgID: "org-100"}
+	//nolint:exhaustruct // Test fixture - timestamps not needed
+	tenant2 := m.Tenant{Id: tenant2ID, ExternalTenant: "tenant-200", OrgID: "org-200"}
+
+	DB.Create(&tenant1)
+	DB.Create(&tenant2)
+
+	// Create application type
+	//nolint:exhaustruct // Test fixture - only setting required fields
+	appType := m.ApplicationType{Id: 1, Name: "/insights/platform/cost-management", DisplayName: "Cost Management"}
+	DB.Create(&appType)
+
+	// Create source type
+	//nolint:exhaustruct // Test fixture - only setting required fields
+	sourceType := m.SourceType{Id: 1, Name: "openshift", ProductName: "OpenShift", Vendor: "Red Hat"}
+	DB.Create(&sourceType)
+
+	// Tenant 1: Create source and application
+	uid1 := "source-tenant1-uid"
+	//nolint:exhaustruct // Test fixture - only setting required fields
+	source1 := m.Source{
+		ID:           1,
+		Name:         "Tenant1 Source",
+		SourceTypeID: 1,
+		TenantID:     tenant1ID,
+		Uid:          &uid1,
+	}
+	DB.Create(&source1)
+
+	//nolint:exhaustruct // Test fixture - only setting required fields
+	app1 := m.Application{
+		ID:                1,
+		SourceID:          1,
+		ApplicationTypeID: 1,
+		TenantID:          tenant1ID,
+	}
+	DB.Create(&app1)
+
+	// Tenant 2: Create source and application with SAME application_type_id
+	uid2 := "source-tenant2-uid"
+	//nolint:exhaustruct // Test fixture - only setting required fields
+	source2 := m.Source{
+		ID:           2,
+		Name:         "Tenant2 Source",
+		SourceTypeID: 1,
+		TenantID:     tenant2ID,
+		Uid:          &uid2,
+	}
+	DB.Create(&source2)
+
+	//nolint:exhaustruct // Test fixture - only setting required fields
+	app2 := m.Application{
+		ID:                2,
+		SourceID:          2,
+		ApplicationTypeID: 1, // SAME as tenant1's application
+		TenantID:          tenant2ID,
+	}
+	DB.Create(&app2)
+
+	// Update sequences
+	UpdateTablesSequences("app_filter_tenant_isolation")
+
+	// Test: Tenant 1 queries for application_type_id=1
+	t.Run("tenant 1 only sees their own sources", func(t *testing.T) {
+		//nolint:exhaustruct // Test code - only setting required fields
+		sourceDao := sourceDaoImpl{
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &tenant1ID},
+		}
+
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"1"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		// Should only return 1 source (tenant 1's source)
+		if count != 1 {
+			t.Errorf("expected count 1, got %d", count)
+		}
+
+		if len(sources) != 1 {
+			t.Fatalf("expected 1 source, got %d", len(sources))
+		}
+
+		if sources[0].ID != 1 {
+			t.Errorf("expected source ID 1 (tenant 1's source), got %d", sources[0].ID)
+		}
+
+		if sources[0].TenantID != tenant1ID {
+			t.Errorf("expected tenant ID %d, got %d", tenant1ID, sources[0].TenantID)
+		}
+	})
+
+	// Test: Tenant 2 queries for application_type_id=1
+	t.Run("tenant 2 only sees their own sources", func(t *testing.T) {
+		//nolint:exhaustruct // Test code - only setting required fields
+		sourceDao := sourceDaoImpl{
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &tenant2ID},
+		}
+
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"1"}},
+		}
+
+		sources, count, err := sourceDao.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		// Should only return 1 source (tenant 2's source)
+		if count != 1 {
+			t.Errorf("expected count 1, got %d", count)
+		}
+
+		if len(sources) != 1 {
+			t.Fatalf("expected 1 source, got %d", len(sources))
+		}
+
+		if sources[0].ID != 2 {
+			t.Errorf("expected source ID 2 (tenant 2's source), got %d", sources[0].ID)
+		}
+
+		if sources[0].TenantID != tenant2ID {
+			t.Errorf("expected tenant ID %d, got %d", tenant2ID, sources[0].TenantID)
+		}
+	})
+
+	// Test: Verify tenant isolation even with data integrity violation
+	t.Run("data integrity violation - application with mismatched tenant_id should not leak", func(t *testing.T) {
+		// Create a source for tenant 1
+		uid3 := "source-tenant1-second"
+		//nolint:exhaustruct // Test fixture - only setting required fields
+		source3 := m.Source{
+			ID:           3,
+			Name:         "Tenant1 Second Source",
+			SourceTypeID: 1,
+			TenantID:     tenant1ID,
+			Uid:          &uid3,
+		}
+		DB.Create(&source3)
+
+		// Create an application with MISMATCHED tenant_id (data integrity violation)
+		// This simulates a bug where application.tenant_id != source.tenant_id
+		//nolint:exhaustruct // Test fixture - only setting required fields
+		app3 := m.Application{
+			ID:                3,
+			SourceID:          3,         // Points to tenant 1's source
+			ApplicationTypeID: 1,
+			TenantID:          tenant2ID, // BUT marked as tenant 2! (data bug)
+		}
+		DB.Create(&app3)
+
+		// Tenant 1 queries - should NOT see source 3 because JOIN requires matching tenant_id
+		//nolint:exhaustruct // Test code - only setting required fields
+		sourceDao1 := sourceDaoImpl{
+			//nolint:exhaustruct // Test code - only setting required fields
+			RequestParams: &RequestParams{TenantID: &tenant1ID},
+		}
+
+		filters := []util.Filter{
+			{Subresource: "application", Name: "application_type_id", Operation: "eq", Value: []string{"1"}},
+		}
+
+		sources, count, err := sourceDao1.List(100, 0, filters)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+
+		// Should still only see source 1, NOT source 3
+		// because applications.tenant_id (200) != sources.tenant_id (100)
+		if count != 1 {
+			t.Errorf("expected count 1 (only source 1), got %d", count)
+		}
+
+		for _, s := range sources {
+			if s.ID == 3 {
+				t.Errorf("SECURITY ISSUE: Tenant 1 should not see source 3 which has application with tenant_id mismatch")
+			}
+		}
+
+		// Verify only source 1 is returned
+		if len(sources) == 1 && sources[0].ID != 1 {
+			t.Errorf("expected only source ID 1, got %d", sources[0].ID)
+		}
+	})
+
+	DropSchema("app_filter_tenant_isolation")
+}

@@ -191,11 +191,12 @@ func applyFilters(query *gorm.DB, filters []util.Filter) (*gorm.DB, error) {
 				}
 
 				if !alreadyJoined[filter.Subresource] {
-					query = query.Joins(`Applications`)
+					// Include tenant_id check for defense-in-depth tenant isolation
+					query = query.Joins("INNER JOIN applications ON applications.source_id = sources.id AND applications.tenant_id = sources.tenant_id").Distinct()
 					alreadyJoined[filter.Subresource] = true
 				}
 
-				filterName = fmt.Sprintf("%v.%v", `"Applications"`, filter.Name)
+				filterName = fmt.Sprintf("%v.%v", "applications", filter.Name)
 			default:
 				return nil, fmt.Errorf("invalid subresource type [%v]", filter.Subresource)
 			}
