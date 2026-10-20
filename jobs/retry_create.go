@@ -172,7 +172,7 @@ func claimRetryBatch() ([]m.Application, error) {
 			Where("retry_counter < ?", RetryMax).
 			Order("created_at ASC").
 			Limit(retryBatchSize).
-			Scan(&apps)
+			Find(&apps)
 		if result.Error != nil {
 			l.Log.Errorf("Error listing applications that meet retry criteria")
 			return result.Error
