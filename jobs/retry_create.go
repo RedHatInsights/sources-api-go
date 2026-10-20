@@ -271,6 +271,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 	}
 
 	l.Log.Debugf("Found %d authentication(s) for application %d", len(authentications), app.ID)
+
 	for _, auth := range authentications {
 		l.Log.Debugf("  - auth_id=%s, resource_type=%s, resource_id=%d",
 			auth.ID, auth.ResourceType, auth.ResourceID)
@@ -278,6 +279,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 
 	l.Log.Debugf("Found %d application_authentication(s) for application %d",
 		len(app.ApplicationAuthentications), app.ID)
+
 	for _, appAuth := range app.ApplicationAuthentications {
 		l.Log.Debugf("  - app_auth_id=%d, auth_id=%d, app_id=%d",
 			appAuth.ID, appAuth.AuthenticationID, appAuth.ApplicationID)
