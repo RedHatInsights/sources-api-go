@@ -1,0 +1,203 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: sources-floorist
+objects:
+- apiVersion: metrics.console.redhat.com/v1alpha1
+  kind: FloorPlan
+  metadata:
+    name: sources
+  spec:
+    database:
+      secretName: ${FLOORIST_DB_SECRET_NAME}
+    objectStore:
+      secretName: ${FLOORIST_BUCKET_SECRET_NAME}
+    logLevel: ${FLOORIST_LOG_LEVEL}
+    suspend: ${{FLOORIST_SUSPEND}}
+    queries:
+      # We ignore the tenants that belong to QE and developer accounts. More info on:
+      #
+      # - https://issues.redhat.com/browse/RHCLOUD-20850
+      # - https://lists.corp.redhat.com/archives/insights-platform/2022-September/000622.html
+      - prefix: insights/sources/all-sources-count
+        query: |
+          SELECT
+            count("src".*) AS "number_sources_all"
+          FROM
+            "sources" AS "src"
+          WHERE
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          ;
+      - prefix: insights/sources/all-sources-account-auth
+        query: |
+          SELECT
+            count("src".*) AS "number_sources_account_auth"
+          FROM
+            "sources" AS "src"
+          WHERE
+            "src"."app_creation_workflow" = 'account_authorization'
+          AND
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          ;
+      - prefix: insights/sources/all-sources-manual-config
+        query: |
+          SELECT
+            count("src".*) AS "number_sources_manual_config"
+          FROM
+            "sources" AS "src"
+          WHERE
+            "src"."app_creation_workflow" = 'manual_configuration'
+          AND
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          ;
+      - prefix: insights/sources/all-sources-source-type
+        query: |
+          SELECT
+            "stypes"."product_name" AS "source_type", count("src".*) AS "number_sources_all"
+          FROM
+            "sources" AS "src"
+          INNER JOIN
+           "source_types" AS "stypes" ON "stypes"."id" = "src"."source_type_id"
+          WHERE
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          GROUP BY
+            "stypes"."product_name"
+          ORDER BY
+            "stypes"."product_name" ASC
+          ;
+      - prefix: insights/sources/all-sources-app-type
+        query: |
+          SELECT
+            "appTypes"."display_name" AS "application_type", count(distinct "apps"."source_id") AS "number_sources_all"
+          FROM
+            "applications" AS "apps"
+          INNER JOIN
+            "application_types" AS "appTypes" ON "appTypes"."id" = "apps"."application_type_id"
+          WHERE
+            "apps"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          GROUP BY
+            "appTypes"."display_name"
+          ORDER BY
+            "appTypes"."display_name" ASC
+          ;
+      - prefix: insights/sources/all-apps-app-type
+        query: |
+          SELECT
+            "appTypes"."display_name" AS "application_type", count("apps".*) AS "number_applications_all"
+          FROM
+            "applications" AS "apps"
+          INNER JOIN
+            "application_types" AS "appTypes" ON "appTypes"."id" = "apps"."application_type_id"
+          WHERE
+            "apps"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          GROUP BY
+            "appTypes"."display_name"
+          ORDER BY
+            "appTypes"."display_name" ASC
+          ;
+      - prefix: insights/sources/available-sources-count
+        query: |
+          SELECT
+            count("src".*) AS "number_sources_available"
+          FROM
+            "sources" AS "src"
+          WHERE
+            "src"."availability_status" = 'available'
+          AND
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          ;
+      - prefix: insights/sources/available-sources-account-auth
+        query: |
+          SELECT
+            count("src".*) AS "number_available_sources_account_auth"
+          FROM
+            "sources" AS "src"
+          WHERE
+            "src"."app_creation_workflow" = 'account_authorization'
+          AND
+            "src"."availability_status" = 'available'
+          AND
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          ;
+      - prefix: insights/sources/available-sources-manual-config
+        query: |
+          SELECT
+            count("src".*) AS "number_available_sources_manual_config"
+          FROM
+            "sources" AS "src"
+          WHERE
+            "src"."app_creation_workflow" = 'manual_configuration'
+          AND
+            "src"."availability_status" = 'available'
+          AND
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          ;
+      - prefix: insights/sources/available-sources-source-type
+        query: |
+          SELECT
+            "stypes"."product_name" AS "source_type", count("src".*) AS "number_sources_available"
+          FROM
+            "sources" AS "src"
+          INNER JOIN
+            "source_types" AS "stypes" ON "stypes"."id" = "src"."source_type_id"
+          WHERE
+            "src"."availability_status" = 'available'
+          AND
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          GROUP BY
+            "stypes"."product_name"
+          ORDER BY
+            "stypes"."product_name" ASC
+          ;
+      - prefix: insights/sources/available-sources-app-type
+        query: |
+          SELECT
+            "appTypes"."display_name" AS "application_type", count(distinct "apps"."source_id") AS "number_sources_available"
+          FROM
+            "applications" AS "apps"
+          INNER JOIN
+            "application_types" AS "appTypes" ON "appTypes"."id" = "apps"."application_type_id"
+          INNER JOIN
+            "sources" AS "src" ON "src"."id" = "apps"."source_id"
+          WHERE
+            "src"."availability_status" = 'available'
+          AND
+            "src"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          GROUP BY
+            "appTypes"."display_name"
+          ORDER BY
+            "appTypes"."display_name" ASC
+          ;
+      - prefix: insights/sources/avilable-apps-app-type
+        query: |
+          SELECT
+            "appTypes"."display_name" AS "application_type", count("apps".*) AS "number_applications_available"
+          FROM
+            "applications" AS "apps"
+          INNER JOIN
+            "application_types" AS "appTypes" ON "appTypes"."id" = "apps"."application_type_id"
+          WHERE
+            "apps"."availability_status" = 'available'
+          AND
+            "apps"."tenant_id" NOT IN (2, 5, 7, 11, 14, 27, 31, 33, 15356, 15409, 24317, 24420, 24632, 39273)
+          GROUP BY
+            "appTypes"."display_name"
+          ORDER BY
+            "appTypes"."display_name" ASC
+          ;
+parameters:
+- description:
+  name: FLOORIST_BUCKET_SECRET_NAME
+  required: true
+  value: 'floorist-bucket-secret-name'
+- description: Specify the name of the database secrets for Floorist
+  name: FLOORIST_DB_SECRET_NAME
+  required: true
+  value: 'secret-name'
+- description: Specify the log level for the Floorist instance.
+  name: FLOORIST_LOG_LEVEL
+  value: 'INFO'
+- description: Specify if the Floorist metrics gathering service should be suspended or not. Defaults to true to avoid errors on the ephemeral environment.
+  name: FLOORIST_SUSPEND
+  required: true
+  value: 'true'

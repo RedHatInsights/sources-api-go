@@ -1,0 +1,483 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: sources-api
+objects:
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: sources-api-secrets
+    labels:
+      app: sources-api
+  stringData:
+    encryption-key: "${ENCRYPTION_KEY}"
+    secret-key: "${SECRET_KEY}"
+    psks: "thisMustBeEphemeralOrMinikube"
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: internal-psk
+    labels:
+      app: sources-api
+  stringData:
+    psk: "thisMustBeEphemeralOrMinikube"
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: sources-psk
+    labels:
+      app: sources-api
+  stringData:
+    psk: "thisMustBeEphemeralOrMinikube"
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: unleash-ephemeral
+  type: Opaque
+  data:
+    CLIENT_ACCESS_TOKEN: ''
+- apiVersion: v1
+  kind: Secret # For ephemeral/local environment
+  metadata:
+    name: sources-secrets-manager
+  type: Opaque
+  stringData:
+    aws_access_key_id: "asdfasdfasf"
+    aws_secret_access_key: "asdfsadf"
+    secrets_prefix: "sources-ephemeral"
+    localstack_url: "http://localstack-ephemeral-svc:10000"
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: sources-api
+  spec:
+    envName: ${ENV_NAME}
+    testing:
+      iqePlugin: sources
+    deployments:
+    - name: background-worker
+      minReplicas: ${{BACKGROUND_WORKER_MIN_REPLICAS}}
+      podSpec:
+        args:
+        - -background-worker
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
+        - name: LOG_LEVEL
+          value: ${LOG_LEVEL}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: encryption-key
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
+        resources:
+          limits:
+            cpu: ${BACKGROUND_WORKER_CPU_LIMIT}
+            memory: ${BACKGROUND_WORKER_MEMORY_LIMIT}
+          requests:
+            cpu: ${BACKGROUND_WORKER_CPU_REQUEST}
+            memory: ${BACKGROUND_WORKER_MEMORY_REQUEST}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+    - name: availability-status-listener
+      minReplicas: ${{AVAILABILITY_MIN_REPLICAS}}
+      podSpec:
+        args:
+        - -listener
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
+        - name: LOG_LEVEL
+          value: ${LOG_LEVEL}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: encryption-key
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
+        resources:
+          limits:
+            cpu: ${AVAILABILITY_LISTENER_CPU_LIMIT}
+            memory: ${AVAILABILITY_LISTENER_MEMORY_LIMIT}
+          requests:
+            cpu: ${AVAILABILITY_LISTENER_CPU_REQUEST}
+            memory: ${AVAILABILITY_LISTENER_MEMORY_REQUEST}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 1
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+    - name: svc
+      minReplicas: ${{MIN_REPLICAS}}
+      webServices:
+        public:
+          enabled: true
+          apiPath: sources
+      podSpec:
+        image: ${IMAGE}:${IMAGE_TAG}
+        env:
+        - name: SECRET_STORE
+          value: ${SECRET_STORE}
+        - name: LOG_LEVEL
+          value: ${LOG_LEVEL}
+        - name: CLOUD_METER_AVAILABILITY_CHECK_URL
+          value: ${CLOUD_METER_API_SCHEME}://${CLOUD_METER_API_HOST}:${CLOUD_METER_SOURCES_API_PORT}${CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH}
+        - name: COST_MANAGEMENT_AVAILABILITY_CHECK_URL
+          value: ${KOKU_SOURCES_API_SCHEME}://${KOKU_SOURCES_API_HOST}:${KOKU_SOURCES_API_PORT}${KOKU_SOURCES_API_APP_CHECK_PATH}
+        - name: CLOUD_CONNECTOR_AVAILABILITY_CHECK_URL
+          value: ${CLOUD_CONNECTOR_SCHEME}://${CLOUD_CONNECTOR_HOST}:${CLOUD_CONNECTOR_PORT}${CLOUD_CONNECTOR_BASE_PATH}
+        - name: CLOUD_CONNECTOR_STATUS_PATH
+          value: ${CLOUD_CONNECTOR_STATUS_PATH}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
+        - name: PROVISIONING_AVAILABILITY_CHECK_URL
+          value: ${PROVISIONING_SCHEME}://${PROVISIONING_HOST}:${PROVISIONING_PORT}${PROVISIONING_CHECK_PATH}
+        - name: SOURCES_ENV
+          value: ${SOURCES_ENV}
+        - name: SOURCES_PSKS
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: psks
+              optional: true
+        - name: RBAC_HOST
+          value: ${RBAC_HOST}
+        - name: SOURCES_PSKS
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: psks
+              optional: true
+        - name: BYPASS_RBAC
+          value: ${BYPASS_RBAC}
+        - name: ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-api-secrets
+              key: encryption-key
+        - name: TENANT_TRANSLATOR_URL
+          value: ${TENANT_TRANSLATOR_SCHEME}://${TENANT_TRANSLATOR_HOST}:${TENANT_TRANSLATOR_PORT}
+        - name: CLOUD_CONNECTOR_PSK
+          valueFrom:
+            secretKeyRef:
+              name: cloud-connector-psk
+              key: client-psk
+              optional: true
+        - name: CLOUD_CONNECTOR_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloud-connector-psk
+              key: client-id
+              optional: true
+        - name: FEATURE_FLAGS_SERVICE
+          value: ${FEATURE_FLAGS_SERVICE}
+        - name: SOURCE_TYPE_SKIP_LIST
+          value: ${SOURCE_TYPE_SKIP_LIST}
+        - name: APPLICATION_TYPE_SKIP_LIST
+          value: ${APPLICATION_TYPE_SKIP_LIST}
+        - name: SECRETS_MANAGER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_access_key_id
+              optional: true
+        - name: SECRETS_MANAGER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: aws_secret_access_key
+              optional: true
+        - name: SECRETS_MANAGER_PREFIX
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: secrets_prefix
+              optional: true
+        - name: LOCALSTACK_URL
+          valueFrom:
+            secretKeyRef:
+              name: sources-secrets-manager
+              key: localstack_url
+              optional: true
+        - name: HANDLE_TENANT_REFRESH
+          value: ${HANDLE_TENANT_REFRESH}
+        - name: DISABLED_APPLICATION_TYPES
+          value: ${DISABLED_APPLICATION_TYPES}
+        readinessProbe:
+          tcpSocket:
+            port: 8000
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+        resources:
+          limits:
+            cpu: ${CPU_LIMIT}
+            memory: ${MEMORY_LIMIT}
+          requests:
+            cpu: ${CPU_REQUEST}
+            memory: ${MEMORY_REQUEST}
+        volumeMounts:
+          - name: sources-app-metadata
+            mountPath: /mnt/sources
+            readOnly: true
+        volumes:
+          - name: sources-app-metadata
+            configMap:
+              name: sources-app-metadata
+    database:
+      name: sources
+      version: 12
+    kafkaTopics:
+    - topicName: platform.sources.event-stream
+      partitions: 3
+      replicas: 3
+    - topicName: platform.sources.status
+      partitions: 3
+      replicas: 3
+    - topicName: platform.sources.superkey-requests
+      partitions: 3
+      replicas: 3
+    - topicName: platform.notifications.ingress
+      partitions: 3
+      replicas: 3
+    inMemoryDb: true
+    featureFlags: true
+    dependencies:
+    - rbac
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: sources-api
+    name: sources-app-metadata
+  data:
+    app_metadata.yml: |
+      ${APP_METADATA}
+parameters:
+- description: Scheme of the Cloud Meter API
+  displayName: Cloud Meter API Scheme
+  name: CLOUD_METER_API_SCHEME
+  value: http
+- description: Hostname of the Cloud Meter API
+  displayName: Cloud Meter API Hostname
+  name: CLOUD_METER_API_HOST
+  required: true
+  value: cloudigrade-api
+- name: CLOUD_METER_SOURCES_API_PORT
+  value: '8000'
+- name: CLOUD_METER_SOURCES_API_AVAILABILITY_CHECK_PATH
+  value: /internal/api/cloudigrade/v1/availability_status
+- name: CPU_LIMIT
+  value: 500m
+- name: CPU_REQUEST
+  value: 100m
+- name: AVAILABILITY_LISTENER_CPU_LIMIT
+  value: 200m
+- name: AVAILABILITY_LISTENER_CPU_REQUEST
+  value: 50m
+- name: BACKGROUND_WORKER_CPU_LIMIT
+  value: 200m
+- name: BACKGROUND_WORKER_CPU_REQUEST
+  value: 50m
+- description: Clowder ENV
+  name: ENV_NAME
+  required: true
+- name: ENCRYPTION_KEY
+  displayName: Encryption Key (Ephemeral)
+  required: true
+  description: Encryption Key for Passwords
+  from: "[a-zA-Z0-9]{43}"
+  generate: expression
+- description: Image
+  name: IMAGE
+  value: quay.io/redhat-user-workloads/hcc-integrations-tenant/sources/sources-api
+- description: Image tag
+  name: IMAGE_TAG
+  required: true
+- name: KOKU_SOURCES_API_SCHEME
+  value: http
+- description: Hostname of the koku sources API server
+  displayName: Koku Sources API Hostname
+  name: KOKU_SOURCES_API_HOST
+  required: true
+  value: koku-sources
+- name: KOKU_SOURCES_API_PORT
+  value: '8000'
+- name: KOKU_SOURCES_API_APP_CHECK_PATH
+  value: /api/cost-management/v1/source-status/
+- name: LOG_LEVEL
+  value: INFO
+- name: MEMORY_LIMIT
+  value: 1Gi
+- name: MEMORY_REQUEST
+  value: 100Mi
+- name: AVAILABILITY_LISTENER_MEMORY_LIMIT
+  value: 128Mi
+- name: AVAILABILITY_LISTENER_MEMORY_REQUEST
+  value: 32Mi
+- name: BACKGROUND_WORKER_MEMORY_LIMIT
+  value: 128Mi
+- name: BACKGROUND_WORKER_MEMORY_REQUEST
+  value: 32Mi
+- description: Prometheus Metrics Port
+  displayName: Metrics Port
+  name: METRICS_PORT
+  value: '9000'
+- description: The number of replicas to use for the api svc
+  name: MIN_REPLICAS
+  value: '1'
+- description: The number of replicas to use for the availability status listener
+  name: AVAILABILITY_MIN_REPLICAS
+  value: '1'
+- description: The number of replicas to use for the background worker
+  name: BACKGROUND_WORKER_MIN_REPLICAS
+  value: '1'
+- description: 'Options can be found in the doc: https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-SSLMODE-STATEMENTS'
+  displayName: Postgres SSL mode
+  name: PGSSLMODE
+  value: prefer
+- description: The host and port for the RBAC service Sources depends on. Used only in development environments.
+  displayName: RBAC service's host.
+  name: RBAC_HOST
+  value: 'http://localhost:8080'
+  required: false
+- description: Skip the RBAC service entirely. If "BYPASS_RBAC=true" all the identified requests will be assumed to be valid.
+  displayName: Bypass RBAC option enabled
+  name: BYPASS_RBAC
+  value: "false"
+- description: Env name for seed
+  name: SOURCES_ENV
+  required: true
+  value: eph
+- description: Scheme for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_SCHEME
+  required: true
+  value: 'http'
+- description: Host for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_HOST
+  required: true
+  value: 'gateway.3scale-dev.svc.cluster.local'
+- description: Port for the EAN to OrgId translator.
+  name: TENANT_TRANSLATOR_PORT
+  required: true
+  value: '8892'
+- name: CLOUD_CONNECTOR_SCHEME
+  required: true
+  value: "http"
+- name: CLOUD_CONNECTOR_HOST
+  required: true
+  value: "cloud-connector-api"
+- name: CLOUD_CONNECTOR_PORT
+  required: true
+  value: "9000"
+- name: CLOUD_CONNECTOR_BASE_PATH
+  description: Partial path for performing connection operations
+  required: true
+  value: "/api/cloud-connector/v2/connections"
+- name: CLOUD_CONNECTOR_STATUS_PATH
+  description: Partial path for checking connection status, used with CLOUD_CONNECTOR_BASE_PATH
+  required: true
+  value: "/status"
+- name: PROVISIONING_SCHEME
+  required: true
+  value: "http"
+- name: PROVISIONING_HOST
+  required: true
+  value: "provisioning-backend-api"
+- name: PROVISIONING_PORT
+  required: true
+  value: "8000"
+- name: PROVISIONING_CHECK_PATH
+  required: true
+  value: "/availability_status/sources"
+- description: Specify name of service for Feature Flags
+  name: FEATURE_FLAGS_SERVICE
+  value: 'unleash'
+- description: Specify any source_types to not seed into the database
+  name: SOURCE_TYPE_SKIP_LIST
+  value: ''
+- description: Specify any application_types to not seed into the database
+  name: APPLICATION_TYPE_SKIP_LIST
+  value: ''
+- description: Which secret-store should sources use for authentications
+  name: SECRET_STORE
+  value: "database"
+- description: Whether to handle conflicts on user_ids during a tenant refresh
+  name: HANDLE_TENANT_REFRESH
+  value: "false"
+- description: A comma-separated list of application types that are disabled in Sources
+  name: DISABLED_APPLICATION_TYPES
+  value: ""
+- description: A YAML file containing app_metadata for the supported applications in Sources.
+  name: APP_METADATA
+  value: ""

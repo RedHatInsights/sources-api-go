@@ -1,0 +1,219 @@
+package main
+
+import (
+	"net/http"
+
+	"github.com/RedHatInsights/sources-api-go/dao"
+	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
+	"github.com/RedHatInsights/sources-api-go/service"
+	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
+)
+
+var getAuthenticationDao func(c echo.Context) (dao.AuthenticationDao, error)
+
+func getAuthenticationDaoWithTenant(c echo.Context) (dao.AuthenticationDao, error) {
+	requestParams, err := dao.NewRequestParamsFromContext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return dao.GetAuthenticationDao(requestParams), nil
+}
+
+func AuthenticationList(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	authentications, count, err := authDao.List(limit, offset, filters)
+	if err != nil {
+		return err
+	}
+
+	out := make([]interface{}, 0, len(authentications))
+	for _, auth := range authentications {
+		out = append(out, *auth.ToResponse())
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}
+
+func AuthenticationGet(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	auth, err := authDao.GetById(c.Param("uid"))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, auth.ToResponse())
+}
+
+func AuthenticationCreate(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	createRequest := m.AuthenticationCreateRequest{}
+
+	err = c.Bind(&createRequest)
+	if err != nil {
+		return err
+	}
+
+	err = service.ValidateAuthenticationCreationRequest(&createRequest)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	auth := &m.Authentication{
+		Name:         createRequest.Name,
+		AuthType:     createRequest.AuthType,
+		Username:     createRequest.Username,
+		ResourceType: createRequest.ResourceType,
+		ResourceID:   createRequest.ResourceID,
+	}
+
+	err = auth.SetExtra(createRequest.Extra)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	err = auth.SetPassword(createRequest.Password)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	err = authDao.Create(auth)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":         auth.TenantID,
+		"authentication_id": auth.ID,
+		"source_id":         auth.SourceID,
+		"resource_type":     auth.ResourceType,
+		"resource_id":       auth.ResourceID,
+	}).Infof("created authentication")
+
+	securitylog.LogCrud(c, "CREATE", "authentication", auth.ID, "success")
+
+	accountNumber, err := getAccountNumberFromEchoContext(c)
+	if err != nil {
+		c.Logger().Warn(err)
+	}
+
+	auth.Tenant = m.Tenant{Id: auth.TenantID, ExternalTenant: accountNumber}
+	setEventStreamResource(c, auth)
+
+	return c.JSON(http.StatusCreated, auth.ToResponse())
+}
+
+func AuthenticationEdit(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	updateRequest := &m.AuthenticationEditRequest{}
+
+	err = c.Bind(updateRequest)
+	if err != nil {
+		return err
+	}
+
+	err = service.ValidateAuthenticationEditRequest(updateRequest)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	auth, err := authDao.GetById(c.Param("uid"))
+	if err != nil {
+		return err
+	}
+
+	previousStatus := ""
+	if auth.AvailabilityStatus != nil {
+		previousStatus = *auth.AvailabilityStatus
+	}
+
+	err = auth.UpdateFromRequest(updateRequest)
+	if err != nil {
+		return util.NewErrBadRequest(`invalid JSON given in "extra" field`)
+	}
+
+	err = authDao.Update(auth)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":         *authDao.Tenant(),
+		"authentication_id": auth.ID,
+		"source_id":         auth.SourceID,
+	}).Infof("updated authentication")
+
+	// Authentication.ID is already a string — FormatID() not needed.
+	securitylog.LogCrud(c, "UPDATE", "authentication", auth.ID, "success")
+
+	sourceDao, err := getSourceDao(c)
+	if err != nil {
+		return err
+	}
+
+	source, err := sourceDao.GetById(&auth.SourceID)
+	if err != nil {
+		return err
+	}
+
+	auth.Source = *source
+
+	setNotificationForAvailabilityStatus(c, previousStatus, auth)
+	setEventStreamResource(c, auth)
+
+	return c.JSON(http.StatusOK, auth.ToResponse())
+}
+
+func AuthenticationDelete(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	auth, err := authDao.Delete(c.Param("uid"))
+	if err != nil {
+		return err
+	}
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":         auth.TenantID,
+		"authentication_id": auth.ID,
+		"source_id":         auth.SourceID,
+	}).Infof("deleted authentication")
+
+	// Authentication.ID is already a string — FormatID() not needed.
+	securitylog.LogCrud(c, "DELETE", "authentication", auth.ID, "success")
+
+	setEventStreamResource(c, auth)
+
+	return c.NoContent(http.StatusNoContent)
+}

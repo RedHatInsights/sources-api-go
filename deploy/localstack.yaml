@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: localstack-ephemeral
+objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: localstack-ephemeral
+  spec:
+    envName: ${ENV_NAME}
+    deployments:
+    - name: svc
+      minReplicas: ${{MIN_REPLICAS}}
+      webServices:
+        private:
+          enabled: true
+        public:
+          enabled: false
+      podSpec:
+        image: docker.io/localstack/localstack
+        resources:
+          limits:
+            memory: 768M
+            cpu: 500Mi
+          requests:
+            memory: 256M
+            cpu: 100Mi
+        env:
+        - name: EDGE_PORT
+          value: "10000"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 10000
+          initialDelaySeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 10000
+          initialDelaySeconds: 30
+parameters:
+- description: Clowder ENV
+  name: ENV_NAME
+  required: true
+- description: The number of replicas to use for the api svc
+  name: MIN_REPLICAS
+  value: '1'

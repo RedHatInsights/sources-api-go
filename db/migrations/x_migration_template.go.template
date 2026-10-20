@@ -1,0 +1,36 @@
+package migrations
+
+import (
+	_ "embed"
+
+	logging "github.com/RedHatInsights/sources-api-go/logger"
+	"github.com/go-gormigrate/gormigrate/v2"
+	"gorm.io/gorm"
+)
+
+// TODO: Implement Migration
+func NewMigration() *gormigrate.Migration {
+	return &gormigrate.Migration{
+		ID: "DATE",
+		Migrate: func(db *gorm.DB) error {
+			logging.Log.Info(`Migration "NAME" started`)
+			defer logging.Log.Info(`Migration "NAME" ended`)
+
+			// Perform the migration.
+			err := db.Transaction(func(tx *gorm.DB) error {
+				// TODO: do the thing
+				return nil
+			})
+
+			return err
+		},
+		Rollback: func(db *gorm.DB) error {
+			err := db.Transaction(func(tx *gorm.DB) error {
+				// TODO: reverse the thing
+				return nil
+			})
+
+			return err
+		},
+	}
+}

@@ -1,0 +1,85 @@
+package middleware
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/labstack/echo/v4"
+)
+
+var BadQueryParams = []string{"limit", "offset", "sort_by"}
+
+func SortAndFilter(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		filters, err := parseFilter(c)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		if sort := parseSorting(c); sort != nil {
+			filters = append(filters, *sort)
+		}
+
+		c.Set("filters", filters)
+
+		return next(c)
+	}
+}
+
+func parseFilter(c echo.Context) ([]util.Filter, error) {
+	f := make([]util.Filter, 0)
+	for key, values := range c.QueryParams() {
+		if strings.HasPrefix(key, "filter") {
+			matches := util.FilterRegex.FindAllStringSubmatch(key, -1)
+			filter := util.Filter{}
+
+			if len(matches) < 2 {
+				return nil, fmt.Errorf("filter")
+			}
+
+			// matching filter[subresource][field][operation]
+			// we only support filtering on source type/application type
+			if matches[1][0] == "source_type" || matches[1][0] == "application_type" {
+				filter = util.Filter{
+					Subresource: matches[1][0],
+					Name:        matches[2][0],
+					Value:       values,
+				}
+
+				// this will only be present if the user used a operation. it
+				// defaults to "" which we use as eq
+				if len(matches) == 4 {
+					filter.Operation = matches[3][0]
+				}
+			} else {
+				// matching filter[field][operation]
+				filter = util.Filter{Name: matches[1][0], Value: values}
+				// this will only be present if the user used a operation. it
+				// defaults to "" which we use as eq
+				if len(matches) == 3 {
+					filter.Operation = matches[2][0]
+				}
+			}
+
+			f = append(f, filter)
+		} else if !util.SliceContainsString(BadQueryParams, key) {
+			if !util.IsValidColumnName(key) {
+				return nil, fmt.Errorf("invalid filter parameter")
+			}
+			f = append(f, util.Filter{Name: key, Value: values})
+		}
+	}
+
+	return f, nil
+}
+
+func parseSorting(c echo.Context) *util.Filter {
+	for k, v := range c.QueryParams() {
+		if k == "sort_by" {
+			return &util.Filter{Operation: "sort_by", Value: v}
+		}
+	}
+
+	return &util.Filter{Operation: "sort_by", Value: []string{"id ASC"}}
+}

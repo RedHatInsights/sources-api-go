@@ -1,0 +1,459 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/RedHatInsights/sources-api-go/dao"
+	m "github.com/RedHatInsights/sources-api-go/model"
+	"github.com/RedHatInsights/sources-api-go/securitylog"
+	"github.com/RedHatInsights/sources-api-go/service"
+	"github.com/RedHatInsights/sources-api-go/util"
+	"github.com/labstack/echo/v4"
+	"github.com/sirupsen/logrus"
+)
+
+// function that defines how we get the dao - default implementation below.
+var getApplicationDao func(c echo.Context) (dao.ApplicationDao, error)
+
+func getApplicationDaoWithTenant(c echo.Context) (dao.ApplicationDao, error) {
+	requestParams, err := dao.NewRequestParamsFromContext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return dao.GetApplicationDao(requestParams), nil
+}
+
+func ApplicationList(c echo.Context) error {
+	applicationDB, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		applications []m.Application
+		count        int64
+	)
+
+	applications, count, err = applicationDB.List(limit, offset, filters)
+	if err != nil {
+		return err
+	}
+
+	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
+
+	out := make([]interface{}, len(applications))
+	for i := 0; i < len(applications); i++ {
+		out[i] = applications[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}
+
+func ApplicationGet(c echo.Context) error {
+	applicationDB, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	c.Logger().Infof("Getting Application ID %v", id)
+
+	app, err := applicationDB.GetById(&id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, app.ToResponse())
+}
+
+func ApplicationCreate(superKeySvc service.SuperKeyProducer) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		applicationDB, err := getApplicationDao(c)
+		if err != nil {
+			return err
+		}
+
+		requestParams, err := dao.NewRequestParamsFromContext(c)
+		if err != nil {
+			return err
+		}
+
+		input := &m.ApplicationCreateRequest{}
+
+		err = c.Bind(input)
+		if err != nil {
+			return err
+		}
+
+		err = service.ValidateApplicationCreateRequest(requestParams, input)
+		if err != nil {
+			return util.NewErrBadRequest(fmt.Sprintf("Validation failed: %v", err))
+		}
+
+		application := &m.Application{
+			Extra:             input.Extra,
+			ApplicationTypeID: input.ApplicationTypeID,
+			SourceID:          input.SourceID,
+		}
+
+		err = applicationDB.Create(application)
+		if err != nil {
+			return err
+		}
+
+		handlerLogEntry(c).WithFields(logrus.Fields{
+			"tenant_id":           *applicationDB.Tenant(),
+			"application_id":      application.ID,
+			"source_id":           application.SourceID,
+			"application_type_id": application.ApplicationTypeID,
+		}).Infof("created application")
+
+		securitylog.LogCrud(c, "CREATE", "application", securitylog.FormatID(application.ID), "success")
+
+		accountNumber, err := getAccountNumberFromEchoContext(c)
+		if err != nil {
+			c.Logger().Warn(err)
+		}
+
+		application.Tenant = m.Tenant{Id: application.TenantID, ExternalTenant: accountNumber}
+		setEventStreamResource(c, application)
+
+		// do not raise if it is a superkey application. The worker will post back
+		// with the resources and then we raise the create event.
+		if applicationDB.IsSuperkey(application.ID) {
+			c.Set("skip_raise", true)
+
+			forwardableHeaders, err := service.ForwadableHeaders(c)
+			if err != nil {
+				return err
+			}
+
+			// do the rest async. Don't want to be tied to kafka.
+			go func() {
+				err := superKeySvc.SendCreateRequest(application, forwardableHeaders)
+				if err != nil {
+					c.Logger().Warnf("Error sending Superkey Create Request: %v", err)
+				}
+			}()
+		}
+
+		return c.JSON(http.StatusCreated, application.ToResponse())
+	}
+}
+
+func ApplicationEdit(c echo.Context) error {
+	applicationDB, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	app, err := applicationDB.GetByIdWithPreload(&id, "Tenant", "Source")
+	if err != nil {
+		return util.NewErrNotFound("application")
+	}
+
+	// Store the previous status before updating the application.
+	previousStatus := app.AvailabilityStatus
+
+	var statusFromRequest *string
+
+	if app.PausedAt != nil {
+		input := &m.ResourceEditPausedRequest{}
+
+		err := c.Bind(input)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		statusFromRequest = input.AvailabilityStatus
+
+		err = app.UpdateFromRequestPaused(input)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+	} else {
+		input := &m.ApplicationEditRequest{}
+
+		err := c.Bind(input)
+		if err != nil {
+			return util.NewErrBadRequest(err)
+		}
+
+		err = service.ValidateApplicationEditRequest(input)
+		if err != nil {
+			return util.NewErrBadRequest(fmt.Errorf(`invalid payload: %w`, err))
+		}
+
+		statusFromRequest = input.AvailabilityStatus
+		app.UpdateFromRequest(input)
+	}
+
+	err = applicationDB.Update(app)
+	if err != nil {
+		return err
+	}
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":      *applicationDB.Tenant(),
+		"application_id": id,
+		"source_id":      app.SourceID,
+	}).Infof("updated application")
+
+	securitylog.LogCrud(c, "UPDATE", "application", securitylog.FormatID(id), "success")
+
+	setNotificationForAvailabilityStatus(c, previousStatus, app)
+	setEventStreamResource(c, app)
+
+	if statusFromRequest != nil {
+		err := service.UpdateSourceFromApplicationAvailabilityStatus(app, previousStatus)
+		if err != nil {
+			return err
+		}
+	}
+
+	// for this model we ONLY raise the update for superkey sources once the
+	// worker posts back.
+	if applicationDB.IsSuperkey(app.ID) {
+		if app.GotSuperkeyUpdate {
+			c.Set("event_override", "Application.create")
+		}
+	}
+
+	return c.JSON(http.StatusOK, app.ToResponse())
+}
+
+func ApplicationDelete(c echo.Context) error {
+	applicationDB, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	// Check if the application exists before proceeding.
+	applicationExists, err := applicationDB.Exists(id)
+	if err != nil {
+		return err
+	}
+
+	if !applicationExists {
+		return util.NewErrNotFound("application")
+	}
+
+	// Superkey applications are deleted asynchronously: we enqueue a job
+	// that sends the destroy request to the superkey worker, which cleans
+	// up the cloud resources before the actual DB cascade delete runs.
+	if applicationDB.IsSuperkey(id) {
+		return enqueueSuperKeyDelete(c, "application", id)
+	}
+
+	// Non-superkey: cascade delete immediately.
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
+
+	err = service.DeleteCascade(applicationDB.Tenant(), applicationDB.User(), "Application", id, forwardableHeaders)
+	if err != nil {
+		return err
+	}
+
+	handlerLogEntry(c).WithFields(logrus.Fields{
+		"tenant_id":      *applicationDB.Tenant(),
+		"application_id": id,
+	}).Infof("deleted application")
+
+	securitylog.LogCrud(c, "DELETE", "application", securitylog.FormatID(id), "success")
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+func ApplicationListAuthentications(c echo.Context) error {
+	authDao, err := getAuthenticationDao(c)
+	if err != nil {
+		return err
+	}
+
+	appID, err := strconv.ParseInt(c.Param("application_id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	auths, count, err := authDao.ListForApplication(appID, 100, 0, nil)
+	if err != nil {
+		return err
+	}
+
+	out := make([]interface{}, count)
+	for i := 0; i < int(count); i++ {
+		out[i] = auths[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), 100, 0))
+}
+
+func SourceListApplications(c echo.Context) error {
+	applicationDB, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	filters, err := getFilters(c)
+	if err != nil {
+		return err
+	}
+
+	limit, offset, err := getLimitAndOffset(c)
+	if err != nil {
+		return err
+	}
+
+	var (
+		applications []m.Application
+		count        int64
+	)
+
+	id, err := strconv.ParseInt(c.Param("source_id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	applications, count, err = applicationDB.SubCollectionList(m.Source{ID: id}, limit, offset, filters)
+	if err != nil {
+		return err
+	}
+
+	c.Logger().Infof("tenant: %v", *applicationDB.Tenant())
+
+	out := make([]interface{}, len(applications))
+	for i := 0; i < len(applications); i++ {
+		out[i] = applications[i].ToResponse()
+	}
+
+	return c.JSON(http.StatusOK, util.CollectionResponse(out, c.Request(), int(count), limit, offset))
+}
+
+// ApplicationPause pauses a given application by setting its "paused_at" column to "now()".
+func ApplicationPause(c echo.Context) error {
+	applicationId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	applicationDao, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	// Check if the application exists
+	appExists, err := applicationDao.Exists(applicationId)
+	if err != nil {
+		return err
+	}
+
+	if !appExists {
+		return util.NewErrNotFound("application")
+	}
+
+	// Pause the existing application
+	err = applicationDao.Pause(applicationId)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	application, err := applicationDao.GetById(&applicationId)
+	if err != nil {
+		return err
+	}
+
+	// Get the Kafka headers we will need to be forwarding.
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
+
+	// Raise the pause event for the application.
+	err = service.RaiseEvent("Application.pause", application, forwardableHeaders)
+	if err != nil {
+		return err
+	}
+
+	securitylog.LogCrud(c, "UPDATE", "application", securitylog.FormatID(applicationId), "success")
+
+	return c.JSON(http.StatusNoContent, nil)
+}
+
+// ApplicationUnpause resumes a given application by setting its "paused_at" column to "NULL".
+func ApplicationUnpause(c echo.Context) error {
+	applicationId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	applicationDao, err := getApplicationDao(c)
+	if err != nil {
+		return err
+	}
+
+	// Check if the application exists
+	appExists, err := applicationDao.Exists(applicationId)
+	if err != nil {
+		return err
+	}
+
+	if !appExists {
+		return util.NewErrNotFound("application")
+	}
+
+	// Unpause the existing application
+	err = applicationDao.Unpause(applicationId)
+	if err != nil {
+		return util.NewErrBadRequest(err)
+	}
+
+	application, err := applicationDao.GetById(&applicationId)
+	if err != nil {
+		return err
+	}
+
+	// Get the Kafka headers we will need to be forwarding.
+	forwardableHeaders, err := service.ForwadableHeaders(c)
+	if err != nil {
+		return err
+	}
+
+	// Raise the unpause event for the application.
+	err = service.RaiseEvent("Application.unpause", application, forwardableHeaders)
+	if err != nil {
+		return err
+	}
+
+	securitylog.LogCrud(c, "UPDATE", "application", securitylog.FormatID(applicationId), "success")
+
+	return c.JSON(http.StatusNoContent, nil)
+}

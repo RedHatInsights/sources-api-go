@@ -1,0 +1,71 @@
+---
+"/insights/platform/app-studio":
+  display_name: App Studio
+  dependent_applications: []
+  supported_source_types:
+    - bitbucket
+    - dockerhub
+    - github
+    - gitlab
+    - quay
+  supported_authentication_types:
+    bitbucket:
+      - bitbucket-app-password
+    dockerhub:
+      - docker-access-token
+    github:
+      - github-personal-access-token
+    gitlab:
+      - gitlab-personal-access-token
+    quay:
+      - quay-encrypted-password
+  resource_ownership: user
+
+"/insights/platform/cost-management":
+  display_name: Cost Management
+  dependent_applications: []
+  supported_source_types:
+  - amazon
+  - azure
+  - google
+  - openshift
+  - ibm
+  supported_authentication_types:
+    amazon:
+    - arn
+    azure:
+    - tenant_id_client_id_client_secret
+    google:
+    - project_id_service_account_json
+    openshift:
+    - token
+    ibm:
+    - api_token_account_id
+"/insights/platform/cloud-meter":
+  display_name: RHEL management
+  dependent_applications: []
+  supported_source_types:
+  - amazon
+  - azure
+  - google
+  supported_authentication_types:
+    amazon:
+    - cloud-meter-arn
+    azure:
+    - lighthouse_subscription_id
+"/insights/platform/fifi":
+  display_name: Remediations
+  dependent_applications: []
+  supported_source_types:
+  - satellite
+  supported_authentication_types:
+    satellite:
+    - receptor_node
+"/insights/platform/image-builder":
+  display_name: Image Builder
+  dependent_applications: []
+  supported_source_types:
+    - amazon
+  supported_authentication_types:
+    amazon:
+      - image-builder-aws-account-id

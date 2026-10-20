@@ -1,0 +1,214 @@
+---
+"/insights/platform/cost-management":
+  steps:
+  - step: 1
+    name: s3
+    payload:
+      "create_cost_policy"
+    substitutions:
+      S3BUCKET: s3
+  - step: 2
+    name: cost_report
+    payload:
+      {
+        "additional_artifacts": [
+          "REDSHIFT",
+          "QUICKSIGHT"
+        ],
+        "additional_schema_elements": [
+          "RESOURCES"
+        ],
+        "compression": "GZIP",
+        "format": "textORcsv",
+        "time_unit": "HOURLY",
+        "report_name": "koku",
+        "s3_prefix": "cost",
+        "s3_region": "us-east-1",
+        "s3_bucket": "S3BUCKET"
+      }
+    substitutions:
+      S3BUCKET: s3
+  - step: 3
+    name: policy
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+              "s3:Get*",
+              "s3:List*"
+            ],
+            "Resource": [
+              "arn:aws:s3:::S3BUCKET",
+              "arn:aws:s3:::S3BUCKET/*"
+            ]
+          },
+          {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+              "s3:ListBucket",
+              "cur:DescribeReportDefinitions"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    substitutions:
+      S3BUCKET: s3
+  - step: 4
+    name: role
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::ACCOUNT:root"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+              "StringEquals": {
+                "sts:ExternalID": "EXTERNAL_ID"
+              }
+            }
+          }
+        ]
+      }
+    substitutions:
+      ACCOUNT: get_account
+      EXTERNAL_ID: generate_external_id
+  - step: 5
+    name: bind_role
+    payload: {}
+    substitutions: {}
+
+"/insights/platform/cloud-meter":
+  steps:
+  - step: 1
+    name: policy
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "CloudigradePolicy",
+            "Effect": "Allow",
+            "Action": [
+              "ec2:DescribeImages",
+              "ec2:DescribeInstances",
+              "ec2:ModifySnapshotAttribute",
+              "ec2:DescribeSnapshotAttribute",
+              "ec2:DescribeSnapshots",
+              "ec2:CopyImage",
+              "ec2:CreateTags",
+              "ec2:DescribeRegions",
+              "cloudtrail:CreateTrail",
+              "cloudtrail:UpdateTrail",
+              "cloudtrail:PutEventSelectors",
+              "cloudtrail:DescribeTrails",
+              "cloudtrail:StartLogging",
+              "cloudtrail:DeleteTrail"
+            ],
+            "Resource": "*"
+          }
+        ]
+      }
+    substitutions: {}
+  - step: 2
+    name: role
+    payload:
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::ACCOUNT:root"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+              "StringEquals": {
+                "sts:ExternalID": "EXTERNAL_ID"
+              }
+            }
+          }
+        ]
+      }
+    substitutions:
+      ACCOUNT: get_account
+      EXTERNAL_ID: generate_external_id
+  - step: 3
+    name: bind_role
+    payload: {}
+    substitutions: {}
+
+"/insights/platform/image-builder":
+  steps:
+    - step: 1
+      name: policy
+      payload:
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "RedHatImageBuilder",
+              "Effect": "Allow",
+              "Action": [
+                  "iam:GetPolicyVersion",
+                  "iam:GetPolicy",
+                  "iam:ListAttachedRolePolicies",
+                  "iam:GetRolePolicy",
+                  "iam:ListRolePolicies",
+                  "ec2:CreateKeyPair",
+                  "ec2:CreateLaunchTemplate",
+                  "ec2:CreateLaunchTemplateVersion",
+                  "ec2:CreateTags",
+                  "ec2:DeleteKeyPair",
+                  "ec2:DeleteTags",
+                  "ec2:DescribeAvailabilityZones",
+                  "ec2:DescribeImages",
+                  "ec2:DescribeInstanceTypes",
+                  "ec2:DescribeInstances",
+                  "ec2:DescribeKeyPairs",
+                  "ec2:DescribeLaunchTemplates",
+                  "ec2:DescribeLaunchTemplateVersions",
+                  "ec2:DescribeRegions",
+                  "ec2:DescribeSecurityGroups",
+                  "ec2:DescribeSnapshotAttribute",
+                  "ec2:DescribeTags",
+                  "ec2:ImportKeyPair",
+                  "ec2:RunInstances",
+                  "ec2:StartInstances"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      substitutions: {}
+    - step: 2
+      name: role
+      payload:
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": "arn:aws:iam::ACCOUNT:root"
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {}
+            }
+          ]
+        }
+      substitutions:
+        ACCOUNT: get_account
+    - step: 3
+      name: bind_role
+      payload: {}
+      substitutions: {}
