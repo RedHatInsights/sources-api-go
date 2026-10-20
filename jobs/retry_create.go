@@ -272,7 +272,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 
 	l.Log.Debugf("Found %d authentication(s) for application %d", len(authentications), app.ID)
 	for _, auth := range authentications {
-		l.Log.Debugf("  - auth_id=%d, resource_type=%s, resource_id=%d",
+		l.Log.Debugf("  - auth_id=%s, resource_type=%s, resource_id=%d",
 			auth.ID, auth.ResourceType, auth.ResourceID)
 	}
 
@@ -311,7 +311,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		if err != nil {
 			l.Log.Warnf("Failed to raise Authentication.create event for authentication %v: %v", authentications[i].ID, err)
 		} else {
-			l.Log.Debugf("Sent Authentication.create event: auth_id=%d, resource_type=%s, resource_id=%d",
+			l.Log.Debugf("Sent Authentication.create event: auth_id=%s, resource_type=%s, resource_id=%d",
 				authentications[i].ID, authentications[i].ResourceType, authentications[i].ResourceID)
 			retryCreateMessagesSent.Inc()
 		}
