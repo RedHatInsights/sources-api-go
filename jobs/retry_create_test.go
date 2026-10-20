@@ -17,27 +17,29 @@ import (
 func createRetryTestApplication(t *testing.T, sourceID int64, status string, retryCounter int8, createdAt time.Time) *m.Application {
 	t.Helper()
 
-	app := &m.Application{
-		SourceID:           sourceID,
-		ApplicationTypeID:  fixtures.TestApplicationTypeData[0].Id,
-		TenantID:           fixtures.TestTenantData[0].Id,
-		AvailabilityStatus: status,
-		RetryCounter:       &retryCounter,
-	}
+	var app m.Application
 
-	if err := dao.DB.Create(app).Error; err != nil {
+	app.SourceID = sourceID
+	app.ApplicationTypeID = fixtures.TestApplicationTypeData[0].Id
+	app.TenantID = fixtures.TestTenantData[0].Id
+	app.AvailabilityStatus = status
+	app.RetryCounter = &retryCounter
+
+	err := dao.DB.Create(&app).Error
+	if err != nil {
 		t.Fatalf("failed to create test application: %v", err)
 	}
 
 	// CreatedAt is set by GORM on creation - backdate it directly, bypassing hooks, so the row can
 	// exercise the "RecordAgeLimit" cutoff.
-	if err := dao.DB.Model(app).UpdateColumn("created_at", createdAt).Error; err != nil {
+	err = dao.DB.Model(&app).UpdateColumn("created_at", createdAt).Error
+	if err != nil {
 		t.Fatalf("failed to backdate test application: %v", err)
 	}
 
-	t.Cleanup(func() { dao.DB.Delete(app) })
+	t.Cleanup(func() { dao.DB.Delete(&app) })
 
-	return app
+	return &app
 }
 
 // TestClaimRetryBatchClaimsEligibleApplications is a regression test for the GORM error "invalid value, should be
@@ -78,7 +80,9 @@ func TestClaimRetryBatchClaimsEligibleApplications(t *testing.T) {
 	}
 
 	var reloaded m.Application
-	if err := dao.DB.First(&reloaded, eligible.ID).Error; err != nil {
+
+	err = dao.DB.First(&reloaded, eligible.ID).Error
+	if err != nil {
 		t.Fatalf("failed to reload claimed application: %v", err)
 	}
 
@@ -114,12 +118,15 @@ func TestResetAvailableRetryCountersMarksAvailableApplicationsAsDone(t *testing.
 
 	app := createRetryTestApplication(t, 6, m.Available, 0, time.Now())
 
-	if err := resetAvailableRetryCounters(); err != nil {
+	err := resetAvailableRetryCounters()
+	if err != nil {
 		t.Fatalf("resetAvailableRetryCounters returned an unexpected error: %v", err)
 	}
 
 	var reloaded m.Application
-	if err := dao.DB.First(&reloaded, app.ID).Error; err != nil {
+
+	err = dao.DB.First(&reloaded, app.ID).Error
+	if err != nil {
 		t.Fatalf("failed to reload application: %v", err)
 	}
 
