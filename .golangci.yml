@@ -30,6 +30,7 @@ linters:
     - errname # must have.
     - errorlint # must have.
     - exhaustruct
+    - exhaustruct_v5
     - forbidigo
     - funcorder
     - funlen
