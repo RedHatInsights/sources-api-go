@@ -39,8 +39,7 @@ func parseFilter(c echo.Context) ([]util.Filter, error) {
 			}
 
 			// matching filter[subresource][field][operation]
-			// we only support filtering on source type/application type
-			if matches[1][0] == "source_type" || matches[1][0] == "application_type" {
+			if matches[1][0] == "source_type" || matches[1][0] == "application_type" || matches[1][0] == "application" {
 				filter = util.Filter{
 					Subresource: matches[1][0],
 					Name:        matches[2][0],
