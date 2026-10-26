@@ -184,6 +184,12 @@ func claimRetryBatch() ([]m.Application, error) {
 
 		l.Log.Infof("Found %v applications that need to be retried", len(apps))
 
+		// Debug log the claimed applications with their IDs
+		for _, app := range apps {
+			l.Log.Debugf("Claiming application for retry: app_id=%d, tenant_id=%d, app_type_id=%d",
+				app.ID, app.TenantID, app.ApplicationTypeID)
+		}
+
 		// Extract IDs for a targeted update — avoids passing a slice to
 		// Model() which can cause unexpected GORM behavior.
 		ids := make([]int64, len(apps))
@@ -232,6 +238,9 @@ func sendRetryMessages(apps []m.Application) {
 
 // resend the messages that would have been sent out for the application.
 func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
+	l.Log.Debugf("Starting retry message processing: app_id=%d, app_type_id=%d, tenant_id=%d",
+		applicationId, applicationTypeId, tenantId)
+
 	// checking to see if the application is "opted in" to retrying first
 	optedIn, err := dao.GetMetaDataDao().ApplicationOptedIntoRetry(applicationTypeId)
 	if err != nil {
@@ -240,7 +249,8 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 	}
 
 	if !optedIn {
-		l.Log.Debugf("Application %v not opted into retrying, returning.", applicationId)
+		l.Log.Debugf("Application %v (app_type_id=%d) not opted into retrying, skipping",
+			applicationId, applicationTypeId)
 		return
 	}
 
@@ -251,20 +261,42 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		return
 	}
 
+	l.Log.Debugf("Loaded application for retry: app_id=%d, source_id=%d, tenant_id=%d, org_id=%s, external_tenant=%s",
+		app.ID, app.SourceID, app.TenantID, app.Tenant.OrgID, app.Tenant.ExternalTenant)
+
 	authentications, _, err := dao.GetAuthenticationDao(&dao.RequestParams{TenantID: &app.TenantID}).ListForApplication(app.ID, 100, 0, []util.Filter{})
 	if err != nil {
 		l.Log.Warnf("Error listing authentications for application %v: %v", applicationId, err)
 		return
 	}
 
+	l.Log.Debugf("Found %d authentication(s) for application %d", len(authentications), app.ID)
+
+	for _, auth := range authentications {
+		l.Log.Debugf("  - auth_id=%s, resource_type=%s, resource_id=%d",
+			auth.ID, auth.ResourceType, auth.ResourceID)
+	}
+
+	l.Log.Debugf("Found %d application_authentication(s) for application %d",
+		len(app.ApplicationAuthentications), app.ID)
+
+	for _, appAuth := range app.ApplicationAuthentications {
+		l.Log.Debugf("  - app_auth_id=%d, auth_id=%d, app_id=%d",
+			appAuth.ID, appAuth.AuthenticationID, appAuth.ApplicationID)
+	}
+
 	// generate the forwardable headers from what we have in the tenant table
 	headers := app.Tenant.GetHeadersWithGeneratedXRHID()
 
 	// raise ALL THE EVENTS...AGAIN!
+	l.Log.Debugf("Raising retry events for app_id=%d (source_id=%d, tenant_id=%d, org_id=%s)",
+		app.ID, app.SourceID, app.TenantID, app.Tenant.OrgID)
+
 	err = service.RaiseEvent("Source.create", &app.Source, headers)
 	if err != nil {
 		l.Log.Warnf("Failed to raise Source.create event for source %v: %v", app.SourceID, err)
 	} else {
+		l.Log.Debugf("Sent Source.create event: source_id=%d", app.SourceID)
 		retryCreateMessagesSent.Inc()
 	}
 
@@ -272,6 +304,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 	if err != nil {
 		l.Log.Warnf("Failed to raise Application.create event for application %v: %v", app.ID, err)
 	} else {
+		l.Log.Debugf("Sent Application.create event: app_id=%d", app.ID)
 		retryCreateMessagesSent.Inc()
 	}
 
@@ -280,6 +313,8 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		if err != nil {
 			l.Log.Warnf("Failed to raise Authentication.create event for authentication %v: %v", authentications[i].ID, err)
 		} else {
+			l.Log.Debugf("Sent Authentication.create event: auth_id=%s, resource_type=%s, resource_id=%d",
+				authentications[i].ID, authentications[i].ResourceType, authentications[i].ResourceID)
 			retryCreateMessagesSent.Inc()
 		}
 	}
@@ -289,7 +324,13 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		if err != nil {
 			l.Log.Warnf("Failed to raise ApplicationAuthentication.create event for appAuth %v: %v", app.ApplicationAuthentications[i].ID, err)
 		} else {
+			l.Log.Debugf("Sent ApplicationAuthentication.create event: app_auth_id=%d, auth_id=%d, app_id=%d",
+				app.ApplicationAuthentications[i].ID, app.ApplicationAuthentications[i].AuthenticationID, app.ApplicationAuthentications[i].ApplicationID)
 			retryCreateMessagesSent.Inc()
 		}
 	}
+
+	l.Log.Infof("Completed retry processing for app_id=%d (source_id=%d, org_id=%s): sent %d events",
+		app.ID, app.SourceID, app.Tenant.OrgID,
+		2+len(authentications)+len(app.ApplicationAuthentications))
 }
