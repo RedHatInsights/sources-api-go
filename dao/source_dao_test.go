@@ -1571,7 +1571,7 @@ func TestSourceListFilterByApplicationSubresource_TenantIsolation(t *testing.T) 
 		//nolint:exhaustruct // Test fixture - only setting required fields
 		app3 := m.Application{
 			ID:                3,
-			SourceID:          3,         // Points to tenant 1's source
+			SourceID:          3, // Points to tenant 1's source
 			ApplicationTypeID: 1,
 			TenantID:          tenant2ID, // BUT marked as tenant 2! (data bug)
 		}
