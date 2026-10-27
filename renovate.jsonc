@@ -28,7 +28,7 @@
       // a moved tag with no version change is what a hijacked action looks like.
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["patch", "minor"],
-      "matchDepNames": ["actions/checkout", "actions/setup-go"],
+      "matchDepNames": ["actions/checkout", "actions/setup-go", "fullsend-ai/fullsend"],
       "automerge": true,
       "groupName": "GitHub Actions"
     },
