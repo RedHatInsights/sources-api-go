@@ -510,7 +510,7 @@ func (add *authenticationDaoDbImpl) BulkDelete(authentications []m.Authenticatio
 	}
 
 	for _, auth := range dbAuths {
-		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": auth.ResourceType, "resource_id": auth.ResourceID, "authentication_id": auth}).Info("Authentication deleted")
+		logger.Log.WithFields(logrus.Fields{"tenant_id": *add.TenantID, "resource_type": auth.ResourceType, "resource_id": auth.ResourceID, "authentication_id": auth.ID}).Info("Authentication deleted")
 	}
 
 	return dbAuths, nil

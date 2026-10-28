@@ -273,16 +273,16 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 	l.Log.Debugf("Found %d authentication(s) for application %d", len(authentications), app.ID)
 
 	for _, auth := range authentications {
-		l.Log.Debugf("  - auth_id=%s, resource_type=%s, resource_id=%d",
-			auth.ID, auth.ResourceType, auth.ResourceID)
+		l.Log.Debugf("Application %d authentication: auth_id=%s, resource_type=%s, resource_id=%d",
+			app.ID, auth.ID, auth.ResourceType, auth.ResourceID)
 	}
 
 	l.Log.Debugf("Found %d application_authentication(s) for application %d",
 		len(app.ApplicationAuthentications), app.ID)
 
 	for _, appAuth := range app.ApplicationAuthentications {
-		l.Log.Debugf("  - app_auth_id=%d, auth_id=%d, app_id=%d",
-			appAuth.ID, appAuth.AuthenticationID, appAuth.ApplicationID)
+		l.Log.Debugf("Application %d application_authentication: app_auth_id=%d, auth_id=%d",
+			app.ID, appAuth.ID, appAuth.AuthenticationID)
 	}
 
 	// generate the forwardable headers from what we have in the tenant table
@@ -330,7 +330,7 @@ func resendCreateMessages(applicationId, applicationTypeId, tenantId int64) {
 		}
 	}
 
-	l.Log.Infof("Completed retry processing for app_id=%d (source_id=%d, org_id=%s): sent %d events",
+	l.Log.Debugf("Completed retry processing for app_id=%d (source_id=%d, org_id=%s): sent %d events",
 		app.ID, app.SourceID, app.Tenant.OrgID,
 		2+len(authentications)+len(app.ApplicationAuthentications))
 }
