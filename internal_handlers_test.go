@@ -267,11 +267,6 @@ func TestInternalSecretGet(t *testing.T) {
 		t.Error(err)
 	}
 
-	encryptedPassword, err := util.Encrypt("password")
-	if err != nil {
-		t.Error(err)
-	}
-
 	var userID *int64
 
 	for _, userScoped := range []bool{false, true} {
@@ -332,8 +327,16 @@ func TestInternalSecretGet(t *testing.T) {
 			t.Error("secret not found")
 		}
 
-		if *secret.Password != encryptedPassword {
-			t.Errorf("expected password %v but got %v", encryptedPassword, *secret.Password)
+		// Compare the decrypted value rather than the raw ciphertext: encryption schemes are not
+		// required to be deterministic (e.g. a random nonce/IV per call), so two independent
+		// encryptions of the same plaintext may legitimately produce different ciphertexts.
+		decryptedPassword, err := util.Decrypt(*secret.Password)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if decryptedPassword != "password" {
+			t.Errorf("expected password %v but got %v", "password", decryptedPassword)
 		}
 
 		if userScoped && secret.UserID == nil || !userScoped && secret.UserID != nil {
@@ -342,4 +345,102 @@ func TestInternalSecretGet(t *testing.T) {
 
 		cleanSecretByID(t, secretID, &dao.RequestParams{TenantID: &tenantIDForSecret, UserID: userID})
 	}
+}
+
+// TestInternalAuthenticationGetExposesPassword covers "InternalAuthenticationGet", the handler
+// backing "/internal/v2.0/authentications/:uuid". This is the endpoint "sources-superkey-worker"
+// relies on to fetch plaintext credentials — it has no decryption logic of its own — so it's the
+// one path that would actually break if the encrypt/decrypt round trip in "util" ever regressed.
+func TestInternalAuthenticationGetExposesPassword(t *testing.T) {
+	testutils.SkipIfNotRunningIntegrationTests(t)
+	// Set the encryption key
+	util.OverrideEncryptionKey(strings.Repeat("test", 8))
+
+	tenantID := int64(1)
+	plaintextPassword := "password"
+
+	// CreateSecretByName creates an Authentication row (a "secret" is just an Authentication
+	// scoped to the tenant) with its password encrypted via util.Encrypt, which is exactly the
+	// code path InternalAuthenticationGet's response depends on.
+	auth, err := dao.CreateSecretByName("Internal Auth Get Test", &tenantID, nil)
+	if err != nil {
+		t.Error(err)
+	}
+
+	authID, err := util.InterfaceToString(auth.DbID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Without "expose_encrypted_attribute[]=password" the response must never include the
+	// password, encrypted or not.
+	c, rec := request.CreateTestContext(
+		http.MethodGet,
+		"/internal/v2.0/authentications/"+authID,
+		nil,
+		map[string]any{
+			"tenantID": tenantID,
+		},
+	)
+	c.SetParamNames("uuid")
+	c.SetParamValues(authID)
+
+	err = InternalAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Error("Did not return 200")
+	}
+
+	var rawResponse map[string]any
+
+	err = json.Unmarshal(rec.Body.Bytes(), &rawResponse)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if _, exposed := rawResponse["password"]; exposed {
+		t.Error("password must not be present in the response without expose_encrypted_attribute[]=password")
+	}
+
+	// With "expose_encrypted_attribute[]=password" the response must include the plaintext
+	// password, decrypted from whatever ciphertext util.Encrypt produced for it.
+	c, rec = request.CreateTestContext(
+		http.MethodGet,
+		"/internal/v2.0/authentications/"+authID+"?expose_encrypted_attribute[]=password",
+		nil,
+		map[string]any{
+			"tenantID": tenantID,
+		},
+	)
+	c.SetParamNames("uuid")
+	c.SetParamValues(authID)
+
+	err = InternalAuthenticationGet(c)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if rec.Code != http.StatusOK {
+		t.Error("Did not return 200")
+	}
+
+	var outAuth m.AuthenticationInternalResponse
+
+	err = json.Unmarshal(rec.Body.Bytes(), &outAuth)
+	if err != nil {
+		t.Error("Failed unmarshaling output")
+	}
+
+	if outAuth.ID != authID {
+		t.Errorf(`wrong authentication fetched. Want "%s", got "%s"`, authID, outAuth.ID)
+	}
+
+	if outAuth.Password != plaintextPassword {
+		t.Errorf("expected plaintext password %q but got %q", plaintextPassword, outAuth.Password)
+	}
+
+	cleanSecretByID(t, authID, &dao.RequestParams{TenantID: &tenantID})
 }
