@@ -378,7 +378,7 @@ func TestInternalAuthenticationGetExposesPassword(t *testing.T) {
 		http.MethodGet,
 		"/internal/v2.0/authentications/"+authID,
 		nil,
-		map[string]interface{}{
+		map[string]any{
 			"tenantID": tenantID,
 		},
 	)
@@ -394,7 +394,7 @@ func TestInternalAuthenticationGetExposesPassword(t *testing.T) {
 		t.Error("Did not return 200")
 	}
 
-	var rawResponse map[string]interface{}
+	var rawResponse map[string]any
 
 	err = json.Unmarshal(rec.Body.Bytes(), &rawResponse)
 	if err != nil {
@@ -411,7 +411,7 @@ func TestInternalAuthenticationGetExposesPassword(t *testing.T) {
 		http.MethodGet,
 		"/internal/v2.0/authentications/"+authID+"?expose_encrypted_attribute[]=password",
 		nil,
-		map[string]interface{}{
+		map[string]any{
 			"tenantID": tenantID,
 		},
 	)
