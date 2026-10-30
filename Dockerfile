@@ -1,14 +1,30 @@
-FROM registry.access.redhat.com/ubi9/ubi:latest@sha256:5f08e80aa970ae77712e75e5e857ac0b396abc900823c4d041c1150a9538a13f as build
-WORKDIR /build
+################################
+# STEP 1 build executable binary
+################################
+FROM registry.access.redhat.com/hi/go:latest-fips-builder@sha256:b7a89799fe7ac875c0923329ea6cdcb61837027b5a44fa9f23a88101c05e833a AS builder
 
-RUN dnf --assumeyes --disableplugin=subscription-manager install go
+USER 0
 
+WORKDIR /workspace
+
+# Cache deps before copying source so that we do not need to re-download for every build
+COPY go.mod go.sum .
+
+# Fetch dependencies hermetically by sourcing the local prefetch cache
+RUN if [ -f /cachi2/cachi2.env ]; then . /cachi2/cachi2.env; fi && \
+    go mod download
+
+# Now copy the rest of the files for build
 COPY . .
-RUN go mod download \
-    && go build -o sources-api-go . \
-    && strip sources-api-go
 
-FROM registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:bba2b4bbf0ed15cfe7dd72a1e17ae7d2015a141f306b304e1a2785c41400e39c
+# Build the binary using the local cached modules
+RUN if [ -f /cachi2/cachi2.env ]; then . /cachi2/cachi2.env; fi && \
+    go build -ldflags "-w -s" -o sources-api-go .
+
+############################
+# STEP 2 build a small image
+############################
+FROM registry.access.redhat.com/hi/go:latest-fips@sha256:b793b36bc6129d842d28f051681deb7907aae8b9b40e894fcd62e0fb2c1eaad5
 
 # The Sources API leaves the RDS CA in a file when the Clowder configuration
 # is loaded. In order to avoid permission errors when writing the file to
@@ -21,7 +37,7 @@ WORKDIR /app
 RUN chmod 777 /app
 
 # Copy the binary and the license.
-COPY --from=build /build/sources-api-go /app/sources-api-go
+COPY --from=builder /workspace/sources-api-go /app/sources-api-go
 COPY licenses/LICENSE /app/licenses/LICENSE
 
 USER 1001
