@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://console.redhat.com/schemas/sources/availability-check-request.schema.json",
+  "title": "Availability Check Request",
+  "description": "Schema for availability check request messages published by Sources to Kafka topic: platform.sources.availability-check-requests",
+  "type": "object",
+  "required": [
+    "source_id",
+    "tenant_id",
+    "application_id",
+    "application_type",
+    "source_type",
+    "timestamp",
+    "correlation_id"
+  ],
+  "properties": {
+    "source_id": {
+      "type": "string",
+      "description": "Unique identifier for the source in Sources database",
+      "minLength": 1,
+      "examples": ["12345", "67890"]
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Red Hat account/organization ID (org_id) in UUID format",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "examples": ["550e8400-e29b-41d4-a716-446655440000"]
+    },
+    "application_id": {
+      "type": "string",
+      "description": "Unique identifier for the application instance",
+      "minLength": 1,
+      "examples": ["67890", "12345"]
+    },
+    "application_type": {
+      "type": "string",
+      "description": "Application type path that identifies which application should process this check",
+      "enum": [
+        "/insights/platform/cost-management",
+        "/insights/platform/cloud-meter",
+        "/insights/platform/provisioning",
+        "cloud-connector"
+      ],
+      "examples": [
+        "/insights/platform/cost-management",
+        "/insights/platform/cloud-meter",
+        "cloud-connector"
+      ]
+    },
+    "source_type": {
+      "type": "string",
+      "description": "Type of external system being checked",
+      "enum": [
+        "amazon",
+        "azure",
+        "google",
+        "openshift",
+        "ibm",
+        "satellite",
+        "github",
+        "gitlab",
+        "bitbucket",
+        "dockerhub",
+        "quay"
+      ],
+      "examples": ["amazon", "azure", "google", "openshift", "satellite"]
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Human-readable source name for logging and debugging purposes (optional)",
+      "maxLength": 255,
+      "examples": ["AWS Production Account", "Azure Test Subscription"]
+    },
+    "timestamp": {
+      "type": "string",
+      "description": "UTC timestamp when request was published in ISO 8601 format",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$",
+      "examples": ["2026-10-07T14:30:00.000Z", "2026-10-07T12:00:00Z"]
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "UUID v4 for request/result correlation and distributed tracing",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+      "examples": ["550e8400-e29b-41d4-a716-446655440001", "c7f8e4a0-8b3c-4f1e-9d2a-5e6f7a8b9c0d"]
+    },
+    "request_metadata": {
+      "type": "object",
+      "description": "Additional context about the availability check request (optional)",
+      "properties": {
+        "triggered_by": {
+          "type": "string",
+          "description": "How the availability check was triggered",
+          "enum": ["manual", "scheduled", "api"],
+          "examples": ["manual", "scheduled"]
+        },
+        "user_id": {
+          "type": "string",
+          "description": "User who triggered manual check (if applicable)",
+          "format": "email",
+          "examples": ["user@redhat.com"]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "source_id": "12345",
+      "tenant_id": "550e8400-e29b-41d4-a716-446655440000",
+      "application_id": "67890",
+      "application_type": "/insights/platform/cost-management",
+      "source_type": "amazon",
+      "source_name": "AWS Production Account",
+      "timestamp": "2026-10-07T14:30:00.000Z",
+      "correlation_id": "c7f8e4a0-8b3c-4f1e-9d2a-5e6f7a8b9c0d",
+      "request_metadata": {
+        "triggered_by": "scheduled"
+      }
+    },
+    {
+      "source_id": "54321",
+      "tenant_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "application_id": "98765",
+      "application_type": "/insights/platform/cloud-meter",
+      "source_type": "azure",
+      "source_name": "Azure Test Subscription",
+      "timestamp": "2026-10-07T14:30:45.123Z",
+      "correlation_id": "f8e7d6c5-b4a3-2190-8765-4321dcba9876",
+      "request_metadata": {
+        "triggered_by": "manual",
+        "user_id": "user@redhat.com"
+      }
+    },
+    {
+      "source_id": "11111",
+      "tenant_id": "11111111-2222-3333-4444-555555555555",
+      "application_id": "22222",
+      "application_type": "cloud-connector",
+      "source_type": "satellite",
+      "source_name": "On-Premise Satellite",
+      "timestamp": "2026-10-07T12:15:00.000Z",
+      "correlation_id": "aaaabbbb-cccc-4ddd-eeee-ffffffffffff",
+      "request_metadata": {
+        "triggered_by": "scheduled"
+      }
+    }
+  ]
+}
