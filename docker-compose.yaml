@@ -101,8 +101,8 @@ services:
       kafka-topics --bootstrap-server sources-kafka:29092 --list
 
       echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server sources-kafka:29092 --create --if-not-exists --topic platform.sources.event-stream --replication-factor 1 --partitions 1
-      kafka-topics --bootstrap-server sources-kafka:29092 --create --if-not-exists --topic platform.sources.status --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server sources-kafka:29092 --create --if-not-exists --topic platform.sources.event-stream --replication-factor 1 --partitions 3
+      kafka-topics --bootstrap-server sources-kafka:29092 --create --if-not-exists --topic platform.sources.status --replication-factor 1 --partitions 3
 
       echo -e 'Successfully created the following topics:'
       kafka-topics --bootstrap-server sources-kafka:29092 --list
