@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://console.redhat.com/schemas/sources/availability-check-result.schema.json",
+  "title": "Availability Check Result",
+  "description": "Schema for availability check result messages published by applications to Kafka topic: platform.sources.availability-check-results",
+  "type": "object",
+  "required": [
+    "source_id",
+    "application_id",
+    "status",
+    "checked_at",
+    "correlation_id"
+  ],
+  "properties": {
+    "source_id": {
+      "type": "string",
+      "description": "Unique identifier for the source (must match the request)",
+      "minLength": 1,
+      "examples": ["12345", "67890"]
+    },
+    "application_id": {
+      "type": "string",
+      "description": "Application instance ID (must match the request)",
+      "minLength": 1,
+      "examples": ["67890", "12345"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Result status of the availability check",
+      "enum": ["available", "unavailable", "in_progress"],
+      "examples": ["available", "unavailable"]
+    },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Human-readable error message (null or omitted if status is 'available')",
+      "maxLength": 1000,
+      "examples": [
+        "AWS IAM role authentication failed: The security token included in the request is invalid",
+        "IAM role lacks required permissions for Cost and Usage Report access",
+        "Failed to connect to Azure API: Connection timeout after 10 seconds",
+        null
+      ]
+    },
+    "error_code": {
+      "type": ["string", "null"],
+      "description": "Machine-readable error code for categorization and monitoring",
+      "enum": [
+        "AUTH_INVALID",
+        "AUTH_MISSING",
+        "PERMISSION_DENIED",
+        "RESOURCE_NOT_FOUND",
+        "NETWORK_ERROR",
+        "RATE_LIMITED",
+        "TIMEOUT",
+        "UNKNOWN",
+        null
+      ],
+      "examples": ["AUTH_INVALID", "PERMISSION_DENIED", "NETWORK_ERROR", null]
+    },
+    "checked_at": {
+      "type": "string",
+      "description": "UTC timestamp when check was completed in ISO 8601 format",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$",
+      "examples": ["2026-10-07T14:30:05.123Z", "2026-10-07T12:00:15Z"]
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "UUID from request for correlation and distributed tracing",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "examples": ["550e8400-e29b-41d4-a716-446655440001", "c7f8e4a0-8b3c-4f1e-9d2a-5e6f7a8b9c0d"]
+    },
+    "check_duration_ms": {
+      "type": "integer",
+      "description": "Duration of check execution in milliseconds (for performance monitoring)",
+      "minimum": 0,
+      "maximum": 900000,
+      "examples": [3245, 1823, 10000]
+    },
+    "result_metadata": {
+      "type": "object",
+      "description": "Additional check-specific details and diagnostic information (optional)",
+      "properties": {
+        "cloud_provider_response_code": {
+          "type": "integer",
+          "description": "HTTP status code from cloud provider API (if applicable)",
+          "minimum": 100,
+          "maximum": 599,
+          "examples": [200, 403, 404, 500]
+        },
+        "validation_details": {
+          "type": "string",
+          "description": "Details about what was validated or error context",
+          "maxLength": 500,
+          "examples": [
+            "Successfully validated AWS IAM role arn:aws:iam::123456789:role/CostManagement",
+            "AWS STS AssumeRole failed",
+            "Missing required policy: arn:aws:iam::aws:policy/CostManagement"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "available"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "null"
+          },
+          "error_code": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["unavailable", "in_progress"]
+          }
+        }
+      },
+      "then": {
+        "anyOf": [
+          {
+            "required": ["error"]
+          },
+          {
+            "required": ["error_code"]
+          }
+        ]
+      }
+    }
+  ],
+  "examples": [
+    {
+      "source_id": "12345",
+      "application_id": "67890",
+      "status": "available",
+      "error": null,
+      "error_code": null,
+      "checked_at": "2026-10-07T14:30:05.123Z",
+      "correlation_id": "c7f8e4a0-8b3c-4f1e-9d2a-5e6f7a8b9c0d",
+      "check_duration_ms": 3245,
+      "result_metadata": {
+        "cloud_provider_response_code": 200,
+        "validation_details": "Successfully validated AWS IAM role arn:aws:iam::123456789:role/CostManagement"
+      }
+    },
+    {
+      "source_id": "12345",
+      "application_id": "67890",
+      "status": "unavailable",
+      "error": "AWS IAM role authentication failed: The security token included in the request is invalid",
+      "error_code": "AUTH_INVALID",
+      "checked_at": "2026-10-07T14:30:05.123Z",
+      "correlation_id": "c7f8e4a0-8b3c-4f1e-9d2a-5e6f7a8b9c0d",
+      "check_duration_ms": 1823,
+      "result_metadata": {
+        "cloud_provider_response_code": 403,
+        "validation_details": "AWS STS AssumeRole failed"
+      }
+    },
+    {
+      "source_id": "12345",
+      "application_id": "67890",
+      "status": "unavailable",
+      "error": "IAM role lacks required permissions for Cost and Usage Report access",
+      "error_code": "PERMISSION_DENIED",
+      "checked_at": "2026-10-07T14:30:05.123Z",
+      "correlation_id": "c7f8e4a0-8b3c-4f1e-9d2a-5e6f7a8b9c0d",
+      "check_duration_ms": 2104,
+      "result_metadata": {
+        "cloud_provider_response_code": 403,
+        "validation_details": "Missing required policy: arn:aws:iam::aws:policy/CostManagement"
+      }
+    },
+    {
+      "source_id": "12345",
+      "application_id": "67890",
+      "status": "unavailable",
+      "error": "Failed to connect to Azure API: Connection timeout after 10 seconds",
+      "error_code": "NETWORK_ERROR",
+      "checked_at": "2026-10-07T14:30:15.123Z",
+      "correlation_id": "c7f8e4a0-8b3c-4f1e-9d2a-5e6f7a8b9c0d",
+      "check_duration_ms": 10000,
+      "result_metadata": {
+        "validation_details": "Attempted to reach management.azure.com"
+      }
+    }
+  ]
+}
