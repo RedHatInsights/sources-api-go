@@ -5,161 +5,181 @@ import (
 	"testing"
 )
 
-func TestDualKeyRotationSupport(t *testing.T) {
-	// Generate two different test keys (exactly 32 bytes for AES-256)
+func TestEncryptDecryptNewKeyOnly(t *testing.T) {
+	newKey := "newkey12345678901234567890123456" // exactly 32 bytes
+	newKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(newKey))
+	testPassword := "super-secret-password-123"
+
+	ResetEncryptionKeys()
+	t.Setenv("ENCRYPTION_KEY", newKeyB64)
+	InitializeEncryption()
+
+	encrypted, err := Encrypt(testPassword)
+	if err != nil {
+		t.Fatalf("Failed to encrypt: %v", err)
+	}
+
+	decrypted, err := Decrypt(encrypted)
+	if err != nil {
+		t.Fatalf("Failed to decrypt: %v", err)
+	}
+
+	if decrypted != testPassword {
+		t.Errorf("Expected %s, got %s", testPassword, decrypted)
+	}
+}
+
+func TestDecryptOldDataWithFallbackKey(t *testing.T) {
 	oldKey := "oldkey12345678901234567890123456" // exactly 32 bytes
 	newKey := "newkey12345678901234567890123456" // exactly 32 bytes
 
 	oldKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(oldKey))
 	newKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(newKey))
-
 	testPassword := "super-secret-password-123"
 
-	// Pre-encrypt test data with old key BEFORE any subtests run
-	// This avoids state pollution between tests
+	// First, encrypt with old key
 	ResetEncryptionKeys()
 	OverrideEncryptionKey(oldKey)
-	dataEncryptedWithOldKey, _ := Encrypt(testPassword)
+	encryptedWithOldKey, _ := Encrypt(testPassword)
 
-	t.Run("Encrypt and decrypt with new key only", func(t *testing.T) {
-		ResetEncryptionKeys()
-		t.Setenv("ENCRYPTION_KEY", newKeyB64)
-		InitializeEncryption()
+	// Now setup dual-key mode
+	ResetEncryptionKeys()
+	t.Setenv("ENCRYPTION_KEY", newKeyB64)
+	t.Setenv("ENCRYPTION_KEY_OLD", oldKeyB64)
+	InitializeEncryption()
 
-		encrypted, err := Encrypt(testPassword)
-		if err != nil {
-			t.Fatalf("Failed to encrypt: %v", err)
-		}
+	// Should decrypt old data using fallback key
+	decrypted, err := Decrypt(encryptedWithOldKey)
+	if err != nil {
+		t.Fatalf("Failed to decrypt old data with fallback key: %v", err)
+	}
 
-		decrypted, err := Decrypt(encrypted)
-		if err != nil {
-			t.Fatalf("Failed to decrypt: %v", err)
-		}
-
-		if decrypted != testPassword {
-			t.Errorf("Expected %s, got %s", testPassword, decrypted)
-		}
-	})
-
-	t.Run("Decrypt old data with fallback key", func(t *testing.T) {
-		ResetEncryptionKeys()
-		t.Setenv("ENCRYPTION_KEY", newKeyB64)
-		t.Setenv("ENCRYPTION_KEY_OLD", oldKeyB64)
-		InitializeEncryption()
-
-		decrypted, err := Decrypt(dataEncryptedWithOldKey)
-		if err != nil {
-			t.Fatalf("Failed to decrypt old data with fallback key: %v", err)
-		}
-
-		if decrypted != testPassword {
-			t.Errorf("Expected %s, got %s", testPassword, decrypted)
-		}
-	})
-
-	t.Run("New encryptions always use new key", func(t *testing.T) {
-		ResetEncryptionKeys()
-		t.Setenv("ENCRYPTION_KEY", newKeyB64)
-		t.Setenv("ENCRYPTION_KEY_OLD", oldKeyB64)
-		InitializeEncryption()
-
-		// Encrypt with dual-key mode active
-		encrypted, err := Encrypt(testPassword)
-		if err != nil {
-			t.Fatalf("Failed to encrypt: %v", err)
-		}
-
-		// Verify it can be decrypted with ONLY the new key (no fallback)
-		// by using pre-encrypted data that we know was encrypted with new key
-		ResetEncryptionKeys()
-		OverrideEncryptionKey(newKey)
-
-		decrypted, err := Decrypt(encrypted)
-		if err != nil {
-			t.Fatalf("Failed to decrypt with new key only: %v", err)
-		}
-
-		if decrypted != testPassword {
-			t.Errorf("Expected %s, got %s", testPassword, decrypted)
-		}
-	})
-
-	t.Run("Cannot decrypt old data without fallback key", func(t *testing.T) {
-		ResetEncryptionKeys()
-		t.Setenv("ENCRYPTION_KEY", newKeyB64)
-		InitializeEncryption()
-
-		_, err := Decrypt(dataEncryptedWithOldKey)
-		if err == nil {
-			t.Error("Expected decryption to fail without fallback key, but it succeeded")
-		}
-	})
-
-	t.Run("Override key functionality still works", func(t *testing.T) {
-		ResetEncryptionKeys()
-		customKey := "12345678901234567890123456789012" // exactly 32 bytes
-		OverrideEncryptionKey(customKey)
-
-		encrypted, err := Encrypt(testPassword)
-		if err != nil {
-			t.Fatalf("Failed to encrypt: %v", err)
-		}
-
-		decrypted, err := Decrypt(encrypted)
-		if err != nil {
-			t.Fatalf("Failed to decrypt: %v", err)
-		}
-
-		if decrypted != testPassword {
-			t.Errorf("Expected %s, got %s", testPassword, decrypted)
-		}
-	})
+	if decrypted != testPassword {
+		t.Errorf("Expected %s, got %s", testPassword, decrypted)
+	}
 }
 
-func TestDualKeyRotationEdgeCases(t *testing.T) {
-	t.Run("Empty password", func(t *testing.T) {
-		ResetEncryptionKeys()
-		t.Setenv("ENCRYPTION_KEY", base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345")))
-		InitializeEncryption()
+func TestNewEncryptionsAlwaysUseNewKey(t *testing.T) {
+	newKey := "newkey12345678901234567890123456" // exactly 32 bytes
+	oldKey := "oldkey12345678901234567890123456" // exactly 32 bytes
 
-		encrypted, err := Encrypt("")
-		if err != nil {
-			t.Fatalf("Failed to encrypt empty string: %v", err)
-		}
+	oldKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(oldKey))
+	newKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(newKey))
+	testPassword := "super-secret-password-123"
 
-		decrypted, err := Decrypt(encrypted)
-		if err != nil {
-			t.Fatalf("Failed to decrypt empty string: %v", err)
-		}
+	// Setup dual-key mode
+	ResetEncryptionKeys()
+	t.Setenv("ENCRYPTION_KEY", newKeyB64)
+	t.Setenv("ENCRYPTION_KEY_OLD", oldKeyB64)
+	InitializeEncryption()
 
-		if decrypted != "" {
-			t.Errorf("Expected empty string, got %s", decrypted)
-		}
-	})
+	// Encrypt with dual-key mode
+	encrypted, err := Encrypt(testPassword)
+	if err != nil {
+		t.Fatalf("Failed to encrypt: %v", err)
+	}
 
-	t.Run("Invalid fallback key is ignored gracefully", func(t *testing.T) {
-		ResetEncryptionKeys()
-		validKey := base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345"))
+	// Verify it decrypts with ONLY new key (no fallback)
+	ResetEncryptionKeys()
+	OverrideEncryptionKey(newKey)
 
-		t.Setenv("ENCRYPTION_KEY", validKey)
-		t.Setenv("ENCRYPTION_KEY_OLD", "invalid-base64-!@#$%")
+	decrypted, err := Decrypt(encrypted)
+	if err != nil {
+		t.Fatalf("Failed to decrypt with new key only: %v", err)
+	}
 
-		// Should not panic, just ignore the invalid fallback key
-		InitializeEncryption()
+	if decrypted != testPassword {
+		t.Errorf("Expected %s, got %s", testPassword, decrypted)
+	}
+}
 
-		// Should still work with primary key
-		encrypted, err := Encrypt("test")
-		if err != nil {
-			t.Fatalf("Failed to encrypt: %v", err)
-		}
+func TestCannotDecryptOldDataWithoutFallbackKey(t *testing.T) {
+	oldKey := "oldkey12345678901234567890123456" // exactly 32 bytes
+	newKey := "newkey12345678901234567890123456" // exactly 32 bytes
 
-		decrypted, err := Decrypt(encrypted)
-		if err != nil {
-			t.Fatalf("Failed to decrypt: %v", err)
-		}
+	newKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(newKey))
+	testPassword := "super-secret-password-123"
 
-		if decrypted != "test" {
-			t.Errorf("Expected 'test', got %s", decrypted)
-		}
-	})
+	// Encrypt with old key
+	ResetEncryptionKeys()
+	OverrideEncryptionKey(oldKey)
+	encryptedWithOldKey, _ := Encrypt(testPassword)
+
+	// Try to decrypt with only new key (no fallback)
+	ResetEncryptionKeys()
+	t.Setenv("ENCRYPTION_KEY", newKeyB64)
+	InitializeEncryption()
+
+	_, err := Decrypt(encryptedWithOldKey)
+	if err == nil {
+		t.Error("Expected decryption to fail without fallback key, but it succeeded")
+	}
+}
+
+func TestOverrideKeyFunctionality(t *testing.T) {
+	testPassword := "super-secret-password-123"
+
+	ResetEncryptionKeys()
+	customKey := "12345678901234567890123456789012" // exactly 32 bytes
+	OverrideEncryptionKey(customKey)
+
+	encrypted, err := Encrypt(testPassword)
+	if err != nil {
+		t.Fatalf("Failed to encrypt: %v", err)
+	}
+
+	decrypted, err := Decrypt(encrypted)
+	if err != nil {
+		t.Fatalf("Failed to decrypt: %v", err)
+	}
+
+	if decrypted != testPassword {
+		t.Errorf("Expected %s, got %s", testPassword, decrypted)
+	}
+}
+
+func TestEmptyPassword(t *testing.T) {
+	ResetEncryptionKeys()
+	t.Setenv("ENCRYPTION_KEY", base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345")))
+	InitializeEncryption()
+
+	encrypted, err := Encrypt("")
+	if err != nil {
+		t.Fatalf("Failed to encrypt empty string: %v", err)
+	}
+
+	decrypted, err := Decrypt(encrypted)
+	if err != nil {
+		t.Fatalf("Failed to decrypt empty string: %v", err)
+	}
+
+	if decrypted != "" {
+		t.Errorf("Expected empty string, got %s", decrypted)
+	}
+}
+
+func TestInvalidFallbackKeyIgnored(t *testing.T) {
+	ResetEncryptionKeys()
+	validKey := base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345"))
+
+	t.Setenv("ENCRYPTION_KEY", validKey)
+	t.Setenv("ENCRYPTION_KEY_OLD", "invalid-base64-!@#$%")
+
+	// Should not panic, just ignore invalid fallback key
+	InitializeEncryption()
+
+	// Should still work with primary key
+	encrypted, err := Encrypt("test")
+	if err != nil {
+		t.Fatalf("Failed to encrypt: %v", err)
+	}
+
+	decrypted, err := Decrypt(encrypted)
+	if err != nil {
+		t.Fatalf("Failed to decrypt: %v", err)
+	}
+
+	if decrypted != "test" {
+		t.Errorf("Expected 'test', got %s", decrypted)
+	}
 }
