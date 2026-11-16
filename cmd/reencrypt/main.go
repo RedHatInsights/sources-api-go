@@ -47,6 +47,7 @@ func main() {
 
 	// Initialize database connection
 	dao.Init()
+
 	database := dao.DB
 
 	// Create re-encryption tracking table if not exists
@@ -136,8 +137,10 @@ func processBatchConcurrently(ctx context.Context, database *gorm.DB, auths []mo
 	var wg sync.WaitGroup
 	for range workers {
 		wg.Add(1)
+
 		go func() {
 			defer wg.Done()
+
 			for auth := range jobs {
 				result := processAuthentication(ctx, database, &auth, dryRun)
 				results <- result
@@ -149,6 +152,7 @@ func processBatchConcurrently(ctx context.Context, database *gorm.DB, auths []mo
 	for _, auth := range auths {
 		jobs <- auth
 	}
+
 	close(jobs)
 
 	// Wait for workers to finish
@@ -190,11 +194,13 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 	if dryRun {
 		l.Log.Debugf("[DRY-RUN] Would re-encrypt auth %d", auth.DbID)
 		result.success = true
+
 		return result
 	}
 
 	// Update in database within a transaction
 	tx := database.Begin()
+
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
@@ -204,18 +210,22 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 	// Update password
 	auth.Password = &encrypted
 	err = tx.Save(auth).Error
+
 	if err != nil {
 		tx.Rollback()
 		result.err = fmt.Errorf("failed to save: %w", err)
+
 		return result
 	}
 
 	// Mark as completed
 	err = tx.Exec("INSERT INTO reencryption_completed (auth_id, completed_at) VALUES (?, ?)",
 		auth.DbID, time.Now()).Error
+
 	if err != nil {
 		tx.Rollback()
 		result.err = fmt.Errorf("failed to mark as completed: %w", err)
+
 		return result
 	}
 
@@ -226,6 +236,7 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 	}
 
 	result.success = true
+
 	return result
 }
 
