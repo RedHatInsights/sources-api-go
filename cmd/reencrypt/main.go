@@ -50,16 +50,18 @@ func main() {
 	database := dao.DB
 
 	// Create re-encryption tracking table if not exists
-	if err := createTrackingTable(database); err != nil {
+	err := createTrackingTable(database)
+	if err != nil {
 		l.Log.Fatalf("Failed to create tracking table: %v", err)
 	}
 
 	// Get total count of authentications to re-encrypt
 	var totalCount int64
-	if err := database.Model(&model.Authentication{}).
+	err = database.Model(&model.Authentication{}).
 		Where("password IS NOT NULL").
 		Where("id NOT IN (SELECT auth_id FROM reencryption_completed)").
-		Count(&totalCount).Error; err != nil {
+		Count(&totalCount).Error
+	if err != nil {
 		l.Log.Fatalf("Failed to count authentications: %v", err)
 	}
 
@@ -79,15 +81,15 @@ func main() {
 	for {
 		auths := []model.Authentication{}
 
-		err := database.Where("password IS NOT NULL").
+		err = database.Where("password IS NOT NULL").
 			Where("id NOT IN (SELECT auth_id FROM reencryption_completed)").
 			Limit(*batchSize).
 			Offset(offset).
 			Find(&auths).Error
-
 		if err != nil {
 			l.Log.Errorf("Failed to fetch batch at offset %d: %v", offset, err)
 			offset += *batchSize
+
 			continue
 		}
 
@@ -104,6 +106,7 @@ func main() {
 				reencrypted++
 			} else {
 				failed++
+
 				l.Log.Errorf("Failed to re-encrypt auth %d: %v", result.authID, result.err)
 			}
 		}
@@ -131,7 +134,7 @@ func processBatchConcurrently(ctx context.Context, database *gorm.DB, auths []mo
 
 	// Start worker pool
 	var wg sync.WaitGroup
-	for i := 0; i < workers; i++ {
+	for range workers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -200,21 +203,24 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 
 	// Update password
 	auth.Password = &encrypted
-	if err := tx.Save(auth).Error; err != nil {
+	err = tx.Save(auth).Error
+	if err != nil {
 		tx.Rollback()
 		result.err = fmt.Errorf("failed to save: %w", err)
 		return result
 	}
 
 	// Mark as completed
-	if err := tx.Exec("INSERT INTO reencryption_completed (auth_id, completed_at) VALUES (?, ?)",
-		auth.DbID, time.Now()).Error; err != nil {
+	err = tx.Exec("INSERT INTO reencryption_completed (auth_id, completed_at) VALUES (?, ?)",
+		auth.DbID, time.Now()).Error
+	if err != nil {
 		tx.Rollback()
 		result.err = fmt.Errorf("failed to mark as completed: %w", err)
 		return result
 	}
 
-	if err := tx.Commit().Error; err != nil {
+	err = tx.Commit().Error
+	if err != nil {
 		result.err = fmt.Errorf("failed to commit transaction: %w", err)
 		return result
 	}
