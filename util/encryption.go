@@ -15,9 +15,13 @@ import (
 )
 
 var (
-	// "the key" to encrypt/decrypt passwords with
+	// "the key" to encrypt/decrypt passwords with (primary/new key)
 	key        string
 	keyPresent = false
+
+	// fallback key for reading old encrypted data during rotation
+	fallbackKey        string
+	fallbackKeyPresent = false
 )
 
 // InitializeEncryption allows reinitializing the encryption key by reading from the "ENCRYPTION_KEY" environment
@@ -40,6 +44,19 @@ func InitializeEncryption() {
 
 	key = string(decoded)
 	keyPresent = true
+
+	// Load fallback key for rotation support (optional)
+	fallbackKeyStr := os.Getenv("ENCRYPTION_KEY_OLD")
+	if fallbackKeyStr != "" {
+		decodedFallback, err := base64.RawStdEncoding.DecodeString(fallbackKeyStr)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to decode fallback encryption key: %v\n", err)
+		} else {
+			fallbackKey = string(decodedFallback)
+			fallbackKeyPresent = true
+			fmt.Fprintf(os.Stderr, "Info: Fallback encryption key loaded for dual-key rotation support\n")
+		}
+	}
 }
 
 func setDefaultEncryptionKey() (string, error) {
@@ -103,12 +120,32 @@ func Decrypt(str string) (string, error) {
 		return "", err
 	}
 
-	return decode(string(rawPass))
+	// Try decrypting with the new/primary key first
+	decrypted, err := decodeWithKey(string(rawPass), key)
+	if err == nil {
+		return decrypted, nil
+	}
+
+	// If fallback key is present, try decrypting with the old key
+	if fallbackKeyPresent {
+		decrypted, err = decodeWithKey(string(rawPass), fallbackKey)
+		if err == nil {
+			// Log for monitoring - this indicates data still encrypted with old key
+			fmt.Fprintf(os.Stderr, "Info: Decrypted data using fallback key\n")
+			return decrypted, nil
+		}
+	}
+
+	return "", fmt.Errorf("failed to decrypt with available keys")
 }
 
 func decode(pw string) (string, error) {
+	return decodeWithKey(pw, key)
+}
+
+func decodeWithKey(pw string, encKey string) (string, error) {
 	// create the block from the key
-	block, err := aes.NewCipher([]byte(key))
+	block, err := aes.NewCipher([]byte(encKey))
 	if err != nil {
 		return "", err
 	}
