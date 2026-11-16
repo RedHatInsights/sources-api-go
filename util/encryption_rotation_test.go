@@ -7,9 +7,9 @@ import (
 )
 
 func TestDualKeyRotationSupport(t *testing.T) {
-	// Generate two different test keys (32 bytes for AES-256)
-	oldKey := "old-key-12345678901234567890123"
-	newKey := "new-key-12345678901234567890123"
+	// Generate two different test keys (exactly 32 bytes for AES-256)
+	oldKey := "oldkey12345678901234567890123456" // exactly 32 bytes
+	newKey := "newkey12345678901234567890123456" // exactly 32 bytes
 
 	oldKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(oldKey))
 	newKeyB64 := base64.RawStdEncoding.EncodeToString([]byte(newKey))
@@ -119,7 +119,7 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	})
 
 	t.Run("Override key functionality still works", func(t *testing.T) {
-		customKey := "custom-key-123456789012345678"
+		customKey := "12345678901234567890123456789012" // exactly 32 bytes
 		OverrideEncryptionKey(customKey)
 
 		encrypted, err := Encrypt(testPassword)
@@ -140,7 +140,7 @@ func TestDualKeyRotationSupport(t *testing.T) {
 
 func TestDualKeyRotationEdgeCases(t *testing.T) {
 	t.Run("Empty password", func(t *testing.T) {
-		os.Setenv("ENCRYPTION_KEY", base64.RawStdEncoding.EncodeToString([]byte("test-key-1234567890123456789012")))
+		os.Setenv("ENCRYPTION_KEY", base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345"))) // exactly 32 bytes
 		os.Unsetenv("ENCRYPTION_KEY_OLD")
 		InitializeEncryption()
 
@@ -160,7 +160,7 @@ func TestDualKeyRotationEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid fallback key is ignored gracefully", func(t *testing.T) {
-		validKey := base64.RawStdEncoding.EncodeToString([]byte("test-key-1234567890123456789012"))
+		validKey := base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345")) // exactly 32 bytes
 
 		os.Setenv("ENCRYPTION_KEY", validKey)
 		os.Setenv("ENCRYPTION_KEY_OLD", "invalid-base64-!@#$%")
