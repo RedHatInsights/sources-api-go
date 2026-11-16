@@ -40,6 +40,7 @@ func TestDecryptOldDataWithFallbackKey(t *testing.T) {
 	// First, encrypt with old key
 	ResetEncryptionKeys()
 	OverrideEncryptionKey(oldKey)
+
 	encryptedWithOldKey, _ := Encrypt(testPassword)
 
 	// Now setup dual-key mode

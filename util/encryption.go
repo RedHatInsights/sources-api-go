@@ -58,6 +58,7 @@ func InitializeEncryption() {
 		} else {
 			fallbackKey = string(decodedFallback)
 			fallbackKeyPresent = true
+
 			fmt.Fprintf(os.Stderr, "Info: Fallback encryption key loaded for dual-key rotation support\n")
 		}
 	}
