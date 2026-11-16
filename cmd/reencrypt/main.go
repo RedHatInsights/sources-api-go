@@ -138,8 +138,8 @@ func processBatchConcurrently(ctx context.Context, database *gorm.DB, auths []mo
 	var wg sync.WaitGroup
 	for range workers {
 		wg.Add(1)
-		//nolint:waitgroupgo // Standard library sync.WaitGroup doesn't have .Go() method
-		go func() {
+
+		go func() { //nolint:waitgroupgo // Standard library sync.WaitGroup doesn't have .Go() method
 			defer wg.Done()
 
 			for auth := range jobs {
