@@ -213,3 +213,11 @@ func OverrideEncryptionKey(k string) {
 	key = k
 	keyPresent = true
 }
+
+// ResetEncryptionKeys clears the encryption keys (for testing only)
+func ResetEncryptionKeys() {
+	key = ""
+	keyPresent = false
+	fallbackKey = ""
+	fallbackKeyPresent = false
+}
