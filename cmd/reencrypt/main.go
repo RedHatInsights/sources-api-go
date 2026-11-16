@@ -58,6 +58,7 @@ func main() {
 
 	// Get total count of authentications to re-encrypt
 	var totalCount int64
+
 	err = database.Model(&model.Authentication{}).
 		Where("password IS NOT NULL").
 		Where("id NOT IN (SELECT auth_id FROM reencryption_completed)").
@@ -193,6 +194,7 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 
 	if dryRun {
 		l.Log.Debugf("[DRY-RUN] Would re-encrypt auth %d", auth.DbID)
+
 		result.success = true
 
 		return result
@@ -210,7 +212,6 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 	// Update password
 	auth.Password = &encrypted
 	err = tx.Save(auth).Error
-
 	if err != nil {
 		tx.Rollback()
 		result.err = fmt.Errorf("failed to save: %w", err)
@@ -221,7 +222,6 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 	// Mark as completed
 	err = tx.Exec("INSERT INTO reencryption_completed (auth_id, completed_at) VALUES (?, ?)",
 		auth.DbID, time.Now()).Error
-
 	if err != nil {
 		tx.Rollback()
 		result.err = fmt.Errorf("failed to mark as completed: %w", err)

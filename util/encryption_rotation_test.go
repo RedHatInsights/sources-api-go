@@ -5,6 +5,20 @@ import (
 	"testing"
 )
 
+// Helper function to encrypt with a specific key using direct override
+func encryptWithKey(t *testing.T, password, key string) string {
+	t.Helper()
+	ResetEncryptionKeys()
+	OverrideEncryptionKey(key)
+
+	encrypted, err := Encrypt(password)
+	if err != nil {
+		t.Fatalf("Failed to encrypt: %v", err)
+	}
+
+	return encrypted
+}
+
 func TestDualKeyRotationSupport(t *testing.T) {
 	// Generate two different test keys (exactly 32 bytes for AES-256)
 	oldKey := "oldkey12345678901234567890123456" // exactly 32 bytes
@@ -42,19 +56,10 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	})
 
 	t.Run("Decrypt old data with fallback key", func(t *testing.T) {
-		// Reset encryption state
-		ResetEncryptionKeys()
+		// Encrypt with old key using direct override (not env vars)
+		encryptedWithOldKey := encryptWithKey(t, testPassword, oldKey)
 
-		// First, encrypt with old key
-		t.Setenv("ENCRYPTION_KEY", oldKeyB64)
-		InitializeEncryption()
-
-		encryptedWithOldKey, err := Encrypt(testPassword)
-		if err != nil {
-			t.Fatalf("Failed to encrypt with old key: %v", err)
-		}
-
-		// Now setup dual-key mode (new primary, old fallback)
+		// Now setup dual-key mode via environment (new primary, old fallback)
 		ResetEncryptionKeys()
 		t.Setenv("ENCRYPTION_KEY", newKeyB64)
 		t.Setenv("ENCRYPTION_KEY_OLD", oldKeyB64)
@@ -103,17 +108,8 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	})
 
 	t.Run("Cannot decrypt old data without fallback key", func(t *testing.T) {
-		// Reset encryption state
-		ResetEncryptionKeys()
-
-		// Encrypt with old key
-		t.Setenv("ENCRYPTION_KEY", oldKeyB64)
-		InitializeEncryption()
-
-		encryptedWithOldKey, err := Encrypt(testPassword)
-		if err != nil {
-			t.Fatalf("Failed to encrypt with old key: %v", err)
-		}
+		// Encrypt with old key using direct override (not env vars)
+		encryptedWithOldKey := encryptWithKey(t, testPassword, oldKey)
 
 		// Setup with only new key (no fallback)
 		ResetEncryptionKeys()
@@ -121,7 +117,7 @@ func TestDualKeyRotationSupport(t *testing.T) {
 		InitializeEncryption()
 
 		// Should fail to decrypt old data
-		_, err = Decrypt(encryptedWithOldKey)
+		_, err := Decrypt(encryptedWithOldKey)
 		if err == nil {
 			t.Error("Expected decryption to fail without fallback key, but it succeeded")
 		}
