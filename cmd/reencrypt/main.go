@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/RedHatInsights/sources-api-go/config"
-	"github.com/RedHatInsights/sources-api-go/db"
+	"github.com/RedHatInsights/sources-api-go/dao"
 	l "github.com/RedHatInsights/sources-api-go/logger"
 	"github.com/RedHatInsights/sources-api-go/model"
 	"github.com/RedHatInsights/sources-api-go/util"
@@ -44,7 +44,10 @@ func main() {
 		*dryRun, *batchSize, *workerPool)
 
 	ctx := context.Background()
-	database := db.DB
+
+	// Initialize database connection
+	dao.Init()
+	database := dao.DB
 
 	// Create re-encryption tracking table if not exists
 	if err := createTrackingTable(database); err != nil {
