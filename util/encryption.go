@@ -27,6 +27,10 @@ var (
 // InitializeEncryption allows reinitializing the encryption key by reading from the "ENCRYPTION_KEY" environment
 // variable again. Useful for testing purposes outside the "util" package.
 func InitializeEncryption() {
+	// Reset fallback key state on each initialization
+	fallbackKey = ""
+	fallbackKeyPresent = false
+
 	key = os.Getenv("ENCRYPTION_KEY")
 	if key == "" {
 		var err error
