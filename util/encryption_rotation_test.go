@@ -18,6 +18,9 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	testPassword := "super-secret-password-123"
 
 	t.Run("Encrypt and decrypt with new key only", func(t *testing.T) {
+		// Reset encryption state
+		ResetEncryptionKeys()
+
 		// Setup: only new key present
 		os.Setenv("ENCRYPTION_KEY", newKeyB64)
 		os.Unsetenv("ENCRYPTION_KEY_OLD")
@@ -41,6 +44,9 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	})
 
 	t.Run("Decrypt old data with fallback key", func(t *testing.T) {
+		// Reset encryption state
+		ResetEncryptionKeys()
+
 		// First, encrypt with old key
 		os.Setenv("ENCRYPTION_KEY", oldKeyB64)
 		os.Unsetenv("ENCRYPTION_KEY_OLD")
@@ -68,6 +74,9 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	})
 
 	t.Run("New encryptions always use new key", func(t *testing.T) {
+		// Reset encryption state
+		ResetEncryptionKeys()
+
 		// Setup dual-key mode
 		os.Setenv("ENCRYPTION_KEY", newKeyB64)
 		os.Setenv("ENCRYPTION_KEY_OLD", oldKeyB64)
@@ -96,6 +105,9 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	})
 
 	t.Run("Cannot decrypt old data without fallback key", func(t *testing.T) {
+		// Reset encryption state
+		ResetEncryptionKeys()
+
 		// Encrypt with old key
 		os.Setenv("ENCRYPTION_KEY", oldKeyB64)
 		os.Unsetenv("ENCRYPTION_KEY_OLD")
@@ -119,6 +131,9 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	})
 
 	t.Run("Override key functionality still works", func(t *testing.T) {
+		// Reset encryption state
+		ResetEncryptionKeys()
+
 		customKey := "12345678901234567890123456789012" // exactly 32 bytes
 		OverrideEncryptionKey(customKey)
 
@@ -140,6 +155,9 @@ func TestDualKeyRotationSupport(t *testing.T) {
 
 func TestDualKeyRotationEdgeCases(t *testing.T) {
 	t.Run("Empty password", func(t *testing.T) {
+		// Reset encryption state
+		ResetEncryptionKeys()
+
 		os.Setenv("ENCRYPTION_KEY", base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345"))) // exactly 32 bytes
 		os.Unsetenv("ENCRYPTION_KEY_OLD")
 		InitializeEncryption()
@@ -160,6 +178,9 @@ func TestDualKeyRotationEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Invalid fallback key is ignored gracefully", func(t *testing.T) {
+		// Reset encryption state
+		ResetEncryptionKeys()
+
 		validKey := base64.RawStdEncoding.EncodeToString([]byte("testkey1234567890123456789012345")) // exactly 32 bytes
 
 		os.Setenv("ENCRYPTION_KEY", validKey)
