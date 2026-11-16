@@ -21,11 +21,6 @@ func TestDualKeyRotationSupport(t *testing.T) {
 	OverrideEncryptionKey(oldKey)
 	dataEncryptedWithOldKey, _ := Encrypt(testPassword)
 
-	// Pre-encrypt data for "new key" test
-	ResetEncryptionKeys()
-	OverrideEncryptionKey(newKey)
-	dataEncryptedWithNewKey, _ := Encrypt(testPassword)
-
 	t.Run("Encrypt and decrypt with new key only", func(t *testing.T) {
 		ResetEncryptionKeys()
 		t.Setenv("ENCRYPTION_KEY", newKeyB64)
