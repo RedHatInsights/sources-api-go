@@ -138,7 +138,7 @@ func processBatchConcurrently(ctx context.Context, database *gorm.DB, auths []mo
 	var wg sync.WaitGroup
 	for range workers {
 		wg.Add(1)
-
+		//nolint:waitgroupgo // Standard library sync.WaitGroup doesn't have .Go() method
 		go func() {
 			defer wg.Done()
 
@@ -211,9 +211,11 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 
 	// Update password
 	auth.Password = &encrypted
+
 	err = tx.Save(auth).Error
 	if err != nil {
 		tx.Rollback()
+
 		result.err = fmt.Errorf("failed to save: %w", err)
 
 		return result
@@ -224,6 +226,7 @@ func processAuthentication(ctx context.Context, database *gorm.DB, auth *model.A
 		auth.DbID, time.Now()).Error
 	if err != nil {
 		tx.Rollback()
+
 		result.err = fmt.Errorf("failed to mark as completed: %w", err)
 
 		return result

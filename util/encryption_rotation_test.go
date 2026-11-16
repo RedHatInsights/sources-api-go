@@ -5,16 +5,23 @@ import (
 	"testing"
 )
 
-// Helper function to encrypt with a specific key using direct override
-func encryptWithKey(t *testing.T, password, key string) string {
-	t.Helper()
-	ResetEncryptionKeys()
-	OverrideEncryptionKey(key)
+// Helper function to encrypt with a specific key using direct override (no env vars)
+func encryptWithKey(password, encKey string) string {
+	// Save current state
+	savedKey := key
+	savedKeyPresent := keyPresent
+	savedFallbackKey := fallbackKey
+	savedFallbackKeyPresent := fallbackKeyPresent
 
-	encrypted, err := Encrypt(password)
-	if err != nil {
-		t.Fatalf("Failed to encrypt: %v", err)
-	}
+	// Use the specified key
+	OverrideEncryptionKey(encKey)
+	encrypted, _ := Encrypt(password)
+
+	// Restore previous state
+	key = savedKey
+	keyPresent = savedKeyPresent
+	fallbackKey = savedFallbackKey
+	fallbackKeyPresent = savedFallbackKeyPresent
 
 	return encrypted
 }
@@ -57,7 +64,7 @@ func TestDualKeyRotationSupport(t *testing.T) {
 
 	t.Run("Decrypt old data with fallback key", func(t *testing.T) {
 		// Encrypt with old key using direct override (not env vars)
-		encryptedWithOldKey := encryptWithKey(t, testPassword, oldKey)
+		encryptedWithOldKey := encryptWithKey(testPassword, oldKey)
 
 		// Now setup dual-key mode via environment (new primary, old fallback)
 		ResetEncryptionKeys()
@@ -109,7 +116,7 @@ func TestDualKeyRotationSupport(t *testing.T) {
 
 	t.Run("Cannot decrypt old data without fallback key", func(t *testing.T) {
 		// Encrypt with old key using direct override (not env vars)
-		encryptedWithOldKey := encryptWithKey(t, testPassword, oldKey)
+		encryptedWithOldKey := encryptWithKey(testPassword, oldKey)
 
 		// Setup with only new key (no fallback)
 		ResetEncryptionKeys()
