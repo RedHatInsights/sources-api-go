@@ -295,7 +295,6 @@ func TestSuiteForSourceWithOwnership(performTest func(suiteData *SourceOwnership
 
 func CreateSecretByName(name string, tenantID *int64, userID *int64) (*m.Authentication, error) {
 	secretDao := GetSecretDao(&RequestParams{TenantID: tenantID})
-	pass, _ := util.Encrypt("password")
 
 	secret := &m.Authentication{
 		Name:         util.StringRef(name),
@@ -303,7 +302,12 @@ func CreateSecretByName(name string, tenantID *int64, userID *int64) (*m.Authent
 		Username:     util.StringRef("Y"),
 		ResourceType: secretResourceType,
 		ResourceID:   *tenantID,
-		Password:     util.StringRef(pass),
+	}
+
+	// Route through SetPassword so the row lands in the right column(s)
+	// (password_hash_gcm, plus the legacy column while dual-writing).
+	if err := secret.SetPassword(util.StringRef("password")); err != nil {
+		return nil, err
 	}
 
 	if userID != nil {
