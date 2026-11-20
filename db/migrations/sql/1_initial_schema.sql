@@ -195,7 +195,9 @@ BEGIN
             "last_available_at" TIMESTAMP WITHOUT TIME ZONE,
             "source_id" BIGINT,
             "paused_at" TIMESTAMP WITHOUT TIME ZONE,
-            "password_hash" CHARACTER VARYING
+            "password_hash" CHARACTER VARYING,
+            "password_hash_gcm" CHARACTER VARYING,
+            "encryption_key_id" CHARACTER VARYING
         );
 
         CREATE SEQUENCE "authentications_id_seq"

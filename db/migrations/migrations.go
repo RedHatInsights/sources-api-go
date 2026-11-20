@@ -30,6 +30,8 @@ var MigrationsCollection = []*gormigrate.Migration{
 	AvailabilityStatusColumnsNotNullConstraintDefaultValue(),
 	MigrateAwsProvisioningToImageBuilder(),
 	CleanupProvisioningAuthentications(),
+	AddPasswordHashGcmColumn(),
+	AddEncryptionKeyIDColumn(),
 }
 
 var ctx = context.Background()

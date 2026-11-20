@@ -129,12 +129,16 @@ func TestSecretCreate(t *testing.T) {
 			t.Error("user id has to be nil as user ownership was not requested for secret")
 		}
 
-		encryptedPassword, err := util.Encrypt(password)
+		encryptedPassword, err := secretOut.GetPassword()
 		if err != nil {
 			t.Error(err)
 		}
 
-		stringMatcher(t, "secret password", *secretOut.Password, encryptedPassword)
+		if encryptedPassword == nil {
+			t.Error("expected a password to be stored")
+		} else {
+			stringMatcher(t, "secret password", *encryptedPassword, password)
+		}
 
 		cleanSecretByID(t, secret.ID, &dao.RequestParams{TenantID: &tenantId, UserID: userID})
 	}
@@ -752,12 +756,16 @@ func TestSecretEdit(t *testing.T) {
 
 		stringMatcher(t, "secret username", *secret.Username, username)
 
-		encryptedPassword, err := util.Encrypt(password)
+		encryptedPassword, err := secret.GetPassword()
 		if err != nil {
 			t.Error(err)
 		}
 
-		stringMatcher(t, "secret password", *secret.Password, encryptedPassword)
+		if encryptedPassword == nil {
+			t.Error("expected a password to be stored")
+		} else {
+			stringMatcher(t, "secret password", *encryptedPassword, password)
+		}
 
 		extra, err := json.Marshal(secretExtra)
 		if err != nil {

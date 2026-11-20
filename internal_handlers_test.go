@@ -330,12 +330,12 @@ func TestInternalSecretGet(t *testing.T) {
 		// Compare the decrypted value rather than the raw ciphertext: encryption schemes are not
 		// required to be deterministic (e.g. a random nonce/IV per call), so two independent
 		// encryptions of the same plaintext may legitimately produce different ciphertexts.
-		decryptedPassword, err := util.Decrypt(*secret.Password)
+		decryptedPassword, err := secret.GetPassword()
 		if err != nil {
 			t.Error(err)
 		}
 
-		if decryptedPassword != "password" {
+		if decryptedPassword == nil || *decryptedPassword != "password" {
 			t.Errorf("expected password %v but got %v", "password", decryptedPassword)
 		}
 
