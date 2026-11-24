@@ -39,7 +39,7 @@ func Tenancy(next echo.HandlerFunc) echo.HandlerFunc {
 
 		tenant, err := tenantDao.GetOrCreateTenant(&id.Identity)
 		if err != nil {
-			c.Logger().Errorf("[identity struct: %v] unable to get or create the tenant: %w", err)
+			c.Logger().Errorf("[identity struct: %v] unable to get or create the tenant: %v", id, err)
 
 			return fmt.Errorf("failed to get or create tenant for request: %w", err)
 		}
