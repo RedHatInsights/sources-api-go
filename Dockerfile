@@ -1,7 +1,7 @@
 ################################
 # STEP 1 build executable binary
 ################################
-FROM registry.access.redhat.com/hi/go:latest-fips-builder@sha256:c52ae1e6fe4d3a0bbe3b4457eca4691f762c7f71605423a4069b1c3dbd7daccc AS builder
+FROM registry.access.redhat.com/hi/go:latest-fips-builder@sha256:0374b76ef9a21619360dd9920540e912c64a33980a472962017f532c8f19b56d AS builder
 
 USER 0
 
@@ -24,7 +24,7 @@ RUN if [ -f /cachi2/cachi2.env ]; then . /cachi2/cachi2.env; fi && \
 ############################
 # STEP 2 build a small image
 ############################
-FROM registry.access.redhat.com/hi/go:latest-fips@sha256:ee1ec2fd8d76564b1d45ba348508db163b2d9d3bb9a9cec166b112ab87c2bbd8
+FROM registry.access.redhat.com/hi/go:latest-fips@sha256:900dcc80cc2d493c9de3d5a97c347fd78cf26ca1b92a9e556d253409584869ae
 
 # The Sources API leaves the RDS CA in a file when the Clowder configuration
 # is loaded. In order to avoid permission errors when writing the file to
