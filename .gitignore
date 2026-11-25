@@ -3,3 +3,6 @@
 .scannerwork/
 sources-api-go
 tmp/
+
+# fullsend lint/run cache
+/.fullsend/.fullsend-cache/
