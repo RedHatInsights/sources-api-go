@@ -2,6 +2,7 @@
 .vscode/
 .scannerwork/
 sources-api-go
+mcp/sources-mcp
 tmp/
 
 # fullsend lint/run cache
