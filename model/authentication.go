@@ -22,10 +22,18 @@ type Authentication struct {
 
 	// DO NOT set these fields directly, instead see secret_store_util.go for
 	// interacting with store-specific fields.
-	Password    *string                `json:"password_hash" gorm:"column:password_hash"`
-	MiqPassword *string                `json:"password" gorm:"column:password"`
-	Extra       map[string]interface{} `gorm:"-" json:"extra,omitempty"`
-	ExtraDb     datatypes.JSON         `gorm:"column:extra"`
+	//
+	// Password holds AES-CBC ciphertext from the legacy scheme (pre-rotation
+	// key); PasswordGcm holds AES-GCM ciphertext encrypted with the keyring
+	// entry named by EncryptionKeyID. During the migration window both
+	// columns are maintained; see the encryption migration runbook. Never
+	// serialized: json:"-".
+	Password        *string                `json:"password_hash" gorm:"column:password_hash"`
+	PasswordGcm     *string                `json:"-" gorm:"column:password_hash_gcm"`
+	EncryptionKeyID *string                `json:"-" gorm:"column:encryption_key_id"`
+	MiqPassword     *string                `json:"password" gorm:"column:password"`
+	Extra           map[string]interface{} `gorm:"-" json:"extra,omitempty"`
+	ExtraDb         datatypes.JSON         `gorm:"column:extra"`
 
 	AvailabilityStatus      *string    `gorm:"default:in_progress;not null" json:"availability_status,omitempty"`
 	LastCheckedAt           *time.Time `json:"last_checked_at,omitempty"`

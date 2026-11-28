@@ -54,13 +54,33 @@ func (auth *Authentication) GetExtra() map[string]interface{} {
 func (auth *Authentication) GetPassword() (*string, error) {
 	switch config.Get().SecretStore {
 	case config.DatabaseStore:
-		if auth.Password == nil {
-			return nil, nil
+		// Prefer the GCM column, routed by the stored key id; fall back to
+		// the legacy CBC column for rows not yet migrated. Failures do NOT
+		// fall back — the columns and key id declare how to read a value, so
+		// a failure means corruption or misconfiguration and must be loud.
+		if auth.PasswordGcm != nil {
+			if auth.EncryptionKeyID == nil {
+				return nil, fmt.Errorf("authentication %d has a GCM password but no encryption key id", auth.DbID)
+			}
+
+			decrypted, err := util.DecryptGCMWithKeyID(*auth.PasswordGcm, *auth.EncryptionKeyID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decrypt password_hash_gcm for authentication %d: %w", auth.DbID, err)
+			}
+
+			return &decrypted, nil
 		}
 
-		decrypted, err := util.Decrypt(*auth.Password)
+		if auth.Password != nil {
+			decrypted, err := util.DecryptLegacyCBC(*auth.Password)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decrypt legacy password_hash for authentication %d: %w", auth.DbID, err)
+			}
 
-		return &decrypted, err
+			return &decrypted, nil
+		}
+
+		return nil, nil
 
 	case config.VaultStore:
 		return auth.Password, nil
@@ -147,7 +167,24 @@ func (auth *Authentication) SetPassword(pass *string) error {
 			return err
 		}
 
-		auth.Password = &encrypted
+		auth.PasswordGcm = &encrypted
+
+		// Stamp the key id that encrypted the value, so reads route through
+		// the keyring instead of inferring the key.
+		keyID := util.ActiveKeyID()
+		auth.EncryptionKeyID = &keyID
+
+		// Dual-write the legacy column while the migration window is open, so
+		// pre-migration binaries keep reading current values. Stops on its own
+		// once ENCRYPTION_KEY_OLD is removed from the deployment.
+		if util.LegacyKeyPresent() {
+			legacy, legacyErr := util.EncryptLegacyCBC(*pass)
+			if legacyErr != nil {
+				return legacyErr
+			}
+
+			auth.Password = &legacy
+		}
 
 		return nil
 
